@@ -28,8 +28,26 @@ def session_init():
     print(json.dumps(result, indent=2))
 
 
-def update_status(brand, month, post_id, new_status, actor="system", notes=""):
-    """Transition a post's status in the tracker."""
+VALID_TRANSITIONS = {
+    "QUEUED": ["ASSET_MATCHING"],
+    "ASSET_MATCHING": ["GENERATING", "QUEUED"],
+    "GENERATING": ["PENDING_REVIEW", "QUEUED"],
+    "PENDING_REVIEW": ["APPROVED_INTERNAL", "REVISION_REQUESTED", "REJECTED"],
+    "APPROVED_INTERNAL": ["PENDING_CLIENT", "FINAL"],
+    "REVISION_REQUESTED": ["GENERATING"],
+    "REJECTED": ["QUEUED"],
+    "PENDING_CLIENT": ["APPROVED_CLIENT", "REVISION_REQ_CLIENT", "REJECTED_CLIENT"],
+    "APPROVED_CLIENT": ["PENDING_CEO", "FINAL"],
+    "REVISION_REQ_CLIENT": ["GENERATING"],
+    "REJECTED_CLIENT": ["QUEUED"],
+    "PENDING_CEO": ["APPROVED_CEO", "REJECTED"],
+    "APPROVED_CEO": ["FINAL"],
+    "FINAL": [],  # Write-protected — no transitions allowed
+}
+
+
+def update_status(brand, month, post_id, new_status, actor="system", notes="", force=False):
+    """Transition a post's status in the tracker with validation."""
     tracker_path = WORKSPACE / "output" / brand / month / "status-tracker.json"
     if not tracker_path.exists():
         print(json.dumps({"error": f"Status tracker not found: {tracker_path}"}))
@@ -42,6 +60,20 @@ def update_status(brand, month, post_id, new_status, actor="system", notes=""):
         tracker.setdefault("posts", {})[post_key] = {"status": "QUEUED", "revision_history": [], "flags": []}
 
     old_status = tracker["posts"][post_key]["status"]
+
+    # Validate transition
+    if not force:
+        allowed = VALID_TRANSITIONS.get(old_status, [])
+        if new_status not in allowed and old_status != new_status:
+            print(json.dumps({
+                "error": "Invalid state transition",
+                "from": old_status,
+                "to": new_status,
+                "allowed": allowed,
+                "hint": "Use --force to override (not recommended)"
+            }))
+            sys.exit(1)
+
     tracker["posts"][post_key]["status"] = new_status
     tracker["last_updated"] = datetime.utcnow().isoformat() + "Z"
 
@@ -135,6 +167,7 @@ def main():
     parser.add_argument("--status", default=None)
     parser.add_argument("--actor", default="system")
     parser.add_argument("--notes", default="")
+    parser.add_argument("--force", action="store_true", help="Force state transition even if invalid")
     args = parser.parse_args()
 
     if args.action == "session-init":
@@ -143,7 +176,7 @@ def main():
         if not all([args.brand, args.month, args.post_id, args.status]):
             print("Error: --brand, --month, --post-id, --status required", file=sys.stderr)
             sys.exit(1)
-        update_status(args.brand, args.month, args.post_id, args.status, args.actor, args.notes)
+        update_status(args.brand, args.month, args.post_id, args.status, args.actor, args.notes, args.force)
     elif args.action == "get-summary":
         if not all([args.brand, args.month]):
             print("Error: --brand and --month required", file=sys.stderr)

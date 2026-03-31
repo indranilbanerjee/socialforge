@@ -1,0 +1,12 @@
+{
+  "document_type": "social_media_calendar",
+  "sections": [
+    {"type": "cover", "title": "{{brand_name}} — Social Media Calendar", "subtitle": "{{month}}", "prepared_by": "{{agency_name}}"},
+    {"type": "toc", "title": "Table of Contents"},
+    {"type": "summary", "title": "Monthly Overview", "includes": ["total_posts", "platform_breakdown", "tier_distribution", "content_type_mix"]},
+    {"type": "weekly", "title": "Week {{week_number}}", "repeats": true, "per_post": ["date", "platform", "image_preview", "copy_text", "hashtags", "cta", "creative_mode", "quality_score"]},
+    {"type": "appendix", "id": "A", "title": "Publishing Schedule", "includes": ["dates", "times", "platforms", "format"]},
+    {"type": "appendix", "id": "B", "title": "Production Notes", "includes": ["asset_gaps", "compliance_flags", "revision_history"]},
+    {"type": "appendix", "id": "C", "title": "Cost Report", "includes": ["total_cost", "by_operation", "by_post"]}
+  ]
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --brand-primary: {{brand_primary}};
+    --brand-secondary: {{brand_secondary}};
+    --brand-accent: {{brand_accent}};
+    --brand-bg-light: {{brand_bg_light}};
+    --brand-bg-dark: {{brand_bg_dark}};
+    --brand-text: {{brand_text}};
+    --font-heading: '{{font_heading}}', 'Montserrat', sans-serif;
+    --font-body: '{{font_body}}', 'Open Sans', sans-serif;
+  }
+  body {
+    width: 1080px; height: 1080px;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: var(--brand-bg-light);
+    color: var(--brand-text); padding: 100px;
+    font-family: var(--font-body);
+  }
+  .quote-mark {
+    font-size: 120px; color: var(--brand-primary);
+    opacity: 0.3; line-height: 0.5;
+    font-family: Georgia, serif;
+  }
+  .quote-text {
+    font-family: var(--font-heading);
+    font-size: 36px; line-height: 1.5;
+    text-align: center; max-width: 800px;
+    margin: 30px 0;
+    color: var(--brand-bg-dark);
+  }
+  .quote-author {
+    font-size: 18px; color: var(--brand-primary);
+    font-weight: 600; margin-top: 20px;
+  }
+  .quote-title {
+    font-size: 14px; opacity: 0.6; margin-top: 5px;
+  }
+  .accent-line {
+    width: 60px; height: 3px;
+    background: var(--brand-accent);
+    margin: 20px auto;
+  }
+  .logo {
+    position: absolute; bottom: 40px; right: 40px;
+    font-family: var(--font-heading);
+    font-size: 14px; opacity: 0.5;
+    color: var(--brand-primary);
+  }
+</style>
+</head>
+<body>
+  <div class="quote-mark">"</div>
+  <div class="quote-text">{{slide_quote}}</div>
+  <div class="accent-line"></div>
+  <div class="quote-author">{{slide_author}}</div>
+  <div class="quote-title">{{slide_author_title}}</div>
+  <div class="logo">{{brand_name}}</div>
+</body>
+</html>

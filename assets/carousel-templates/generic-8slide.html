@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --brand-primary: {{brand_primary}};
+    --brand-secondary: {{brand_secondary}};
+    --brand-accent: {{brand_accent}};
+    --brand-bg-light: {{brand_bg_light}};
+    --brand-bg-dark: {{brand_bg_dark}};
+    --brand-text: {{brand_text}};
+    --font-heading: '{{font_heading}}', 'Montserrat', sans-serif;
+    --font-body: '{{font_body}}', 'Open Sans', sans-serif;
+  }
+  body {
+    width: 1080px; height: 1080px;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-bg-dark));
+    color: white; padding: 80px; text-align: center;
+    font-family: var(--font-body);
+  }
+  .slide-number {
+    position: absolute; top: 40px; right: 40px;
+    font-size: 14px; opacity: 0.6;
+    font-family: var(--font-body);
+  }
+  h1 {
+    font-family: var(--font-heading);
+    font-size: 52px; line-height: 1.2;
+    margin-bottom: 30px; max-width: 900px;
+  }
+  p {
+    font-size: 24px; line-height: 1.6;
+    max-width: 800px; opacity: 0.9;
+  }
+  .accent-line {
+    width: 80px; height: 4px;
+    background: var(--brand-accent);
+    margin: 30px auto;
+  }
+  .logo {
+    position: absolute; bottom: 40px; left: 40px;
+    font-family: var(--font-heading);
+    font-size: 16px; opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+  <div class="slide-number">{{slide_number}}</div>
+  <h1>{{slide_title}}</h1>
+  <div class="accent-line"></div>
+  <p>{{slide_body}}</p>
+  <div class="logo">{{brand_name}}</div>
+</body>
+</html>

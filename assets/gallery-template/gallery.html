@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SocialForge Review Gallery — {{brand}} / {{month}}</title>
+<link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+  <header>
+    <h1>SocialForge Review</h1>
+    <h2>{{brand}} — {{month}}</h2>
+    <div class="summary" id="summary"></div>
+  </header>
+  <div class="filters" id="filters">
+    <button class="filter active" data-filter="all">All</button>
+    <button class="filter" data-filter="HERO">HERO</button>
+    <button class="filter" data-filter="HUB">HUB</button>
+    <button class="filter" data-filter="HYGIENE">HYGIENE</button>
+  </div>
+  <div class="grid" id="gallery">
+    <!-- Post cards injected here -->
+  </div>
+  <script src="gallery.js"></script>
+</body>
+</html>

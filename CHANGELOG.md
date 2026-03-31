@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-03-31
+
+### Added — Reference Docs, Templates, State Machine Validation
+
+All reference documentation complete. Key templates built. State machine enforcement added.
+
+#### Reference Documents (10 new, 11 total — ALL COMPLETE)
+- **Schema docs (6):** brand-config, approval-chain, compliance-rules, asset-index, calendar-data, status-tracker
+- **Guides (4):** compositing-guide (4 creative modes), image-gen-guide (prompt engineering), carousel-templates-guide, troubleshooting (8 common errors)
+
+#### Templates (6 new)
+- **Carousel:** generic-8slide.html (gradient background, CSS variables), quote-card-single.html
+- **Gallery:** gallery.html + gallery.css + gallery.js (responsive grid, tier filtering)
+- **Document:** calendar-doc-structure.json (cover, weekly sections, 3 appendices)
+
+#### State Machine Validation
+- status_manager.py now enforces valid state transitions (VALID_TRANSITIONS dict)
+- FINAL status is write-protected — no transitions allowed from FINAL
+- Invalid transitions return error with allowed states listed
+- `--force` flag available for override (logged as forced transition)
+
+### Summary
+
+| Component | v0.4.0 | v0.5.0 | Spec |
+|-----------|--------|--------|------|
+| Skills | 14 | 14 | 14 ✅ |
+| Scripts | 17 | 17 | 17 ✅ |
+| Agents | 5 | 5 | 5 ✅ |
+| Commands | 18 | 18 | 18 ✅ |
+| Reference docs | 1 | 11 | 11 ✅ |
+| Templates | 0 | 6 | 19 (13 remaining variants) |
+
+---
+
 ## [0.4.0] - 2026-03-31
 
 ### Added — Feature Complete (All Scripts + Commands)

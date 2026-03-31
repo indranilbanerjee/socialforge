@@ -1,0 +1,27 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+header { background: white; padding: 24px 32px; border-bottom: 1px solid #e0e0e0; }
+h1 { font-size: 24px; font-weight: 700; }
+h2 { font-size: 16px; font-weight: 400; color: #666; margin-top: 4px; }
+.summary { display: flex; gap: 24px; margin-top: 16px; }
+.stat { text-align: center; }
+.stat-num { font-size: 28px; font-weight: 700; }
+.stat-label { font-size: 11px; color: #888; text-transform: uppercase; }
+.filters { padding: 16px 32px; display: flex; gap: 8px; }
+.filter { padding: 6px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; cursor: pointer; font-size: 13px; }
+.filter.active { background: #333; color: white; border-color: #333; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; padding: 16px 32px; }
+.card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.2s; }
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.card-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+.post-id { font-weight: 700; font-size: 13px; }
+.tier { color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tier-HERO { background: #e74c3c; }
+.tier-HUB { background: #3498db; }
+.tier-HYGIENE { background: #2ecc71; }
+.status { margin-left: auto; font-size: 11px; color: #888; }
+.card img { width: 100%; display: block; }
+.card-body { padding: 12px 14px; }
+.card-body strong { font-size: 14px; display: block; margin-bottom: 4px; }
+.meta { font-size: 12px; color: #888; margin-bottom: 8px; }
+.copy-preview { font-size: 13px; line-height: 1.4; color: #555; }

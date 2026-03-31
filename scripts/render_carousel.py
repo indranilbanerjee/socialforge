@@ -104,9 +104,22 @@ def render_slides(template_type, slides_data, brand, output_dir, width=1080, hei
 
         browser.close()
 
+    # Assemble slides into PDF
+    pdf_path = None
+    try:
+        from PIL import Image
+        if rendered:
+            slides_pil = [Image.open(s).convert("RGB") for s in rendered]
+            pdf_file = output_dir / "carousel.pdf"
+            slides_pil[0].save(str(pdf_file), save_all=True, append_images=slides_pil[1:], resolution=150)
+            pdf_path = str(pdf_file)
+    except Exception:
+        pdf_path = None  # PDF assembly failed, PNGs still available
+
     return {
         "status": "success",
         "slides_rendered": len(rendered),
+        "pdf": pdf_path,
         "output_dir": str(output_dir),
         "files": rendered,
         "template": template_type,

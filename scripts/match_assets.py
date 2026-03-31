@@ -27,8 +27,11 @@ def extract_keywords(post):
     return keywords - stop_words
 
 
-def score_asset(asset, post_keywords, post, month_usage):
+def score_asset(asset, post_keywords, post, month_usage, week_usage=None):
     """Calculate multi-factor match score for an asset against a post."""
+    if week_usage is None:
+        week_usage = {}
+
     asset_tags = set(t.lower() for t in asset.get("tags", []))
 
     # Factor 1: Tag overlap (30%)
@@ -62,6 +65,11 @@ def score_asset(asset, post_keywords, post, month_usage):
     uses = month_usage.get(asset_id, 0)
     freshness_penalty = 0 if uses == 0 else (0.15 if uses == 1 else (0.40 if uses == 2 else 0.70))
 
+    # Same-week additional penalty (spec: ×0.50 additional)
+    post_week = post.get("week_number", 0)
+    if post_week and asset_id in week_usage.get(post_week, set()):
+        freshness_penalty = min(freshness_penalty + 0.50, 1.0)  # Additional 0.50, cap at 1.0
+
     final = (tag_score * 0.30) + (suit_score * 0.25) + (bucket_score * 0.20) + (crop_score * 0.15) - (freshness_penalty * 0.10)
     return max(0, min(final, 1.0))
 
@@ -94,8 +102,9 @@ def match_all(brand, month):
     index = json.loads(index_path.read_text(encoding="utf-8"))
     assets = index.get("assets", [])
 
-    # Build month usage from existing matches
+    # Build month + week usage from existing matches
     month_usage = {}
+    week_usage = {}
 
     results = []
     mode_counts = {"ANCHOR_COMPOSE": 0, "ENHANCE_EXTEND": 0, "STYLE_REFERENCED": 0, "PURE_CREATIVE": 0}
@@ -106,7 +115,7 @@ def match_all(brand, month):
         # Score all assets
         scored = []
         for asset in assets:
-            score = score_asset(asset, post_keywords, post, month_usage)
+            score = score_asset(asset, post_keywords, post, month_usage, week_usage)
             scored.append({"asset_id": asset["id"], "score": round(score, 3), "filename": asset.get("filename", "")})
 
         scored.sort(key=lambda x: -x["score"])
@@ -123,9 +132,12 @@ def match_all(brand, month):
 
         mode_counts[mode] = mode_counts.get(mode, 0) + 1
 
-        # Track usage
+        # Track usage (month + week)
         if top and best_score > 0.5:
             month_usage[top[0]["asset_id"]] = month_usage.get(top[0]["asset_id"], 0) + 1
+            post_week = post.get("week_number", 0)
+            if post_week:
+                week_usage.setdefault(post_week, set()).add(top[0]["asset_id"])
 
         # Select style references
         style_refs = [a["id"] for a in assets if a.get("is_style_reference")][:5]

@@ -129,13 +129,20 @@ Style reference photos:
 
 ### Step 8: Social Profiles
 
+For each active platform configured in Step 4:
+
 ```
-For each active platform:
-  Display name: [brand name on platform]
-  Handle: [@handle]
-  Avatar: [file path — used in preview rendering]
-  Profile headline: [used in preview rendering]
+Platform: [platform name]
+  Display name: [brand name as it appears on the platform]
+  Handle: [@handle or username]
+  Avatar: [file path to avatar/profile photo — used in preview rendering]
+  Profile headline: [bio or tagline shown on the platform]
+  Profile URL: [full URL to the profile page]
 ```
+
+This data powers preview rendering (showing exactly how posts look on each platform).
+
+If user skips: Previews will use brand name and placeholder avatar. Recommend filling in for accurate mockups.
 
 ### Step 9: Languages
 

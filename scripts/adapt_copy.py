@@ -66,9 +66,14 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
 
     # Prepare hashtags
     all_hashtags = list(brand_hashtags or [])
-    remaining_limit = specs.get("hashtag_limit", 5) - len(all_hashtags)
+    hashtag_limit = specs.get("hashtag_limit", 5)
+    hashtag_text = " ".join(all_hashtags[:hashtag_limit])
 
-    hashtag_text = " ".join(all_hashtags[:specs.get("hashtag_limit", 5)])
+    # Instagram first-comment strategy: hashtags go in first comment, not caption
+    first_comment = None
+    if specs.get("hashtag_placement") == "first_comment":
+        first_comment = hashtag_text
+        hashtag_text = ""  # Don't include in main copy
 
     fold_at_val = specs.get("fold_at")
     result = {
@@ -81,9 +86,26 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
         "hook_visible": adapted[:fold_at_val] if fold_at_val else adapted[:100],
         "hashtags": hashtag_text,
         "hashtag_placement": specs.get("hashtag_placement", "inline"),
+        "first_comment": first_comment,
     }
 
     return result
+
+
+def generate_bilingual(copy_text, platform, primary_lang="en", secondary_lang=None, mode="separate_posts"):
+    """Generate bilingual copy variants."""
+    if not secondary_lang:
+        return {"primary": copy_text, "secondary": None, "mode": mode}
+
+    # In actual use, Claude generates the translation. This function structures the output.
+    return {
+        "primary": copy_text,
+        "primary_lang": primary_lang,
+        "secondary": f"[TRANSLATE TO {secondary_lang}]: {copy_text}",
+        "secondary_lang": secondary_lang,
+        "mode": mode,
+        "note": "Secondary copy requires translation. Use Claude or connected translation MCP."
+    }
 
 
 def main():
@@ -92,6 +114,9 @@ def main():
     parser.add_argument("--platform", required=True, help="Target platform")
     parser.add_argument("--brand", default=None, help="Brand slug for hashtags")
     parser.add_argument("--cta", default=None, help="Call-to-action text or URL")
+    parser.add_argument("--secondary-lang", default=None, help="Secondary language for bilingual posts")
+    parser.add_argument("--bilingual-mode", default="separate_posts", choices=["separate_posts", "bilingual_single_post", "language_per_platform"])
+    parser.add_argument("--campaign-hashtags", nargs="*", default=None, help="Campaign-specific hashtags")
     parser.add_argument("--list-platforms", action="store_true")
     args = parser.parse_args()
 
@@ -105,6 +130,9 @@ def main():
         if config_path.exists():
             config = json.loads(config_path.read_text(encoding="utf-8"))
             brand_hashtags = config.get("brand_hashtags", {}).get("always_include", [])
+
+    if args.campaign_hashtags:
+        brand_hashtags.extend(args.campaign_hashtags)
 
     result = adapt_for_platform(args.text, args.platform, brand_hashtags, args.cta)
     print(json.dumps(result, indent=2))

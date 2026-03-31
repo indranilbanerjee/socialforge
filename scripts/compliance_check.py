@@ -88,6 +88,19 @@ def check_compliance(brand, text, platform=None):
                     "suggestion": f"Reduce to {max_hashtags} hashtags"
                 })
 
+        # Forbidden content types
+        forbidden = platform_rules.get("forbidden_content_types", [])
+        if forbidden:
+            # Check if any forbidden type keywords appear in the text
+            for ftype in forbidden:
+                if ftype.lower() in text.lower():
+                    violations.append({
+                        "type": "forbidden_content",
+                        "severity": "critical",
+                        "reason": f"Content type '{ftype}' is forbidden on {platform}",
+                        "suggestion": f"Remove or rephrase content related to '{ftype}'"
+                    })
+
     # Check required disclaimers
     disclaimers = rules.get("required_disclaimers", {})
     for trigger, config in disclaimers.items():

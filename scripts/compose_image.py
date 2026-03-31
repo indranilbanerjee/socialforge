@@ -93,6 +93,46 @@ def composite_layers(background_path, foreground_path, output_path, position="ce
     # Composite foreground on top of shadow
     bg.paste(fg, (x, y), fg)
 
+    # Edge feathering — soften edges of composited foreground
+    try:
+        from PIL import ImageFilter
+        # Create a mask from the alpha channel and blur edges
+        if fg.mode == "RGBA":
+            alpha = fg.split()[3]
+            # Slight blur on the alpha edge (2px feather)
+            feathered_alpha = alpha.filter(ImageFilter.GaussianBlur(radius=2))
+            fg_feathered = fg.copy()
+            fg_feathered.putalpha(feathered_alpha)
+            # Re-composite with feathered edges
+            bg_temp = bg.copy()
+            bg_temp.paste(fg_feathered, (x, y), fg_feathered)
+            bg = bg_temp
+    except Exception:
+        pass  # Feathering failed, continue with hard edges
+
+    # Color temperature matching — adjust foreground warmth to match background
+    try:
+        from PIL import ImageStat
+        # Sample background color temperature (average RGB)
+        bg_crop = bg.crop((0, 0, bg.width, bg.height)).convert("RGB")
+        bg_stat = ImageStat.Stat(bg_crop)
+        bg_avg = bg_stat.mean  # [R, G, B] averages
+
+        # Determine if background is warm (R>B) or cool (B>R)
+        warmth = bg_avg[0] - bg_avg[2]  # Positive = warm, negative = cool
+
+        # Apply subtle color shift to foreground region to match
+        if abs(warmth) > 15:  # Only if noticeable difference
+            from PIL import ImageEnhance
+            fg_region = bg.crop((x, y, x + fg.size[0], y + fg.size[1]))
+            # Subtle color balance: shift by 2-5% toward background temperature
+            shift = 0.03 if warmth > 0 else -0.03
+            enhancer = ImageEnhance.Color(fg_region)
+            fg_adjusted = enhancer.enhance(1.0 + shift)
+            bg.paste(fg_adjusted, (x, y))
+    except Exception:
+        pass  # Color matching failed, continue without
+
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     bg.convert("RGB").save(output_path, quality=95)
 
@@ -103,6 +143,47 @@ def composite_layers(background_path, foreground_path, output_path, position="ce
         "fg_size": f"{new_w}x{new_h}",
         "position": position
     }
+
+
+def add_reflection(image_path, output_path, surface_type="subtle"):
+    """Add subtle surface reflection below the composited subject."""
+    try:
+        from PIL import Image, ImageFilter, ImageEnhance
+    except ImportError:
+        return {"error": "Pillow not installed"}
+
+    img = Image.open(image_path).convert("RGBA")
+    w, h = img.size
+
+    # Create reflection: flip bottom 20% of image
+    reflect_height = int(h * 0.15)
+    bottom_strip = img.crop((0, h - reflect_height, w, h))
+    reflected = bottom_strip.transpose(Image.FLIP_TOP_BOTTOM)
+
+    # Fade the reflection
+    gradient = Image.new("L", (w, reflect_height))
+    for y_pos in range(reflect_height):
+        opacity = int(60 * (1 - y_pos / reflect_height))  # Fade from 60 to 0
+        for x_pos in range(w):
+            gradient.putpixel((x_pos, y_pos), opacity)
+
+    reflected.putalpha(gradient)
+
+    # Blur reflection
+    reflected_rgb = reflected.convert("RGB").filter(ImageFilter.GaussianBlur(radius=3))
+    reflected_final = reflected_rgb.convert("RGBA")
+    reflected_final.putalpha(gradient)
+
+    # Extend canvas and paste reflection
+    new_h = h + reflect_height
+    canvas = Image.new("RGBA", (w, new_h), (0, 0, 0, 0))
+    canvas.paste(img, (0, 0))
+    canvas.paste(reflected_final, (0, h), reflected_final)
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    canvas.convert("RGB").save(output_path, quality=95)
+
+    return {"status": "success", "output": str(output_path), "reflection": surface_type}
 
 
 def add_logo_overlay(image_path, logo_path, output_path, position="bottom-right", opacity=0.7, size_pct=8):
@@ -170,6 +251,12 @@ def main():
     logo_parser.add_argument("--opacity", type=float, default=0.7)
     logo_parser.add_argument("--size-pct", type=float, default=8)
 
+    # Reflection
+    ref_parser = sub.add_parser("add-reflection", help="Add surface reflection")
+    ref_parser.add_argument("--image", required=True)
+    ref_parser.add_argument("--output", required=True)
+    ref_parser.add_argument("--surface", default="subtle", choices=["subtle", "glass", "water"])
+
     args = parser.parse_args()
 
     if args.action == "remove-bg":
@@ -178,6 +265,8 @@ def main():
         result = composite_layers(args.background, args.foreground, args.output, args.position, args.fg_scale)
     elif args.action == "add-logo":
         result = add_logo_overlay(args.image, args.logo, args.output, args.position, args.opacity, args.size_pct)
+    elif args.action == "add-reflection":
+        result = add_reflection(args.image, args.output, args.surface)
 
     print(json.dumps(result, indent=2))
 

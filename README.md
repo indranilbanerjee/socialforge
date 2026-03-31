@@ -71,7 +71,8 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 
 ## Documentation
 
-- **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery
+- **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery (with real agency examples)
+- **[Technical Operations](docs/OPERATIONS.md)** — How everything works: pipeline logic, scoring algorithms, AI models, deterministic vs non-deterministic steps, folder structures, evaluation parameters, cost tracking
 - **[Connectors](CONNECTORS.md)** — All 10 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
 - **[Contributing](CONTRIBUTING.md)** — How to contribute to SocialForge

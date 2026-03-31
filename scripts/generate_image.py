@@ -28,14 +28,14 @@ def generate_with_gemini(prompt, output_path, reference_images=None, aspect_rati
         return {"error": "GEMINI_API_KEY not set. Get one at https://aistudio.google.com/apikey"}
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-preview-image-generation")
+    model = genai.GenerativeModel("gemini-2.0-flash-exp-image-generation")
 
     # Build content parts
     contents = []
 
     # Add reference images if provided (style-referenced mode)
     if reference_images:
-        for ref_path in reference_images[:8]:  # Max 8 references
+        for ref_path in reference_images[:14]:  # Max 14 references (Nano Banana 2 limit)
             ref_file = Path(ref_path)
             if ref_file.exists():
                 img_data = ref_file.read_bytes()

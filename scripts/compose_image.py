@@ -75,7 +75,22 @@ def composite_layers(background_path, foreground_path, output_path, position="ce
     else:
         x, y = (bg.width - new_w) // 2, (bg.height - new_h) // 2
 
-    # Composite
+    # Add drop shadow
+    try:
+        shadow = Image.new("RGBA", fg.size, (0, 0, 0, 0))
+        shadow_data = fg.split()[3]  # Get alpha channel
+        shadow_alpha = shadow_data.point(lambda p: min(int(p * 0.3), 80))  # Subtle shadow
+        shadow.putalpha(shadow_alpha)
+        # Offset shadow slightly down and right
+        shadow_offset = (x + 4, y + 6)
+        # Apply gaussian-like blur by pasting slightly offset multiple times
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                bg.paste(shadow, (shadow_offset[0] + dx, shadow_offset[1] + dy), shadow)
+    except Exception:
+        pass  # Shadow generation failed, continue without
+
+    # Composite foreground on top of shadow
     bg.paste(fg, (x, y), fg)
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)

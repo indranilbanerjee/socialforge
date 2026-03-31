@@ -25,7 +25,7 @@ def edit_with_gemini(image_path, instruction, output_path, reference_images=None
         return {"error": "GEMINI_API_KEY not set"}
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-preview-image-generation")
+    model = genai.GenerativeModel("gemini-2.0-flash-exp-image-generation")
 
     # Build content: image + instruction
     img_data = Path(image_path).read_bytes()
@@ -35,7 +35,7 @@ def edit_with_gemini(image_path, instruction, output_path, reference_images=None
 
     # Add style references if provided
     if reference_images:
-        for ref in reference_images[:5]:
+        for ref in reference_images[:14]:  # Up to 14 style references
             if Path(ref).exists():
                 ref_data = Path(ref).read_bytes()
                 ref_mime = "image/jpeg" if Path(ref).suffix.lower() in [".jpg", ".jpeg"] else "image/png"

@@ -66,13 +66,15 @@ Fonts:
 Style keywords: [e.g., "modern", "clean", "professional", "enterprise"]
 Mood keywords: [e.g., "confident", "innovative", "authoritative"]
 Photography style: warm natural light | studio professional | candid editorial | corporate clean
+Illustration style: flat vector | isometric | hand-drawn | 3D render | minimal line art | none
 Color temperature: warm | neutral | cool
 Contrast level: high | medium | soft
 
-Image rules (custom constraints):
+Image rules (array of custom constraints):
   e.g., "Navy should appear in at least 30% of visual area"
   e.g., "Avoid generic stock photo aesthetics"
   e.g., "Always include subtle brand color accents"
+  e.g., "No text overlays on product photography"
 ```
 
 ### Step 4: Platform Configuration
@@ -133,6 +135,35 @@ For each active platform:
   Handle: [@handle]
   Avatar: [file path — used in preview rendering]
   Profile headline: [used in preview rendering]
+```
+
+### Step 9: Languages
+
+```
+Primary language: [e.g., en-US, hi-IN, es-MX]
+Secondary languages: [list, e.g., es-MX, fr-FR]
+Bilingual config:
+  Mode: separate_posts | bilingual_single_post | language_per_platform
+  Primary ratio: [percentage of content in primary language, e.g., 80]
+Do-not-translate terms: [brand names, product names, taglines to keep in original language]
+Translation service preference: manual | ai_with_review | ai_auto
+```
+
+### Step 10: Brand Hashtags
+
+```
+Always include (every post):
+  e.g., #BrandName, #BrandTagline
+
+Campaign hashtags (active campaigns only):
+  Campaign name: [hashtag list + start/end dates]
+  e.g., "Summer Launch": ["#SummerWith{Brand}", "#LaunchDay"] (2026-06-01 to 2026-08-31)
+
+Platform-specific hashtag rules:
+  LinkedIn: max 3-5 hashtags, professional tone
+  Instagram: up to 15-20, mix of branded + discovery
+  X: max 2-3, integrated into copy
+  TikTok: trending + branded mix
 ```
 
 ## Output

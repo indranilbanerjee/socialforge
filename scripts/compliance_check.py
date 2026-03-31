@@ -88,6 +88,36 @@ def check_compliance(brand, text, platform=None):
                     "suggestion": f"Reduce to {max_hashtags} hashtags"
                 })
 
+    # Check required disclaimers
+    disclaimers = rules.get("required_disclaimers", {})
+    for trigger, config in disclaimers.items():
+        disclaimer_text = config.get("disclaimer_text", "")
+        trigger_platforms = config.get("platforms", [])
+
+        # Check if trigger context applies
+        if trigger.lower() in text.lower():
+            # Disclaimer should be present
+            if disclaimer_text and disclaimer_text.lower() not in text.lower():
+                if not platform or platform in trigger_platforms or not trigger_platforms:
+                    warnings.append({
+                        "type": "missing_disclaimer",
+                        "severity": "warning",
+                        "trigger": trigger,
+                        "reason": f"Content triggers '{trigger}' but required disclaimer is missing",
+                        "suggestion": f"Add: {disclaimer_text}"
+                    })
+
+    # Check image compliance rules (text-based, not actual image analysis)
+    for rule in rules.get("image_compliance", []):
+        if rule.get("check_method") == "manual_flag":
+            # Flag for manual review
+            warnings.append({
+                "type": "image_compliance",
+                "severity": rule.get("severity", "warning"),
+                "reason": rule.get("rule", "Image compliance check required"),
+                "suggestion": "Manually verify this image rule before publishing"
+            })
+
     status = "BLOCKED" if violations else ("WARNING" if warnings else "PASSED")
     print(json.dumps({
         "status": status,

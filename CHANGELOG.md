@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-03-31
+
+### Fixed — Spec Alignment Audit (Deep Audit Pass)
+
+Comprehensive audit comparing implementation against the 3,308-line engineering spec. Fixed model names, expanded brand configuration, added compositing effects, fixed compliance gaps.
+
+#### Gemini API Fixes
+- **generate_image.py** — Model updated to `gemini-2.0-flash-exp-image-generation` (best available image gen model). Reference image limit raised from 8 to **14** (Nano Banana 2 max).
+- **edit_image.py** — Same model update. Reference limit raised from 5 to **14**.
+- **index_assets.py** — Confirmed `gemini-2.0-flash` is correct for vision analysis (already using best available).
+
+#### Brand Manager Expansion
+- **Step 3 expanded** — Added `illustration_style` field and `image_rules` (custom generation constraints) to visual style collection
+- **Step 9 added** — Languages: primary, secondary, bilingual config (separate_posts/bilingual_single/language_per_platform), do-not-translate terms, translation service preference
+- **Step 10 added** — Brand Hashtags: always-include list, campaign hashtags with dates, platform-specific hashtag rules
+
+#### Compositing Visual Effects
+- **compose_image.py** — Drop shadow generation added: creates shadow from foreground alpha channel at 30% opacity, offsets 4px right + 6px down, pseudo-blur via multi-offset paste. Graceful fallback if shadow generation fails.
+
+#### Copy Adaptation
+- **adapt_copy.py** — LinkedIn `fold_at` (140 chars) now used: full copy preserved but fold-point awareness added. Result includes `hook_visible` (first 140 chars for preview) and `fold_at` field.
+
+#### Compliance
+- **compliance_check.py** — Added `required_disclaimers` validation: iterates trigger contexts, matches against copy, flags missing disclaimers per platform. Added `image_compliance` check: flags manual-review rules from compliance-rules.json.
+
+### What's Still Planned (Not in This Release)
+- Video generation (Veo 3.1 / Kling API integration) — currently stub only
+- PDF carousel assembly from rendered slides
+- Edge feathering and color temperature matching in compositing
+- Instagram first-comment hashtag strategy implementation
+
+---
+
 ## [1.0.1] - 2026-03-31
 
 ### Added — Documentation & Professional Infrastructure

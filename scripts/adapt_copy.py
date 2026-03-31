@@ -44,9 +44,18 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
 
     adapted = copy_text
 
-    # Truncate to optimal limit (preferred) or hard limit (max)
+    # Truncate to fold point (for preview visibility) or optimal limit
+    fold_at = specs.get("fold_at")
     limit = specs.get("optimal_limit", specs["char_limit"])
-    adapted = truncate_smart(adapted, limit)
+
+    if fold_at and len(copy_text) > fold_at:
+        # For platforms with "see more" fold: ensure hook is in first N chars
+        # Full copy still saved, but first fold_at chars must be compelling
+        adapted = copy_text  # Keep full copy
+        if len(adapted) > limit:
+            adapted = truncate_smart(adapted, limit)
+    else:
+        adapted = truncate_smart(adapted, limit)
 
     # Add CTA
     if cta:
@@ -61,12 +70,15 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
 
     hashtag_text = " ".join(all_hashtags[:specs.get("hashtag_limit", 5)])
 
+    fold_at_val = specs.get("fold_at")
     result = {
         "platform": platform,
         "copy": adapted,
         "char_count": len(adapted),
         "char_limit": specs["char_limit"],
         "within_limit": len(adapted) <= specs["char_limit"],
+        "fold_at": fold_at_val,
+        "hook_visible": adapted[:fold_at_val] if fold_at_val else adapted[:100],
         "hashtags": hashtag_text,
         "hashtag_placement": specs.get("hashtag_placement", "inline"),
     }

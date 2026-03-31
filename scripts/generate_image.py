@@ -77,7 +77,7 @@ def generate_with_gemini(prompt, output_path, reference_images=None, aspect_rati
 
 
 def generate_placeholder(prompt, output_path, width=1080, height=1080):
-    """Generate a placeholder image when no AI provider is available."""
+    """Generate a placeholder image — only when explicitly requested by user."""
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
@@ -105,7 +105,7 @@ def generate_placeholder(prompt, output_path, width=1080, height=1080):
         "status": "placeholder",
         "provider": "pillow_placeholder",
         "output": str(output_path),
-        "note": "No AI provider available. Placeholder generated. Replace with real image."
+        "warning": "Placeholder only — not a real image. Replace before publishing."
     }
 
 
@@ -124,10 +124,24 @@ def main():
     if args.provider == "gemini":
         result = generate_with_gemini(args.prompt, args.output, args.references, args.aspect_ratio)
         if "error" in result:
-            # Fallback to placeholder
-            result = generate_placeholder(args.prompt, args.output, args.width, args.height)
-    else:
+            # DO NOT silently fall back to placeholder — tell the user what to do
+            result = {
+                "status": "FAILED",
+                "error": result["error"],
+                "action_required": True,
+                "message": (
+                    "IMAGE GENERATION FAILED — no image was created. "
+                    "SocialForge requires an AI image API to produce visuals. "
+                    "Setup: (1) Set GEMINI_API_KEY (free: https://aistudio.google.com/apikey), "
+                    "or (2) Connect fal.ai / Replicate via Connectors panel. "
+                    "After setup, rerun the generation command."
+                )
+            }
+    elif args.provider == "placeholder":
+        # Only when user explicitly requests placeholder
         result = generate_placeholder(args.prompt, args.output, args.width, args.height)
+    else:
+        result = {"status": "FAILED", "error": f"Unknown provider: {args.provider}"}
 
     # Log the prompt
     log_dir = WORKSPACE / "shared" / "prompt-logs"

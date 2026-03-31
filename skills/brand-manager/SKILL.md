@@ -10,9 +10,42 @@ user-invocable: true
 
 Set up a new brand profile or update an existing one. Brand profiles control visual identity, platform config, compliance rules, approval chains, and asset sources for all SocialForge workflows.
 
+## Pre-Requisite: Image Generation API
+
+SocialForge generates AI images for social media posts. Before setting up a brand, check that an image generation API is configured.
+
+**Step 0: Check image API (MANDATORY — do this before anything else)**
+
+Run: `echo $GEMINI_API_KEY` (or `echo %GEMINI_API_KEY%` on Windows)
+
+**If empty or not set:**
+1. Go to https://aistudio.google.com/apikey (free tier available)
+2. Create an API key
+3. Set it: `export GEMINI_API_KEY=your-key-here` (add to shell profile for persistence)
+4. Install the package: `pip install google-generativeai`
+
+**Alternative providers:** Connect fal.ai or Replicate via Connectors panel.
+
+**Without an image API**, SocialForge can parse calendars, match assets, adapt copy, and render carousels — but it CANNOT generate new images. STYLE_REFERENCED and PURE_CREATIVE modes will fail. ANCHOR_COMPOSE works for basic Pillow compositing only (no AI scene generation).
+
+**If the API key is not set, warn the user clearly:**
+```
+WARNING: No image generation API configured.
+GEMINI_API_KEY is not set. AI image generation will NOT work.
+
+To fix: export GEMINI_API_KEY=your-key (get free at https://aistudio.google.com/apikey)
+Or connect fal.ai/Replicate via the Connectors panel.
+
+Do you want to:
+  1. Set up the API key now (recommended)
+  2. Continue without image generation (limited functionality)
+```
+
+Wait for user response. If they choose to continue without, log a persistent warning in brand-config.json: `"image_api_configured": false`.
+
 ## Quick Start (5-10 minutes)
 
-Most users only need these 5 things to get started:
+After confirming the image API, users need these 5 things:
 
 1. **Brand name** — Your company or client name
 2. **Industry** — pharma, bfsi, real-estate, saas, retail, healthcare, edtech, legal, manufacturing, hospitality, automotive, media, other
@@ -20,9 +53,9 @@ Most users only need these 5 things to get started:
 4. **Active platforms** — Which social media platforms (LinkedIn, Instagram, X, Facebook, YouTube, etc.)
 5. **Asset source** — Where are brand photos? (Google Drive folder URL, local path, or "I'll add later")
 
-That's it. Run `/sf:brand-setup [brand-name]` and answer these 5 questions. SocialForge creates a working brand profile.
+That's it. Run `/sf:brand-setup [brand-name]` and answer these questions. SocialForge creates a working brand profile.
 
-**Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags → `/sf:brand-setup --update [brand]`
+**Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags via `/sf:brand-setup --update [brand]`
 
 ## Full Setup
 
@@ -87,7 +120,7 @@ For each active platform, configure:
   Optimal posting times: [day + time + timezone]
   Supported formats: static | carousel | video | story | reel | short | text_only
   Content mix: video % | carousel % | static % | text_only %
-  Cross-posting: from which platform? (e.g., LinkedIn → Facebook)
+  Cross-posting: from which platform? (e.g., LinkedIn -> Facebook)
 ```
 
 ### Step 5: Compliance Rules
@@ -122,7 +155,7 @@ Where are your brand photos stored?
    Works in: Claude Code (persistent) | Cowork (session-only, re-provide each session)
 
 2. **Google Drive folder** — Provide the Drive folder URL
-   Works in: Cowork (via Settings → Integrations → Google Drive) | Claude Code (download first or mount)
+   Works in: Cowork (via Settings -> Integrations -> Google Drive) | Claude Code (download first or mount)
    In Cowork: Claude reads Drive files directly through platform integration
    In Claude Code: Download the folder locally, then index with --source /local/path
 
@@ -175,7 +208,7 @@ Always include (every post):
 
 Campaign hashtags (active campaigns only):
   Campaign name: [hashtag list + start/end dates]
-  e.g., "Summer Launch": ["#SummerWith{Brand}", "#LaunchDay"] (2026-06-01 to 2026-08-31)
+  e.g., "Summer Launch": ["#SummerWithBrand", "#LaunchDay"] (2026-06-01 to 2026-08-31)
 
 Platform-specific hashtag rules:
   LinkedIn: max 3-5 hashtags, professional tone
@@ -197,6 +230,7 @@ Creates these files in `~/socialforge-workspace/brands/{brand-slug}/`:
 ## Pre-Flight Validation
 
 Before any SocialForge workflow starts, the brand profile is validated:
+- Image generation API configured (GEMINI_API_KEY or MCP connector)
 - Brand name and slug set
 - At least one platform configured
 - Colors (primary + secondary) set

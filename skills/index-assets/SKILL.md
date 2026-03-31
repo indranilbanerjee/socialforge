@@ -1,6 +1,6 @@
 ---
 name: index-assets
-description: Index brand photo library using AI vision. Use when: setting up assets, adding new photos, or refreshing the index.
+description: "Index brand photo library using AI vision. Use when: setting up assets, adding new photos, or refreshing the index."
 argument-hint: "[brand-name] [--source drive|local] [--refresh]"
 effort: high
 user-invocable: true

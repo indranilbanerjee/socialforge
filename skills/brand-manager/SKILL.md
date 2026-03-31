@@ -1,6 +1,6 @@
 ---
 name: brand-manager
-description: Set up and manage brand profiles. Use when: configuring a new brand, updating brand config, or switching brands.
+description: "Set up and manage brand profiles. Use when: configuring a new brand, updating brand config, or switching brands."
 argument-hint: "[brand-name] [--update] [--switch]"
 effort: medium
 user-invocable: true

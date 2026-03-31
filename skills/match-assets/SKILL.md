@@ -1,6 +1,6 @@
 ---
 name: match-assets
-description: Match brand assets to calendar posts and assign creative modes. Use when: after calendar parsing or asset re-matching.
+description: "Match brand assets to calendar posts and assign creative modes. Use when: after calendar parsing or asset re-matching."
 argument-hint: "[--brand <name>] [--post <id>] [--override]"
 effort: high
 user-invocable: true

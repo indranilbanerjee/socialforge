@@ -1,6 +1,6 @@
 ---
 name: render-carousels
-description: Render multi-slide carousels from HTML templates via Playwright. Use when: producing carousel posts.
+description: "Render multi-slide carousels from HTML templates via Playwright. Use when: producing carousel posts."
 argument-hint: "[--post <id>] [--all] [--template <type>]"
 effort: high
 user-invocable: true

@@ -1,8 +1,8 @@
 # SocialForge — Social Media Calendar Automation
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Platform:** Claude Code & Cowork
-**Status:** Foundation Release (Layers 0-2)
+**Status:** Core Engine Release (Layers 0-6)
 
 Agency-grade social media calendar automation with asset-first compositing. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, adapts copy per platform, produces review galleries and delivery documents.
 

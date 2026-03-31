@@ -155,6 +155,12 @@ Before any SocialForge workflow starts, the brand profile is validated:
 
 Missing fields trigger a warning with options to continue or fix.
 
+## Timeout & Interruption Handling
+
+- If user closes or interrupts during multi-step setup: save whatever was collected so far. On next `/sf:brand-setup [brand]`, detect the partial profile and ask: "Resume setup from Step {N}? Or start fresh?"
+- Each step saves incrementally — no data is lost on interruption.
+- If brand-config.json write fails: retry once, then save to `~/socialforge-workspace/brands/{slug}/brand-config.partial.json` and inform user.
+
 ## Switching Brands
 
 ```

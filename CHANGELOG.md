@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-03-31
+
+### Added — Core Engine (Layers 3-6)
+
+Creative production engine with all 14 skills, 7 core scripts, and platform reference documentation.
+
+#### Skills (11 new, 14 total)
+- **match-assets** — Multi-factor asset scoring (tags 30%, suitability 25%, bucket 20%, crop 15%, freshness 10%), creative mode assignment
+- **compose-creative** — 4-mode creative engine (ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED, PURE_CREATIVE) with 2-3 variant generation, quality review, user approval
+- **adapt-copy** — Platform-specific copy adaptation (LinkedIn 3000 chars, Instagram 2200, X 280, Facebook 500, YouTube 5000) with mandatory compliance checking
+- **render-carousels** — 8 HTML template types rendered via Playwright, brand-themed, PDF assembly
+- **create-previews** — Platform mockup previews showing how posts look on each social platform
+- **build-review-gallery** — Interactive HTML gallery with quality scores, filtering, bulk actions
+- **manage-reviews** — Multi-tier approval workflow (internal → client → CEO) with `disable-model-invocation`
+- **assemble-document** — DOCX calendar delivery document with weekly sections and appendices
+- **finalize-month** — Final delivery folder packaging with `disable-model-invocation`
+- **full-pipeline** — End-to-end 7-phase orchestration with quality gates
+- **generate-video** — Video scripts, storyboards, thumbnails, optional AI video clips
+
+#### Scripts (7)
+- **status_manager.py** — Session init, month init, post status transitions, pipeline summary
+- **cost_tracker.py** — API cost logging per post/operation with monthly cost reports
+- **match_assets.py** — 5-factor scoring algorithm with creative mode recommendations
+- **compliance_check.py** — Banned phrase detection, data claim flagging, platform rule enforcement
+- **adapt_copy.py** — Platform-specific character limits, smart truncation, hashtag/CTA formatting
+- **resize_image.py** — 14 platform dimension specs, cover/contain resize modes (Pillow)
+- **verify_brand_colors.py** — Pixel sampling to verify brand palette in generated images
+
+#### Reference Documents (1)
+- **platform-specs.md** — Complete specs for 7 platforms: image dimensions, character limits, hashtag limits, video specs, supported formats
+
+### Summary
+
+| Component | v0.1.0 | v0.2.0 |
+|-----------|--------|--------|
+| Skills | 3 | 14 (all) |
+| Scripts | 0 | 7 |
+| Agents | 5 | 5 |
+| Commands | 6 | 6 |
+| Reference docs | 0 | 1 |
+| Total files | 21 | 39+ |
+
+---
+
 ## [0.1.0] - 2026-03-31
 
 ### Added — Foundation Release (Layers 0-2)

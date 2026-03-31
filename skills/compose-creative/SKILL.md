@@ -1,0 +1,89 @@
+---
+name: compose-creative
+description: Core creative engine. Generates images using 4 modes with brand assets, AI compositing, and platform resizing.
+argument-hint: "[--post <id>] [--all] [--variant b]"
+effort: max
+user-invocable: true
+---
+
+# /sf:compose-creative — Creative Production Engine
+
+The core production skill. Takes asset matching results and produces visual assets for each post according to its assigned creative mode.
+
+## The 4 Creative Modes
+
+### MODE 1: ANCHOR_COMPOSE
+Brand asset is the untouchable center. AI generates scene around it.
+1. Remove background from brand asset (rembg)
+2. Generate surrounding scene via AI using brand style references
+3. Composite asset onto generated scene (Pillow)
+4. Add shadow/reflection for natural placement
+5. Add text overlay + logo
+6. Resize per platform
+
+### MODE 2: ENHANCE_EXTEND
+Brand asset is the foundation. AI modifies periphery only.
+1. Feed real image to AI edit endpoint
+2. AI extends/enhances while preserving core subject
+3. Verify core subject preservation
+4. Add overlay + resize
+
+### MODE 3: STYLE_REFERENCED
+No brand asset composited. Style reference photos guide AI generation.
+1. Load 2-8 brand style reference images
+2. Construct 5-layer prompt (brand identity, post context, creative direction, image rules, technical)
+3. Feed references + prompt to AI generation
+4. Quality review — does output match brand DNA?
+5. Add overlay + resize
+
+### MODE 4: PURE_CREATIVE
+Full AI generation with only text prompt + brand colors/mood.
+1. Construct prompt from brief + brand-config visual style
+2. Generate (text-only, no reference images)
+3. Quality review
+4. Add overlay + resize
+
+## Process (For Each Post)
+
+1. Load post from calendar-data.json
+2. Load matched asset and creative mode from asset-matches.json
+3. Route to correct mode pipeline
+4. Generate 2-3 variants
+5. Run quality-reviewer agent on each variant
+6. **Show top variant to user for approval**
+7. If approved: apply text overlay, logo, platform resizing
+8. If rejected: regenerate with adjusted prompt or different asset
+9. Update status-tracker.json → PENDING_REVIEW
+10. Log prompt to `shared/prompt-logs/`
+11. Track API cost in cost-log.json
+
+## Rules
+- **Brand assets are SACRED** — never modify the core subject in ANCHOR_COMPOSE
+- **No text in AI-generated images** — text is always added via compose_text_overlay.py
+- **Logo overlay** per brand-config.json (position, opacity, size, platform exclusions)
+- **Every generated image requires user approval** before entering review queue
+- **Max 3 regeneration attempts** per post before escalating to user
+
+## Progress Indicators
+
+```
+[3/28] Post P03 — ANCHOR_COMPOSE
+  Asset: asset_012 (product-hero.jpg)
+  Removing background... ✓
+  Generating scene (variant A)... ✓
+  Compositing... ✓
+  Quality score: 8.2/10 ✓
+
+  [Image shown to user]
+  Approve this image? (yes / regenerate / skip)
+```
+
+## Scripts Used
+- generate_image.py | compose_image.py | edit_image.py
+- resize_image.py | compose_text_overlay.py | verify_brand_colors.py
+
+## Timeout & Fallback
+- AI generation: 60-second timeout per image. Retry once with simplified prompt.
+- Background removal: 30-second timeout. If fails, flag for manual masking.
+- Compositing: 15-second timeout. If Pillow fails, save components for manual assembly.
+- Total per post: 5-minute cap. If exceeded, mark as `production_timeout` and move to next.

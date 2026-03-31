@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-03-31
+
+### Added — Feature Complete (All Scripts + Commands)
+
+All 17 scripts and 18 commands now implemented. The plugin is feature-complete for its core architecture.
+
+#### Scripts (5 new, 17 total — ALL COMPLETE)
+- **index_assets.py** — Scan image libraries, Gemini Vision analysis per image, build asset-index.json. Refresh mode for incremental updates. Graceful fallback to metadata-only when API unavailable.
+- **render_preview.py** — Platform mockup previews via Playwright. Renders HTML cards with profile, image, copy. Fallback when templates not yet built.
+- **build_gallery.py** — Self-contained HTML review gallery with base64-embedded images, tier badges, status, copy previews, summary stats.
+- **generate_video.py** — Video scripts and storyboards from calendar data. 5 video types (hero, case study, reel, story, talking head). JSON output with scene breakdowns.
+- **assemble_docx.js** — Node.js calendar document builder. Groups posts by week, includes summary/schedule. JSON structure output (DOCX generation via docx package when available).
+
+#### Commands (12 new, 18 total — ALL COMPLETE)
+- **edit-post** — Edit copy, visual direction, or metadata for a generated post
+- **edit-image** — AI edit instruction to modify generated images
+- **swap-asset** — Replace matched brand asset with alternative
+- **revision** — Apply revision feedback and regenerate affected elements
+- **client-review** — Send approved posts to client via Slack/email
+- **check-approvals** — Check pending approvals and send overdue reminders
+- **finalize** — Package all approved content for delivery
+- **reactive-post** — Create unplanned trending/reactive posts outside calendar
+- **sync-calendar** — Re-sync calendar from source (Notion/Drive/file)
+- **cost-report** — API cost breakdown per operation and per post
+- **preview-batch** — Batch generate platform mockup previews
+- **index-assets** — Index or re-index brand photo library
+
+### Summary
+
+| Component | v0.3.0 | v0.4.0 | Spec Target |
+|-----------|--------|--------|-------------|
+| Skills | 14 | 14 | 14 ✅ |
+| Scripts | 12 | 17 | 17 ✅ |
+| Agents | 5 | 5 | 5 ✅ |
+| Commands | 6 | 18 | 18 ✅ |
+| Reference docs | 1 | 1 | 11 (remaining) |
+| HTML templates | 0 | 0 | 19 (remaining) |
+
+---
+
 ## [0.3.0] - 2026-03-31
 
 ### Added — Creative Pipeline Scripts + Audit Fixes

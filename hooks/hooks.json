@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "command": "If this Write/Edit is creating social media copy or image prompts for SocialForge, check: (1) No banned phrases from brand compliance-rules.json. (2) No fabricated statistics or unsourced claims. (3) Platform character limits respected. (4) Brand hashtags included where required. Otherwise respond 'SKIP'. $ARGUMENTS"
+            "prompt": "If this Write/Edit is creating social media copy or image prompts for SocialForge, check: (1) No banned phrases from brand compliance-rules.json. (2) No fabricated statistics or unsourced claims. (3) Platform character limits respected. (4) Brand hashtags included where required. Otherwise respond 'SKIP'. $ARGUMENTS"
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "command": "If this subagent is working on SocialForge content: (1) Load active brand-config.json — enforce brand colors, fonts, visual style. (2) Brand assets are sacred — AI generates around them, never replaces them. (3) All generated images must be shown to user for approval. (4) Follow the 4 creative modes: ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED, PURE_CREATIVE. (5) Respect compliance-rules.json banned phrases and disclaimers. Otherwise respond 'SKIP'. $ARGUMENTS"
+            "prompt": "If this subagent is working on SocialForge content: (1) Load active brand-config.json — enforce brand colors, fonts, visual style. (2) Brand assets are sacred — AI generates around them, never replaces them. (3) All generated images must be shown to user for approval. (4) Follow the 4 creative modes: ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED, PURE_CREATIVE. (5) Respect compliance-rules.json banned phrases and disclaimers. Otherwise respond 'SKIP'. $ARGUMENTS"
           }
         ]
       }
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "command": "If this task involved SocialForge content production, verify: (1) All generated images approved by user. (2) Copy respects platform character limits. (3) Brand compliance checked (no banned phrases). (4) Logo overlay applied where required by brand-config. (5) Correct image dimensions for target platforms. If any check fails, list issues and ask how to proceed. Otherwise respond 'PASS'. $ARGUMENTS"
+            "prompt": "If this task involved SocialForge content production, verify: (1) All generated images approved by user. (2) Copy respects platform character limits. (3) Brand compliance checked (no banned phrases). (4) Logo overlay applied where required by brand-config. (5) Correct image dimensions for target platforms. If any check fails, list issues and ask how to proceed. Otherwise respond 'PASS'. $ARGUMENTS"
           }
         ]
       }

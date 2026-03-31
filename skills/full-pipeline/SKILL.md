@@ -52,7 +52,7 @@ Phase 6 (manage-reviews) is the only async gate — the pipeline pauses here bec
 1. Gallery is built and shared (Phase 5 output)
 2. Pipeline shows: "Review gallery ready. Pipeline paused — resume after reviews complete."
 3. User reviews posts via `/sf:review` or `/sf:manage-reviews`
-4. To resume: `/sf:full-pipeline --resume` or manually run Phase 7 (`/sf:finalize`)
+4. To resume after reviews: run `/sf:full-pipeline --resume` or `/sf:finalize` directly
 
 **Escalation (per approval-chain.json):**
 - Reminder after N days (configurable per tier)

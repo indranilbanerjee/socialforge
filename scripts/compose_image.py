@@ -13,18 +13,34 @@ WORKSPACE = Path.home() / "socialforge-workspace"
 
 
 def remove_background(input_path, output_path):
-    """Remove background using rembg."""
+    """Remove background using rembg. Falls back to white-background detection if rembg unavailable."""
     try:
         from rembg import remove
         from PIL import Image
+        img = Image.open(input_path)
+        result = remove(img)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        result.save(output_path, format="PNG")
+        return {"status": "success", "output": str(output_path), "method": "rembg", "has_alpha": True}
     except ImportError:
-        return {"error": "rembg and/or Pillow not installed. Run: pip install rembg Pillow"}
-
-    img = Image.open(input_path)
-    result = remove(img)
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    result.save(output_path, format="PNG")
-    return {"status": "success", "output": str(output_path), "has_alpha": True}
+        # Fallback: if image has white/solid background, attempt basic threshold removal
+        try:
+            from PIL import Image
+            img = Image.open(input_path).convert("RGBA")
+            # Simple white-background removal (threshold-based)
+            data = img.getdata()
+            new_data = []
+            for item in data:
+                if item[0] > 240 and item[1] > 240 and item[2] > 240:
+                    new_data.append((255, 255, 255, 0))  # Make white pixels transparent
+                else:
+                    new_data.append(item)
+            img.putdata(new_data)
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            img.save(output_path, format="PNG")
+            return {"status": "success", "output": str(output_path), "method": "threshold_fallback", "has_alpha": True, "note": "Basic white-background removal. Install rembg for better results."}
+        except ImportError:
+            return {"error": "Neither rembg nor Pillow available. Run: pip install Pillow (minimum) or pip install rembg Pillow (recommended)"}
 
 
 def composite_layers(background_path, foreground_path, output_path, position="center", fg_scale=0.5):

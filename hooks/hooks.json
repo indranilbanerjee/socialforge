@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "timeout 30 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action session-init 2>/dev/null; echo '✓ SocialForge v0.1 loaded' && echo '' && echo 'Quick Start:' && echo '  1. /sf:brand-setup   — Configure a brand (do this first, 5-10 min)' && echo '  2. /sf:index-assets  — Index brand photo library' && echo '  3. /sf:new-month     — Start monthly calendar production' && echo '' && echo 'Already set up? /sf:status to check active brands' && echo '' && echo 'Commands: /sf:generate-all | /sf:review | /sf:finalize' && echo 'Help:     /sf:help'"
+            "command": "timeout 30 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action session-init 2>/dev/null; echo '✓ SocialForge v1.0 loaded' && echo '' && echo 'Quick Start:' && echo '  1. /sf:brand-setup   — Configure a brand (do this first, 5-10 min)' && echo '  2. /sf:index-assets  — Index brand photo library' && echo '  3. /sf:new-month     — Start monthly calendar production' && echo '' && echo 'Already set up? /sf:status to check active brands' && echo '' && echo 'Commands: /sf:generate-all | /sf:review | /sf:finalize' && echo 'Help:     /sf:help'"
           }
         ]
       }

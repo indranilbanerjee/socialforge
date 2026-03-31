@@ -23,7 +23,15 @@ Manage the multi-tier approval workflow per brand's approval-chain.json.
 - `/sf:manage-reviews --check` — Check pending approvals and send reminders
 
 ## State Transitions
-PENDING_REVIEW → APPROVED_INTERNAL → PENDING_CLIENT → APPROVED_CLIENT → PENDING_CEO → FINAL
+QUEUED → ASSET_MATCHING → GENERATING → PENDING_REVIEW
+  PENDING_REVIEW → APPROVED_INTERNAL | REVISION_REQUESTED | REJECTED
+  REVISION_REQUESTED → GENERATING (re-enters production with feedback)
+  REJECTED → QUEUED (start over)
+  APPROVED_INTERNAL → PENDING_CLIENT (if client review required) | FINAL (if not)
+  PENDING_CLIENT → APPROVED_CLIENT | REVISION_REQ_CLIENT | REJECTED_CLIENT
+  APPROVED_CLIENT → PENDING_CEO (if CEO required) | FINAL (if not)
+  PENDING_CEO → APPROVED_CEO → FINAL
+  FINAL → (write-protected, no transitions)
 
 ## Rules
 - FINAL status is write-protected — cannot be modified after finalization

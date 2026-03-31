@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --brand-primary: {{brand_primary}}; --brand-secondary: {{brand_secondary}}; --brand-accent: {{brand_accent}}; --brand-bg-light: {{brand_bg_light}}; --brand-bg-dark: {{brand_bg_dark}}; --brand-text: {{brand_text}}; --font-heading: '{{font_heading}}', sans-serif; --font-body: '{{font_body}}', sans-serif; }
+  body { width: 1080px; height: 1080px; font-family: var(--font-body); background: var(--brand-bg-light); color: var(--brand-text); display: flex; align-items: center; padding: 60px; }
+  .number { font-family: var(--font-heading); font-size: 200px; font-weight: 700; color: var(--brand-primary); opacity: 0.15; margin-right: 40px; line-height: 1; min-width: 200px; text-align: center; }
+  .content { flex: 1; }
+  .content h2 { font-family: var(--font-heading); font-size: 40px; color: var(--brand-primary); margin-bottom: 20px; }
+  .content p { font-size: 22px; line-height: 1.6; }
+  .accent-line { width: 60px; height: 4px; background: var(--brand-accent); margin-bottom: 20px; }
+  .slide-number { position: absolute; top: 20px; right: 20px; font-size: 13px; opacity: 0.5; }
+  .logo { position: absolute; bottom: 20px; right: 30px; font-size: 14px; opacity: 0.5; font-family: var(--font-heading); }
+</style></head><body>
+  <div class="slide-number">{{slide_number}}</div>
+  <div class="number">{{slide_tip_number}}</div>
+  <div class="content"><div class="accent-line"></div><h2>{{slide_title}}</h2><p>{{slide_body}}</p></div>
+  <div class="logo">{{brand_name}}</div>
+</body></html>

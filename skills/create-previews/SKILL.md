@@ -4,6 +4,7 @@ description: Generate platform mockup previews showing how posts will look on ea
 argument-hint: "[--post <id>] [--all] [--platform <name>]"
 effort: medium
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # /sf:create-previews — Preview Generator

@@ -8,11 +8,11 @@ Common SocialForge errors with causes and fixes.
 
 **When:** Any command that requires brand context (most commands).
 
-**Cause:** No `brand-config.json` exists at `~/.claude-marketing/<brand-slug>/`, or the slug doesn't match.
+**Cause:** No `brand-config.json` exists at `~/socialforge-workspace/brands/<brand-slug>/`, or the slug doesn't match.
 
 **Fix:**
 1. Run `/sf:brand-setup` to create a new brand profile.
-2. If the brand exists, check the slug: `ls ~/.claude-marketing/` and verify the directory name matches exactly.
+2. If the brand exists, check the slug: `ls ~/socialforge-workspace/brands/` and verify the directory name matches exactly.
 3. Ensure `brand-config.json` contains valid JSON with `brand_name` and `brand_slug` fields.
 
 ---
@@ -131,3 +131,14 @@ Common SocialForge errors with causes and fixes.
 3. **Check file paths** — Use forward slashes. Verify files exist at referenced paths.
 4. **Check dependencies** — `pip install playwright python-docx gspread pillow` covers most needs.
 5. **Resume, don't restart** — The pipeline is designed to resume from the last successful phase. You rarely need to start over.
+
+---
+
+## "Background removal failed" / rembg not available
+
+**When:** compose_image.py remove-bg fails in Cowork or restricted environments
+**Cause:** rembg requires C-extension libraries that may not compile in all environments
+**Fix:**
+1. **Automatic fallback:** Script falls back to basic white-background removal (threshold-based). Works for product-on-white images.
+2. **Manual:** Upload pre-masked images (PNG with alpha channel) — skip background removal entirely
+3. **Claude Code:** `pip install rembg` works in full Claude Code environments

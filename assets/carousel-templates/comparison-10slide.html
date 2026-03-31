@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --brand-primary: {{brand_primary}}; --brand-secondary: {{brand_secondary}}; --brand-accent: {{brand_accent}}; --brand-bg-light: {{brand_bg_light}}; --brand-bg-dark: {{brand_bg_dark}}; --brand-text: {{brand_text}}; --font-heading: '{{font_heading}}', sans-serif; --font-body: '{{font_body}}', sans-serif; }
+  body { width: 1080px; height: 1080px; font-family: var(--font-body); background: var(--brand-bg-light); color: var(--brand-text); display: flex; flex-direction: column; }
+  .header { background: var(--brand-primary); color: white; padding: 40px 60px; text-align: center; }
+  .header h1 { font-family: var(--font-heading); font-size: 36px; }
+  .comparison { display: flex; flex: 1; }
+  .col { flex: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .col-left { background: rgba(0,0,0,0.03); }
+  .col h2 { font-family: var(--font-heading); font-size: 28px; margin-bottom: 20px; color: var(--brand-primary); }
+  .col p { font-size: 20px; line-height: 1.6; }
+  .vs { width: 60px; display: flex; align-items: center; justify-content: center; background: var(--brand-accent); color: white; font-family: var(--font-heading); font-size: 24px; font-weight: 700; }
+  .slide-number { position: absolute; top: 20px; right: 20px; font-size: 13px; opacity: 0.5; }
+  .logo { position: absolute; bottom: 20px; left: 30px; font-size: 14px; opacity: 0.5; font-family: var(--font-heading); }
+</style></head><body>
+  <div class="slide-number">{{slide_number}}</div>
+  <div class="header"><h1>{{slide_title}}</h1></div>
+  <div class="comparison">
+    <div class="col col-left"><h2>{{slide_left_title}}</h2><p>{{slide_left_body}}</p></div>
+    <div class="vs">VS</div>
+    <div class="col"><h2>{{slide_right_title}}</h2><p>{{slide_right_body}}</p></div>
+  </div>
+  <div class="logo">{{brand_name}}</div>
+</body></html>

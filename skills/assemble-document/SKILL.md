@@ -4,6 +4,7 @@ description: Assemble the final calendar delivery document (DOCX) with all posts
 argument-hint: "[--brand <name>] [--format docx|pdf]"
 effort: high
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # /sf:assemble-document — Document Assembler

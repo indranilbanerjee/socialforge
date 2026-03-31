@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --brand-primary: {{brand_primary}}; --brand-secondary: {{brand_secondary}}; --brand-accent: {{brand_accent}}; --brand-bg-light: {{brand_bg_light}}; --brand-bg-dark: {{brand_bg_dark}}; --brand-text: {{brand_text}}; --font-heading: '{{font_heading}}', sans-serif; --font-body: '{{font_body}}', sans-serif; }
+  body { width: 1080px; height: 1080px; font-family: var(--font-body); background: var(--brand-bg-light); color: var(--brand-text); display: flex; flex-direction: column; }
+  .date-bar { background: var(--brand-primary); color: white; padding: 30px 60px; font-family: var(--font-heading); font-size: 20px; letter-spacing: 1px; }
+  .main { flex: 1; padding: 60px; display: flex; flex-direction: column; justify-content: center; }
+  .main h1 { font-family: var(--font-heading); font-size: 44px; margin-bottom: 20px; color: var(--brand-bg-dark); }
+  .main p { font-size: 22px; line-height: 1.6; }
+  .highlight { background: var(--brand-accent); color: white; display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 16px; margin-bottom: 16px; }
+  .slide-number { position: absolute; top: 20px; right: 20px; font-size: 13px; opacity: 0.5; }
+  .logo { position: absolute; bottom: 20px; right: 30px; font-size: 14px; opacity: 0.5; font-family: var(--font-heading); }
+</style></head><body>
+  <div class="slide-number">{{slide_number}}</div>
+  <div class="date-bar">{{slide_date}}</div>
+  <div class="main"><div class="highlight">{{slide_highlight}}</div><h1>{{slide_title}}</h1><p>{{slide_body}}</p></div>
+  <div class="logo">{{brand_name}}</div>
+</body></html>

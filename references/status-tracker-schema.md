@@ -5,7 +5,7 @@ JSON schema for `status-tracker.json` — tracks every post through the 8-phase 
 ## Location
 
 ```
-~/.claude-marketing/<brand-slug>/status-tracker.json
+~/socialforge-workspace/brands/<brand-slug>/status-tracker.json
 ```
 
 ## Top-Level Fields

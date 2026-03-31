@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --brand-primary: {{brand_primary}}; --brand-secondary: {{brand_secondary}}; --brand-accent: {{brand_accent}}; --brand-bg-light: {{brand_bg_light}}; --brand-bg-dark: {{brand_bg_dark}}; --brand-text: {{brand_text}}; --font-heading: '{{font_heading}}', sans-serif; --font-body: '{{font_body}}', sans-serif; }
+  body { width: 1080px; height: 1080px; font-family: var(--font-body); background: var(--brand-bg-dark); color: white; display: flex; flex-direction: column; }
+  .metric { flex: 0 0 400px; display: flex; align-items: center; justify-content: center; flex-direction: column; background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); }
+  .metric-value { font-family: var(--font-heading); font-size: 96px; font-weight: 700; }
+  .metric-label { font-size: 22px; opacity: 0.9; margin-top: 10px; }
+  .narrative { flex: 1; padding: 50px 60px; display: flex; flex-direction: column; justify-content: center; }
+  .narrative h2 { font-family: var(--font-heading); font-size: 32px; margin-bottom: 16px; }
+  .narrative p { font-size: 20px; line-height: 1.6; opacity: 0.85; }
+  .client-tag { margin-top: 20px; font-size: 14px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+  .slide-number { position: absolute; top: 20px; right: 20px; font-size: 13px; opacity: 0.4; }
+  .logo { position: absolute; bottom: 20px; right: 30px; font-size: 14px; opacity: 0.4; font-family: var(--font-heading); }
+</style></head><body>
+  <div class="slide-number">{{slide_number}}</div>
+  <div class="metric"><div class="metric-value">{{slide_metric}}</div><div class="metric-label">{{slide_metric_label}}</div></div>
+  <div class="narrative"><h2>{{slide_title}}</h2><p>{{slide_body}}</p><div class="client-tag">{{slide_client}}</div></div>
+  <div class="logo">{{brand_name}}</div>
+</body></html>

@@ -13,6 +13,7 @@ Package all approved posts into the organized delivery folder structure.
 
 ## Pre-Finalization Check
 - All posts must be FINAL status (or --force to skip unapproved)
+  **WARNING:** `--force` bypasses ALL approval gates. Use only in emergencies. All force-finalized posts are logged with `force_finalized: true` in status-tracker.json for audit trail.
 - All compliance checks passed
 - All required approvals obtained per approval-chain.json
 - Calendar document assembled

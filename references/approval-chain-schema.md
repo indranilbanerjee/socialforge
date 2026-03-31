@@ -5,7 +5,7 @@ JSON schema for `approval-chain.json` — defines who reviews content and when p
 ## Location
 
 ```
-~/.claude-marketing/<brand-slug>/approval-chain.json
+~/socialforge-workspace/brands/<brand-slug>/approval-chain.json
 ```
 
 ## Top-Level Fields

@@ -5,7 +5,7 @@ JSON schema for `calendar-data.json` — the monthly content calendar with all p
 ## Location
 
 ```
-~/.claude-marketing/<brand-slug>/calendar-data.json
+~/socialforge-workspace/brands/<brand-slug>/calendar-data.json
 ```
 
 ## Top-Level Fields

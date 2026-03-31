@@ -5,7 +5,7 @@ JSON schema for `asset-index.json` — the catalog of all indexed brand visual a
 ## Location
 
 ```
-~/.claude-marketing/<brand-slug>/asset-index.json
+~/socialforge-workspace/brands/<brand-slug>/asset-index.json
 ```
 
 ## Top-Level Fields

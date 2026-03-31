@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-03-31
+
+### GA Release — Full Audit Pass + All Critical Fixes
+
+Production-ready release. All 4 critical + 8 high-priority audit findings resolved. Complete carousel template library. State machine enforced.
+
+#### Critical Fixes
+- **C1:** Workspace path unified across all 7 reference docs (`~/socialforge-workspace/brands/` — not `~/.claude-marketing/`)
+- **C2:** All 8 carousel templates now present (was 2, added: comparison, case-study, tips, playbook, recap, data-infographic)
+- **C3:** SessionStart hook version updated to v1.0 (was v0.1)
+- **C4:** compose_image.py remove-bg now has Pillow threshold fallback when rembg unavailable (Cowork compatibility)
+
+#### High-Priority Fixes
+- **H1:** full-pipeline resume documented: `/sf:full-pipeline --resume` or `/sf:finalize`
+- **H2:** finalize-month `--force` flag gets explicit WARNING + audit trail (`force_finalized: true`)
+- **H5:** manage-reviews now documents complete 14-state machine (was 6 states)
+- **H7:** new-month command expanded with calendar source options (DOCX/XLSX/Notion/text)
+- **H8:** `disable-model-invocation: true` added to assemble-document and create-previews
+
+#### State Machine Enforcement
+- status_manager.py VALID_TRANSITIONS dict with 14 states
+- FINAL is write-protected (no transitions out)
+- Invalid transitions blocked with error + allowed states list
+- `--force` flag for emergency override (logged)
+
+#### Carousel Templates (8 total — ALL COMPLETE)
+| Template | Purpose | Design |
+|----------|---------|--------|
+| generic-8slide | General purpose | Gradient bg, centered title/body |
+| quote-card-single | Quote cards | Light bg, large quote mark, attribution |
+| comparison-10slide | Feature comparisons | Two-column VS layout |
+| case-study-10slide | Success stories | Hero metric + narrative |
+| tips-5slide | Quick tips | Large number + tip text |
+| playbook-8slide | Step-by-step | Circular step badge, dark bg |
+| recap-6slide | Event recaps | Date bar + highlight badge |
+| data-infographic-6slide | Data visualization | Large stat on gradient |
+
+### Final Inventory
+
+| Component | Count | Status |
+|-----------|-------|--------|
+| Skills | 14 | ✅ Complete |
+| Scripts | 17 | ✅ Complete |
+| Agents | 5 | ✅ Complete |
+| Commands | 18 | ✅ Complete |
+| Hooks | 4 | ✅ Complete |
+| MCP Connectors | 9 | ✅ Complete |
+| Reference Docs | 11 | ✅ Complete |
+| Carousel Templates | 8 | ✅ Complete |
+| Gallery Template | 3 files | ✅ Complete |
+| Document Template | 1 | ✅ Complete |
+
+---
+
 ## [0.5.0] - 2026-03-31
 
 ### Added — Reference Docs, Templates, State Machine Validation

@@ -5,7 +5,7 @@ JSON schema for `compliance-rules.json` — enforces banned phrases, required di
 ## Location
 
 ```
-~/.claude-marketing/<brand-slug>/compliance-rules.json
+~/socialforge-workspace/brands/<brand-slug>/compliance-rules.json
 ```
 
 ## Top-Level Fields

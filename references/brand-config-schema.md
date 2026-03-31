@@ -5,7 +5,7 @@ JSON schema for `brand-config.json` — the core brand identity file loaded by `
 ## Location
 
 ```
-~/.claude-marketing/<brand-slug>/brand-config.json
+~/socialforge-workspace/brands/<brand-slug>/brand-config.json
 ```
 
 ## Top-Level Fields
@@ -127,4 +127,4 @@ All paths are relative to the brand directory.
 
 - `brand_name` and `brand_slug` must be present or the pipeline aborts.
 - `colors.primary` is required — all other color fields fall back to defaults.
-- `brand_slug` must match the directory name under `~/.claude-marketing/`.
+- `brand_slug` must match the directory name under `~/socialforge-workspace/brands/`.

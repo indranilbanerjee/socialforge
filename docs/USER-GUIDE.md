@@ -1,365 +1,518 @@
-# SocialForge User Guide
+# SocialForge v1.3 — Complete User Guide
 
-**Version:** 1.0.0
-**Last Updated:** 2026-03-31
-
-A practical guide to producing agency-grade social media calendars with SocialForge. Every section helps you do something — no filler.
+**From zero to delivered calendar.** This guide walks you through every step of using SocialForge to produce a month's worth of social media content for a brand.
 
 ---
 
-## 1. Before You Start
+## Table of Contents
 
-**What SocialForge does:** Takes a monthly content calendar, matches brand assets, generates AI-composed creative, renders carousels, adapts copy per platform, and produces review galleries and delivery documents.
+1. [What You Need](#1-what-you-need)
+2. [Installation](#2-installation)
+3. [Your First Brand Setup](#3-your-first-brand-setup)
+4. [Indexing Brand Assets](#4-indexing-brand-assets)
+5. [Starting a New Month](#5-starting-a-new-month)
+6. [Understanding the 4 Creative Modes](#6-understanding-the-4-creative-modes)
+7. [Producing Content](#7-producing-content)
+8. [Reviewing and Approving](#8-reviewing-and-approving)
+9. [Finalizing and Delivering](#9-finalizing-and-delivering)
+10. [Working with Multiple Brands](#10-working-with-multiple-brands)
+11. [Where Your Data Lives](#11-where-your-data-lives)
+12. [All 18 Commands](#12-all-18-commands)
+13. [All 14 Skills](#13-all-14-skills)
+14. [Connectors](#14-connectors)
+15. [Troubleshooting](#15-troubleshooting)
+16. [FAQ](#16-faq)
 
-**What you need:**
+---
 
-- Claude Code or Cowork environment
-- A brand asset folder (product photos, logos, headshots) — at least 5-10 images
-- A monthly content calendar (DOCX, XLSX, Notion page, or structured text)
-- API keys for AI image generation (at least one): `FAL_KEY`, `REPLICATE_API_TOKEN`, or `GEMINI_API_KEY`
+## 1. What You Need
 
-**Optional but recommended:**
+**Required:**
+- Claude Code or Claude Cowork (any plan)
+- Brand photos (at least 5-10 images — products, people, office, events)
+- A monthly content calendar (DOCX, XLSX, Notion database, or just text)
 
-- Playwright installed (`pip install playwright && playwright install chromium`) for carousel rendering and gallery builds
-- `python-docx` installed for DOCX delivery document export
-- MCP connectors configured (Notion, Canva, Slack, etc.) for workflow integration
+**For AI image generation (at least one):**
+- `GEMINI_API_KEY` — Google AI Studio (free tier available)
+- fal.ai account — connected via Connectors panel (HTTP, works in Cowork)
+- Replicate account — connected via Connectors panel (HTTP, works in Cowork)
 
-**Where files live:**
-
-```
-~/socialforge-workspace/brands/<brand-slug>/   # Brand config, assets, calendar, outputs
-~/socialforge-workspace/brands/<brand-slug>/assets/   # Brand image library
-~/socialforge-workspace/brands/<brand-slug>/output/    # Generated creative
-```
+**Optional (enhances workflow):**
+- Google Drive — store brand assets (connects automatically in Cowork via Settings > Integrations)
+- Slack — approval notifications
+- Notion — calendar databases
+- Cloudinary — professional DAM
 
 ---
 
 ## 2. Installation
 
-### Method A: From Marketplace (recommended)
+### Recommended: From Marketplace
 
 ```
-claude plugin marketplace add github:indranilbanerjee/socialforge
-claude plugin install socialforge@socialforge
+/plugin marketplace add github:indranilbanerjee/neels-plugins
+/plugin install socialforge@neels-plugins
 ```
 
-### Method B: From GitHub
+### Alternative: Direct from GitHub
 
 ```
-claude plugin install github:indranilbanerjee/socialforge
+/plugin install github:indranilbanerjee/socialforge
 ```
 
-### Method C: From Local Directory
+### Verify Installation
+
+After installing, you should see:
 
 ```
-claude plugins add /path/to/socialforge
+SocialForge v1.3 loaded
+
+Quick Start:
+  1. /sf:brand-setup   — Configure a brand (do this first, 5-10 min)
+  2. /sf:index-assets  — Index brand photo library (Drive or local)
+  3. /sf:new-month     — Start monthly calendar production
+
+Already set up? /sf:status | /sf:switch-brand <name>
+
+Connectors: 10 HTTP (Notion, Canva, Figma, Slack, Gmail, Calendar, fal.ai, Replicate, Asana, Cloudinary)
+Storage: persistent via plugin data directory
 ```
-
-After installation, restart your Claude session. You should see the SocialForge welcome message confirming version and available commands.
-
-**Verify installation:** Run `/sf:status`. If you see "No active brand," installation succeeded.
 
 ---
 
-## 3. Quick Start
+## 3. Your First Brand Setup
 
-The full workflow in 6 commands:
+Let's set up a real brand. Say you're an agency working with **GreenLeaf Organics**, a premium organic food brand.
+
+### Quick Setup (3 minutes)
 
 ```
-1. /sf:brand-setup acme-corp        — Configure brand profile (5-10 min)
-2. /sf:index-assets acme-corp       — Index the brand's photo library
-3. /sf:new-month acme-corp 2026-04  — Start April production
-4. /sf:generate-all                 — Produce all creative
-5. /sf:review                       — Review and approve posts
-6. /sf:finalize                     — Package for delivery
+/sf:brand-setup GreenLeaf
 ```
 
-That's it. For most months, this is the entire workflow. The sections below explain each step in detail and cover the edge cases.
+SocialForge asks you 5 questions:
+
+```
+1. Brand name: GreenLeaf Organics
+2. Industry: retail
+3. Brand colors:
+   Primary: #2D5016 (forest green)
+   Secondary: #F4E9D1 (warm cream)
+   Accent: #D4A853 (golden)
+4. Active platforms: LinkedIn, Instagram, Facebook
+5. Asset source: https://drive.google.com/drive/folders/1ABC...  (or local path)
+```
+
+**Done.** Your brand profile is created and persists across sessions.
+
+### Adding More Detail Later
+
+Anytime, run `/sf:brand-setup --update GreenLeaf` to add:
+
+- **Visual style** — "warm natural light, rustic, earthy, farm-to-table aesthetic"
+- **Image rules** — "Always include natural green tones", "Avoid plastic packaging in any visual"
+- **Compliance** — Banned phrases: "100% organic" (requires certification), "all-natural" (FDA regulated)
+- **Approval chain** — HERO posts need client approval, HYGIENE posts auto-approve internally
+- **Social profiles** — LinkedIn: @GreenLeafOrganics, Instagram: @greenleaf.official
+- **Brand hashtags** — Always: #GreenLeafOrganics #OrganicLiving
+- **Languages** — Primary: English, Secondary: Spanish (bilingual posts for Instagram)
+
+### What Gets Created
+
+```
+${CLAUDE_PLUGIN_DATA}/socialforge/brands/greenleaf-organics/
+  brand-config.json       <- Colors, fonts, visual style, hashtags
+  platform-config.json    <- LinkedIn, Instagram, Facebook settings
+  approval-chain.json     <- HERO/HUB/HYGIENE review rules
+  compliance-rules.json   <- Banned phrases, disclaimers
+  asset-source.json       <- Google Drive URL
+  style-references/       <- 2-8 photos representing brand DNA
+```
 
 ---
 
-## 4. Brand Setup
+## 4. Indexing Brand Assets
 
-Run `/sf:brand-setup [brand-name]` to create a new brand profile. The setup wizard walks you through:
+GreenLeaf has a Google Drive folder with 45 photos: products, farm scenes, team photos, packaging shots, recipe images.
 
-1. **Brand identity** — Name, slug, tagline, website, industry
-2. **Visual identity** — Primary/secondary colors (hex), fonts, logo file path
-3. **Voice and tone** — Communication style, vocabulary preferences, tone markers
-4. **Platform config** — Which platforms to post on, posting cadence, hashtag strategy
-5. **Compliance rules** — Banned phrases, required disclaimers, data claim policy
-6. **Approval chain** — Who reviews what tier (HERO/HUB/HYGIENE), escalation timelines
-
-**Output:** A `brand-config.json` file at `~/socialforge-workspace/brands/<brand-slug>/`.
-
-**Tips:**
-
-- Brand slugs must be lowercase-kebab-case (e.g., `acme-corp`, not `Acme Corp`)
-- You can update any section later with `/sf:brand-setup acme-corp --update`
-- Switch between brands with `/sf:switch-brand <name>`
-- Compliance rules are enforced automatically by the PreToolUse hook — set them once, forget them
-
----
-
-## 5. Calendar Parsing
-
-SocialForge accepts calendars in four formats:
-
-| Format | How to Provide | Best For |
-|--------|---------------|----------|
-| DOCX | File path | Agency handoff documents |
-| XLSX | File path | Structured spreadsheets with columns |
-| Notion | Notion page URL (requires Notion MCP) | Teams already on Notion |
-| Text | Paste directly or provide .txt file | Quick/informal calendars |
-
-**Required fields per post:**
-
-| Field | Required | Example |
-|-------|----------|---------|
-| Date | Yes | 2026-04-07 |
-| Platform(s) | Yes | LinkedIn, Instagram |
-| Topic/Title | Yes | "Q1 Results Infographic" |
-| Tier | Recommended | HERO, HUB, or HYGIENE |
-| Copy/Caption | Optional | Can be generated later |
-| Visual direction | Optional | "Product flat-lay, warm tones" |
-
-**How it works:** The `parse-calendar` skill reads your source document, extracts post entries, normalizes dates and platform names, assigns tiers if missing (based on content type heuristics), and writes `calendar-data.json`.
-
-Run: `/sf:sync-calendar` to parse or re-sync from source.
-
-**Tier definitions:**
-
-- **HERO** — Flagship content (launches, campaigns, major announcements). Gets highest approval scrutiny.
-- **HUB** — Regular recurring content (tips, how-tos, thought leadership). Standard review.
-- **HYGIENE** — Always-on content (quotes, reposts, community engagement). Lightweight review.
-
----
-
-## 6. Asset Indexing
-
-Run `/sf:index-assets <brand-name>` to scan and catalog the brand's image library.
+```
+/sf:index-assets GreenLeaf
+```
 
 **What happens:**
 
-1. The indexer scans the brand's `assets/` directory for `.jpg`, `.jpeg`, `.png`, and `.webp` files
-2. Each image is analyzed using AI vision to generate descriptions, dominant colors, detected objects, mood tags, and suitability scores
-3. Results are written to `asset-index.json` with per-image metadata
+```
+[1/4] Scanning asset source...
+  Google Drive folder detected. Reading files via platform integration...
+  Found: 45 images (32 .jpg, 10 .png, 3 .webp)
 
-**Cost expectations:**
+[2/4] Analyzing images with AI Vision...
+  Each image analyzed by Gemini Vision for: subjects, mood, colors, setting,
+  what posts it's suitable for, whether background is removable.
 
-- AI vision analysis costs approximately $0.01-0.03 per image depending on provider
-- A typical brand library of 50-100 images costs $0.50-3.00 to index
-- Re-indexing with `--refresh` only processes new/changed files
+  Analyzed: 15/45 (33%) — ~2 min remaining
+  Analyzed: 30/45 (67%) — ~1 min remaining
+  Analyzed: 45/45 (100%)
 
-**Tips:**
+[3/4] Building asset index...
+  Tags generated: 287 unique tags across 45 assets
+  Categories: products (12), farm/agriculture (8), team (6), recipes (7),
+              packaging (5), lifestyle (4), events (3)
 
-- Organize assets into subfolders (products/, team/, lifestyle/, logos/) for better matching
-- Include at least 3-5 style reference images for the STYLE_REFERENCED creative mode
-- Supported formats: JPG, PNG, WEBP. Minimum resolution: 800x800 recommended
-- Use `--source <path>` to index from a non-standard directory
+[4/4] Identifying style reference candidates...
+  Top 6 candidates selected (warm lighting, earthy tones, natural settings)
 
----
+Asset Index Complete: greenleaf-organics
+  Total: 45 assets | Background-removable: 18 | Style references: 6
+  Estimated cost: $0.14 (Gemini Vision)
+```
 
-## 7. The 4 Creative Modes
+**Now the system knows:**
+- Photo #12 is "organic avocado product packaging on wooden table" — suitable for product launch posts
+- Photo #23 is "farm team harvesting vegetables at sunrise" — suitable for team culture, sustainability posts
+- Photo #37 is "founder portrait, professional, warm lighting" — suitable for leadership, about-us posts
 
-SocialForge uses four modes to generate visuals. Each post is assigned a mode during asset matching.
+### Google Drive as Asset Source
 
-### ANCHOR_COMPOSE
+When you provide a Google Drive folder URL during brand setup, SocialForge uses the platform integration (Cowork) or local download (Claude Code) to read files. Your photos stay in Drive — nothing is duplicated. The asset index stores metadata only.
 
-**When to use:** The brand photo IS the content — a product shot, headshot, or screenshot.
+To use Drive in Cowork: Settings > Integrations > Google Drive > Connect. No API key needed.
 
-**What happens:** The brand asset is placed as the untouched centerpiece. AI generates a complementary scene around it — backgrounds, decorative elements, mood lighting. The brand photo's pixels are never modified.
+### Updating Assets
 
-**Example:** A product bottle on a plain white background becomes a product bottle on a marble countertop with soft morning light and botanical elements.
+When GreenLeaf adds new photos to their Drive folder:
 
-### ENHANCE_EXTEND
+```
+/sf:index-assets GreenLeaf --refresh
+```
 
-**When to use:** The brand photo needs more canvas or context but should remain dominant.
-
-**What happens:** AI extends the image periphery — adding more background, filling edges, or expanding the scene. The core of the brand photo stays pixel-faithful.
-
-**Example:** A tight headshot is extended into a wider frame with a blurred office background.
-
-### STYLE_REFERENCED
-
-**When to use:** No specific asset is needed, but the visual should match the brand's aesthetic.
-
-**What happens:** AI generates an entirely new image using the brand's style reference photos as visual DNA — matching color palette, mood, composition style.
-
-**Example:** A motivational quote post where the background is generated to match the brand's warm, minimal aesthetic.
-
-### PURE_CREATIVE
-
-**When to use:** Generic or abstract content where brand photos aren't relevant.
-
-**What happens:** AI generates from a text prompt combined with brand colors and mood guidelines. No brand assets are composited.
-
-**Example:** An abstract background for a holiday greeting or event announcement.
-
-**How modes are assigned:** The `match-assets` skill automatically assigns modes based on post type and available assets. Override with `/sf:swap-asset <post-id>` or by editing the post's visual config.
+Only analyzes new/changed images. Existing index preserved.
 
 ---
 
-## 8. Running the Production Pipeline
+## 5. Starting a New Month
 
-### Full pipeline (recommended)
+GreenLeaf's social media manager sends you the April 2026 calendar as a Word document (DOCX). It has 28 posts across LinkedIn, Instagram, and Facebook.
+
+```
+/sf:new-month GreenLeaf 2026-04
+```
+
+SocialForge asks for the calendar source:
+
+```
+Calendar source? (Upload DOCX, XLSX, paste Notion URL, or describe posts)
+> [Upload: GreenLeaf-April-2026-Calendar.docx]
+```
+
+**Parsing:**
+
+```
+Calendar parsed: 28 posts for April 2026
+  LinkedIn: 12 posts (4 carousels, 6 static, 2 video)
+  Instagram: 10 posts (3 carousels, 4 reels, 3 static)
+  Facebook: 6 posts (all static)
+
+  Tier breakdown: 4 HERO | 14 HUB | 10 HYGIENE
+
+Issues: 2
+  - P14: Missing visual_brief (will ask during production)
+  - P22: Weekend post — confirm intentional?
+```
+
+**Asset matching:**
+
+```
+Asset Matching Complete: 28 posts
+  ANCHOR_COMPOSE: 8 posts (direct brand asset as centerpiece)
+  ENHANCE_EXTEND: 5 posts (brand photo enhanced with AI)
+  STYLE_REFERENCED: 9 posts (AI gen guided by brand photo DNA)
+  PURE_CREATIVE: 4 posts (full AI, brand colors only)
+  CAROUSEL_TEMPLATE: 2 posts (HTML template rendering)
+
+  Asset gaps: 1 (P14: "New product launch" but no new product photos indexed)
+```
+
+You can override any match: "Use photo #12 for P14 instead" or "Make P22 STYLE_REFERENCED"
+
+### Supported Calendar Formats
+
+| Format | How to Provide | Best For |
+|--------|---------------|----------|
+| DOCX | Upload or file path | Agency handoff documents |
+| XLSX | Upload or file path | Structured spreadsheets with columns |
+| Notion | Paste page URL (requires Notion MCP) | Teams already on Notion |
+| Text | Paste directly or .txt file | Quick/informal calendars |
+
+### Tier Definitions
+
+- **HERO** — Flagship content (launches, campaigns, major announcements). Highest approval scrutiny, ANCHOR_COMPOSE or STYLE_REFERENCED mode.
+- **HUB** — Regular recurring content (tips, how-tos, thought leadership). Standard review, any creative mode.
+- **HYGIENE** — Always-on content (quotes, reposts, community engagement). Lightweight review, often PURE_CREATIVE.
+
+---
+
+## 6. Understanding the 4 Creative Modes
+
+Every post gets assigned one of four creative modes during asset matching. Each mode defines how the final visual is produced — specifically, how much of the image comes from the brand's own photography versus AI generation.
+
+### Mode 1: ANCHOR_COMPOSE (8 posts this month)
+
+**When:** The brand has a perfect photo for the post — a product shot, headshot, or screenshot.
+
+**Example:** Post P03 "Meet our new Avocado Oil product line"
+- Brand asset: `product-avocado-oil-bottle.jpg` (product on white background)
+- What SocialForge does:
+  1. Removes the white background (rembg)
+  2. Generates an AI scene: "Rustic wooden kitchen counter, morning sunlight, fresh avocados beside the bottle"
+  3. Composites the product onto the generated scene
+  4. Adds drop shadow and edge feathering for natural placement
+  5. Overlays brand logo (bottom-right, 70% opacity)
+  6. Resizes for LinkedIn (1200x627), Instagram (1080x1350), Facebook (1200x630)
+
+**The product photo is UNTOUCHED. AI only creates the world around it.**
+
+### Mode 2: ENHANCE_EXTEND (5 posts)
+
+**When:** The brand has a good photo but it needs enhancement — extend the background, improve lighting, adjust mood.
+
+**Example:** Post P09 "Our farm at golden hour"
+- Brand asset: `farm-sunrise.jpg` (beautiful but too tightly cropped for LinkedIn landscape)
+- What SocialForge does:
+  1. Feeds the photo to Gemini with instruction: "Extend the left and right edges to create a wider landscape view. Keep the central farmhouse and sunrise untouched."
+  2. Verifies core subject is preserved
+  3. Overlays brand logo and resizes for each platform
+
+**The core photo stays faithful. AI only extends/enhances the edges.**
+
+### Mode 3: STYLE_REFERENCED (9 posts)
+
+**When:** No specific brand photo fits, but the AI should generate something that looks like the brand's own photography.
+
+**Example:** Post P18 "5 Tips for Organic Living" (carousel — abstract concept, no specific product)
+- No matching brand asset
+- SocialForge feeds 6 style reference photos (selected from the brand's best images) to Gemini alongside the prompt
+- The AI generates a new image that absorbs the brand's visual DNA — warm lighting, earthy tones, natural textures
+- Result looks like it was shot by the brand's photographer, not stock AI
+
+**No brand photo is composited. But the output matches the brand's visual identity.**
+
+### Mode 4: PURE_CREATIVE (4 posts)
+
+**When:** Generic content where brand visual DNA isn't critical — festival greetings, trending topics, abstract concepts.
+
+**Example:** Post P25 "Happy Earth Day from GreenLeaf"
+- Full AI generation with brand colors (#2D5016 green, #F4E9D1 cream, #D4A853 gold)
+- No reference images fed — only text prompt + brand colors/mood
+- Quick, low-cost, suitable for HYGIENE tier content
+
+### How Modes Are Assigned
+
+The `match-assets` skill scores each post against the asset index using five factors: subject relevance, mood alignment, color compatibility, composition fit, and resolution adequacy. Posts with a strong asset match get ANCHOR_COMPOSE. Posts with a partial match get ENHANCE_EXTEND. Posts with no match but strong brand aesthetic needs get STYLE_REFERENCED. Everything else gets PURE_CREATIVE.
+
+Override any assignment:
+
+```
+/sf:swap-asset P18 --mode ANCHOR_COMPOSE --asset asset_023
+```
+
+---
+
+## 7. Producing Content
+
+### Generate All Posts
 
 ```
 /sf:generate-all
 ```
 
-This runs all production phases in sequence:
+```
+[1/28] Post P01 — ANCHOR_COMPOSE
+  Asset: product-avocado-oil-bottle.jpg
+  Removing background... done
+  Generating scene... done (warm kitchen counter, morning light)
+  Compositing... done
+  Adding shadow + logo... done
+  Quality score: 8.6/10
 
-1. **Calendar parse** — Validate and structure the calendar data
-2. **Asset match** — Assign brand assets and creative modes to each post
-3. **Visual production** — Generate images using the 4 creative modes
-4. **Copy generation** — Write or refine copy for each post
-5. **Copy adaptation** — Adapt copy per platform (character limits, hashtags, CTAs)
-6. **Compliance check** — Verify all content against brand rules
-7. **Preview generation** — Create platform mockup previews
-8. **Gallery build** — Assemble the interactive review gallery
+  [Image shown]
+  Approve? (yes / regenerate / skip) > yes
 
-### Single post generation
+[2/28] Post P02 — STYLE_REFERENCED
+  Style references: 6 brand photos loaded
+  Generating... done (sustainable farming landscape)
+  Quality score: 7.8/10
+
+  [Image shown]
+  Approve? (yes / regenerate / skip) > regenerate
+
+  Regenerating with adjusted prompt... done
+  Quality score: 8.2/10
+  Approve? > yes
+
+...
+
+[28/28] Post P28 — PURE_CREATIVE
+  Festival greeting visual... done
+  Quality score: 7.2/10
+  Approve? > yes
+
+Production complete: 28/28 posts generated
+  Average quality: 8.1/10
+  API cost: $2.87
+  Time: 42 minutes
+```
+
+### Generate a Single Post
 
 ```
-/sf:generate-post <post-id>
+/sf:generate-post P03
 ```
 
-Generates creative for one post only. Useful for reactive content or fixing individual posts.
+Useful for reactive content, fixing individual posts, or testing different creative directions before committing to a full run.
 
-### Generating variants
+### Generate by Week
 
 ```
-/sf:generate-post <post-id> --variant b
+/sf:generate-all --week 1
 ```
 
-Creates an alternative version for A/B testing or client choice.
+Produces only Week 1 posts (April 1-7). Handy when you need the first week delivered immediately while the rest of the month is still in planning.
 
-### Resuming after failure
+### Copy Adaptation
 
-The pipeline tracks progress in `status-tracker.json`. If it fails mid-run, just run `/sf:generate-all` again — it picks up from where it stopped. You rarely need to restart from scratch.
+Copy is automatically adapted for each platform during generation:
+
+```
+Post P03 copy adapted:
+  LinkedIn: 847 chars (under 3000) | 4 hashtags | Direct link CTA
+  Instagram: 1,203 chars | 20 hashtags (first comment) | Link in bio
+  Facebook: 423 chars | 3 hashtags | Direct link
+  Compliance: PASSED (0 issues)
+```
+
+The adapter handles character limits, hashtag placement strategy, CTA style (link-in-bio vs direct), tone shifts (professional for LinkedIn, conversational for Instagram), and bilingual formatting if configured.
+
+### Edit After Generation
+
+```
+/sf:edit-image P03 "Make the background warmer, more golden light"
+/sf:edit-post P03 --copy "Updated headline: Introducing our new Avocado Oil..."
+/sf:swap-asset P03 --asset asset_015
+```
+
+Each edit regenerates only the affected element — not the entire post.
+
+### Generate Variants for A/B Testing
+
+```
+/sf:generate-post P03 --variant b
+```
+
+Creates an alternative version. Both variants appear side-by-side in the review gallery so you or the client can pick the winner.
+
+### Reactive Posts (Outside the Calendar)
+
+A trending topic or breaking news warrants an unplanned post:
+
+```
+/sf:reactive-post "Earth Day celebration" --brand GreenLeaf --platform instagram
+```
+
+Creates a one-off post with the same quality pipeline (asset matching, creative mode, copy adaptation, compliance check) but outside the planned calendar.
 
 ---
 
-## 9. Approval Workflows
+## 8. Reviewing and Approving
 
-SocialForge has a tiered approval system based on content tier:
-
-| Tier | Default Reviewers | Client Approval | CEO Approval |
-|------|-------------------|-----------------|--------------|
-| HERO | Social lead + Brand manager + Creative director | Yes | Yes |
-| HUB | Social lead + Brand manager | Yes | No |
-| HYGIENE | Social lead | No | No |
-
-**How it works:**
-
-1. After generation, posts enter the review queue
-2. Run `/sf:review` to open the review gallery and approve, reject, or request revisions
-3. Posts meeting the minimum reviewer threshold advance to client review (if required)
-4. Use `/sf:client-review` to send approved posts to the client via Slack or email
-5. Escalation triggers automatically when reviews exceed `max_review_hours`
-
-**Customizing the approval chain:**
-
-Edit `approval-chain.json` in the brand directory. You can set per-tier reviewers, minimum approval counts, and escalation timelines.
-
-**Check approval status:**
+### Open the Review Gallery
 
 ```
-/sf:check-approvals              # See what's pending
-/sf:check-approvals --send-reminders  # Nudge overdue reviewers
+/sf:review
 ```
+
+This builds an interactive HTML gallery showing all 28 posts with:
+- Image preview + platform mockup (how it will actually look on LinkedIn, Instagram, Facebook)
+- Copy text for each platform variant
+- Quality score and compliance status
+- Tier badge (HERO red, HUB blue, HYGIENE green)
+
+**Filter by tier, platform, or status:**
+
+```
+/sf:review --tier HERO
+/sf:review --platform instagram
+```
+
+### Approve or Request Revisions
+
+Bulk approve posts that look good:
+
+```
+/sf:manage-reviews --approve P01 P02 P03 P04 P05
+```
+
+Flag posts that need changes:
+
+```
+/sf:manage-reviews --revise P06 "The background color doesn't match our brand green"
+```
+
+The revision command regenerates only the affected elements:
+
+```
+/sf:revision P06 "Use darker green (#2D5016) in the background, keep the product placement"
+```
+
+### Tiered Approval Workflow
+
+The approval chain is configured per brand during setup:
+
+| Tier | Internal Review | Client Approval | Auto-Approve Option |
+|------|----------------|-----------------|---------------------|
+| HERO | Social lead + Creative director | Yes (required) | No |
+| HUB | Social lead | Yes (optional) | No |
+| HYGIENE | Social lead | No | Yes (configurable) |
+
+### Send to Client (HERO Content)
+
+```
+/sf:client-review --tier HERO
+```
+
+Sends the 4 HERO posts to the client via Slack (if connected) or packages them for email delivery. The client reviews and responds with approve/revise per post.
+
+### Check Status Anytime
+
+```
+/sf:status
+```
+
+```
+SocialForge Status — GreenLeaf Organics / April 2026
+
+Posts: 28 total | 28 generated | 22 approved | 4 pending client | 2 in revision
+Quality: Avg 8.1/10 | Lowest: P14 (7.0)
+Compliance: 27 passed | 1 flagged (P09: needs "non-GMO" disclaimer)
+Cost: $2.87 total
+
+By Tier:
+  HERO: 4 generated, 2 approved-internal, 2 pending-client
+  HUB: 14 generated, 14 approved
+  HYGIENE: 10 generated, 10 approved (auto-approved per config)
+```
+
+### Send Reminders for Overdue Reviews
+
+```
+/sf:check-approvals --send-reminders
+```
+
+Nudges reviewers who have pending approvals past the configured deadline.
 
 ---
 
-## 10. Carousel Rendering
-
-SocialForge includes 8 HTML carousel templates rendered via Playwright:
-
-| Template | Slides | Best For |
-|----------|--------|----------|
-| `tips-5slide` | 5 | Tip lists, how-tos |
-| `recap-6slide` | 6 | Event recaps, weekly roundups |
-| `data-infographic-6slide` | 6 | Data-driven content |
-| `generic-8slide` | 8 | General multi-point content |
-| `playbook-8slide` | 8 | Step-by-step guides |
-| `comparison-10slide` | 10 | Before/after, product comparisons |
-| `case-study-10slide` | 10 | Client success stories |
-| `quote-card-single` | 1 | Single quote or testimonial |
-
-**How to use:**
-
-1. Posts tagged as carousels in the calendar are automatically routed to the carousel builder
-2. The template is selected based on content type and slide count
-3. Brand colors, fonts, and logo are injected automatically
-4. Override the template: `/sf:generate-post <post-id> --template case-study-10slide`
-
-**Customizing templates:**
-
-Templates live in `assets/carousel-templates/`. They are HTML/CSS files that accept brand variables. Edit them to match your brand's specific design system.
-
-**Requirements:** Playwright with Chromium must be installed. Run `playwright install chromium` if you haven't already.
-
----
-
-## 11. Copy Adaptation
-
-The copy adapter adjusts post text for each target platform automatically.
-
-**What it handles:**
-
-- **Character limits** — LinkedIn (3,000), X/Twitter (280), Instagram (2,200), Facebook (63,206)
-- **Hashtag strategy** — Platform-appropriate hashtag count and placement
-- **CTA style** — Link-in-bio for Instagram, direct links for LinkedIn/X
-- **Tone shifts** — Professional for LinkedIn, conversational for Instagram, concise for X
-- **Bilingual formatting** — If the brand requires dual-language posts
-
-**How it works:**
-
-1. The adapter takes the master copy from the calendar
-2. It generates platform-specific variants respecting each platform's constraints
-3. Compliance rules are checked on every variant (banned phrases, required disclaimers)
-4. All variants are stored in the post's `copy` object for review
-
-**Manual copy editing:**
-
-```
-/sf:edit-post <post-id> --copy      # Edit the master copy
-/sf:edit-post <post-id> --visual    # Edit visual direction
-```
-
----
-
-## 12. Review and Gallery
-
-The review gallery is an interactive HTML page showing all generated posts.
-
-**Opening the gallery:**
-
-```
-/sf:review                          # All posts
-/sf:review --tier HERO              # HERO posts only
-/sf:review --brand acme-corp        # Specific brand
-```
-
-**What you can do in review:**
-
-- **Approve** — Post moves to the next approval stage (or finalization if fully approved)
-- **Request revision** — Specify what to change; the post returns to production
-- **Reject** — Post is removed from the month's output
-- **Swap asset** — Change the brand photo used: `/sf:swap-asset <post-id>`
-- **Edit image** — Adjust background, lighting, or composition: `/sf:edit-image <post-id> <instruction>`
-
-**Applying revisions:**
-
-```
-/sf:revision <post-id> "Make the background warmer and add the brand tagline"
-```
-
-The revision command regenerates only the affected elements (image, copy, or both) without restarting the full pipeline.
-
----
-
-## 13. Finalization
+## 9. Finalizing and Delivering
 
 Once all posts are approved:
 
@@ -367,129 +520,324 @@ Once all posts are approved:
 /sf:finalize
 ```
 
-**What finalize does:**
-
-1. Verifies all posts have complete approvals per their tier's approval chain
-2. Generates final-resolution images in all required platform dimensions
-3. Assembles the delivery DOCX with all posts, copy, images, and scheduling metadata
-4. Creates the organized delivery folder structure:
-
 ```
-output/2026-04-final/
-  images/          # All final images, named by post ID and platform
-  carousels/       # Rendered carousel PDFs/PNGs
-  copy/            # Per-platform copy files
-  calendar.docx    # Complete delivery document
-  summary.json     # Machine-readable summary
+Pre-finalization check:
+  28/28 posts FINAL status
+  All compliance checks passed
+  Calendar document assembled
+  All approval gates satisfied
+
+Packaging...
+
+FINAL/
+  00-Calendar-Document/
+    GreenLeaf-Organics-April-2026-Calendar.docx
+  01-Ready-to-Publish/
+    Week-1/
+      2026-04-01-P01-Avocado-Oil-Launch/
+        linkedin/
+          image-1200x627.png
+          copy.txt
+          preview.png
+        instagram/
+          image-1080x1350.png
+          copy.txt
+          preview.png
+        facebook/
+          image-1200x630.png
+          copy.txt
+          preview.png
+      ...
+    Week-2/ ...
+    Week-3/ ...
+    Week-4/ ...
+  02-Carousels/
+  03-Video-Production-Kit/
+  04-Stories-Shorts/
+  05-Review-Gallery/
+  06-Publishing-Schedule/
+  07-Production-Checklist/
+
+Finalized: 28 posts across 3 platforms
+Files organized in delivery folder
+Calendar document generated
 ```
 
-**Force finalize** (skip approval checks):
+### What the Delivery Contains
+
+- **Calendar Document** — A DOCX with every post laid out: date, platform, image thumbnail, copy, hashtags, CTA, and scheduling notes. This is what the client signs off on.
+- **Ready-to-Publish** — Platform-specific folders with final-resolution images and copy files. Hand these to whoever schedules posts.
+- **Carousels** — Rendered carousel slides as individual PNGs plus combined PDFs.
+- **Video Production Kit** — Storyboards, scripts, and any AI-generated video clips for posts tagged as video.
+- **Review Gallery** — The HTML gallery for archival reference.
+- **Publishing Schedule** — A CSV/JSON schedule compatible with scheduling tools (Buffer, Hootsuite, Later).
+- **Production Checklist** — What was approved, by whom, and when.
+
+### Force Finalize
+
+If you need to deliver before all approvals are complete:
 
 ```
 /sf:finalize --force
 ```
 
-Use sparingly — this bypasses the approval chain.
+Use sparingly — this bypasses the approval chain and logs that it was force-finalized.
 
 ---
 
-## 14. Command Reference
+## 10. Working with Multiple Brands
 
-| Command | Description | Key Arguments |
-|---------|-------------|---------------|
-| `/sf:brand-setup` | Configure a new brand profile | `[brand-name] [--update]` |
-| `/sf:switch-brand` | Switch active brand context | `<brand-name>` |
-| `/sf:index-assets` | Index brand photo library | `<brand-name> [--source] [--refresh]` |
-| `/sf:new-month` | Start a new month's production | `<brand> <YYYY-MM>` |
-| `/sf:sync-calendar` | Parse or re-sync the content calendar | `[--source <path-or-url>]` |
-| `/sf:generate-all` | Generate creative for all posts | `[--brand] [--week <N>]` |
-| `/sf:generate-post` | Generate creative for one post | `<post-id> [--variant b]` |
-| `/sf:edit-post` | Edit a post's copy, visual, or metadata | `<post-id> [--copy] [--visual]` |
-| `/sf:edit-image` | Edit a generated image | `<post-id> <instruction>` |
-| `/sf:swap-asset` | Swap the brand asset for a post | `<post-id> [--asset <id>] [--browse]` |
-| `/sf:preview-batch` | Generate platform mockup previews | `[--brand] [--platform]` |
-| `/sf:review` | Open the review gallery | `[--brand] [--tier HERO\|HUB\|HYGIENE]` |
-| `/sf:revision` | Apply revision feedback and regenerate | `<post-id> <feedback>` |
-| `/sf:check-approvals` | Check pending approvals and send reminders | `[--brand] [--send-reminders]` |
-| `/sf:client-review` | Send approved posts to client | `[--tier HERO\|HUB] [--all-approved]` |
-| `/sf:finalize` | Package all approved content for delivery | `[--brand] [--force]` |
-| `/sf:reactive-post` | Create a post outside the planned calendar | `<topic> [--brand] [--platform]` |
-| `/sf:status` | Show current production status | `[--brand]` |
-| `/sf:cost-report` | Show API cost breakdown | `[--brand] [--month]` |
+Agencies handle multiple clients. Switch between them instantly:
 
----
+```
+/sf:switch-brand ClientB
+```
 
-## 15. Skill Reference
+Now all commands operate on ClientB's brand config, assets, and calendar:
 
-| Skill | Description | Effort |
-|-------|-------------|--------|
-| `brand-manager` | Set up and manage brand profiles | medium |
-| `parse-calendar` | Parse calendars from DOCX, XLSX, Notion, or text | medium |
-| `index-assets` | Index brand photo library using AI vision | high |
-| `match-assets` | Match brand assets to calendar posts and assign creative modes | high |
-| `compose-creative` | Core creative engine — 4 modes with AI compositing | max |
-| `adapt-copy` | Adapt copy per platform (limits, hashtags, CTAs, compliance) | medium |
-| `render-carousels` | Render multi-slide carousels via Playwright | high |
-| `create-previews` | Generate platform mockup previews | medium |
-| `manage-reviews` | Handle approval workflows and revision requests | medium |
-| `build-review-gallery` | Build the interactive HTML review gallery | medium |
-| `finalize-month` | Package approved content for delivery | high |
-| `assemble-document` | Assemble the final delivery DOCX | high |
-| `full-pipeline` | Run the complete end-to-end production pipeline | max |
-| `generate-video` | Generate short-form video scripts and AI clips | high |
+```
+/sf:new-month ClientB 2026-04
+/sf:generate-all
+/sf:finalize
+```
+
+Switch back:
+
+```
+/sf:switch-brand GreenLeaf
+```
+
+Each brand has completely isolated:
+- Config, assets, compliance rules, approval chains
+- Monthly production output
+- Status tracking and cost accounting
+
+There is no limit on the number of brands. A typical agency runs 5-15 brands through SocialForge simultaneously.
+
+### Checking Across Brands
+
+```
+/sf:status --brand GreenLeaf
+/sf:status --brand ClientB
+/sf:cost-report --brand all
+```
 
 ---
 
-## 16. Troubleshooting
+## 11. Where Your Data Lives
+
+### Persistent Storage (Survives Sessions)
+
+All SocialForge data lives under the plugin data directory, which persists across sessions on both Claude Code and Cowork.
+
+| Data | Location | Persists? |
+|------|----------|-----------|
+| Brand configs | `${CLAUDE_PLUGIN_DATA}/socialforge/brands/{slug}/` | Yes |
+| Asset indexes | `${CLAUDE_PLUGIN_DATA}/socialforge/brands/{slug}/asset-index.json` | Yes |
+| Monthly output | `${CLAUDE_PLUGIN_DATA}/socialforge/output/{slug}/{month}/` | Yes |
+| Prompt logs | `${CLAUDE_PLUGIN_DATA}/socialforge/shared/prompt-logs/` | Yes |
+| Cost tracking | `${CLAUDE_PLUGIN_DATA}/socialforge/shared/cost-tracker.json` | Yes |
+
+The `${CLAUDE_PLUGIN_DATA}` variable resolves automatically on both platforms. You never need to know the absolute path.
+
+### Asset Images (External)
+
+Your actual photos stay where they are — SocialForge only stores metadata:
+- **Google Drive** — Claude reads via platform integration (Cowork) or local download (Claude Code). Photos remain in Drive.
+- **Cloudinary** — Professional DAM, connected via HTTP MCP. Assets accessed by URL.
+- **Local folder** — Works in Claude Code (persistent). In Cowork, local files are session-only unless stored in the plugin data directory.
+
+### Generated Images
+
+AI-generated visuals are stored in the monthly output directory:
+
+```
+${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
+  posts/
+    P01/
+      source-asset.jpg        <- Original brand photo (copy)
+      generated-scene.png     <- AI-generated background
+      composited-final.png    <- Final composite
+      linkedin-1200x627.png   <- Platform-sized final
+      instagram-1080x1350.png
+      facebook-1200x630.png
+    P02/ ...
+  carousels/
+  gallery/
+  delivery/
+```
+
+---
+
+## 12. All 18 Commands
+
+| Command | What It Does | Example |
+|---------|-------------|---------|
+| `/sf:brand-setup` | Configure a brand profile | `/sf:brand-setup GreenLeaf` |
+| `/sf:index-assets` | Index brand photo library | `/sf:index-assets GreenLeaf --source /path` |
+| `/sf:new-month` | Start monthly production | `/sf:new-month GreenLeaf 2026-04` |
+| `/sf:generate-all` | Produce all posts | `/sf:generate-all --week 1` |
+| `/sf:generate-post` | Produce one post | `/sf:generate-post P03` |
+| `/sf:edit-post` | Edit copy/visual/metadata | `/sf:edit-post P03 --copy "new headline"` |
+| `/sf:edit-image` | AI edit a generated image | `/sf:edit-image P03 "warmer background"` |
+| `/sf:swap-asset` | Change the matched asset | `/sf:swap-asset P03 --asset asset_015` |
+| `/sf:review` | Open review gallery | `/sf:review --tier HERO` |
+| `/sf:revision` | Apply revision feedback | `/sf:revision P06 "fix background color"` |
+| `/sf:manage-reviews` | Bulk approve/revise posts | `/sf:manage-reviews --approve P01 P02 P03` |
+| `/sf:client-review` | Send to client for review | `/sf:client-review --tier HERO` |
+| `/sf:check-approvals` | Check pending approvals | `/sf:check-approvals --send-reminders` |
+| `/sf:finalize` | Package for delivery | `/sf:finalize` |
+| `/sf:switch-brand` | Switch active brand | `/sf:switch-brand ClientB` |
+| `/sf:reactive-post` | Create unplanned post | `/sf:reactive-post "Earth Day" --brand GreenLeaf` |
+| `/sf:sync-calendar` | Re-read calendar source | `/sf:sync-calendar` |
+| `/sf:status` | Show production dashboard | `/sf:status` |
+| `/sf:cost-report` | API cost breakdown | `/sf:cost-report --brand GreenLeaf` |
+
+---
+
+## 13. All 14 Skills
+
+Skills are the internal engines that commands invoke. You rarely call them directly, but understanding them helps when troubleshooting or customizing behavior.
+
+| Skill | Effort | What It Does |
+|-------|--------|-------------|
+| brand-manager | medium | Set up and manage brand profiles, visual identity, compliance rules |
+| index-assets | high | AI-powered brand photo library indexing via Gemini Vision |
+| parse-calendar | medium | Parse DOCX/XLSX/Notion/text calendars into structured post data |
+| match-assets | high | Score and match assets to posts using 5-factor algorithm, assign creative modes |
+| compose-creative | max | Core 4-mode creative production engine (ANCHOR, ENHANCE, STYLE, PURE) |
+| adapt-copy | medium | Platform-specific copy with character limits, hashtags, CTAs, compliance |
+| render-carousels | high | HTML template to PNG slides via Playwright (8 templates) |
+| generate-video | high | Video scripts, storyboards, AI video clips for Reels/Shorts |
+| create-previews | medium | Platform mockup previews showing how posts will actually appear |
+| build-review-gallery | medium | Interactive HTML review gallery with filtering and actions |
+| manage-reviews | medium | Multi-tier approval workflow with escalation and reminders |
+| assemble-document | high | DOCX calendar delivery document with images, copy, and schedule |
+| finalize-month | high | Final packaging, compliance verification, and delivery folder creation |
+| full-pipeline | max | End-to-end orchestration running all 7 production phases in sequence |
+
+### Effort Levels
+
+- **medium** — Completes in seconds, minimal API cost
+- **high** — May take 1-5 minutes, moderate API cost
+- **max** — Extended operation (10-45 minutes for full pipeline), highest API cost
+
+---
+
+## 14. Connectors
+
+10 HTTP connectors ship with SocialForge. All work in both Cowork and Claude Code — no local server installation required.
+
+| Connector | URL | What For | Required? |
+|-----------|-----|----------|-----------|
+| Notion | `https://mcp.notion.com/mcp` | Calendar databases, brand guidelines | Optional |
+| Canva | `https://mcp.canva.com/mcp` | Design templates, brand kit | Optional |
+| Figma | `https://mcp.figma.com/mcp` | Brand design files | Optional |
+| Slack | `https://mcp.slack.com/mcp` | Approval notifications, delivery | Optional |
+| Gmail | `https://gmail.mcp.claude.com/mcp` | Email delivery, reminders | Optional |
+| Google Calendar | `https://gcal.mcp.claude.com/mcp` | Posting schedule | Optional |
+| fal.ai | `https://fal.ai/mcp` | AI image generation | Recommended |
+| Replicate | `https://replicate.com/mcp` | Alternative AI image gen | Optional |
+| Asana | `https://mcp.asana.com/sse` | Production task tracking | Optional |
+| Cloudinary | `https://mcp.cloudinary.com/mcp` | Professional DAM | Optional |
+
+**The plugin works fully without any connectors.** All skills function with local assets and direct Gemini API calls. Connectors add convenience — pull calendars from Notion, send reviews via Slack, access assets from Cloudinary — but are entirely optional.
+
+### Google Drive
+
+Google Drive is a platform-level integration, not an HTTP connector. In Cowork, connect it via Settings > Integrations > Google Drive. In Claude Code, use local file paths or download assets manually. There is no `.mcp.json` entry for Drive.
+
+### Connecting a Connector
+
+Most connectors activate through the Connectors panel in Claude's settings. For Slack, Notion, Canva, and Figma, you authorize via OAuth — no API keys to manage. For fal.ai and Replicate, you connect your account through their respective dashboards.
+
+---
+
+## 15. Troubleshooting
 
 ### "Brand not found"
 
-Most commands require an active brand. Run `/sf:brand-setup` to create one, or `/sf:switch-brand <name>` if it already exists. Check exact slug with `ls ~/socialforge-workspace/brands/`.
+**Cause:** The command requires an active brand, but none is set or the name doesn't match.
+**Fix:** Run `/sf:brand-setup [name]` to create the brand profile, or `/sf:switch-brand [name]` if it already exists. Brand names are stored as lowercase-kebab-case slugs (e.g., "GreenLeaf Organics" becomes `greenleaf-organics`).
 
 ### "No assets indexed"
 
-Run `/sf:index-assets <brand-name>`. Verify image files exist in the brand's `assets/` folder in supported formats (JPG, PNG, WEBP). Minimum 5-10 images recommended.
+**Cause:** The brand has no asset index. Creative modes that depend on brand photos (ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED) cannot run.
+**Fix:** Run `/sf:index-assets [brand] --source /path/to/photos` or provide a Google Drive folder URL. Need at least 5 images for meaningful matching.
 
 ### "Image generation failed"
 
-Check `.env` for API keys (`FAL_KEY`, `REPLICATE_API_TOKEN`, or `GEMINI_API_KEY`). Check provider status pages. The pipeline supports resuming — just rerun after fixing the key.
+**Cause:** No image generation API is available.
+**Fix:** Check that `GEMINI_API_KEY` is set in `.env`, or connect fal.ai/Replicate via the Connectors panel. The pipeline supports resuming — fix the key and rerun `/sf:generate-all`.
 
 ### "Playwright not installed"
 
-Required for carousels and galleries. Fix: `pip install playwright && playwright install chromium`. In restricted environments, also run `playwright install-deps`.
+**Cause:** Carousel rendering and gallery builds require Playwright with Chromium.
+**Fix:** `pip install playwright && playwright install chromium`. In restricted environments, also run `playwright install-deps`.
+
+### "Quality score below 7.0"
+
+**Cause:** Usually a vague visual brief or weak asset match.
+**Fix:** Try a more specific prompt, a different brand asset, or switch to STYLE_REFERENCED mode. You can also regenerate: `/sf:generate-post P14 --regenerate`.
 
 ### "Compliance blocked"
 
-A post triggered a block-severity rule in `compliance-rules.json`. Read the error for the specific phrase. Edit the copy using the suggested replacement, or adjust the rule if it is a false positive.
+**Cause:** A post triggered a block-severity rule in the brand's `compliance-rules.json`.
+**Fix:** Read the error for the specific banned phrase. Edit the copy to remove or rephrase it: `/sf:edit-post P09 --copy`. If the rule is a false positive, update the compliance config via `/sf:brand-setup --update [brand]`.
+
+### "Calendar parse failed"
+
+**Cause:** The DOCX/XLSX structure wasn't recognized.
+**Fix:** Ensure the calendar has columns or rows for: date, platform, topic/title. Tier and copy are optional. If the format is unusual, paste the calendar as structured text instead.
+
+### Posts Not Persisting Across Sessions
+
+**Cause:** Data may have been written to a temporary directory instead of the plugin data directory.
+**Fix:** Verify the plugin is installed (not just loaded from local path). Installed plugins use `${CLAUDE_PLUGIN_DATA}` which persists. Run `/sf:status` to confirm the storage path shown is under the plugin data directory.
 
 ---
 
-## 17. FAQ
+## 16. FAQ
 
-**Q: Can I use SocialForge without any AI image generation API keys?**
-A: Yes. ANCHOR_COMPOSE mode works with brand assets alone (compositing via Pillow). STYLE_REFERENCED and PURE_CREATIVE modes require an image generation API. You can also provide pre-made images and skip generation entirely.
+**Q: How much does it cost per month?**
+A: For a 28-post calendar: ~$2-4 in Gemini API calls. Carousels and previews are free (local rendering via Playwright). Video generation costs more (~$0.10-0.50 per clip via fal.ai/Replicate). Run `/sf:cost-report` for exact figures.
 
-**Q: How much does a typical month cost in API calls?**
-A: Varies by volume. A 30-post calendar with AI generation typically costs $5-15 in API credits. Asset indexing is a one-time cost of $0.50-3.00. Run `/sf:cost-report` for exact figures.
+**Q: Can I use my own images instead of AI generation?**
+A: Yes. Upload your pre-made image and it bypasses all generation — just gets resized, overlaid with logo, and adapted per platform. Set the post's creative mode to ANCHOR_COMPOSE and provide the image directly.
 
-**Q: Can I use SocialForge for multiple brands?**
-A: Yes. Each brand has its own profile, asset library, and calendar. Switch between them with `/sf:switch-brand <name>`.
+**Q: Does it work offline?**
+A: Partially. Brand setup, calendar parsing, asset matching, copy adaptation, compliance checking, and carousel rendering all work offline. Image generation requires an API connection (Gemini, fal.ai, or Replicate).
+
+**Q: Can multiple people work on the same brand?**
+A: Yes. Brand configs persist in the shared plugin data directory. Multiple team members can work on different months or handle different tiers of the same month simultaneously.
+
+**Q: What calendar formats are supported?**
+A: DOCX (Word tables), XLSX (Excel rows with column headers), Notion databases (via Notion MCP connector), and structured text/markdown.
+
+**Q: How long does it take to produce a full month?**
+A: For 28 posts across 3 platforms: approximately 45 minutes total. Brand setup: 5 min (one-time). Asset indexing: 5 min (one-time). Production: 30 min. Review: 5 min. Subsequent months for the same brand are faster since setup and indexing are already done.
 
 **Q: What if my calendar changes mid-month?**
-A: Run `/sf:sync-calendar` to re-parse. Existing approved posts are preserved. New posts enter the pipeline; removed posts are flagged for review.
+A: Run `/sf:sync-calendar` to re-parse. Existing approved posts are preserved. New posts enter the pipeline. Removed posts are flagged for your confirmation before deletion.
 
-**Q: Do I need all 9 MCP connectors?**
-A: No. SocialForge works fully offline. Connectors add convenience (pull calendars from Notion, send reviews via Slack, etc.) but are entirely optional.
+**Q: Do I need all 10 connectors?**
+A: No. SocialForge works fully without any connectors. They add convenience (pull calendars from Notion, send reviews via Slack, access Cloudinary assets) but every core feature works with local files and direct API calls.
 
 **Q: Can I customize carousel templates?**
-A: Yes. Templates are HTML/CSS files in `assets/carousel-templates/`. Edit them directly or create new ones following the same variable injection pattern.
+A: Yes. The 8 built-in HTML templates live in `assets/carousel-templates/`. Edit them directly or create new ones following the same variable injection pattern. Brand colors, fonts, and logos are injected automatically.
 
 **Q: How do I add a reactive/trending post not in the calendar?**
-A: Run `/sf:reactive-post "topic" --platform instagram`. It creates a one-off post outside the planned calendar with the same quality pipeline.
+A: Run `/sf:reactive-post "topic" --platform instagram --brand GreenLeaf`. It creates a one-off post outside the planned calendar with the same quality pipeline.
 
 **Q: What platforms are supported?**
-A: LinkedIn, Instagram, X/Twitter, Facebook, YouTube (thumbnails), Pinterest, and TikTok. Each has its own dimension and character limit specs.
+A: LinkedIn, Instagram, Facebook, X/Twitter, YouTube (thumbnails), Pinterest, and TikTok. Each has its own dimension specs and character limits configured in the copy adapter.
+
+**Q: Can I use SocialForge without any AI image generation?**
+A: Yes. ANCHOR_COMPOSE mode works with brand assets alone using Pillow for compositing. Carousel rendering uses Playwright (no AI). You can also provide pre-made visuals for every post and skip generation entirely. Only STYLE_REFERENCED and PURE_CREATIVE modes require an image generation API.
+
+**Q: Where do I set API keys?**
+A: In the `.env` file at the project root. The key variable is `GEMINI_API_KEY`. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
 
 ---
 
-*For schema references, see the `references/` directory. For troubleshooting beyond this guide, see `references/troubleshooting.md`.*
+*SocialForge v1.3 — Built for agencies who produce content at scale without compromising brand identity.*

@@ -1,8 +1,8 @@
 # SocialForge — Social Media Calendar Automation
 
-**Version:** 1.0.0
+**Version:** 1.3.0
 **Platform:** Claude Code & Cowork
-**Status:** GA Release (14 skills, 17 scripts, 5 agents, 18 commands, 11 reference docs, 8 carousel templates)
+**Status:** Production Ready (14 skills, 17 scripts, 5 agents, 18 commands, 10 HTTP connectors, 100% spec coverage)
 
 Agency-grade social media calendar automation with asset-first compositing. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, adapts copy per platform, produces review galleries and delivery documents.
 
@@ -38,7 +38,7 @@ Product photos, headshots, screenshots — these are the brand's real visual ide
 - **18 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **17 scripts** — Deterministic execution (compositing, rendering, resizing, compliance checking)
-- **9 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana
+- **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary
 - **4 hooks** — SessionStart, PreToolUse (compliance), SubagentStart (brand injection), Stop (quality gate)
 
 ## Installation
@@ -56,19 +56,23 @@ claude plugins add /path/to/socialforge
 
 ## Connectors
 
-SocialForge ships with **9 HTTP connectors** that work in both Cowork and Claude Code:
-Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana.
+SocialForge ships with **10 HTTP connectors** that work in both Cowork and Claude Code:
+Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary.
 
 The plugin works fully without connectors — all skills, agents, and creative production function with local assets and AI generation APIs.
 
-## Current Release (v1.0.0)
+## Storage
 
-GA release with full audit pass. 14 skills, 17 scripts, 5 agents, 18 commands, 9 HTTP connectors, 11 reference docs, 8 carousel templates, 4 hooks.
+Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
+
+## Current Release (v1.3.0)
+
+100% spec coverage. Persistent storage, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
 
 ## Documentation
 
 - **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery
-- **[Connectors](CONNECTORS.md)** — All 9 MCP connectors explained
+- **[Connectors](CONNECTORS.md)** — All 10 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
 - **[Contributing](CONTRIBUTING.md)** — How to contribute to SocialForge
 - **[Troubleshooting](references/troubleshooting.md)** — Common issues and fixes

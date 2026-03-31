@@ -59,6 +59,35 @@ claude plugins add github:indranilbanerjee/socialforge
 claude plugins add /path/to/socialforge
 ```
 
+### Updating to Latest Version
+
+Plugins do NOT auto-update. When a new version is released, run:
+```
+claude plugin marketplace update neels-plugins
+claude plugin update socialforge@neels-plugins
+```
+
+If the version number hasn't changed but content was updated, force a reinstall:
+```
+claude plugin uninstall socialforge@neels-plugins
+claude plugin install socialforge@neels-plugins
+```
+
+After updating, start a new conversation for changes to take effect.
+
+### Pre-Requisites for Image Generation
+
+SocialForge requires an AI image generation API. Without it, image generation will fail (it will NOT silently create placeholders).
+
+**Option 1 — Gemini API (recommended, free tier):**
+1. Get a key at https://aistudio.google.com/apikey
+2. Set it: `export GEMINI_API_KEY=your-key-here`
+3. Install: `pip install google-generativeai`
+
+**Option 2 — fal.ai or Replicate:** Connect via Connectors panel after installation.
+
+The SessionStart hook checks for `GEMINI_API_KEY` on every session and warns if missing.
+
 ## Connectors
 
 SocialForge ships with **10 HTTP connectors** that work in both Cowork and Claude Code:

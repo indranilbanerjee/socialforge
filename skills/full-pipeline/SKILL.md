@@ -43,3 +43,20 @@ SocialForge Full Pipeline — AcmeCorp / April 2026
 - Phase 6 (Review) is async — pipeline pauses for human review
 - User can interrupt at any phase and resume later
 - Status persists in status-tracker.json
+
+## Async Review Gate (Phase 6)
+
+Phase 6 (manage-reviews) is the only async gate — the pipeline pauses here because human review takes hours or days.
+
+**When pipeline reaches Phase 6:**
+1. Gallery is built and shared (Phase 5 output)
+2. Pipeline shows: "Review gallery ready. Pipeline paused — resume after reviews complete."
+3. User reviews posts via `/sf:review` or `/sf:manage-reviews`
+4. To resume: `/sf:full-pipeline --resume` or manually run Phase 7 (`/sf:finalize`)
+
+**Escalation (per approval-chain.json):**
+- Reminder after N days (configurable per tier)
+- Escalate to next reviewer after M days
+- Auto-finalize HYGIENE tier after N days if configured
+
+**Timeout:** No automatic timeout — Phase 6 stays paused until human action. The `/sf:status` command shows pending review counts.

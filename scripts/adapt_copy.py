@@ -15,7 +15,7 @@ PLATFORM_LIMITS = {
     "linkedin": {"char_limit": 3000, "fold_at": 140, "hashtag_limit": 5, "link": "direct"},
     "instagram": {"char_limit": 2200, "hashtag_limit": 30, "hashtag_placement": "first_comment", "link": "bio"},
     "x": {"char_limit": 280, "hashtag_limit": 2, "link": "direct"},
-    "facebook": {"char_limit": 500, "hashtag_limit": 3, "link": "direct"},
+    "facebook": {"char_limit": 63206, "optimal_limit": 500, "hashtag_limit": 3, "link": "direct"},
     "youtube": {"char_limit": 5000, "hashtag_limit": 5, "link": "direct"},
     "tiktok": {"char_limit": 2200, "hashtag_limit": 10, "link": "bio"},
     "pinterest": {"char_limit": 500, "hashtag_limit": 20, "link": "direct"},
@@ -44,8 +44,9 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
 
     adapted = copy_text
 
-    # Truncate if needed
-    adapted = truncate_smart(adapted, specs["char_limit"])
+    # Truncate to optimal limit (preferred) or hard limit (max)
+    limit = specs.get("optimal_limit", specs["char_limit"])
+    adapted = truncate_smart(adapted, limit)
 
     # Add CTA
     if cta:

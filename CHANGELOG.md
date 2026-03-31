@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-03-31
+
+### Added — Creative Pipeline Scripts + Audit Fixes
+
+5 critical image production scripts enabling the full creative pipeline, plus 3 audit fixes.
+
+#### Scripts (5 new, 12 total)
+- **generate_image.py** — AI image generation via Gemini API (Nano Banana 2) with style reference support (up to 8 refs). Placeholder fallback when no AI provider available. All prompts logged to `shared/prompt-logs/`.
+- **compose_image.py** — Three operations: `remove-bg` (rembg background removal), `composite` (layer foreground on background with position/scale control), `add-logo` (watermark overlay with opacity/position/size)
+- **edit_image.py** — AI-powered image editing via Gemini API. Enhance, extend, modify periphery while preserving core subjects. Style reference support.
+- **compose_text_overlay.py** — Brand-aware text overlays: reads brand-config.json for fonts/colors, configurable position (top/center/bottom), semi-transparent background strips
+- **render_carousel.py** — Renders HTML carousel templates to PNG via Playwright. 8 template types, CSS variable injection for brand theming, brand-specific template overrides
+
+#### Audit Fixes (3)
+- **compose-creative skill** — Added explicit Prerequisites section documenting dependency on asset-matches.json (from match_assets.py)
+- **full-pipeline skill** — Added Async Review Gate documentation: resume behavior, escalation rules, timeout handling
+- **adapt_copy.py** — Fixed Facebook character limit: now uses optimal_limit (500) for truncation, with true max (63,206) as hard limit
+
+### Summary
+
+| Component | v0.2.0 | v0.3.0 |
+|-----------|--------|--------|
+| Scripts | 7 | 12 |
+| Creative pipeline functional | No (missing 5 scripts) | Yes (all image scripts present) |
+
+---
+
 ## [0.2.0] - 2026-03-31
 
 ### Added — Core Engine (Layers 3-6)

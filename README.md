@@ -43,13 +43,18 @@ Product photos, headshots, screenshots — these are the brand's real visual ide
 
 ## Installation
 
-### From Marketplace
+### Option A: From Marketplace (recommended)
 ```
-claude plugin marketplace add github:indranilbanerjee/socialforge
-claude plugin install socialforge@socialforge
+/plugin marketplace add indranilbanerjee/neels-plugins
+/plugin install socialforge@neels-plugins
 ```
 
-### From Local Directory
+### Option B: Direct from GitHub
+```
+claude plugins add github:indranilbanerjee/socialforge
+```
+
+### Option C: From Local Directory
 ```
 claude plugins add /path/to/socialforge
 ```

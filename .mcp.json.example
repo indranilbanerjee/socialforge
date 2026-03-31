@@ -1,0 +1,50 @@
+{
+  "_readme": "SocialForge MCP Connectors — All OPTIONAL. Plugin works fully offline. Configure what your team uses.",
+  "mcpServers": {
+    "notion": {
+      "type": "http",
+      "url": "https://mcp.notion.com/mcp",
+      "_description": "Calendar databases, brand guidelines, asset library. Connect via OAuth when prompted."
+    },
+    "canva": {
+      "type": "http",
+      "url": "https://mcp.canva.com/mcp",
+      "_description": "Browse Canva templates, generate designs with brand kit. Connect via OAuth."
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp",
+      "_description": "Access brand design files and design systems. Connect via OAuth."
+    },
+    "slack": {
+      "type": "http",
+      "url": "https://mcp.slack.com/mcp",
+      "_description": "Send approval requests, post previews, delivery notifications. Connect via OAuth."
+    },
+    "gmail": {
+      "type": "http",
+      "url": "https://gmail.mcp.claude.com/mcp",
+      "_description": "Email finalized documents and approval reminders. Connect via Google OAuth."
+    },
+    "google-calendar": {
+      "type": "http",
+      "url": "https://gcal.mcp.claude.com/mcp",
+      "_description": "Sync posting schedule with Google Calendar. Connect via Google OAuth."
+    },
+    "fal-ai": {
+      "type": "http",
+      "url": "https://mcp.fal.ai/mcp",
+      "_description": "AI image generation (Flux 2, SDXL, 1000+ models). Connect via Bearer token."
+    },
+    "replicate": {
+      "type": "http",
+      "url": "https://mcp.replicate.com/sse",
+      "_description": "Alternative AI image generation. Connect via web-based auth."
+    },
+    "asana": {
+      "type": "http",
+      "url": "https://mcp.asana.com/sse",
+      "_description": "Track post production status and publishing schedule. Connect via OAuth."
+    }
+  }
+}

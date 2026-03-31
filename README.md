@@ -61,9 +61,18 @@ Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana.
 
 The plugin works fully without connectors — all skills, agents, and creative production function with local assets and AI generation APIs.
 
-## Current Release (v0.1.0)
+## Current Release (v1.0.0)
 
-Foundation release — plugin scaffold, brand management, calendar parsing, asset indexing, all 5 agents, 6 commands, hooks, and MCP connectors.
+GA release with full audit pass. 14 skills, 17 scripts, 5 agents, 18 commands, 9 HTTP connectors, 11 reference docs, 8 carousel templates, 4 hooks.
+
+## Documentation
+
+- **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery
+- **[Connectors](CONNECTORS.md)** — All 9 MCP connectors explained
+- **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
+- **[Contributing](CONTRIBUTING.md)** — How to contribute to SocialForge
+- **[Troubleshooting](references/troubleshooting.md)** — Common issues and fixes
+- **[Changelog](CHANGELOG.md)** — Release history
 
 ## License
 

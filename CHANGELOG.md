@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-03-31
+
+### Added — Documentation & Professional Infrastructure
+
+Complete documentation suite matching ContentForge and Digital Marketing Pro standards.
+
+- **LICENSE** — MIT License
+- **docs/USER-GUIDE.md** — Complete user guide (420 lines): 17 sections covering prerequisites through FAQ, all 18 commands and 14 skills documented, 4 creative modes explained, troubleshooting, FAQ
+- **CONNECTORS.md** — All 9 HTTP connectors documented with categories, placeholder patterns, offline-first notes, setup instructions
+- **TESTING-GUIDE.md** — Full QA test plan (310 lines): 15 sections with checkbox format, all components tested, edge cases, Cowork compatibility, regression checklist
+- **.mcp.json.example** — Commented MCP configuration with descriptions for each of 9 connectors
+- **CONTRIBUTING.md** — Contribution guidelines: bug reporting, PR process, coding standards, development setup
+
+### Fixed
+- README.md: "Current Release (v0.1.0)" → "Current Release (v1.0.0)" with documentation links section
+
+---
+
 ## [1.0.0] - 2026-03-31
 
 ### GA Release — Full Audit Pass + All Critical Fixes

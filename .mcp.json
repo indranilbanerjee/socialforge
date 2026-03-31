@@ -35,6 +35,10 @@
     "asana": {
       "type": "http",
       "url": "https://mcp.asana.com/sse"
+    },
+    "cloudinary": {
+      "type": "http",
+      "url": "https://asset-management.mcp.cloudinary.com/mcp"
     }
   }
 }

@@ -6,11 +6,18 @@ Manages pipeline state, post status transitions, and session initialization.
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 
 def session_init():

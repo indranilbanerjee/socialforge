@@ -116,12 +116,23 @@ If user skips: Default to single-tier (all content requires user approval before
 
 ### Step 7: Asset Source
 
-```
-Where are your brand photos?
-  1. Google Drive folder URL — SocialForge will index assets from Drive
-  2. Local folder path — Index from local filesystem
-  3. I'll add later — Start with no assets (can only use PURE_CREATIVE mode)
+Where are your brand photos stored?
 
+1. **Local folder** — Provide the full path (e.g., /Users/photos/acme-corp/)
+   Works in: Claude Code (persistent) | Cowork (session-only, re-provide each session)
+
+2. **Google Drive folder** — Provide the Drive folder URL
+   Works in: Cowork (via Settings → Integrations → Google Drive) | Claude Code (download first or mount)
+   In Cowork: Claude reads Drive files directly through platform integration
+   In Claude Code: Download the folder locally, then index with --source /local/path
+
+3. **I'll add later** — Start with no assets (PURE_CREATIVE mode only)
+
+The asset source is saved in `asset-source.json`. You can change it anytime.
+
+**Recommended for agencies:** Use Google Drive as the source of truth. Each brand gets a Drive folder. SocialForge indexes the photos and stores the index in persistent plugin storage (survives sessions).
+
+```
 Style reference photos:
   Select 2-8 photos that represent the brand's visual DNA.
   These guide AI generation in STYLE_REFERENCED mode.

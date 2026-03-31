@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-03-31
+
+### Added — Persistent Storage, Google Drive Assets, Cloudinary DAM
+
+Cross-platform storage architecture ensuring brands and asset indexes persist across sessions in both Cowork and Claude Code.
+
+#### Persistent Storage (${CLAUDE_PLUGIN_DATA})
+- All 11 Python scripts updated to prefer `${CLAUDE_PLUGIN_DATA}/socialforge/` (official persistent directory), falling back to `~/socialforge-workspace/` for legacy/local use
+- Brand configs, asset indexes, and production state now survive session resets in Cowork and plugin updates in Claude Code
+- Scripts: status_manager, cost_tracker, match_assets, compliance_check, adapt_copy, verify_brand_colors, compose_text_overlay, generate_image, build_gallery, generate_video, index_assets
+
+#### Google Drive Asset Source
+- index_assets.py now detects Google Drive URLs (`https://drive.google.com`, `gdrive://`)
+- In Cowork: Claude reads Drive files via platform integration (Settings → Integrations)
+- In Claude Code: user downloads folder locally, indexes with `--source /local/path`
+- Drive URL saved in `asset-source.json` for reference across sessions
+- brand-manager Step 7 expanded with platform-specific Drive guidance
+
+#### Cloudinary HTTP MCP (10th connector)
+- Added `https://asset-management.mcp.cloudinary.com/mcp` to .mcp.json and .mcp.json.example
+- Professional DAM with asset transformations, tagging, CDN delivery
+- Works in both Cowork and Claude Code (HTTP transport)
+
+#### Documentation
+- CONNECTORS.md: Added Cloudinary row + "Asset Storage Architecture" section with Cowork/Claude Code compatibility table and agency recommended setup
+- SessionStart: Updated to v1.3, shows 10 HTTP connectors, persistent storage note
+
+### Platform Compatibility
+
+| Feature | Cowork | Claude Code |
+|---------|--------|-------------|
+| Brand configs persist | ✅ via ${CLAUDE_PLUGIN_DATA} | ✅ via ${CLAUDE_PLUGIN_DATA} |
+| Asset index persists | ✅ via ${CLAUDE_PLUGIN_DATA} | ✅ via ${CLAUDE_PLUGIN_DATA} |
+| Drive assets | ✅ Platform integration | Download + local |
+| Cloudinary DAM | ✅ HTTP MCP | ✅ HTTP MCP |
+| All 10 connectors | ✅ HTTP | ✅ HTTP |
+
+---
+
 ## [1.2.0] - 2026-03-31
 
 ### 100% Spec Coverage — All Gaps Closed

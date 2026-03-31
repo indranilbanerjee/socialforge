@@ -5,11 +5,18 @@ cost_tracker.py — Track API costs per post and per month.
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 # Approximate costs per API call (USD)
 COST_ESTIMATES = {

@@ -7,10 +7,17 @@ Creates a self-contained HTML file with all post previews, scores, and copy.
 import argparse
 import base64
 import json
+import os
 import sys
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 
 def image_to_base64(img_path):

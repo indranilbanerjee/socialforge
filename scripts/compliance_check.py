@@ -6,11 +6,18 @@ Scans for banned phrases, missing disclaimers, data claims, and platform-specifi
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 
 def check_compliance(brand, text, platform=None):

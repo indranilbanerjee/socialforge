@@ -6,10 +6,17 @@ Handles headlines, CTAs, data points, and brand frames.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 
 def add_text_overlay(image_path, output_path, text, brand=None, position="bottom", font_size=48, color="#FFFFFF", bg_color=None, opacity=0.85):

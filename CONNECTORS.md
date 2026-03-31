@@ -17,8 +17,31 @@ Plugins are **tool-agnostic** — they describe workflows in terms of categories
 | Chat | `~~chat` | Slack | Microsoft Teams | Approval notifications, review requests, delivery alerts |
 | Email | `~~email` | Gmail | Outlook | Finalized document delivery, approval reminders |
 | Project management | `~~project` | Asana | Monday.com, Linear | Post status tracking, publishing schedule |
+| Asset management | `~~dam` | Cloudinary | Bynder, Brandfolder | Brand asset library, transformations, CDN delivery |
 
 ## The plugin works without connectors
+
+## Asset Storage Architecture
+
+SocialForge supports multiple asset storage backends. The priority order:
+
+| Storage | Cowork | Claude Code | Best For |
+|---------|--------|-------------|----------|
+| **Google Drive** | ✅ Platform integration | Download + local index | Agencies (natural client folder structure) |
+| **Cloudinary** | ✅ HTTP MCP | ✅ HTTP MCP | Professional DAM (transformations, CDN, tagging) |
+| **Local folder** | Session-only (VM resets) | ✅ Persistent | Solo users, local workflows |
+
+**Brand configs and indexes** are stored in the persistent plugin data directory (`${CLAUDE_PLUGIN_DATA}/socialforge/`), which survives across sessions and plugin updates in both Cowork and Claude Code.
+
+**Asset images** stay in their original location (Drive, Cloudinary, local). SocialForge stores only the AI-analyzed metadata index, not the images themselves.
+
+### For Agencies (Recommended Setup)
+
+```
+Google Drive (asset images) → /sf:index-assets (AI analysis) → asset-index.json (persistent)
+                                                                     ↓
+Cloudinary (optional DAM) ────────────────────────────────→ CDN delivery + transformations
+```
 
 **All 14 skills, 5 agents, 17 scripts, and 18 commands work immediately** without any connectors. Connectors add live data and execution capabilities:
 

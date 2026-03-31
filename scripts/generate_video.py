@@ -6,11 +6,18 @@ Generates video scripts, storyboards, and optionally AI video clips.
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 VIDEO_TYPES = {
     "hero_video": {"duration": "30-90s", "production": "Script + storyboard (needs filming)"},

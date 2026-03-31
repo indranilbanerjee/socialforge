@@ -12,7 +12,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
+# fall back to ~/socialforge-workspace (legacy/local)
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 SUPPORTED_FORMATS = {".jpg", ".jpeg", ".png", ".webp"}
 
 VISION_PROMPT = """Analyze this brand asset image for a social media automation system.
@@ -35,10 +41,25 @@ Provide a JSON response with these fields:
 
 
 def scan_images(source_path):
-    """Find all image files in the source directory."""
+    """Find all image files in the source directory.
+    Supports local paths and Google Drive paths.
+    Google Drive: In Cowork, Drive is available via platform integration.
+    In Claude Code, files must be downloaded or Drive path must be mounted.
+    """
     source = Path(source_path)
+
+    # Handle Google Drive URLs (strip to local path if available)
+    source_str = str(source_path)
+    if source_str.startswith("https://drive.google.com") or source_str.startswith("gdrive://"):
+        # In Cowork: Claude can read Drive files via platform integration
+        # In Claude Code: user must download or mount Drive
+        # Return empty with helpful message — actual files accessed by Claude reading Drive
+        return {"source_type": "google_drive", "url": source_str, "files": [],
+                "note": "Google Drive source detected. Claude will read files via platform integration. Index will be built from files Claude can access."}
+
     if not source.exists():
         return []
+
     images = []
     for f in sorted(source.rglob("*")):
         if f.is_file() and f.suffix.lower() in SUPPORTED_FORMATS:
@@ -124,6 +145,21 @@ def index_all(brand, source_path, refresh=False):
             existing[asset.get("path", "")] = asset
 
     images = scan_images(source_path)
+
+    # Handle Google Drive source
+    if isinstance(images, dict) and images.get("source_type") == "google_drive":
+        print(json.dumps({
+            "status": "google_drive_source",
+            "url": images["url"],
+            "instruction": "Google Drive asset source detected. To index Drive assets: 1) In Cowork: Claude reads Drive files via platform integration — provide the folder contents. 2) In Claude Code: download the folder locally first, then run with --source /local/path. The asset-source.json has been updated with the Drive URL for reference.",
+            "asset_source_updated": True
+        }))
+        # Save the Drive URL in asset-source.json for reference
+        source_config = {"type": "google_drive", "url": images["url"], "indexed_at": None}
+        source_path_file = brand_dir / "asset-source.json"
+        source_path_file.write_text(json.dumps(source_config, indent=2), encoding="utf-8")
+        return
+
     if not images:
         print(json.dumps({"error": f"No images found in {source_path}"}))
         sys.exit(1)

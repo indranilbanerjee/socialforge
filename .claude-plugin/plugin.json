@@ -1,6 +1,6 @@
 {
   "name": "socialforge",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Agency-grade social media calendar automation with asset-first compositing. Parse calendars, match brand assets, generate AI-composed creative, render carousels, adapt copy, produce review galleries. Multi-brand, multi-platform.",
   "author": {
     "name": "Indranil Banerjee"

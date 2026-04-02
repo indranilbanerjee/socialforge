@@ -4,24 +4,45 @@
 
 ---
 
+## Prerequisites
+
+Before you start, make sure you have:
+
+- **Claude Code CLI** or **Claude Desktop with Code tab** (any plan)
+- **API credentials configured via `/sf:setup`** (one-time setup):
+  - **Google Cloud service account JSON file** -- for Vertex AI image generation
+  - **WaveSpeed API key** -- for Kling v3.0 video generation
+- **Python dependencies installed:**
+  ```
+  pip install google-genai wavespeed Pillow
+  ```
+
+Get both credentials from your admin. If you ARE the admin, see the [Admin Setup Guide](#19-admin-setup-guide) at the end of this document.
+
+---
+
 ## Table of Contents
 
+0. [Prerequisites](#prerequisites)
 1. [What You Need](#1-what-you-need)
 2. [Installation](#2-installation)
-3. [Your First Brand Setup](#3-your-first-brand-setup)
-4. [Indexing Brand Assets](#4-indexing-brand-assets)
-5. [Starting a New Month](#5-starting-a-new-month)
-6. [Understanding the 4 Creative Modes](#6-understanding-the-4-creative-modes)
-7. [Producing Content](#7-producing-content)
-8. [Reviewing and Approving](#8-reviewing-and-approving)
-9. [Finalizing and Delivering](#9-finalizing-and-delivering)
-10. [Working with Multiple Brands](#10-working-with-multiple-brands)
-11. [Where Your Data Lives](#11-where-your-data-lives)
-12. [All 18 Commands](#12-all-18-commands)
-13. [All 14 Skills](#13-all-14-skills)
-14. [Connectors](#14-connectors)
-15. [Troubleshooting](#15-troubleshooting)
-16. [FAQ](#16-faq)
+3. [Setting Up API Credentials (/sf:setup)](#3-setting-up-api-credentials-sfsetup)
+4. [Your First Brand Setup](#4-your-first-brand-setup)
+5. [Indexing Brand Assets](#5-indexing-brand-assets)
+6. [Starting a New Month](#6-starting-a-new-month)
+7. [Understanding the 4 Creative Modes](#7-understanding-the-4-creative-modes)
+8. [Producing Content -- Images](#8-producing-content----images)
+9. [Producing Content -- Video](#9-producing-content----video)
+10. [Reviewing and Approving](#10-reviewing-and-approving)
+11. [Finalizing and Delivering](#11-finalizing-and-delivering)
+12. [Working with Multiple Brands](#12-working-with-multiple-brands)
+13. [Where Your Data Lives](#13-where-your-data-lives)
+14. [All 18 Commands](#14-all-18-commands)
+15. [All 14 Skills](#15-all-14-skills)
+16. [Connectors](#16-connectors)
+17. [Troubleshooting](#17-troubleshooting)
+18. [FAQ](#18-faq)
+19. [Admin Setup Guide](#19-admin-setup-guide)
 
 ---
 
@@ -32,10 +53,14 @@
 - Brand photos (at least 5-10 images — products, people, office, events)
 - A monthly content calendar (DOCX, XLSX, Notion database, or just text)
 
-**For AI image generation (at least one):**
-- `GEMINI_API_KEY` — Google AI Studio (free tier available)
-- fal.ai account — connected via Connectors panel (HTTP, works in Cowork)
-- Replicate account — connected via Connectors panel (HTTP, works in Cowork)
+**For AI image generation (recommended):**
+- **Vertex AI via `/sf:setup`** -- Google Cloud service account (recommended, most reliable)
+- `GEMINI_API_KEY` -- Google AI Studio (legacy fallback; `/sf:setup` with Vertex AI is now recommended, but `GEMINI_API_KEY` in `.env` still works as a fallback)
+- fal.ai account -- connected via Connectors panel (HTTP, works in Cowork)
+- Replicate account -- connected via Connectors panel (HTTP, works in Cowork)
+
+**For AI video generation:**
+- **WaveSpeed API key via `/sf:setup`** -- powers Kling v3.0 video generation
 
 **Optional (enhances workflow):**
 - Google Drive — store brand assets (connects automatically in Cowork via Settings > Integrations)
@@ -44,6 +69,31 @@
 - Cloudinary — professional DAM
 
 ---
+
+## Setting Up API Credentials
+
+Run this once after installing the plugin:
+
+```
+/sf:setup
+```
+
+Step 1 — Image generation (Google Cloud Vertex AI):
+- Your admin gives you a service account JSON file
+- When prompted, provide the file path
+- Models: Nano Banana 2 (gemini-2.5-flash-image), Nano Banana Pro (gemini-3-pro-image-preview)
+
+Step 2 — Video generation (WaveSpeed / Kling v3.0):
+- Your admin gives you a WaveSpeed API key
+- When prompted, paste the key
+- Models: Kling v3.0 Pro (image-to-video, text-to-video, 3-15 seconds)
+
+Credentials are stored persistently. You never need to run /sf:setup again unless credentials change.
+
+Check status anytime: `/sf:setup --status`
+
+---
+
 
 ## 2. Installation
 
@@ -80,7 +130,74 @@ Storage: persistent via plugin data directory
 
 ---
 
-## 3. Your First Brand Setup
+## 3. Setting Up API Credentials (/sf:setup)
+
+Before generating images or video, configure your API credentials. This is a one-time setup -- credentials persist across all sessions.
+
+### Step-by-Step
+
+Run the setup command:
+
+```
+/sf:setup
+```
+
+SocialForge walks you through two steps:
+
+```
+SocialForge Credential Setup
+=============================
+
+Step 1 of 2: Google Cloud (Vertex AI -- Image Generation)
+  Provide the path to your Google Cloud service account JSON file.
+  This enables Vertex AI image generation (Imagen 3, Gemini Vision).
+
+  Path to JSON file: > /path/to/my-service-account.json
+
+  Validating... OK
+  Project: my-project-123
+  Service account: socialforge@my-project-123.iam.gserviceaccount.com
+  Vertex AI API: enabled
+
+Step 2 of 2: WaveSpeed (Kling v3.0 -- Video Generation)
+  Paste your WaveSpeed API key.
+  This enables Kling v3.0 video generation for Reels, Shorts, and TikTok.
+
+  API key: > wvs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+  Validating... OK
+  Account: team@agency.com
+  Credits remaining: 847
+
+Setup complete. Credentials saved to plugin data directory.
+Both persist across sessions -- you won't need to do this again.
+```
+
+### Checking Credential Status
+
+```
+/sf:setup --status
+```
+
+```
+SocialForge Credentials
+  Vertex AI:  CONFIGURED (project: my-project-123)
+  WaveSpeed:  CONFIGURED (847 credits remaining)
+```
+
+### Updating Credentials
+
+Run `/sf:setup` again at any time to replace either credential. The new values overwrite the old ones immediately.
+
+### Fallback: GEMINI_API_KEY
+
+If you have a `GEMINI_API_KEY` set in your `.env` file (the legacy approach from earlier versions), SocialForge will use it as a fallback when Vertex AI credentials are not configured via `/sf:setup`. Vertex AI is recommended because it supports higher rate limits, more models, and does not require managing API keys in `.env`.
+
+Priority order: Vertex AI (via `/sf:setup`) > `GEMINI_API_KEY` (in `.env`) > fal.ai/Replicate (via Connectors).
+
+---
+
+## 4. Your First Brand Setup
 
 Let's set up a real brand. Say you're an agency working with **GreenLeaf Organics**, a premium organic food brand.
 
@@ -131,7 +248,7 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/brands/greenleaf-organics/
 
 ---
 
-## 4. Indexing Brand Assets
+## 5. Indexing Brand Assets
 
 GreenLeaf has a Google Drive folder with 45 photos: products, farm scenes, team photos, packaging shots, recipe images.
 
@@ -190,7 +307,7 @@ Only analyzes new/changed images. Existing index preserved.
 
 ---
 
-## 5. Starting a New Month
+## 6. Starting a New Month
 
 GreenLeaf's social media manager sends you the April 2026 calendar as a Word document (DOCX). It has 28 posts across LinkedIn, Instagram, and Facebook.
 
@@ -252,7 +369,7 @@ You can override any match: "Use photo #12 for P14 instead" or "Make P22 STYLE_R
 
 ---
 
-## 6. Understanding the 4 Creative Modes
+## 7. Understanding the 4 Creative Modes
 
 Every post gets assigned one of four creative modes during asset matching. Each mode defines how the final visual is produced — specifically, how much of the image comes from the brand's own photography versus AI generation.
 
@@ -318,7 +435,59 @@ Override any assignment:
 
 ---
 
-## 7. Producing Content
+## 8. Producing Content -- Images
+
+Image production uses a **4-stage human-in-the-loop flow**. You stay in control at every step.
+
+| Stage | What Happens | Your Input |
+|-------|-------------|------------|
+| 1. Creative direction | 2-3 creative direction options | Pick one (or describe your own) |
+| 2. Confirm details | Full prompt, asset match, platform specs | Confirm or adjust |
+| 3. Generate versions | 2-3 image versions shown inline | Pick the best, regenerate, or refine |
+| 4. Post-process and save | Resize, logo, compliance check | Approve final output |
+
+### Example: Single Image Post
+
+```
+/sf:generate-post P03
+```
+
+**Stage 1 -- Creative Direction:**
+```
+P03 "Meet our new Avocado Oil product line"
+Mode: ANCHOR_COMPOSE | Asset: product-avocado-oil-bottle.jpg
+
+Option A: Rustic kitchen -- warm wooden counter, morning sunlight
+Option B: Farm-to-table -- outdoor dining table, olive grove backdrop
+Option C: Minimal clean -- solid warm cream background, centered product
+
+Which direction? (A / B / C / describe your own) > A
+```
+
+**Stage 2 -- Confirm Details:**
+```
+Direction: Rustic kitchen
+Prompt: "Product bottle on rustic kitchen counter, warm morning light..."
+Asset: product-avocado-oil-bottle.jpg (background removed)
+Platforms: LinkedIn (1200x627), Instagram (1080x1350), Facebook (1200x630)
+Confirm? (yes / adjust) > yes
+```
+
+**Stage 3 -- Generate Versions:**
+```
+Generating via Vertex AI...
+[Version 1 shown inline]  [Version 2 shown inline]  [Version 3 shown inline]
+Pick a version? (1 / 2 / 3 / regenerate / refine "instructions") > 2
+```
+
+**Stage 4 -- Post-process and Save:**
+```
+Compositing product onto scene... done
+Logo overlay, resizing, compliance check... done
+Quality score: 8.6/10
+Saved to: output/greenleaf-organics/2026-04/posts/P03/
+Approve? (yes / regenerate / skip) > yes
+```
 
 ### Generate All Posts
 
@@ -327,35 +496,8 @@ Override any assignment:
 ```
 
 ```
-[1/28] Post P01 — ANCHOR_COMPOSE
-  Asset: product-avocado-oil-bottle.jpg
-  Removing background... done
-  Generating scene... done (warm kitchen counter, morning light)
-  Compositing... done
-  Adding shadow + logo... done
-  Quality score: 8.6/10
-
-  [Image shown]
-  Approve? (yes / regenerate / skip) > yes
-
-[2/28] Post P02 — STYLE_REFERENCED
-  Style references: 6 brand photos loaded
-  Generating... done (sustainable farming landscape)
-  Quality score: 7.8/10
-
-  [Image shown]
-  Approve? (yes / regenerate / skip) > regenerate
-
-  Regenerating with adjusted prompt... done
-  Quality score: 8.2/10
-  Approve? > yes
-
-...
-
-[28/28] Post P28 — PURE_CREATIVE
-  Festival greeting visual... done
-  Quality score: 7.2/10
-  Approve? > yes
+Runs the 4-stage flow for each post. You approve each before moving on.
+For posts where you trust the defaults, type "auto" to skip interactive stages.
 
 Production complete: 28/28 posts generated
   Average quality: 8.1/10
@@ -768,7 +910,17 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ### "Image generation failed"
 
 **Cause:** No image generation API is available.
-**Fix:** Check that `GEMINI_API_KEY` is set in `.env`, or connect fal.ai/Replicate via the Connectors panel. The pipeline supports resuming — fix the key and rerun `/sf:generate-all`.
+**Fix:** Run `/sf:setup --status` to verify Vertex AI credentials. If not configured, run `/sf:setup`. As a fallback, you can set `GEMINI_API_KEY` in `.env` or connect fal.ai/Replicate via the Connectors panel. The pipeline supports resuming — fix the credentials and rerun `/sf:generate-all`.
+
+### "Video generation failed"
+
+**Cause:** WaveSpeed API key is missing or invalid.
+**Fix:** Check WaveSpeed API key via `/sf:setup --status`. Verify credits at wavespeed.ai. If not configured, run `/sf:setup`.
+
+### "Credentials not found"
+
+**Cause:** API credentials have not been configured or were removed.
+**Fix:** Run `/sf:setup` again to reconfigure.
 
 ### "Playwright not installed"
 

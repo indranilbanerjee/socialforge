@@ -4,13 +4,13 @@
 **Platform:** Claude Code & Cowork
 **Status:** Production Ready (14 skills, 17 scripts, 5 agents, 18 commands, 10 HTTP connectors, 100% spec coverage)
 
-Agency-grade social media calendar automation with asset-first compositing. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, adapts copy per platform, produces review galleries and delivery documents.
+Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents.
 
 ## Core Principle
 
 **Brand assets are sacred. AI is the creative layer around them.**
 
-Product photos, headshots, screenshots — these are the brand's real visual identity. AI generates backgrounds, mood, and context around them. The brand asset stays pixel-faithful in every composition.
+Product photos, headshots, screenshots — these are the brand’s real visual identity. AI generates backgrounds, mood, and context around them. The brand asset stays pixel-faithful in every composition.
 
 ## The Four Creative Modes
 
@@ -18,7 +18,7 @@ Product photos, headshots, screenshots — these are the brand's real visual ide
 |------|------|-------------|
 | ANCHOR_COMPOSE | Brand photo is the centerpiece | AI generates scene around the untouched asset |
 | ENHANCE_EXTEND | Brand photo is the base | AI extends/enhances periphery, core stays faithful |
-| STYLE_REFERENCED | No specific asset needed | AI generates using brand's style reference photos as visual DNA |
+| STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
 
 ## Quick Start
@@ -59,6 +59,27 @@ claude plugins add github:indranilbanerjee/socialforge
 claude plugins add /path/to/socialforge
 ```
 
+## First-Time Setup (Required)
+
+After installing the plugin, run the setup command in Claude Code:
+
+```
+/sf:setup
+```
+
+This configures two external API services that power SocialForge’s image and video generation:
+
+1. **Google Cloud Vertex AI** — Used for AI image generation (Gemini Nano Banana 2 / Pro models)
+2. **WaveSpeed** — Used for AI video generation (Kling v3.0 Pro model)
+
+Your admin provides you with:
+- A **Google Cloud service account JSON key file** (for Vertex AI image generation)
+- A **WaveSpeed API key** (for video generation)
+
+`/sf:setup` copies these credentials to persistent storage (`${CLAUDE_PLUGIN_DATA}`), so they work across all sessions automatically. You only need to run it once.
+
+**Without running `/sf:setup`, image and video generation will not work.** All other SocialForge features (calendar parsing, copy adaptation, review galleries, etc.) function normally without it.
+
 ### Updating to Latest Version
 
 Plugins do NOT auto-update. When a new version is released, run:
@@ -67,7 +88,7 @@ claude plugin marketplace update neels-plugins
 claude plugin update socialforge@neels-plugins
 ```
 
-If the version number hasn't changed but content was updated, force a reinstall:
+If the version number hasn’t changed but content was updated, force a reinstall:
 ```
 claude plugin uninstall socialforge@neels-plugins
 claude plugin install socialforge@neels-plugins
@@ -77,16 +98,84 @@ After updating, start a new conversation for changes to take effect.
 
 ### Pre-Requisites for Image Generation
 
-SocialForge requires an AI image generation API. Without it, image generation will fail (it will NOT silently create placeholders).
+SocialForge uses **Google Cloud Vertex AI** for image generation. Without it, image generation will fail (it will NOT silently create placeholders).
 
-**Option 1 — Gemini API (recommended, free tier):**
-1. Get a key at https://aistudio.google.com/apikey
-2. Set it: `export GEMINI_API_KEY=your-key-here`
-3. Install: `pip install google-generativeai`
+**Setup via /sf:setup (recommended):**
+1. Your admin provides a Google Cloud service account JSON key file with Vertex AI access
+2. Run `/sf:setup` and point it to the JSON key file
+3. Credentials are stored persistently — no need to set environment variables manually
 
-**Option 2 — fal.ai or Replicate:** Connect via Connectors panel after installation.
+**Alternative — Direct environment variable:**
+If you prefer manual configuration, set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account JSON file:
+```
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+```
 
-The SessionStart hook checks for `GEMINI_API_KEY` on every session and warns if missing.
+**Alternative — fal.ai or Replicate:** Connect via Connectors panel after installation for third-party image generation.
+
+The SessionStart hook checks for valid image generation credentials on every session and warns if missing.
+
+## Admin Setup (One-Time)
+
+Admins configure the cloud accounts once. Team members then just run `/sf:setup` with the credentials the admin shares.
+
+### Google Cloud (Vertex AI — Image Generation)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) and create a project (or use an existing one)
+2. Enable the **Vertex AI API** for the project
+3. Go to **IAM & Admin > Service Accounts** and create a service account
+4. Grant the service account the **Vertex AI User** role
+5. Create a JSON key for the service account and download it
+6. Share the JSON key file with your team (securely — do not commit to version control)
+
+All Vertex AI billing goes to the admin’s Google Cloud account.
+
+### WaveSpeed (Kling v3.0 — Video Generation)
+
+1. Create an account at [wavespeed.ai](https://wavespeed.ai)
+2. Top up credits (pay-as-you-go; video generation costs vary by duration and resolution)
+3. Go to **API Keys** and create a new API key
+4. Share the API key with your team (securely — do not commit to version control)
+
+All WaveSpeed billing goes to the admin’s WaveSpeed account.
+
+### What Team Members Do
+
+Team members do not need to create any cloud accounts. They just:
+1. Install SocialForge (see Installation above)
+2. Run `/sf:setup`
+3. Paste or point to the credentials the admin shared (JSON file path + API key)
+4. Done — credentials persist across all sessions
+
+## Video Generation
+
+SocialForge produces short-form AI-generated video clips for video content posts (Reels, TikTok, Shorts, etc.).
+
+### Pipeline
+
+1. **Post context** — The calendar post’s theme, copy, and visual direction inform the video
+2. **Script generation** — AI writes a short video script with scene descriptions
+3. **Keyframe generation** — Gemini (via Vertex AI) generates the first and last frame as keyframe images
+4. **Video animation** — WaveSpeed sends the keyframes to **Kling v3.0 Pro** (image-to-video), which animates them into a fluid video clip (3-15 seconds)
+
+### Models
+
+| Component | Model | Provider |
+|-----------|-------|----------|
+| Keyframe images | Gemini Nano Banana 2 / Pro | Google Cloud Vertex AI |
+| Image-to-video | Kling v3.0 Pro | WaveSpeed |
+
+### Human-in-the-Loop
+
+All video generation goes through human-in-the-loop approval. Videos are generated, previewed in the review gallery, and require explicit approval before finalization. Nothing ships without sign-off.
+
+### Requirements
+
+- WaveSpeed API key configured via `/sf:setup`
+- Google Cloud Vertex AI credentials configured via `/sf:setup` (for keyframe generation)
+- Video duration: 3-15 seconds per clip
+
+Use `/sf:generate-video` to produce video for a specific post, or `/sf:generate-all` to include video posts in batch production.
 
 ## Connectors
 

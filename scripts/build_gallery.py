@@ -20,15 +20,23 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
-def image_to_base64(img_path):
-    """Convert image to base64 data URI."""
-    path = Path(img_path)
+def file_to_base64(file_path, mime_type=None):
+    """Convert a file to base64 data URI."""
+    path = Path(file_path)
     if not path.exists():
         return ""
     data = base64.b64encode(path.read_bytes()).decode()
-    ext = path.suffix.lower().lstrip(".")
-    mime = f"image/{'jpeg' if ext in ['jpg', 'jpeg'] else ext}"
-    return f"data:{mime};base64,{data}"
+    if not mime_type:
+        ext = path.suffix.lower().lstrip(".")
+        mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+                    "gif": "image/gif", "mp4": "video/mp4", "webm": "video/webm"}
+        mime_type = mime_map.get(ext, f"application/octet-stream")
+    return f"data:{mime_type};base64,{data}"
+
+
+def image_to_base64(img_path):
+    """Convert image to base64 data URI."""
+    return file_to_base64(img_path)
 
 
 def build_gallery(brand, month):
@@ -69,6 +77,23 @@ def build_gallery(brand, month):
         if copy_file.exists():
             copy_text = copy_file.read_text(encoding="utf-8")
 
+        # Find video files
+        videos_dir = month_dir / "production" / "videos"
+        video_path = ""
+        for vp in [f"post-{pid}-video.mp4", f"post-{pid}-video.webm"]:
+            vf = videos_dir / vp if videos_dir.exists() else Path("")
+            if vf.exists():
+                video_path = str(vf)
+                break
+
+        # Find video alternatives for comparison
+        alt_video_path = ""
+        alt_dir = month_dir / "production" / "alternatives"
+        if alt_dir.exists():
+            for av in alt_dir.glob(f"post-{pid}-video-v*.mp4"):
+                alt_video_path = str(av)
+                break
+
         posts_data.append({
             "id": pid,
             "title": post.get("title", f"Post {pid}"),
@@ -79,6 +104,8 @@ def build_gallery(brand, month):
             "status": status_info.get("status", "QUEUED"),
             "creative_mode": status_info.get("creative_mode", ""),
             "image_b64": image_to_base64(image_path) if image_path else "",
+            "video_path": video_path,
+            "alt_video_path": alt_video_path,
             "copy": copy_text[:500],
             "quality_score": None
         })
@@ -86,7 +113,20 @@ def build_gallery(brand, month):
     # Build HTML
     cards_html = ""
     for p in posts_data:
-        img_tag = f'<img src="{p["image_b64"]}" style="width:100%;border-radius:4px;" />' if p["image_b64"] else '<div style="width:100%;height:200px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;">No image</div>'
+        # Build visual: video takes priority over image
+        if p.get("video_path"):
+            vid_b64 = file_to_base64(p["video_path"])
+            img_tag = f'<video src="{vid_b64}" controls style="width:100%;border-radius:4px;" preload="metadata"></video>' if vid_b64 else ""
+            if p.get("alt_video_path"):
+                alt_b64 = file_to_base64(p["alt_video_path"])
+                if alt_b64:
+                    img_tag += f'<div style="margin-top:8px;font-size:11px;color:#666;">Alternative:</div><video src="{alt_b64}" controls style="width:100%;border-radius:4px;" preload="metadata"></video>'
+            if not img_tag:
+                img_tag = '<div style="width:100%;height:200px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;">Video not embeddable (too large)</div>'
+        elif p["image_b64"]:
+            img_tag = f'<img src="{p["image_b64"]}" style="width:100%;border-radius:4px;" />'
+        else:
+            img_tag = '<div style="width:100%;height:200px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;">No image</div>'
         tier_color = {"HERO": "#e74c3c", "HUB": "#3498db", "HYGIENE": "#2ecc71"}.get(p["tier"], "#999")
 
         cards_html += f"""
@@ -127,7 +167,8 @@ def build_gallery(brand, month):
 <h1>SocialForge Review — {brand} / {month}</h1>
 <div class="summary">
   <div class="stat"><div class="stat-num">{len(posts_data)}</div><div class="stat-label">Total Posts</div></div>
-  <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p['image_b64'])}</div><div class="stat-label">Images Ready</div></div>
+  <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p['image_b64'])}</div><div class="stat-label">Images</div></div>
+  <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p.get('video_path'))}</div><div class="stat-label">Videos</div></div>
   <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p['tier']=='HERO')}</div><div class="stat-label">HERO</div></div>
   <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p['tier']=='HUB')}</div><div class="stat-label">HUB</div></div>
   <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p['tier']=='HYGIENE')}</div><div class="stat-label">HYGIENE</div></div>

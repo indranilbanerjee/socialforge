@@ -23,8 +23,12 @@ import json
 import os
 import sys
 import time
+import urllib.request
 from datetime import datetime
 from pathlib import Path
+
+# Add scripts dir to path for credential_manager import
+sys.path.insert(0, str(Path(__file__).parent))
 
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
 if _plugin_data and Path(_plugin_data).exists():
@@ -55,7 +59,11 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
     except ImportError:
         return {"status": "FAILED", "error": "wavespeed not installed. Run: pip install wavespeed"}
 
-    ws_key = os.environ.get("WAVESPEED_API_KEY")
+    try:
+        from credential_manager import get_wavespeed_key
+        ws_key = get_wavespeed_key()
+    except ImportError:
+        ws_key = os.environ.get("WAVESPEED_API_KEY")
     if not ws_key:
         return {
             "status": "FAILED",

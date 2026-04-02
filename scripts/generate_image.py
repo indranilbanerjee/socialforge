@@ -34,39 +34,42 @@ else:
 
 DEFAULT_MODEL = "gemini-2.5-flash-image"
 
+# Add scripts dir to path for credential_manager import
+sys.path.insert(0, str(Path(__file__).parent))
+
 
 def create_client():
-    """Create a google-genai client. Vertex AI preferred, AI Studio fallback."""
+    """Create a google-genai client via credential_manager (Vertex AI > env vars > AI Studio)."""
     try:
-        from google import genai
+        from credential_manager import get_gemini_client
+        client, backend = get_gemini_client()
+        if client:
+            return client, backend, None
+        else:
+            return None, None, backend  # backend contains error message when client is None
     except ImportError:
-        return None, None, "google-genai not installed. Run: pip install google-genai"
-
-    # Try Vertex AI first
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-
-    if project:
+        # Fallback if credential_manager not available
         try:
-            client = genai.Client(vertexai=True, project=project, location=location)
-            return client, "vertex", None
-        except Exception as e:
-            pass  # Fall through to AI Studio
+            from google import genai
+        except ImportError:
+            return None, None, "google-genai not installed. Run: pip install google-genai"
 
-    # Fall back to AI Studio
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if api_key:
-        try:
-            client = genai.Client(api_key=api_key)
-            return client, "aistudio", None
-        except Exception as e:
-            return None, None, f"AI Studio init failed: {e}"
+        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if project:
+            try:
+                client = genai.Client(vertexai=True, project=project,
+                                      location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1"))
+                return client, "vertex-env", None
+            except Exception:
+                pass
+        if api_key:
+            try:
+                return genai.Client(api_key=api_key), "aistudio", None
+            except Exception as e:
+                return None, None, f"AI Studio init failed: {e}"
 
-    return None, None, (
-        "No Gemini credentials configured. "
-        "For Vertex AI: set GOOGLE_CLOUD_PROJECT + run 'gcloud auth application-default login'. "
-        "For AI Studio: set GEMINI_API_KEY (get at https://aistudio.google.com/apikey)."
-    )
+        return None, None, "No credentials. Run /sf:setup or set GOOGLE_CLOUD_PROJECT."
 
 
 def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1", model=DEFAULT_MODEL):

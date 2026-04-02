@@ -54,8 +54,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 - A monthly content calendar (DOCX, XLSX, Notion database, or just text)
 
 **For AI image generation (recommended):**
-- **Vertex AI via `/sf:setup`** -- Google Cloud service account (recommended, most reliable)
-- `GEMINI_API_KEY` -- Google AI Studio (legacy fallback; `/sf:setup` with Vertex AI is now recommended, but `GEMINI_API_KEY` in `.env` still works as a fallback)
+- Google Cloud Vertex AI credentials (configured via `/sf:setup`)
 - fal.ai account -- connected via Connectors panel (HTTP, works in Cowork)
 - Replicate account -- connected via Connectors panel (HTTP, works in Cowork)
 
@@ -189,11 +188,9 @@ SocialForge Credentials
 
 Run `/sf:setup` again at any time to replace either credential. The new values overwrite the old ones immediately.
 
-### Fallback: GEMINI_API_KEY
+### Credential Management
 
-If you have a `GEMINI_API_KEY` set in your `.env` file (the legacy approach from earlier versions), SocialForge will use it as a fallback when Vertex AI credentials are not configured via `/sf:setup`. Vertex AI is recommended because it supports higher rate limits, more models, and does not require managing API keys in `.env`.
-
-Priority order: Vertex AI (via `/sf:setup`) > `GEMINI_API_KEY` (in `.env`) > fal.ai/Replicate (via Connectors).
+All API credentials are managed through `/sf:setup`. Run it anytime to configure or update your Vertex AI service account or WaveSpeed API key.
 
 ---
 
@@ -910,7 +907,7 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ### "Image generation failed"
 
 **Cause:** No image generation API is available.
-**Fix:** Run `/sf:setup --status` to verify Vertex AI credentials. If not configured, run `/sf:setup`. As a fallback, you can set `GEMINI_API_KEY` in `.env` or connect fal.ai/Replicate via the Connectors panel. The pipeline supports resuming — fix the credentials and rerun `/sf:generate-all`.
+**Fix:** Run `/sf:setup --status` to verify Vertex AI credentials. If not configured, run `/sf:setup` to configure. The pipeline supports resuming — fix the credentials and rerun `/sf:generate-all`.
 
 ### "Video generation failed"
 
@@ -988,7 +985,7 @@ A: LinkedIn, Instagram, Facebook, X/Twitter, YouTube (thumbnails), Pinterest, an
 A: Yes. ANCHOR_COMPOSE mode works with brand assets alone using Pillow for compositing. Carousel rendering uses Playwright (no AI). You can also provide pre-made visuals for every post and skip generation entirely. Only STYLE_REFERENCED and PURE_CREATIVE modes require an image generation API.
 
 **Q: Where do I set API keys?**
-A: In the `.env` file at the project root. The key variable is `GEMINI_API_KEY`. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
+A: Run `/sf:setup` to configure all credentials. They are stored securely in the plugin data directory. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
 
 ---
 

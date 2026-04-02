@@ -29,7 +29,7 @@ Run all phases sequentially with quality gates between each.
 Before any production work begins, verify that the required API credentials are configured via `credential_manager.py`.
 
 1. Run `credential_manager.py status` to check Vertex AI and WaveSpeed configuration
-2. **Image generation** requires Vertex AI (service account JSON) or GEMINI_API_KEY fallback
+2. **Image generation** requires Vertex AI credentials configured via `/sf:setup`
 3. **Video generation** requires WaveSpeed API key (only checked if calendar contains video posts)
 4. If any required credential is missing, stop the pipeline and prompt the user:
    "Required credentials not configured. Run `/sf:setup` to configure API keys before starting production."

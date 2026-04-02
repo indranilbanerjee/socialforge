@@ -12,32 +12,26 @@ Set up a new brand profile or update an existing one. Brand profiles control vis
 
 ## Pre-Requisite: Image Generation API
 
-SocialForge generates AI images for social media posts. Before setting up a brand, check that an image generation API is configured.
+SocialForge generates AI images for social media posts. Before setting up a brand, check that Google Cloud Vertex AI credentials are configured.
 
 **Step 0: Check image API (MANDATORY — do this before anything else)**
 
-Run: `echo $GEMINI_API_KEY` (or `echo %GEMINI_API_KEY%` on Windows)
+Run `/sf:setup` to configure Google Cloud Vertex AI credentials. Your admin provides a service account JSON file, which `/sf:setup` stores securely in the plugin data directory.
 
-**If empty or not set:**
-1. Go to https://aistudio.google.com/apikey (free tier available)
-2. Create an API key
-3. Set it: `export GEMINI_API_KEY=your-key-here` (add to shell profile for persistence)
-4. Install the package: `pip install google-generativeai`
+**Alternative providers:** Connect fal.ai or Replicate via the Connectors panel.
 
-**Alternative providers:** Connect fal.ai or Replicate via Connectors panel.
+**Without credentials**, SocialForge can parse calendars, match assets, adapt copy, and render carousels — but it CANNOT generate new images. STYLE_REFERENCED and PURE_CREATIVE modes will fail. ANCHOR_COMPOSE works for basic Pillow compositing only (no AI scene generation).
 
-**Without an image API**, SocialForge can parse calendars, match assets, adapt copy, and render carousels — but it CANNOT generate new images. STYLE_REFERENCED and PURE_CREATIVE modes will fail. ANCHOR_COMPOSE works for basic Pillow compositing only (no AI scene generation).
-
-**If the API key is not set, warn the user clearly:**
+**If credentials are not configured, warn the user clearly:**
 ```
 WARNING: No image generation API configured.
-GEMINI_API_KEY is not set. AI image generation will NOT work.
+Vertex AI credentials are not set. AI image generation will FAIL.
 
-To fix: export GEMINI_API_KEY=your-key (get free at https://aistudio.google.com/apikey)
+To fix: Run /sf:setup to configure Google Cloud Vertex AI credentials.
 Or connect fal.ai/Replicate via the Connectors panel.
 
 Do you want to:
-  1. Set up the API key now (recommended)
+  1. Run /sf:setup now (recommended)
   2. Continue without image generation (limited functionality)
 ```
 
@@ -230,7 +224,7 @@ Creates these files in `~/socialforge-workspace/brands/{brand-slug}/`:
 ## Pre-Flight Validation
 
 Before any SocialForge workflow starts, the brand profile is validated:
-- Image generation API configured (GEMINI_API_KEY or MCP connector)
+- Image generation API configured (Vertex AI via `/sf:setup` or MCP connector)
 - Brand name and slug set
 - At least one platform configured
 - Colors (primary + secondary) set

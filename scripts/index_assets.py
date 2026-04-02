@@ -12,6 +12,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Add scripts dir to path for credential_manager import
+sys.path.insert(0, str(Path(__file__).parent))
+
 # Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
 # fall back to ~/socialforge-workspace (legacy/local)
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
@@ -70,30 +73,39 @@ def scan_images(source_path):
 def analyze_image_gemini(image_path):
     """Analyze a single image with Gemini Vision."""
     try:
-        import google.generativeai as genai
+        from credential_manager import get_gemini_client
+        client, backend = get_gemini_client()
+        if not client:
+            return None
     except ImportError:
-        return None
+        # Fallback if credential_manager not available
+        try:
+            from google import genai
+        except ImportError:
+            return None
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            return None
+        client = genai.Client(api_key=api_key)
 
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return None
-
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    from google.genai import types
 
     img_data = image_path.read_bytes()
     mime = "image/jpeg" if image_path.suffix.lower() in [".jpg", ".jpeg"] else "image/png"
 
     try:
-        response = model.generate_content([
-            {"mime_type": mime, "data": base64.b64encode(img_data).decode()},
-            VISION_PROMPT
-        ])
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[
+                types.Part.from_bytes(data=img_data, mime_type=mime),
+                VISION_PROMPT,
+            ],
+        )
         # Parse JSON from response
-        text = response.text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-        return json.loads(text)
+        resp_text = response.text.strip()
+        if resp_text.startswith("```"):
+            resp_text = resp_text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        return json.loads(resp_text)
     except Exception:
         return None
 

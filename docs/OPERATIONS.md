@@ -40,15 +40,15 @@ Phase 1: MATCH ASSETS ──────────────→ asset-matche
   Gate: User confirms matches          │
   Fallback: Manual override            │
                                        ▼
-Phase 2: PRODUCE CREATIVE ──────────→ production/images/*.png
+Phase 2: PRODUCE CREATIVE ──────────→ production/week-{N}/{PostID}-.../versions/
   Gate: Quality score ≥7.0/10          │
   Fallback: Regenerate (max 3x)        │
                                        ▼
-Phase 3: ADAPT COPY ────────────────→ production/copy/*.txt
+Phase 3: ADAPT COPY ────────────────→ production/week-{N}/{PostID}-.../copy/
   Gate: Compliance PASSED              │
   Fallback: Flag for human edit        │
                                        ▼
-Phase 4: CREATE PREVIEWS ───────────→ production/previews/*.png
+Phase 4: CREATE PREVIEWS ───────────→ production/week-{N}/{PostID}-.../final/
   Gate: All platforms rendered          │
   Fallback: Raw image + copy           │
                                        ▼
@@ -82,11 +82,11 @@ Phase 0 writes: calendar-data.json
 Phase 1 reads:  calendar-data.json + asset-index.json
 Phase 1 writes: asset-matches.json + updates calendar-data.json (production block)
 Phase 2 reads:  calendar-data.json + asset-matches.json + brand-config.json
-Phase 2 writes: production/images/*.png + status-tracker.json
+Phase 2 writes: production/week-{N}/{PostID}-.../versions/*.png + status-tracker.json
 Phase 3 reads:  calendar-data.json + brand-config.json + compliance-rules.json
-Phase 3 writes: production/copy/*.txt
-Phase 4 reads:  production/images/ + production/copy/ + brand-config.json
-Phase 4 writes: production/previews/*.png
+Phase 3 writes: production/week-{N}/{PostID}-.../copy/*.txt
+Phase 4 reads:  .../versions/ + .../copy/ + brand-config.json
+Phase 4 writes: production/week-{N}/{PostID}-.../final/*.png
 Phase 5 reads:  everything in production/ + calendar-data.json + status-tracker.json
 Phase 5 writes: review/gallery.html
 Phase 6 reads:  status-tracker.json + approval-chain.json
@@ -570,7 +570,7 @@ Each banned phrase entry in compliance-rules.json has a `match_type`:
 ### Processing Order
 
 1. Load compliance-rules.json for the active brand.
-2. For each copy text file in production/copy/:
+2. For each copy text file in `production/week-{N}/{PostID}-.../copy/`:
    a. Run all banned phrase checks (critical first, then warnings).
    b. Scan for data claim patterns.
    c. Check if any trigger contexts require disclaimers and verify disclaimers are present.
@@ -712,7 +712,7 @@ If Playwright is not installed, the skill prompts the user to install it. There 
 
 Every video post, regardless of whether AI video generation is available, produces:
 
-1. **Script** -- Timestamped scene-by-scene narration/dialogue. Stored as `post-{id}-script.md` in production/video/.
+1. **Script** -- Timestamped scene-by-scene narration/dialogue. Stored as `post-{id}-script.md` in the post's `keyframes/` directory (`production/week-{N}/{PostID}-.../keyframes/`).
 2. **Storyboard** -- Shot-by-shot visual descriptions with camera directions (angle, movement, framing). Stored as `post-{id}-storyboard.md`.
 3. **Thumbnail** -- A static image generated via the standard image production pipeline (ANCHOR_COMPOSE or STYLE_REFERENCED). Stored as `post-{id}-thumbnail.png`.
 
@@ -883,11 +883,13 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/
 |   |   |   +-- status-tracker.json     <- Per-post state machine
 |   |   |   +-- cost-log.json           <- API cost tracking
 |   |   |   +-- production/
-|   |   |   |   +-- images/             <- Generated/composed images
-|   |   |   |   +-- carousels/          <- Rendered carousel slides + PDFs
-|   |   |   |   +-- previews/           <- Platform mockup screenshots
-|   |   |   |   +-- copy/               <- Adapted copy per platform
-|   |   |   |   +-- video/              <- Scripts, storyboards, clips
+|   |   |   |   +-- week-{N}/                              <- Week grouping
+|   |   |   |   |   +-- {PostID}-{date}-{platforms}-{tier}-{type}/
+|   |   |   |   |       +-- versions/                      <- Generated options
+|   |   |   |   |       +-- final/                         <- Approved output
+|   |   |   |   |       +-- copy/                          <- Platform copy
+|   |   |   |   |       +-- keyframes/                     <- Video keyframes
+|   |   |   |   +-- carousels/                             <- Rendered carousel slides + PDFs
 |   |   |   +-- review/
 |   |   |   |   +-- gallery.html        <- Interactive review gallery
 |   |   |   +-- FINAL/                  <- Delivery package (after finalization)
@@ -948,7 +950,7 @@ The FINAL/ folder is the delivery package. A social media manager can open Week-
 
 Asset images (the brand's photography) stay in their original location -- Google Drive, Cloudinary, or a local folder. SocialForge stores only the AI-analyzed metadata index (`asset-index.json`), not copies of the images themselves. The `asset-source.json` file records where to find the originals.
 
-Generated images (production output) are stored locally in the output directory under `production/images/`. These are new files created by SocialForge.
+Generated images (production output) are stored locally in the output directory under each post's directory: `production/week-{N}/{PostID}-{date}-{platforms}-{tier}-{type}/versions/` for generated options and `.../final/` for approved output. These are new files created by SocialForge.
 
 ---
 

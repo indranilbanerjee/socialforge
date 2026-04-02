@@ -9,7 +9,7 @@ Video providers:
   - Veo 2.0 via Vertex AI: text-to-video and image-to-video (up to 8s). Google-native.
 
 Setup (WaveSpeed — for Kling):
-    export WAVESPEED_API_KEY=your-fal-key (get at https://WaveSpeed/dashboard/keys)
+    export WAVESPEED_API_KEY=your-fal-key (get at https://wavespeed.ai/accesskey)
     pip install wavespeed
 
 Setup (Vertex AI — for Veo):

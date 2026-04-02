@@ -12,26 +12,36 @@ import os
 import sys
 from pathlib import Path
 
+# Add scripts dir to path for credential_manager import
+sys.path.insert(0, str(Path(__file__).parent))
+
 
 def edit_with_gemini(image_path, instruction, output_path, reference_images=None):
     """Edit image using Gemini API."""
     try:
-        import google.generativeai as genai
+        from credential_manager import get_gemini_client
+        client, backend = get_gemini_client()
+        if not client:
+            return {"status": "FAILED", "error": backend}
     except ImportError:
-        return {"error": "google-generativeai not installed. Run: pip install google-generativeai"}
+        # Fallback if credential_manager not available
+        try:
+            from google import genai
+        except ImportError:
+            return {"status": "FAILED", "error": "google-genai not installed. Run: pip install google-genai"}
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            return {"status": "FAILED", "error": "No credentials. Run /sf:setup"}
+        client = genai.Client(api_key=api_key)
+        backend = "ai-studio-fallback"
 
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return {"error": "GEMINI_API_KEY not set"}
-
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-exp-image-generation")
+    from google.genai import types
 
     # Build content: image + instruction
     img_data = Path(image_path).read_bytes()
     mime = "image/jpeg" if Path(image_path).suffix.lower() in [".jpg", ".jpeg"] else "image/png"
 
-    contents = [{"mime_type": mime, "data": base64.b64encode(img_data).decode()}]
+    contents = [types.Part.from_bytes(data=img_data, mime_type=mime)]
 
     # Add style references if provided
     if reference_images:
@@ -39,24 +49,33 @@ def edit_with_gemini(image_path, instruction, output_path, reference_images=None
             if Path(ref).exists():
                 ref_data = Path(ref).read_bytes()
                 ref_mime = "image/jpeg" if Path(ref).suffix.lower() in [".jpg", ".jpeg"] else "image/png"
-                contents.append({"mime_type": ref_mime, "data": base64.b64encode(ref_data).decode()})
+                contents.append(types.Part.from_bytes(data=ref_data, mime_type=ref_mime))
 
     contents.append(f"Edit this image: {instruction}. Preserve the core subject faithfully. Do not distort faces, products, or key elements.")
 
+    config = types.GenerateContentConfig(
+        response_modalities=["TEXT", "IMAGE"],
+    )
+
     try:
-        response = model.generate_content(
-            contents,
-            generation_config={"response_modalities": ["TEXT", "IMAGE"]}
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp-image-generation",
+            contents=contents,
+            config=config,
         )
 
-        for part in response.candidates[0].content.parts:
-            if hasattr(part, "inline_data") and part.inline_data.mime_type.startswith("image/"):
-                img_bytes = base64.b64decode(part.inline_data.data)
+        for part in response.parts:
+            if part.inline_data is not None and part.inline_data.mime_type.startswith("image/"):
                 Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-                Path(output_path).write_bytes(img_bytes)
+                try:
+                    image = part.as_image()
+                    image.save(output_path)
+                except (AttributeError, TypeError):
+                    img_bytes = base64.b64decode(part.inline_data.data) if isinstance(part.inline_data.data, str) else part.inline_data.data
+                    Path(output_path).write_bytes(img_bytes)
                 return {
                     "status": "success",
-                    "provider": "gemini_edit",
+                    "provider": f"gemini-edit-{backend}",
                     "output": str(output_path),
                     "instruction": instruction
                 }

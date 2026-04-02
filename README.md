@@ -121,31 +121,127 @@ Admins configure the cloud accounts once. Team members then just run `/sf:setup`
 
 ### Google Cloud (Vertex AI — Image Generation)
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/) and create a project (or use an existing one)
-2. Enable the **Vertex AI API** for the project
-3. Go to **IAM & Admin > Service Accounts** and create a service account
-4. Grant the service account the **Vertex AI User** role
-5. Create a JSON key for the service account and download it
-6. Share the JSON key file with your team (securely — do not commit to version control)
+#### Step 1: Create a Google Cloud Project
+1. Open https://console.cloud.google.com/
+2. If you don’t have an account, click "Get started for free" and follow registration
+3. Click the project dropdown at the top of the page (next to "Google Cloud")
+4. Click "NEW PROJECT"
+5. Enter a project name (e.g., "socialforge-production")
+6. Click "CREATE"
+7. Wait for the project to be created (30 seconds), then select it from the dropdown
 
-All Vertex AI billing goes to the admin’s Google Cloud account.
+#### Step 2: Enable Billing
+1. Go to https://console.cloud.google.com/billing
+2. Click "LINK A BILLING ACCOUNT"
+3. If you don’t have a billing account, click "CREATE BILLING ACCOUNT"
+4. Add a payment method (credit card)
+5. New accounts get $300 free credits for 90 days
+
+#### Step 3: Enable Vertex AI API
+1. Go to https://console.cloud.google.com/apis/library
+2. Search for "Vertex AI API"
+3. Click on it, then click "ENABLE"
+4. Wait for it to activate (takes a few seconds)
+
+#### Step 4: Create a Service Account
+1. Go to https://console.cloud.google.com/iam-admin/serviceaccounts
+2. Click "+ CREATE SERVICE ACCOUNT"
+3. Service account name: `socialforge-image-gen`
+4. Description: `SocialForge AI image generation`
+5. Click "CREATE AND CONTINUE"
+6. In "Grant this service account access to project":
+   - Click the "Select a role" dropdown
+   - Type "Vertex AI User" in the search box
+   - Select "Vertex AI User"
+7. Click "CONTINUE", then "DONE"
+
+#### Step 5: Download the JSON Key File
+1. In the service accounts list, click on `socialforge-image-gen`
+2. Go to the "KEYS" tab
+3. Click "ADD KEY" then "Create new key"
+4. Select "JSON" and click "CREATE"
+5. A .json file downloads automatically — this is your credential file
+6. Save it somewhere safe on your computer
+
+#### Step 6: Share with Your Team
+Share the downloaded JSON file with your team via:
+- Slack DM (not in a public channel)
+- Email (encrypted if possible)
+- Shared company drive (restricted access)
+
+NEVER commit this file to Git. NEVER share it publicly.
+
+**Cost:** Image generation costs approximately $0.01-0.04 per image depending on resolution and model. All costs go to the admin’s billing account.
 
 ### WaveSpeed (Kling v3.0 — Video Generation)
 
-1. Create an account at [wavespeed.ai](https://wavespeed.ai)
-2. Top up credits (pay-as-you-go; video generation costs vary by duration and resolution)
-3. Go to **API Keys** and create a new API key
-4. Share the API key with your team (securely — do not commit to version control)
+#### Step 1: Create a WaveSpeed Account
+1. Open https://wavespeed.ai
+2. Click "Sign Up" and create an account
+3. Verify your email
 
-All WaveSpeed billing goes to the admin’s WaveSpeed account.
+#### Step 2: Add Credits
+1. After logging in, go to your dashboard
+2. Click "Top Up" or navigate to billing
+3. Add credits (minimum top-up required to activate API access)
+4. Pricing: approximately $0.08-0.11 per second of video
+   - A 5-second video costs roughly $0.40-0.56
+   - A 10-second video costs roughly $0.84-1.12
+
+#### Step 3: Create an API Key
+1. Go to https://wavespeed.ai/accesskey
+2. Click "Create API Key"
+3. Copy the key (it’s a long string of letters and numbers)
+4. Save it somewhere safe
+
+#### Step 4: Share with Your Team
+Share the API key string with your team via:
+- Slack DM
+- Password manager (recommended)
+- Email (encrypted if possible)
+
+NEVER commit this key to Git or paste it in public forums.
+
+**Cost:** All video generation costs go to the admin’s WaveSpeed account. Monitor usage at https://wavespeed.ai/dashboard
+
+### HiggsField (Optional Fallback — Video + Image)
+
+HiggsField provides additional resilience. If both Vertex AI and WaveSpeed are down, HiggsField can generate images and videos.
+
+#### Step 1: Create a HiggsField Account
+1. Open https://higgsfield.ai
+2. Click "Sign Up" and create an account
+3. New accounts get 150 free credits
+
+#### Step 2: Get API Credentials
+1. Go to https://cloud.higgsfield.ai/api-keys
+2. Create a new API key pair — you’ll get an API Key AND an API Secret
+3. Save both values
+
+#### Step 3: Share with Your Team
+Share both the API key AND secret with your team. Both are needed for authentication.
 
 ### What Team Members Do
 
-Team members do not need to create any cloud accounts. They just:
-1. Install SocialForge (see Installation above)
-2. Run `/sf:setup`
-3. Paste or point to the credentials the admin shared (JSON file path + API key)
-4. Done — credentials persist across all sessions
+Team members do NOT need any cloud accounts. The admin shares credentials, and the team member runs:
+
+```
+/sf:setup
+```
+
+The setup wizard asks for:
+1. Path to the Google Cloud JSON file (for images) — paste the file path
+2. WaveSpeed API key (for video) — paste the key
+3. HiggsField credentials (optional) — paste key and secret if provided
+
+Credentials are stored in the plugin’s persistent data directory. They survive across sessions, restarts, and plugin updates.
+
+**Where credentials are stored per platform:**
+- Windows: `%APPDATA%\Claude\plugins\data\socialforge-neels-plugins\socialforge\`
+- macOS: `~/Library/Application Support/Claude/plugins/data/socialforge-neels-plugins/socialforge/`
+- Linux: `~/.config/Claude/plugins/data/socialforge-neels-plugins/socialforge/`
+
+Or if using the fallback workspace: `~/socialforge-workspace/`
 
 ## Video Generation
 

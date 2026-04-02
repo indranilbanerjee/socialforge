@@ -5,3 +5,5 @@ node_modules/
 .env
 *.log
 .mcp.json
+__pycache__/
+*.pyc

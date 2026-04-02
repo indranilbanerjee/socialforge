@@ -1,18 +1,31 @@
 #!/usr/bin/env python3
 """
-generate_video.py — Video production kit.
-Generates video scripts, storyboards, and optionally AI video clips.
+generate_video.py — Video production with AI generation.
+
+Pipeline: Gemini generates image → Kling (via fal.ai) or Veo (via Vertex AI) animates to video.
+
+Video providers:
+  - Kling v2.0 via fal.ai: image-to-video (5-10s clips). Best price/quality for short-form.
+  - Veo 2.0 via Vertex AI: text-to-video and image-to-video (up to 8s). Google-native.
+
+Setup (fal.ai — for Kling):
+    export FAL_KEY=your-fal-key (get at https://fal.ai/dashboard/keys)
+    pip install fal-client
+
+Setup (Vertex AI — for Veo):
+    export GOOGLE_CLOUD_PROJECT=your-project-id
+    gcloud auth application-default login
+    pip install google-genai
 """
 
 import argparse
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
-# Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
-# fall back to ~/socialforge-workspace (legacy/local)
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
 if _plugin_data and Path(_plugin_data).exists():
     WORKSPACE = Path(_plugin_data) / "socialforge"
@@ -28,6 +41,170 @@ VIDEO_TYPES = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Video Generation — Kling via fal.ai
+# ---------------------------------------------------------------------------
+
+def generate_video_kling(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9"):
+    """Generate video using Kling v2.0 via fal.ai. Supports image-to-video."""
+    try:
+        import fal_client
+    except ImportError:
+        return {"status": "FAILED", "error": "fal-client not installed. Run: pip install fal-client"}
+
+    fal_key = os.environ.get("FAL_KEY")
+    if not fal_key:
+        return {
+            "status": "FAILED",
+            "error": "FAL_KEY not set. Get one at https://fal.ai/dashboard/keys",
+            "action_required": True,
+        }
+
+    os.environ["FAL_KEY"] = fal_key
+
+    try:
+        if image_path and Path(image_path).exists():
+            # Image-to-video via Kling
+            # Upload image to fal.ai first
+            image_url = fal_client.upload_file(image_path)
+
+            result = fal_client.subscribe(
+                "fal-ai/kling-video/v2/master/image-to-video",
+                arguments={
+                    "prompt": prompt,
+                    "image_url": image_url,
+                    "duration": str(duration),
+                    "aspect_ratio": aspect_ratio,
+                },
+                with_logs=True,
+            )
+        else:
+            # Text-to-video via Kling
+            result = fal_client.subscribe(
+                "fal-ai/kling-video/v2/master/text-to-video",
+                arguments={
+                    "prompt": prompt,
+                    "duration": str(duration),
+                    "aspect_ratio": aspect_ratio,
+                },
+                with_logs=True,
+            )
+
+        video_url = result.get("video", {}).get("url")
+        if video_url:
+            # Download video
+            import urllib.request
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(video_url, output_path)
+            return {
+                "status": "success",
+                "provider": "kling-v2-fal",
+                "output": str(output_path),
+                "video_url": video_url,
+                "duration": duration,
+                "mode": "image-to-video" if image_path else "text-to-video",
+            }
+        else:
+            return {"status": "FAILED", "error": "No video URL in fal.ai response", "raw": str(result)[:500]}
+
+    except Exception as e:
+        return {"status": "FAILED", "error": f"Kling generation failed: {str(e)}"}
+
+
+# ---------------------------------------------------------------------------
+# Video Generation — Veo via Vertex AI
+# ---------------------------------------------------------------------------
+
+def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9"):
+    """Generate video using Google Veo 2.0 via Vertex AI."""
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        return {"status": "FAILED", "error": "google-genai not installed. Run: pip install google-genai"}
+
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+
+    if not project:
+        # Try AI Studio fallback
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if api_key:
+            client = genai.Client(api_key=api_key)
+            backend = "aistudio"
+        else:
+            return {
+                "status": "FAILED",
+                "error": "GOOGLE_CLOUD_PROJECT not set for Vertex AI Veo. "
+                         "Run: export GOOGLE_CLOUD_PROJECT=your-project-id",
+                "action_required": True,
+            }
+    else:
+        try:
+            client = genai.Client(vertexai=True, project=project, location=location)
+            backend = "vertex"
+        except Exception as e:
+            return {"status": "FAILED", "error": f"Vertex AI init failed: {e}"}
+
+    try:
+        # Build generation config
+        gen_config = types.GenerateVideosConfig(
+            prompt=prompt,
+            number_of_videos=1,
+            duration_seconds=min(duration, 8),  # Veo max 8s
+            aspect_ratio=aspect_ratio,
+        )
+
+        # Image-to-video or text-to-video
+        if image_path and Path(image_path).exists():
+            img_bytes = Path(image_path).read_bytes()
+            mime = "image/jpeg" if Path(image_path).suffix.lower() in (".jpg", ".jpeg") else "image/png"
+            image = types.Image(image_bytes=img_bytes, mime_type=mime)
+            operation = client.models.generate_videos(
+                model="veo-2.0-generate-001",
+                image=image,
+                config=gen_config,
+            )
+        else:
+            operation = client.models.generate_videos(
+                model="veo-2.0-generate-001",
+                config=gen_config,
+            )
+
+        # Poll for completion (max 5 minutes)
+        timeout = 300
+        start = time.time()
+        while not operation.done and (time.time() - start) < timeout:
+            time.sleep(15)
+            operation = client.operations.get(operation)
+
+        if not operation.done:
+            return {"status": "FAILED", "error": "Veo generation timed out after 5 minutes"}
+
+        if operation.result and operation.result.generated_videos:
+            video = operation.result.generated_videos[0]
+            video_bytes = client.files.download(file=video.video)
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "wb") as f:
+                f.write(video_bytes)
+            return {
+                "status": "success",
+                "provider": f"veo-2.0-{backend}",
+                "output": str(output_path),
+                "duration": min(duration, 8),
+                "mode": "image-to-video" if image_path else "text-to-video",
+            }
+        else:
+            return {"status": "FAILED", "error": "Veo returned no video (may have been filtered)"}
+
+    except Exception as e:
+        return {"status": "FAILED", "error": f"Veo generation failed: {str(e)}"}
+
+
+# ---------------------------------------------------------------------------
+# Script and Storyboard generation
+# ---------------------------------------------------------------------------
+
 def generate_script(post_data, brand_config):
     """Generate a video script from post data."""
     title = post_data.get("title", "Untitled")
@@ -35,7 +212,7 @@ def generate_script(post_data, brand_config):
     video_type = post_data.get("video_details", {}).get("video_type", "short_reel")
     duration = post_data.get("video_details", {}).get("duration_seconds", 30)
 
-    script = {
+    return {
         "title": title,
         "video_type": video_type,
         "target_duration_seconds": duration,
@@ -47,97 +224,27 @@ def generate_script(post_data, brand_config):
             {"timestamp": f"0:08-0:{duration-5}", "visual": "Main content sequence", "audio": "Narration continues", "text_overlay": "Key points"},
             {"timestamp": f"0:{duration-5}-0:{duration}", "visual": "CTA + brand logo", "audio": "Closing statement", "text_overlay": "Call to action"},
         ],
-        "notes": f"Based on: {brief}"
+        "notes": f"Based on: {brief}",
     }
-
-    return script
 
 
 def generate_storyboard(script):
     """Generate a storyboard from a script."""
-    storyboard = {
+    return {
         "title": script["title"],
         "total_scenes": len(script["scenes"]),
-        "frames": []
+        "frames": [
+            {
+                "frame_number": i + 1,
+                "timestamp": scene["timestamp"],
+                "visual_description": scene["visual"],
+                "camera_direction": "Static" if i == 0 else "Pan/zoom",
+                "text_overlay": scene.get("text_overlay", ""),
+                "transition": "Cut" if i > 0 else "Fade in",
+            }
+            for i, scene in enumerate(script["scenes"])
+        ],
     }
-
-    for i, scene in enumerate(script["scenes"]):
-        storyboard["frames"].append({
-            "frame_number": i + 1,
-            "timestamp": scene["timestamp"],
-            "visual_description": scene["visual"],
-            "camera_direction": "Static" if i == 0 else "Pan/zoom",
-            "text_overlay": scene.get("text_overlay", ""),
-            "transition": "Cut" if i > 0 else "Fade in"
-        })
-
-    return storyboard
-
-
-def route_video_provider(duration_seconds, video_type):
-    """Route to the appropriate video generation provider based on duration."""
-    if duration_seconds <= 10:
-        return {"provider": "veo_fast", "model": "veo-3.1-generate-preview", "mode": "fast"}
-    elif duration_seconds <= 30:
-        return {"provider": "veo_standard", "model": "veo-3.1-generate-preview", "mode": "standard"}
-    elif duration_seconds <= 180:
-        return {"provider": "kling", "model": "kling-v2", "mode": "long_form"}
-    else:
-        return {"provider": "manual", "model": None, "mode": "needs_filming",
-                "note": "Videos over 3 minutes require live filming"}
-
-
-def generate_video_veo(prompt, output_path, duration=10, image_path=None):
-    """Generate video using Gemini Veo 3.1 API."""
-    try:
-        import google.generativeai as genai
-        import os
-        import base64
-        import time
-    except ImportError:
-        return {"error": "google-generativeai not installed"}
-
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return {"error": "GEMINI_API_KEY not set", "fallback": "script_and_storyboard_only"}
-
-    genai.configure(api_key=api_key)
-
-    try:
-        # Veo 3.1 video generation
-        model = genai.GenerativeModel("veo-3.1-generate-preview")
-
-        contents = []
-        if image_path and Path(image_path).exists():
-            # Image-to-video
-            img_data = Path(image_path).read_bytes()
-            mime = "image/jpeg" if Path(image_path).suffix.lower() in [".jpg", ".jpeg"] else "image/png"
-            contents.append({"mime_type": mime, "data": base64.b64encode(img_data).decode()})
-
-        contents.append(f"Generate a {duration}-second video: {prompt}")
-
-        response = model.generate_content(
-            contents,
-            generation_config={"response_modalities": ["VIDEO"]}
-        )
-
-        # Extract video from response
-        for part in response.candidates[0].content.parts:
-            if hasattr(part, "inline_data") and part.inline_data.mime_type.startswith("video/"):
-                video_bytes = base64.b64decode(part.inline_data.data)
-                Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-                Path(output_path).write_bytes(video_bytes)
-                return {
-                    "status": "success",
-                    "provider": "veo_3.1",
-                    "output": str(output_path),
-                    "duration_requested": duration
-                }
-
-        return {"error": "No video in Veo response", "fallback": "script_and_storyboard_only"}
-
-    except Exception as e:
-        return {"error": f"Veo generation failed: {str(e)}", "fallback": "script_and_storyboard_only"}
 
 
 def generate_srt(script, output_path):
@@ -149,58 +256,77 @@ def generate_srt(script, output_path):
         start = parts[0].strip() if parts else "00:00:00"
         end = parts[1].strip() if len(parts) > 1 else "00:00:05"
 
-        # Convert M:SS to HH:MM:SS,mmm
         def to_srt_time(t):
-            parts = t.split(":")
-            if len(parts) == 2:
-                return f"00:{parts[0].zfill(2)}:{parts[1].zfill(2)},000"
+            p = t.split(":")
+            if len(p) == 2:
+                return f"00:{p[0].zfill(2)}:{p[1].zfill(2)},000"
             return f"{t},000"
 
         text = scene.get("text_overlay", "") or scene.get("visual", "")[:80]
         if text:
-            srt_lines.append(f"{i + 1}")
-            srt_lines.append(f"{to_srt_time(start)} --> {to_srt_time(end)}")
-            srt_lines.append(text)
-            srt_lines.append("")
+            srt_lines.extend([f"{i + 1}", f"{to_srt_time(start)} --> {to_srt_time(end)}", text, ""])
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     Path(output_path).write_text("\n".join(srt_lines), encoding="utf-8")
     return {"status": "success", "output": str(output_path), "subtitle_count": len(script.get("scenes", []))}
 
 
+def route_video_provider(duration_seconds, video_type):
+    """Route to the appropriate video provider."""
+    fal_key = os.environ.get("FAL_KEY")
+    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+
+    if duration_seconds <= 8 and (gcp_project or gemini_key):
+        return {"provider": "veo", "model": "veo-2.0-generate-001", "max_duration": 8}
+    elif duration_seconds <= 10 and fal_key:
+        return {"provider": "kling", "model": "kling-v2", "max_duration": 10}
+    elif fal_key:
+        return {"provider": "kling", "model": "kling-v2", "max_duration": 10}
+    elif gcp_project or gemini_key:
+        return {"provider": "veo", "model": "veo-2.0-generate-001", "max_duration": 8}
+    else:
+        return {
+            "provider": "none",
+            "error": "No video API configured. Set FAL_KEY for Kling or GOOGLE_CLOUD_PROJECT for Veo.",
+            "fallback": "script_and_storyboard_only",
+        }
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
 def main():
-    parser = argparse.ArgumentParser(description="SocialForge Video Generator")
+    parser = argparse.ArgumentParser(description="SocialForge Video Generator (Kling + Veo)")
     parser.add_argument("--brand", required=True)
     parser.add_argument("--month", required=True)
     parser.add_argument("--post-id", required=True)
     parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--generate-video", action="store_true", help="Actually generate AI video (requires API key)")
+    parser.add_argument("--generate-video", action="store_true", help="Generate AI video")
     parser.add_argument("--image", default=None, help="Input image for image-to-video")
+    parser.add_argument("--provider", default="auto", choices=["auto", "kling", "veo"],
+                        help="Video provider (auto routes by duration and available keys)")
+    parser.add_argument("--duration", type=int, default=None, help="Override video duration (seconds)")
+    parser.add_argument("--aspect-ratio", default="16:9", help="Video aspect ratio")
     parser.add_argument("--srt", action="store_true", help="Generate SRT subtitle file")
     args = parser.parse_args()
 
     # Load post data
     calendar_path = WORKSPACE / "output" / args.brand / args.month / "calendar-data.json"
     if not calendar_path.exists():
-        print(json.dumps({"error": "Calendar not found"}))
+        print(json.dumps({"error": "Calendar not found", "path": str(calendar_path)}))
         sys.exit(1)
 
     calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
-    post = None
-    for p in calendar.get("posts", []):
-        if str(p.get("post_id")) == str(args.post_id):
-            post = p
-            break
-
+    post = next((p for p in calendar.get("posts", []) if str(p.get("post_id")) == str(args.post_id)), None)
     if not post:
         print(json.dumps({"error": f"Post {args.post_id} not found"}))
         sys.exit(1)
 
     # Load brand config
     config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
-    brand_config = {}
-    if config_path.exists():
-        brand_config = json.loads(config_path.read_text(encoding="utf-8"))
+    brand_config = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -215,23 +341,30 @@ def main():
     storyboard_path = output_dir / f"post-{args.post_id}-storyboard.json"
     storyboard_path.write_text(json.dumps(storyboard, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    # Route video provider
-    duration = post.get("video_details", {}).get("duration_seconds", 30)
+    # Duration and routing
+    duration = args.duration or post.get("video_details", {}).get("duration_seconds", 10)
     video_type = post.get("video_details", {}).get("video_type", "short_reel")
     routing = route_video_provider(duration, video_type)
 
-    # Generate SRT if requested
+    # SRT
     srt_result = None
     if args.srt:
         srt_path = output_dir / f"post-{args.post_id}-subtitles.srt"
         srt_result = generate_srt(script, str(srt_path))
 
-    # Generate actual video if requested
+    # Generate video
     video_result = None
-    if args.generate_video and routing["provider"] != "manual":
+    if args.generate_video and routing["provider"] != "none":
         video_path = output_dir / f"post-{args.post_id}-video.mp4"
         prompt = post.get("visual", {}).get("direction_a", post.get("title", ""))
-        video_result = generate_video_veo(prompt, str(video_path), duration, args.image)
+        provider = args.provider if args.provider != "auto" else routing["provider"]
+
+        if provider == "kling":
+            video_result = generate_video_kling(prompt, str(video_path), args.image, duration, args.aspect_ratio)
+        elif provider == "veo":
+            video_result = generate_video_veo(prompt, str(video_path), args.image, duration, args.aspect_ratio)
+    elif args.generate_video and routing["provider"] == "none":
+        video_result = {"status": "FAILED", "error": routing["error"], "action_required": True}
 
     print(json.dumps({
         "status": "success",
@@ -243,7 +376,7 @@ def main():
         "script": str(script_path),
         "storyboard": str(storyboard_path),
         "srt": srt_result,
-        "video": video_result or {"status": "not_requested", "note": "Use --generate-video to create AI video"}
+        "video": video_result or {"status": "not_requested", "note": "Use --generate-video to create AI video"},
     }, indent=2))
 
 

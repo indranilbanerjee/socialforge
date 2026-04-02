@@ -130,6 +130,7 @@ def init_month(brand, month):
     (month_dir / "production" / "previews").mkdir(parents=True, exist_ok=True)
     (month_dir / "production" / "copy").mkdir(parents=True, exist_ok=True)
     (month_dir / "production" / "video").mkdir(parents=True, exist_ok=True)
+    (month_dir / "production" / "alternatives").mkdir(parents=True, exist_ok=True)
     (month_dir / "review").mkdir(parents=True, exist_ok=True)
     (month_dir / "FINAL").mkdir(parents=True, exist_ok=True)
 

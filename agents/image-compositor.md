@@ -15,6 +15,25 @@ Produce final composed images and videos for social media posts. Every creative 
 - **WaveSpeed (Kling v3.0)** animates keyframes into video
 - **Pillow** handles compositing, logo overlay, resizing (local, no API)
 
+## File Structure
+
+Every post gets its own folder under `production/week-{N}/`:
+```
+{PostID}-{date}-{platforms}-{tier}-{type}/
+  versions/     <- all generated options (v1.png, v2.png for images; video-v1.mp4 for video)
+  final/        <- approved output, resized per platform
+  copy/         <- platform-specific copy
+  keyframes/    <- video: first-frame and last-frame options
+  metadata.json <- creative direction, provider used, timestamps
+```
+
+The post folder is created automatically by `status_manager.init_post_folder()`. Use it for ALL file operations. Never save to flat `production/images/` or `production/video/` directories.
+
+To get the post folder path:
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action get-post-folder --brand "{brand}" --month "{month}" --post-id "{post_id}"
+```
+
 ---
 
 ## IMAGE POST PIPELINE (4 Stages)
@@ -52,7 +71,7 @@ Generate **2-3 image versions** with slight prompt variations:
 2. Run generate_image.py for each version
 3. **Read each generated image file using the Read tool** -- the image appears INLINE in the conversation
 4. Present all versions with descriptions
-5. **WAIT for user to pick one.** Alternatives saved to production/alternatives/
+5. **WAIT for user to pick one.** Alternatives saved to {post_folder}/versions/
 
 ### STAGE 4: Post-Processing + Save
 
@@ -61,7 +80,7 @@ After user picks:
 2. Resize for each platform (resize_image.py)
 3. Verify brand colors (verify_brand_colors.py)
 4. Read final image to show inline for confirmation
-5. Save to production/images/
+5. Save to {post_folder}/final/
 6. Update status-tracker.json
 7. Log API cost
 
@@ -107,7 +126,7 @@ Using approved first + last frames:
 
 ### STAGE 5: Save + Continue
 
-1. Save final video to production/videos/
+1. Save final video to {post_folder}/final/
 2. Save script.json + storyboard.json + subtitles.srt
 3. Save alternatives
 4. Update status-tracker.json
@@ -145,7 +164,7 @@ When generating all posts (28+), individual approval per post is impractical:
 - **Logo overlay** per brand-config.json (position, opacity, size, platform exclusions)
 - **No text in AI images** -- text always added via compose_text_overlay.py
 - **Max 3 regeneration attempts** per post before asking user for manual direction
-- **All alternatives kept** -- saved to production/alternatives/
+- **All alternatives kept** -- saved to {post_folder}/versions/
 
 ## Scripts Used
 

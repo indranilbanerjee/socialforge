@@ -84,7 +84,7 @@ After the user selects their preferred image:
 1. Apply text overlay via compose_text_overlay.py
 2. Apply logo per brand-config.json (position, opacity, size, platform exclusions)
 3. Resize per platform via resize_image.py
-4. Save final assets to output directory
+4. Save final assets to the post-specific folder: `{post_folder}/final/`
 5. Update status-tracker.json
 6. Log prompt to `shared/prompt-logs/`
 7. Track API cost in cost-log.json
@@ -118,7 +118,7 @@ User picks a concept before any generation begins.
 - Max 3 generation rounds before escalating
 
 ### Stage 5: Save Final
-1. Save the selected video to output directory
+1. Save the selected video to the post-specific folder: `{post_folder}/final/`
 2. Apply any required brand watermark or logo overlay
 3. Update status-tracker.json
 4. Log prompt and generation parameters to `shared/prompt-logs/`

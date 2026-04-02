@@ -53,7 +53,7 @@ Using the approved first and last frames, generate **2 video versions** via Wave
 
 ### Stage 5: Save & Deliver
 
-Save all final assets to `production/video/post-{id}-*`:
+Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video versions in `versions/`, final video in `final/`:
 - **Video file** (.mp4) — the approved clip
 - **Script** — timestamped narration/dialogue
 - **Storyboard** — shot-by-shot visual breakdown with keyframe references
@@ -88,7 +88,7 @@ Save all final assets to `production/video/post-{id}-*`:
 - `--thumbnail` generates a video thumbnail via compose-creative (independent of the pipeline)
 - AI video clips are never auto-saved; user must confirm the final selection
 - Thumbnails use the same creative mode system as static images
-- All assets save to `production/video/post-{id}-*`
+- All assets save to `{post_folder}/` -- keyframes in `keyframes/`, video versions in `versions/`, final video in `final/`
 
 ## Timeout & Fallback
 

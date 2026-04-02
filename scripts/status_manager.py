@@ -209,7 +209,7 @@ def init_month(brand, month):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Status Manager")
-    parser.add_argument("--action", required=True, choices=["session-init", "update-status", "get-summary", "init-month"])
+    parser.add_argument("--action", required=True, choices=["session-init", "update-status", "get-summary", "init-month", "get-post-folder"])
     parser.add_argument("--brand", default=None)
     parser.add_argument("--month", default=None)
     parser.add_argument("--post-id", default=None)
@@ -236,6 +236,21 @@ def main():
             print("Error: --brand and --month required", file=sys.stderr)
             sys.exit(1)
         init_month(args.brand, args.month)
+    elif args.action == "get-post-folder":
+        if not all([args.brand, args.month, args.post_id]):
+            print("Error: --brand, --month, --post-id required", file=sys.stderr)
+            sys.exit(1)
+        calendar_path = WORKSPACE / "output" / args.brand / args.month / "calendar-data.json"
+        if not calendar_path.exists():
+            print(json.dumps({"error": "Calendar not found"}))
+            sys.exit(1)
+        calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+        post = next((p for p in calendar.get("posts", []) if str(p.get("post_id")) == str(args.post_id)), None)
+        if not post:
+            print(json.dumps({"error": f"Post {args.post_id} not found"}))
+            sys.exit(1)
+        post_dir = init_post_folder(args.brand, args.month, post)
+        print(json.dumps({"post_id": args.post_id, "folder": post_dir, "name": get_post_folder_name(post)}))
 
 
 if __name__ == "__main__":

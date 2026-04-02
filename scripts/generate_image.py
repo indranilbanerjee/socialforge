@@ -52,7 +52,14 @@ def create_client():
         try:
             from google import genai
         except ImportError:
-            return None, None, "google-genai not installed. Run: pip install google-genai"
+            try:
+                from install_deps import ensure_package
+                if ensure_package("google-genai"):
+                    from google import genai
+                else:
+                    return None, None, "google-genai install failed. Run: pip install google-genai"
+            except (ImportError, Exception):
+                return None, None, "google-genai not installed. Run: pip install google-genai"
 
         project = os.environ.get("GOOGLE_CLOUD_PROJECT")
         api_key = os.environ.get("GEMINI_API_KEY")
@@ -172,7 +179,14 @@ def generate_placeholder(prompt, output_path, width=1080, height=1080):
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
-        return {"error": "Pillow not installed. Run: pip install Pillow"}
+        try:
+            from install_deps import ensure_package
+            if ensure_package("Pillow"):
+                from PIL import Image, ImageDraw, ImageFont
+            else:
+                return {"error": "Pillow install failed. Run: pip install Pillow"}
+        except (ImportError, Exception):
+            return {"error": "Pillow not installed. Run: pip install Pillow"}
 
     img = Image.new("RGB", (width, height), (240, 240, 240))
     draw = ImageDraw.Draw(img)

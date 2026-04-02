@@ -57,7 +57,14 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
     try:
         import wavespeed
     except ImportError:
-        return {"status": "FAILED", "error": "wavespeed not installed. Run: pip install wavespeed"}
+        try:
+            from install_deps import ensure_package
+            if ensure_package("wavespeed"):
+                import wavespeed
+            else:
+                return {"status": "FAILED", "error": "wavespeed install failed. Run: pip install wavespeed"}
+        except (ImportError, Exception):
+            return {"status": "FAILED", "error": "wavespeed not installed. Run: pip install wavespeed"}
 
     try:
         from credential_manager import get_wavespeed_key
@@ -128,7 +135,15 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
         from google import genai
         from google.genai import types
     except ImportError:
-        return {"status": "FAILED", "error": "google-genai not installed. Run: pip install google-genai"}
+        try:
+            from install_deps import ensure_package
+            if ensure_package("google-genai"):
+                from google import genai
+                from google.genai import types
+            else:
+                return {"status": "FAILED", "error": "google-genai install failed. Run: pip install google-genai"}
+        except (ImportError, Exception):
+            return {"status": "FAILED", "error": "google-genai not installed. Run: pip install google-genai"}
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")

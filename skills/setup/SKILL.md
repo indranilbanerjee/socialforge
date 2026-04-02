@@ -33,6 +33,17 @@ If you are the admin, see the Admin Setup section below.
 
 ## Interactive Flow
 
+### Step 0: Install Dependencies (Automatic)
+
+Run this first — installs all required Python packages:
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py"
+```
+
+This auto-installs: google-genai (Vertex AI), wavespeed (Kling video), Pillow (compositing), playwright (carousels).
+
+If any package fails, show the manual install command and continue.
+
 ### Step 1: Image Generation (Vertex AI)
 
 Check if already configured:

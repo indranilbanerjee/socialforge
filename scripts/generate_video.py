@@ -122,7 +122,52 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
             return {"status": "FAILED", "error": "No video URL in WaveSpeed response", "raw": str(output)[:500]}
 
     except Exception as e:
-        return {"status": "FAILED", "error": f"Kling generation failed: {str(e)}"}
+        ws_error = str(e)
+        hf_result = generate_video_higgsfield(prompt, output_path, first_frame_path, duration, sound)
+        if hf_result and hf_result.get("status") == "success":
+            hf_result["fallback_from"] = "wavespeed"
+            return hf_result
+        return {"status": "FAILED", "error": f"WaveSpeed failed: {ws_error[:100]}. HiggsField also unavailable."}
+
+
+def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, sound=False):
+    """Fallback: Generate video via HiggsField (Kling or DoP)."""
+    try:
+        from credential_manager import get_higgsfield_auth
+        api_key, api_secret = get_higgsfield_auth()
+    except ImportError:
+        api_key = os.environ.get("HF_API_KEY")
+        api_secret = os.environ.get("HF_API_SECRET")
+    if not api_key or not api_secret:
+        return None
+    try:
+        import requests as req
+        import time as _time
+        headers = {"Authorization": f"Key {api_key}:{api_secret}", "Content-Type": "application/json"}
+        payload = {"prompt": prompt, "duration": min(max(duration, 3), 15)}
+        model_path = "kling-video/v2.1/pro/image-to-video" if image_path else "kling-video/v2.1/pro/text-to-video"
+        if image_path and Path(image_path).exists():
+            import base64 as b64
+            img_data = b64.b64encode(Path(image_path).read_bytes()).decode()
+            payload["image_url"] = f"data:image/png;base64,{img_data}"
+        resp = req.post(f"https://platform.higgsfield.ai/{model_path}", headers=headers, json=payload, timeout=30)
+        if resp.status_code != 200:
+            return None
+        request_id = resp.json().get("request_id")
+        for _ in range(100):
+            _time.sleep(3)
+            st = req.get(f"https://platform.higgsfield.ai/requests/{request_id}/status", headers=headers, timeout=15).json()
+            if st.get("status") == "completed":
+                vid_url = st.get("video", {}).get("url") or (st.get("outputs", [None]) or [None])[0]
+                if vid_url:
+                    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+                    urllib.request.urlretrieve(vid_url, output_path)
+                    return {"status": "success", "provider": "higgsfield-kling", "output": str(output_path)}
+            elif st.get("status") in ("failed", "nsfw"):
+                return None
+    except Exception:
+        pass
+    return None
 
 
 # ---------------------------------------------------------------------------

@@ -140,7 +140,76 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
         return {"status": "FAILED", "error": "No image in response", "text_response": text_resp}
 
     except Exception as e:
-        return {"status": "FAILED", "error": str(e), "action_required": True}
+        primary_error = str(e)
+        ws_result = generate_image_wavespeed(prompt, output_path, reference_images, aspect_ratio)
+        if ws_result:
+            ws_result["fallback_from"] = "vertex-ai"
+            return ws_result
+        hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio)
+        if hf_result:
+            hf_result["fallback_from"] = "vertex-ai+wavespeed"
+            return hf_result
+        return {"status": "FAILED", "error": f"All providers failed. Primary: {primary_error[:100]}", "action_required": True}
+
+
+def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_ratio="1:1"):
+    """Fallback: Generate image via WaveSpeed (Nano Banana models)."""
+    try:
+        from credential_manager import get_wavespeed_key
+        ws_key = get_wavespeed_key()
+    except ImportError:
+        ws_key = os.environ.get("WAVESPEED_API_KEY")
+    if not ws_key:
+        return None
+    try:
+        from wavespeed import Client as WsClient
+        client = WsClient(api_key=ws_key)
+        payload = {"prompt": prompt, "aspect_ratio": aspect_ratio}
+        output = client.run("kwaivgi/kling-image-v3/text-to-image", payload, timeout=120.0, poll_interval=3.0)
+        img_url = output.get("outputs", [None])[0]
+        if img_url:
+            import urllib.request
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(img_url, output_path)
+            return {"status": "success", "provider": "wavespeed-nanobanana", "output": str(output_path)}
+    except Exception:
+        pass
+    return None
+
+
+def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1"):
+    """Fallback: Generate image via HiggsField (Soul / Nano Banana Pro)."""
+    try:
+        from credential_manager import get_higgsfield_auth
+        api_key, api_secret = get_higgsfield_auth()
+    except ImportError:
+        api_key, api_secret = os.environ.get("HF_API_KEY"), os.environ.get("HF_API_SECRET")
+    if not api_key or not api_secret:
+        return None
+    try:
+        import requests as req
+        import time as _time
+        headers = {"Authorization": f"Key {api_key}:{api_secret}", "Content-Type": "application/json"}
+        resp = req.post("https://platform.higgsfield.ai/higgsfield/soul-v2/text-to-image",
+                       headers=headers, json={"prompt": prompt, "aspect_ratio": aspect_ratio}, timeout=30)
+        if resp.status_code != 200:
+            return None
+        request_id = resp.json().get("request_id")
+        for _ in range(60):
+            _time.sleep(3)
+            st = req.get(f"https://platform.higgsfield.ai/requests/{request_id}/status", headers=headers, timeout=15).json()
+            if st.get("status") == "completed":
+                img_url = st.get("image", {}).get("url") or (st.get("outputs", [None]) or [None])[0]
+                if img_url:
+                    import urllib.request
+                    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+                    urllib.request.urlretrieve(img_url, output_path)
+                    return {"status": "success", "provider": "higgsfield-soul", "output": str(output_path)}
+            elif st.get("status") in ("failed", "nsfw"):
+                return None
+    except Exception:
+        pass
+    return None
 
 
 def edit_image(image_path, edit_prompt, output_path, model=DEFAULT_MODEL):

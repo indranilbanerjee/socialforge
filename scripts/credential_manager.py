@@ -161,15 +161,66 @@ def get_wavespeed_key():
     return os.environ.get("WAVESPEED_API_KEY")
 
 
+def setup_higgsfield(api_key, api_secret):
+    """Save HiggsField API key + secret to plugin data."""
+    if not api_key or not api_secret:
+        return {"status": "FAILED", "error": "Both API key and secret are required"}
+    creds = _load_creds()
+    creds["higgsfield"] = {"api_key": api_key, "api_secret": api_secret}
+    _save_creds(creds)
+    return {"status": "success", "stored_at": str(CRED_FILE)}
+
+
+def validate_higgsfield():
+    """Check if HiggsField credentials are configured."""
+    creds = _load_creds()
+    hf = creds.get("higgsfield")
+    if not hf or not hf.get("api_key"):
+        if os.environ.get("HF_API_KEY") and os.environ.get("HF_API_SECRET"):
+            return {"configured": True, "source": "env_var"}
+        return {"configured": False}
+    return {"configured": True, "source": "plugin_data"}
+
+
+def get_higgsfield_auth():
+    """Return (api_key, api_secret) for HiggsField. Plugin data first, env fallback."""
+    creds = _load_creds()
+    hf = creds.get("higgsfield")
+    if hf and hf.get("api_key") and hf.get("api_secret"):
+        return hf["api_key"], hf["api_secret"]
+    return os.environ.get("HF_API_KEY"), os.environ.get("HF_API_SECRET")
+
+
 def get_status():
     """Return status of all configured services."""
     va = validate_vertex_ai()
     ws = validate_wavespeed()
+    hf = validate_higgsfield()
+
+    # Image: ready if any provider is configured
+    img_providers = []
+    if va.get("configured"):
+        img_providers.append("vertex-ai")
+    if ws.get("configured"):
+        img_providers.append("wavespeed")
+    if hf.get("configured"):
+        img_providers.append("higgsfield")
+
+    # Video: ready if any provider is configured
+    vid_providers = []
+    if ws.get("configured"):
+        vid_providers.append("wavespeed")
+    if hf.get("configured"):
+        vid_providers.append("higgsfield")
+
     return {
         "vertex_ai": va,
         "wavespeed": ws,
-        "image_generation": "ready" if va.get("configured") else "not_configured",
-        "video_generation": "ready" if ws.get("configured") else "not_configured",
+        "higgsfield": hf,
+        "image_generation": "ready" if img_providers else "not_configured",
+        "image_providers": img_providers,
+        "video_generation": "ready" if vid_providers else "not_configured",
+        "video_providers": vid_providers,
         "credentials_dir": str(CRED_DIR),
     }
 
@@ -182,6 +233,9 @@ def main():
     va_p.add_argument("--json-path", required=True, help="Path to GCP service account JSON")
     ws_p = sub.add_parser("setup-wavespeed", help="Configure WaveSpeed")
     ws_p.add_argument("--api-key", required=True, help="WaveSpeed API key")
+    hf_p = sub.add_parser("setup-higgsfield", help="Configure HiggsField")
+    hf_p.add_argument("--api-key", required=True, help="HiggsField API key")
+    hf_p.add_argument("--api-secret", required=True, help="HiggsField API secret")
     sub.add_parser("status", help="Show credential status")
     sub.add_parser("validate", help="Validate all credentials")
     args = parser.parse_args()
@@ -189,10 +243,12 @@ def main():
         result = setup_vertex_ai(args.json_path)
     elif args.action == "setup-wavespeed":
         result = setup_wavespeed(args.api_key)
+    elif args.action == "setup-higgsfield":
+        result = setup_higgsfield(args.api_key, args.api_secret)
     elif args.action == "status":
         result = get_status()
     elif args.action == "validate":
-        result = {"vertex_ai": validate_vertex_ai(), "wavespeed": validate_wavespeed()}
+        result = {"vertex_ai": validate_vertex_ai(), "wavespeed": validate_wavespeed(), "higgsfield": validate_higgsfield()}
     else:
         parser.print_help()
         return

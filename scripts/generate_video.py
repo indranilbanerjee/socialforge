@@ -2,15 +2,15 @@
 """
 generate_video.py — Video production with AI generation.
 
-Pipeline: Gemini generates image → Kling (via fal.ai) or Veo (via Vertex AI) animates to video.
+Pipeline: Gemini generates image → Kling (via WaveSpeed) or Veo (via Vertex AI) animates to video.
 
 Video providers:
-  - Kling v2.0 via fal.ai: image-to-video (5-10s clips). Best price/quality for short-form.
+  - Kling v2.0 via WaveSpeed: image-to-video (5-10s clips). Best price/quality for short-form.
   - Veo 2.0 via Vertex AI: text-to-video and image-to-video (up to 8s). Google-native.
 
-Setup (fal.ai — for Kling):
-    export FAL_KEY=your-fal-key (get at https://fal.ai/dashboard/keys)
-    pip install fal-client
+Setup (WaveSpeed — for Kling):
+    export WAVESPEED_API_KEY=your-fal-key (get at https://WaveSpeed/dashboard/keys)
+    pip install wavespeed
 
 Setup (Vertex AI — for Veo):
     export GOOGLE_CLOUD_PROJECT=your-project-id
@@ -42,70 +42,67 @@ VIDEO_TYPES = {
 
 
 # ---------------------------------------------------------------------------
-# Video Generation — Kling via fal.ai
+# Video Generation — Kling via WaveSpeed
 # ---------------------------------------------------------------------------
 
-def generate_video_kling(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9"):
-    """Generate video using Kling v2.0 via fal.ai. Supports image-to-video."""
+def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=None,
+                         duration=5, model="kwaivgi/kling-v3.0-pro/image-to-video", sound=False):
+    """Generate video using Kling v3.0 via WaveSpeed API.
+    Takes first frame (required) and optionally last frame as keyframes.
+    Kling animates between them guided by the motion prompt."""
     try:
-        import fal_client
+        import wavespeed
     except ImportError:
-        return {"status": "FAILED", "error": "fal-client not installed. Run: pip install fal-client"}
+        return {"status": "FAILED", "error": "wavespeed not installed. Run: pip install wavespeed"}
 
-    fal_key = os.environ.get("FAL_KEY")
-    if not fal_key:
+    ws_key = os.environ.get("WAVESPEED_API_KEY")
+    if not ws_key:
         return {
             "status": "FAILED",
-            "error": "FAL_KEY not set. Get one at https://fal.ai/dashboard/keys",
+            "error": "WAVESPEED_API_KEY not set. Get at https://wavespeed.ai/accesskey",
             "action_required": True,
         }
+    os.environ["WAVESPEED_API_KEY"] = ws_key
 
-    os.environ["FAL_KEY"] = fal_key
+    if not Path(first_frame_path).exists():
+        return {"status": "FAILED", "error": f"First frame not found: {first_frame_path}"}
 
     try:
-        if image_path and Path(image_path).exists():
-            # Image-to-video via Kling
-            # Upload image to fal.ai first
-            image_url = fal_client.upload_file(image_path)
+        print(f"  Uploading first frame...")
+        image_url = wavespeed.upload(first_frame_path)
+        payload = {
+            "image": image_url,
+            "prompt": prompt,
+            "duration": min(max(duration, 3), 15),
+            "cfg_scale": 0.5,
+            "sound": sound,
+            "shot_type": "customize",
+        }
 
-            result = fal_client.subscribe(
-                "fal-ai/kling-video/v2/master/image-to-video",
-                arguments={
-                    "prompt": prompt,
-                    "image_url": image_url,
-                    "duration": str(duration),
-                    "aspect_ratio": aspect_ratio,
-                },
-                with_logs=True,
-            )
-        else:
-            # Text-to-video via Kling
-            result = fal_client.subscribe(
-                "fal-ai/kling-video/v2/master/text-to-video",
-                arguments={
-                    "prompt": prompt,
-                    "duration": str(duration),
-                    "aspect_ratio": aspect_ratio,
-                },
-                with_logs=True,
-            )
+        if last_frame_path and Path(last_frame_path).exists():
+            print(f"  Uploading last frame...")
+            payload["end_image"] = wavespeed.upload(last_frame_path)
 
-        video_url = result.get("video", {}).get("url")
+        print(f"  Generating video via {model}...")
+        output = wavespeed.run(model, payload, timeout=300.0, poll_interval=3.0)
+
+        video_url = output.get("outputs", [None])[0]
+        if not video_url and isinstance(output.get("video"), dict):
+            video_url = output["video"].get("url")
         if video_url:
-            # Download video
-            import urllib.request
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(video_url, output_path)
             return {
                 "status": "success",
-                "provider": "kling-v2-fal",
+                "provider": "wavespeed-kling-v3",
+                "model": model,
                 "output": str(output_path),
                 "video_url": video_url,
                 "duration": duration,
-                "mode": "image-to-video" if image_path else "text-to-video",
+                "sound": sound,
             }
         else:
-            return {"status": "FAILED", "error": "No video URL in fal.ai response", "raw": str(result)[:500]}
+            return {"status": "FAILED", "error": "No video URL in WaveSpeed response", "raw": str(output)[:500]}
 
     except Exception as e:
         return {"status": "FAILED", "error": f"Kling generation failed: {str(e)}"}
@@ -273,7 +270,7 @@ def generate_srt(script, output_path):
 
 def route_video_provider(duration_seconds, video_type):
     """Route to the appropriate video provider."""
-    fal_key = os.environ.get("FAL_KEY")
+    fal_key = os.environ.get("WAVESPEED_API_KEY")
     gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     gemini_key = os.environ.get("GEMINI_API_KEY")
 
@@ -288,7 +285,7 @@ def route_video_provider(duration_seconds, video_type):
     else:
         return {
             "provider": "none",
-            "error": "No video API configured. Set FAL_KEY for Kling or GOOGLE_CLOUD_PROJECT for Veo.",
+            "error": "No video API configured. Set WAVESPEED_API_KEY for Kling or GOOGLE_CLOUD_PROJECT for Veo.",
             "fallback": "script_and_storyboard_only",
         }
 

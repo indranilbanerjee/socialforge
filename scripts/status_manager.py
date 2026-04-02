@@ -121,18 +121,59 @@ def get_summary(brand, month):
     }, indent=2))
 
 
+def get_post_folder_name(post):
+    """Generate descriptive folder name: P01-2026-04-07-linkedin-instagram-HERO-static"""
+    pid = post.get("post_id", "P00")
+    date = post.get("date", "unknown")
+    platforms = "-".join(p.get("name", p) if isinstance(p, dict) else str(p)
+                         for p in post.get("platforms", []))
+    tier = post.get("tier", "HUB")
+    ctype = post.get("content_type", "static")
+    return f"{pid}-{date}-{platforms}-{tier}-{ctype}"
+
+
+def get_week_number(date_str):
+    """Get week number within the month (1-5) from a date string."""
+    try:
+        from datetime import datetime as dt
+        d = dt.strptime(date_str, "%Y-%m-%d")
+        return (d.day - 1) // 7 + 1
+    except (ValueError, TypeError):
+        return 1
+
+
+def init_post_folder(brand, month, post):
+    """Create the post-specific folder structure."""
+    month_dir = WORKSPACE / "output" / brand / month
+    week = get_week_number(post.get("date", ""))
+    folder_name = get_post_folder_name(post)
+    post_dir = month_dir / "production" / f"week-{week}" / folder_name
+    post_dir.mkdir(parents=True, exist_ok=True)
+    (post_dir / "versions").mkdir(exist_ok=True)
+    (post_dir / "final").mkdir(exist_ok=True)
+    (post_dir / "copy").mkdir(exist_ok=True)
+    ctype = post.get("content_type", "static")
+    if ctype == "video":
+        (post_dir / "keyframes").mkdir(exist_ok=True)
+    if ctype == "carousel":
+        (post_dir / "slides").mkdir(exist_ok=True)
+    return str(post_dir)
+
+
 def init_month(brand, month):
     """Initialize a new month's tracking."""
     month_dir = WORKSPACE / "output" / brand / month
     month_dir.mkdir(parents=True, exist_ok=True)
-    (month_dir / "production" / "images").mkdir(parents=True, exist_ok=True)
-    (month_dir / "production" / "carousels").mkdir(parents=True, exist_ok=True)
-    (month_dir / "production" / "previews").mkdir(parents=True, exist_ok=True)
-    (month_dir / "production" / "copy").mkdir(parents=True, exist_ok=True)
-    (month_dir / "production" / "video").mkdir(parents=True, exist_ok=True)
-    (month_dir / "production" / "alternatives").mkdir(parents=True, exist_ok=True)
+    (month_dir / "production").mkdir(parents=True, exist_ok=True)
     (month_dir / "review").mkdir(parents=True, exist_ok=True)
     (month_dir / "FINAL").mkdir(parents=True, exist_ok=True)
+
+    # Create post-specific folders if calendar exists
+    calendar_path = month_dir / "calendar-data.json"
+    if calendar_path.exists():
+        calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+        for post in calendar.get("posts", []):
+            init_post_folder(brand, month, post)
 
     tracker = {
         "brand": brand,

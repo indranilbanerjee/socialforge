@@ -71,13 +71,15 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
             "action_required": True,
         }
     os.environ["WAVESPEED_API_KEY"] = ws_key
+    from wavespeed import Client as WsClient
+    _ws_client = WsClient(api_key=ws_key)
 
     if not Path(first_frame_path).exists():
         return {"status": "FAILED", "error": f"First frame not found: {first_frame_path}"}
 
     try:
         print(f"  Uploading first frame...")
-        image_url = wavespeed.upload(first_frame_path)
+        image_url = _ws_client.upload(first_frame_path)
         payload = {
             "image": image_url,
             "prompt": prompt,
@@ -89,10 +91,10 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
 
         if last_frame_path and Path(last_frame_path).exists():
             print(f"  Uploading last frame...")
-            payload["end_image"] = wavespeed.upload(last_frame_path)
+            payload["end_image"] = _ws_client.upload(last_frame_path)
 
         print(f"  Generating video via {model}...")
-        output = wavespeed.run(model, payload, timeout=300.0, poll_interval=3.0)
+        output = _ws_client.run(model, payload, timeout=300.0, poll_interval=3.0)
 
         video_url = output.get("outputs", [None])[0]
         if not video_url and isinstance(output.get("video"), dict):

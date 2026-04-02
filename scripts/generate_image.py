@@ -109,9 +109,14 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
 
         for part in response.parts:
             if part.inline_data is not None:
-                image = part.as_image()
                 Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-                image.save(output_path, format="PNG", quality=95)
+                try:
+                    image = part.as_image()
+                    image.save(output_path)
+                except (AttributeError, TypeError):
+                    import base64
+                    img_bytes = base64.b64decode(part.inline_data.data) if isinstance(part.inline_data.data, str) else part.inline_data.data
+                    Path(output_path).write_bytes(img_bytes)
                 return {
                     "status": "success",
                     "provider": f"gemini-{backend}",

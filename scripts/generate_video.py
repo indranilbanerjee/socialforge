@@ -123,11 +123,17 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
 
     except Exception as e:
         ws_error = str(e)
+        # Fallback 1: Vertex AI Veo
+        veo_result = generate_video_veo(prompt, output_path, first_frame_path, duration)
+        if veo_result and veo_result.get("status") == "success":
+            veo_result["fallback_from"] = "wavespeed"
+            return veo_result
+        # Fallback 2: HiggsField Kling
         hf_result = generate_video_higgsfield(prompt, output_path, first_frame_path, duration, sound)
         if hf_result and hf_result.get("status") == "success":
-            hf_result["fallback_from"] = "wavespeed"
+            hf_result["fallback_from"] = "wavespeed+veo"
             return hf_result
-        return {"status": "FAILED", "error": f"WaveSpeed failed: {ws_error[:100]}. HiggsField also unavailable."}
+        return {"status": "FAILED", "error": f"All video providers failed. WaveSpeed: {ws_error[:80]}"}
 
 
 def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, sound=False):

@@ -14,7 +14,7 @@ import sys
 REQUIRED = {
     "core": ["Pillow"],
     "image": ["google-genai"],
-    "video": ["wavespeed", "higgsfield-client"],
+    "video": ["wavespeed", "higgsfield-client", "imageio-ffmpeg"],
     "carousel": ["playwright"],
 }
 

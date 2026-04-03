@@ -51,10 +51,16 @@ Using the approved first and last frames, generate **2 video versions** via Wave
 - A **video gallery is opened in the browser** for side-by-side comparison
 - User selects the final version or requests a regeneration
 
-### Stage 5: Save & Deliver
+### Stage 5: Post-Process, Save & Deliver
 
-Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video versions in `versions/`, final video in `final/`:
-- **Video file** (.mp4) — the approved clip
+After the user picks the final video, post-processing runs before saving:
+- **Logo watermark** is automatically added to the video via video_postprocess.py
+- **Subtitles:** User is asked whether to burn subtitles into the video (optional). SRT was already generated from the script and is saved separately regardless.
+- **Background music:** If the video has no audio (sound=False in Kling config), user is asked whether to add background music (optional).
+- **Platform resize:** Video is automatically resized for each target platform (letterbox/pillarbox with black padding, no stretching)
+
+Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video versions in `versions/`, platform-resized final videos in `final/`:
+- **Video files** (.mp4) — post-processed and resized per platform
 - **Script** — timestamped narration/dialogue
 - **Storyboard** — shot-by-shot visual breakdown with keyframe references
 - **SRT subtitle file** (.srt) — for captioned playback

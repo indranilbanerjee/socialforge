@@ -383,6 +383,13 @@ def main():
     parser.add_argument("--duration", type=int, default=None, help="Override video duration (seconds)")
     parser.add_argument("--aspect-ratio", default="16:9", help="Video aspect ratio")
     parser.add_argument("--srt", action="store_true", help="Generate SRT subtitle file")
+    parser.add_argument("--postprocess", action="store_true",
+                        help="Run video post-processing (watermark, resize, subtitles, music)")
+    parser.add_argument("--video-input", default=None, help="Existing video to post-process")
+    parser.add_argument("--burn-subs", action="store_true", help="Burn SRT subtitles into video")
+    parser.add_argument("--music", default=None, help="Background music file to mix in")
+    parser.add_argument("--platforms", default=None,
+                        help="Comma-separated platforms for resizing (e.g., instagram_reel,linkedin,tiktok)")
     args = parser.parse_args()
 
     # Load post data
@@ -439,6 +446,46 @@ def main():
     elif args.generate_video and routing["provider"] == "none":
         video_result = {"status": "FAILED", "error": routing["error"], "action_required": True}
 
+    # Post-process video if requested
+    postprocess_result = None
+    if args.postprocess and video_result and video_result.get("status") == "success":
+        try:
+            from video_postprocess import postprocess_video
+            video_file = video_result.get("output", str(output_dir / f"post-{args.post_id}-video.mp4"))
+            platforms_list = args.platforms.split(",") if args.platforms else [p.get("name", p) if isinstance(p, dict) else str(p) for p in post.get("platforms", [])]
+            srt_file = str(output_dir / f"post-{args.post_id}-subtitles.srt") if args.burn_subs else None
+            postprocess_result = postprocess_video(
+                input_path=video_file,
+                output_dir=str(output_dir / "platform-versions"),
+                brand_config=brand_config,
+                platforms=platforms_list,
+                srt_path=srt_file,
+                music_path=args.music,
+                burn_subs=args.burn_subs,
+                add_music=bool(args.music),
+            )
+        except Exception as e:
+            postprocess_result = {"status": "FAILED", "error": str(e)}
+
+    # Also handle standalone post-processing of existing video
+    if args.postprocess and args.video_input and not args.generate_video:
+        try:
+            from video_postprocess import postprocess_video
+            platforms_list = args.platforms.split(",") if args.platforms else ["linkedin", "instagram_reel"]
+            srt_file = str(output_dir / f"post-{args.post_id}-subtitles.srt") if args.burn_subs else None
+            postprocess_result = postprocess_video(
+                input_path=args.video_input,
+                output_dir=str(output_dir / "platform-versions"),
+                brand_config=brand_config,
+                platforms=platforms_list,
+                srt_path=srt_file,
+                music_path=args.music,
+                burn_subs=args.burn_subs,
+                add_music=bool(args.music),
+            )
+        except Exception as e:
+            postprocess_result = {"status": "FAILED", "error": str(e)}
+
     print(json.dumps({
         "status": "success",
         "post_id": args.post_id,
@@ -450,6 +497,7 @@ def main():
         "storyboard": str(storyboard_path),
         "srt": srt_result,
         "video": video_result or {"status": "not_requested", "note": "Use --generate-video to create AI video"},
+        "postprocess": postprocess_result,
     }, indent=2))
 
 

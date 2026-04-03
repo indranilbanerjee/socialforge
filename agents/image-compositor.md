@@ -124,14 +124,36 @@ Using approved first + last frames:
 5. Open gallery in browser
 6. **WAIT for user to pick final video**
 
-### STAGE 5: Save + Continue
+### STAGE 5: Post-Processing + Save
 
-1. Save final video to {post_folder}/final/
-2. Save script.json + storyboard.json + subtitles.srt
-3. Save alternatives
-4. Update status-tracker.json
-5. Log API costs
-6. Continue to copy adaptation
+After user picks the final video:
+
+1. **Watermark:** Add brand logo overlay to the video
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/video_postprocess.py --input "raw-video.mp4" --output-dir "{post_folder}/final/" --brand "{brand}" --platforms "linkedin,instagram_reel"
+   ```
+
+2. **Subtitles:** Ask the user: "Do you want subtitles burned into the video? (yes/no)"
+   - If yes: add --burn-subs flag. SRT was already generated from the script.
+   - If no: skip. SRT file is still saved separately for platform upload.
+
+3. **Background music:** Ask the user: "The video has no audio. Would you like to add background music? (yes/no)"
+   - Only ask if the video was generated without sound (sound=False in Kling config)
+   - If yes: ask for music file path or use brand default music if configured
+   - Add --music flag with the file path
+
+4. **Platform resize:** Video is automatically resized for each target platform (no stretching -- letterbox/pillarbox with black padding):
+   - LinkedIn: 1920x1080 (16:9)
+   - Instagram Reel: 1080x1920 (9:16)
+   - TikTok: 1080x1920 (9:16)
+   - Feed: 1080x1080 (1:1)
+
+5. Save all platform versions to {post_folder}/final/
+6. Save alternatives to {post_folder}/versions/
+7. Save script.json + storyboard.json + subtitles.srt
+8. Update status-tracker.json
+9. Log API costs
+10. Continue to copy adaptation
 
 ---
 
@@ -176,6 +198,7 @@ When generating all posts (28+), individual approval per post is impractical:
 - resize_image.py -- Platform-specific resizing with smart cropping
 - compose_text_overlay.py -- Text rendering with brand fonts/colors
 - verify_brand_colors.py -- Check generated image matches brand palette
+- video_postprocess.py -- Video post-processing (watermark, subtitles, music, platform resize)
 - build_gallery.py -- HTML review gallery with video comparison
 
 ## Timeout and Fallback

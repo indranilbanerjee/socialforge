@@ -117,12 +117,17 @@ User picks a concept before any generation begins.
 - User picks their preferred video (or requests another round)
 - Max 3 generation rounds before escalating
 
-### Stage 5: Save Final
-1. Save the selected video to the post-specific folder: `{post_folder}/final/`
-2. Apply any required brand watermark or logo overlay
-3. Update status-tracker.json
-4. Log prompt and generation parameters to `shared/prompt-logs/`
-5. Track API cost in cost-log.json
+### Stage 5: Post-Process + Save
+After the user picks the final video, post-processing runs before saving:
+1. **Watermark:** Logo overlay is automatically added to the video via video_postprocess.py
+2. **Subtitles:** User is asked whether to burn subtitles into the video (optional). SRT was already generated from the script and is saved separately regardless.
+3. **Background music:** If the video has no audio (sound=False in Kling config), user is asked whether to add background music (optional).
+4. **Platform resize:** Video is automatically resized for each target platform (letterbox/pillarbox with black padding, no stretching)
+5. Save all platform versions to `{post_folder}/final/`
+6. Save alternatives to `{post_folder}/versions/`
+7. Update status-tracker.json
+8. Log prompt and generation parameters to `shared/prompt-logs/`
+9. Track API cost in cost-log.json
 
 ## Batch Mode (/sf:generate-all)
 

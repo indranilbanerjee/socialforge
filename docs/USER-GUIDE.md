@@ -37,7 +37,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 11. [Finalizing and Delivering](#11-finalizing-and-delivering)
 12. [Working with Multiple Brands](#12-working-with-multiple-brands)
 13. [Where Your Data Lives](#13-where-your-data-lives)
-14. [All 18 Commands](#14-all-18-commands)
+14. [All 25 Commands](#14-all-25-commands)
 15. [All 14 Skills](#15-all-14-skills)
 16. [Connectors](#16-connectors)
 17. [Troubleshooting](#17-troubleshooting)
@@ -813,23 +813,30 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 
 ---
 
-## 12. All 18 Commands
+## 12. All 25 Commands
 
 | Command | What It Does | Example |
 |---------|-------------|---------|
+| `/sf:setup` | Configure API credentials (one-time) | `/sf:setup --status` |
 | `/sf:brand-setup` | Configure a brand profile | `/sf:brand-setup GreenLeaf` |
 | `/sf:index-assets` | Index brand photo library | `/sf:index-assets GreenLeaf --source /path` |
+| `/sf:match-assets` | Match brand assets to posts | `/sf:match-assets --brand GreenLeaf` |
 | `/sf:new-month` | Start monthly production | `/sf:new-month GreenLeaf 2026-04` |
+| `/sf:parse-calendar` | Import and parse monthly calendar | `/sf:parse-calendar calendar.docx` |
 | `/sf:generate-all` | Produce all posts | `/sf:generate-all --week 1` |
 | `/sf:generate-post` | Produce one post | `/sf:generate-post P03` |
+| `/sf:adapt-copy` | Adapt copy per platform | `/sf:adapt-copy --all` |
+| `/sf:render-carousels` | Render carousel slides | `/sf:render-carousels --post P05` |
 | `/sf:edit-post` | Edit copy/visual/metadata | `/sf:edit-post P03 --copy "new headline"` |
 | `/sf:edit-image` | AI edit a generated image | `/sf:edit-image P03 "warmer background"` |
 | `/sf:swap-asset` | Change the matched asset | `/sf:swap-asset P03 --asset asset_015` |
 | `/sf:review` | Open review gallery | `/sf:review --tier HERO` |
 | `/sf:revision` | Apply revision feedback | `/sf:revision P06 "fix background color"` |
+| `/sf:preview-batch` | Generate preview mockups for all posts | `/sf:preview-batch --brand GreenLeaf` |
 | `/sf:manage-reviews` | Bulk approve/revise posts | `/sf:manage-reviews --approve P01 P02 P03` |
 | `/sf:client-review` | Send to client for review | `/sf:client-review --tier HERO` |
 | `/sf:check-approvals` | Check pending approvals | `/sf:check-approvals --send-reminders` |
+| `/sf:assemble-document` | Create delivery DOCX | `/sf:assemble-document` |
 | `/sf:finalize` | Package for delivery | `/sf:finalize` |
 | `/sf:switch-brand` | Switch active brand | `/sf:switch-brand ClientB` |
 | `/sf:reactive-post` | Create unplanned post | `/sf:reactive-post "Earth Day" --brand GreenLeaf` |

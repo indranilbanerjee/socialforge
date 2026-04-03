@@ -144,7 +144,7 @@ Comprehensive audit comparing implementation against the 3,308-line engineering 
 Complete documentation suite matching ContentForge and Digital Marketing Pro standards.
 
 - **LICENSE** — MIT License
-- **docs/USER-GUIDE.md** — Complete user guide (420 lines): 17 sections covering prerequisites through FAQ, all 18 commands and 14 skills documented, 4 creative modes explained, troubleshooting, FAQ
+- **docs/USER-GUIDE.md** — Complete user guide (420 lines): 17 sections covering prerequisites through FAQ, all 25 commands and 15 skills documented, 4 creative modes explained, troubleshooting, FAQ
 - **CONNECTORS.md** — All 9 HTTP connectors documented with categories, placeholder patterns, offline-first notes, setup instructions
 - **TESTING-GUIDE.md** — Full QA test plan (310 lines): 15 sections with checkbox format, all components tested, edge cases, Cowork compatibility, regression checklist
 - **.mcp.json.example** — Commented MCP configuration with descriptions for each of 9 connectors
@@ -247,7 +247,7 @@ All reference documentation complete. Key templates built. State machine enforce
 
 ### Added — Feature Complete (All Scripts + Commands)
 
-All 17 scripts and 18 commands now implemented. The plugin is feature-complete for its core architecture.
+All 19 scripts and 25 commands now implemented. The plugin is feature-complete for its core architecture.
 
 #### Scripts (5 new, 17 total — ALL COMPLETE)
 - **index_assets.py** — Scan image libraries, Gemini Vision analysis per image, build asset-index.json. Refresh mode for incremental updates. Graceful fallback to metadata-only when API unavailable.
@@ -314,7 +314,7 @@ All 17 scripts and 18 commands now implemented. The plugin is feature-complete f
 
 ### Added — Core Engine (Layers 3-6)
 
-Creative production engine with all 14 skills, 7 core scripts, and platform reference documentation.
+Creative production engine with all 15 skills, 7 core scripts, and platform reference documentation.
 
 #### Skills (11 new, 14 total)
 - **match-assets** — Multi-factor asset scoring (tags 30%, suitability 25%, bucket 20%, crop 15%, freshness 10%), creative mode assignment

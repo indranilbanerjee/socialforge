@@ -35,8 +35,8 @@
 ### Post-Install Verification
 - [ ] New session shows SocialForge welcome message | "SocialForge v1.0 loaded" with Quick Start
 - [ ] `/sf:status` returns valid response | Shows "No active brand" or brand status
-- [ ] All 18 commands appear in Customize panel | Count matches expected 18
-- [ ] All 14 skills appear in Skills section | Count matches expected 14
+- [ ] All 25 commands appear in Customize panel | Count matches expected 18
+- [ ] All 15 skills appear in Skills section | Count matches expected 14
 - [ ] `.mcp.json` loaded (9 connectors) | No MCP initialization errors in logs
 
 ---
@@ -296,7 +296,7 @@ Test each of the 8 templates renders correctly.
 
 Run after any code change to verify nothing broke.
 
-- [ ] All 17 scripts pass `--help` without import errors
+- [ ] All 19 scripts pass `--help` without import errors
 - [ ] Session-init hook displays welcome message
 - [ ] Brand setup creates valid brand-config.json
 - [ ] Asset indexing produces valid asset-index.json
@@ -322,10 +322,10 @@ Run after any code change to verify nothing broke.
 - [ ] `plugin.json` version matches README | Consistent across files
 - [ ] `CHANGELOG.md` has entry for current version | Release notes present
 - [ ] `hooks.json` welcome message shows correct version | "SocialForge v1.0"
-- [ ] Skill count in README matches actual skill directories | 14 skills
-- [ ] Command count in README matches actual command files | 18 commands
+- [ ] Skill count in README matches actual skill directories | 15 skills
+- [ ] Command count in README matches actual command files | 25 commands
 - [ ] Agent count in README matches actual agent files | 5 agents
-- [ ] Script count in README matches actual script files | 17 scripts
+- [ ] Script count in README matches actual script files | 19 scripts
 - [ ] Connector count in README matches `.mcp.json` entries | 9 connectors
 - [ ] Carousel template count in README matches actual templates | 8 templates
 - [ ] All agents have valid YAML frontmatter (name + description) | No missing frontmatter

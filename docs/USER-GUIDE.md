@@ -14,7 +14,7 @@ Before you start, make sure you have:
   - **WaveSpeed API key** -- for Kling v3.0 video generation
 - **Python dependencies installed:**
   ```
-  pip install google-genai wavespeed Pillow
+  pip install google-genai wavespeed Pillow imageio-ffmpeg
   ```
 
 Get both credentials from your admin. If you ARE the admin, see the [Admin Setup Guide](#19-admin-setup-guide) at the end of this document.
@@ -707,7 +707,12 @@ Calendar document generated
 - **Calendar Document** — A DOCX with every post laid out: date, platform, image thumbnail, copy, hashtags, CTA, and scheduling notes. This is what the client signs off on.
 - **Ready-to-Publish** — Platform-specific folders with final-resolution images and copy files. Hand these to whoever schedules posts.
 - **Carousels** — Rendered carousel slides as individual PNGs plus combined PDFs.
-- **Video Production Kit** — Storyboards, scripts, and any AI-generated video clips for posts tagged as video.
+- **Video Production Kit** — Storyboards, scripts, and any AI-generated video clips for posts tagged as video. Videos are automatically post-processed with:
+  - Brand logo watermark
+  - Platform-specific resizing (no stretching)
+  - Optional subtitle burning (user approves)
+  - Optional background music (user approves)
+  - Powered by ffmpeg (auto-installed via imageio-ffmpeg)
 - **Review Gallery** — The HTML gallery for archival reference.
 - **Publishing Schedule** — A CSV/JSON schedule compatible with scheduling tools (Buffer, Hootsuite, Later).
 - **Production Checklist** — What was approved, by whom, and when.

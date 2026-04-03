@@ -40,7 +40,7 @@ Run this first — installs all required Python packages:
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py"
 ```
 
-This auto-installs: google-genai (Vertex AI), wavespeed (Kling video), Pillow (compositing), playwright (carousels).
+This auto-installs: google-genai (Vertex AI), wavespeed (Kling video), Pillow (compositing), imageio-ffmpeg (video post-processing), playwright (carousels).
 
 If any package fails, show the manual install command and continue.
 

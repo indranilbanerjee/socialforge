@@ -723,6 +723,15 @@ These three outputs are always delivered, even when no API key is configured.
 4. **AI video clip** -- Generated via Gemini Veo 3.1 or Kling API depending on duration.
 5. **SRT subtitles** -- Derived from script timestamps, synced to the video duration.
 
+### Post-Processing (via video_postprocess.py)
+
+After AI video generation, clips are post-processed using ffmpeg via `imageio-ffmpeg`:
+
+- **Logo watermark overlay** -- Brand logo composited at a configurable position and opacity
+- **Platform resize** -- Output resized to 9 platform dimensions (Instagram Reel 1080x1920, TikTok 1080x1920, YouTube Shorts 1080x1920, LinkedIn 1920x1080, Facebook 1080x1080, X/Twitter 1920x1080, Pinterest 1000x1500, Story 1080x1920, Landscape 1920x1080) with no stretching (pad/crop)
+- **SRT subtitle burning** -- Optional (user approves). Burns SRT file into the video using brand fonts and colors
+- **Background music mixing** -- Optional (user approves). Mixes background audio track at reduced volume under the original video audio
+
 ### Duration-Based Routing
 
 | Duration | Provider | Mode | Notes |

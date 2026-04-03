@@ -37,7 +37,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **14 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management
 - **18 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **17 scripts** — Deterministic execution (compositing, rendering, resizing, compliance checking)
+- **18 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary
 - **4 hooks** — SessionStart, PreToolUse (compliance), SubagentStart (brand injection), Stop (quality gate)
 
@@ -261,6 +261,16 @@ SocialForge produces short-form AI-generated video clips for video content posts
 | Keyframe images | Gemini Nano Banana 2 / Pro | Google Cloud Vertex AI |
 | Image-to-video | Kling v3.0 Pro | WaveSpeed |
 
+### Post-Processing
+
+After generation, videos are automatically post-processed with:
+- **Brand logo watermark** overlay
+- **Platform-specific resizing** (9 platform dimensions, no stretching)
+- **Optional subtitle burning** (user approves — SRT with brand fonts)
+- **Optional background music** (user approves — mixed at appropriate levels)
+
+Post-processing is powered by ffmpeg, auto-installed via the `imageio-ffmpeg` Python package.
+
 ### Human-in-the-Loop
 
 All video generation goes through human-in-the-loop approval. Videos are generated, previewed in the review gallery, and require explicit approval before finalization. Nothing ships without sign-off.
@@ -269,6 +279,7 @@ All video generation goes through human-in-the-loop approval. Videos are generat
 
 - WaveSpeed API key configured via `/sf:setup`
 - Google Cloud Vertex AI credentials configured via `/sf:setup` (for keyframe generation)
+- Python dependencies: `pip install google-genai wavespeed Pillow imageio-ffmpeg`
 - Video duration: 3-15 seconds per clip
 
 Use `/sf:generate-video` to produce video for a specific post, or `/sf:generate-all` to include video posts in batch production.

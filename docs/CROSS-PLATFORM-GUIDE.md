@@ -7,7 +7,7 @@ SocialForge is built as a Claude Code plugin, but its core components follow the
 | Component | Count | Works On |
 |-----------|-------|----------|
 | Skills (SKILL.md) | 15 | Codex, Cursor, Gemini CLI, Copilot, Windsurf |
-| Python scripts | 18 | Any platform with Python 3.10+ |
+| Python scripts | 19 | Any platform with Python 3.10+ |
 | MCP connectors | 8 of 10 | Any MCP-compatible platform |
 | Reference docs | 11 | Universal |
 
@@ -187,9 +187,11 @@ Note: installs skills only, not the full plugin (no agents, hooks, scripts, or M
 | Commands | Full | Partial | Full | Partial | Partial | No |
 | Hooks | Full | Likely | Different events | No | Partial | No |
 | MCP connectors | 10/10 | 8/10 | 8/10 | 8/10 | 8/10 | 8/10 |
-| Python scripts | Full | Full | Full | Full | Full | Full |
+| Python scripts (19) | Full | Full | Full | Full | Full | Full |
 | Image generation | Full | Full | Full | Full | Full | Full |
 | Video generation | Full | Full | Full | Full | Full | Full |
+
+**Note:** Video post-processing requires `imageio-ffmpeg` (which bundles an ffmpeg binary via pip — no system-level ffmpeg install needed).
 | Full pipeline | Full | Full | Likely | Partial | Partial | No |
 
 ---

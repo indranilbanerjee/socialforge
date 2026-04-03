@@ -6,11 +6,16 @@ Shows how posts will look when published on each social platform.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
-WORKSPACE = Path.home() / "socialforge-workspace"
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 TEMPLATE_DIR = PLUGIN_ROOT / "assets" / "preview-templates"
 
 

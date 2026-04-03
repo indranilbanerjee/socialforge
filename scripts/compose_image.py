@@ -6,10 +6,15 @@ Handles background removal, layering, shadow/reflection, and logo overlay.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
-WORKSPACE = Path.home() / "socialforge-workspace"
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+if _plugin_data and Path(_plugin_data).exists():
+    WORKSPACE = Path(_plugin_data) / "socialforge"
+else:
+    WORKSPACE = Path.home() / "socialforge-workspace"
 
 
 def remove_background(input_path, output_path):

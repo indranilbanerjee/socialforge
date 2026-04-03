@@ -1,8 +1,8 @@
 # SocialForge — Social Media Calendar Automation
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Platform:** Claude Code & Cowork
-**Status:** Production Ready (14 skills, 17 scripts, 5 agents, 18 commands, 10 HTTP connectors, 100% spec coverage)
+**Status:** Production Ready (15 skills, 19 scripts, 5 agents, 19 commands, 10 HTTP connectors, 100% spec coverage)
 
 Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents.
 
@@ -34,10 +34,10 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 
 ## Architecture
 
-- **14 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management
-- **18 commands** — Monthly production, post generation, editing, review, approval, finalization
+- **15 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management
+- **19 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **18 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
+- **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary
 - **4 hooks** — SessionStart, PreToolUse (compliance), SubagentStart (brand injection), Stop (quality gate)
 
@@ -295,7 +295,7 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.3.0)
+## Current Release (v1.4.0)
 
 100% spec coverage. Persistent storage, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
 

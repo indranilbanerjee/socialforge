@@ -16,6 +16,7 @@ REQUIRED = {
     "image": ["google-genai"],
     "video": ["wavespeed", "higgsfield-client", "imageio-ffmpeg"],
     "carousel": ["playwright"],
+    "optional": ["rembg"],
 }
 
 ALL_PACKAGES = []

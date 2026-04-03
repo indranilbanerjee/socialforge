@@ -129,10 +129,10 @@ def add_watermark(input_path, logo_path, output_path, position="bottom-right",
         "-filter_complex", filter_complex,
         "-map", "[out]",
         "-map", "0:a?",
-        "-c:a", "copy",
         "-c:v", "libx264",
         "-preset", "medium",
         "-crf", "18",
+        "-c:a", "copy",
         str(output_path),
     ]
 
@@ -193,11 +193,10 @@ def resize_for_platform(input_path, output_path, platform):
         ffmpeg, "-y",
         "-i", str(input_path),
         "-vf", vf,
-        "-map", "0:a?",
-        "-c:a", "copy",
         "-c:v", "libx264",
         "-preset", "medium",
         "-crf", "18",
+        "-c:a", "copy",
         str(output_path),
     ]
 
@@ -283,11 +282,10 @@ def burn_subtitles(input_path, srt_path, output_path, font="Montserrat",
         ffmpeg, "-y",
         "-i", str(input_path),
         "-vf", vf,
-        "-map", "0:a?",
-        "-c:a", "copy",
         "-c:v", "libx264",
         "-preset", "medium",
         "-crf", "18",
+        "-c:a", "copy",
         str(output_path),
     ]
 

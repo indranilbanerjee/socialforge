@@ -2,7 +2,7 @@
 
 **Version:** 1.4.0
 **Platform:** Claude Code & Cowork
-**Status:** Production Ready (15 skills, 19 scripts, 5 agents, 20 commands, 10 HTTP connectors, 100% spec coverage)
+**Status:** Production Ready (15 skills, 19 scripts, 5 agents, 25 commands, 10 HTTP connectors, 100% spec coverage)
 
 Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents.
 
@@ -35,7 +35,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 ## Architecture
 
 - **15 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management
-- **20 commands** — Monthly production, post generation, editing, review, approval, finalization
+- **25 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary

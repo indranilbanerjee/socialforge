@@ -1,8 +1,8 @@
 # SocialForge — Social Media Calendar Automation
 
-**Version:** 1.4.0
+**Version:** 1.5.1
 **Platform:** Claude Code & Cowork
-**Status:** Production Ready (15 skills, 19 scripts, 5 agents, 25 commands, 10 HTTP connectors, 100% spec coverage)
+**Status:** Production Ready (15 skills, 19 scripts, 5 agents, 25 commands, 10 HTTP connectors, 0 global hooks)
 
 Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents.
 
@@ -38,8 +38,8 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **25 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
-- **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary
-- **4 hooks** — SessionStart, PreToolUse (compliance), SubagentStart (brand injection), Stop (quality gate)
+- **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/sf:status` on demand. See [Current Release](#current-release-v151) for the rationale.
 
 ## Installation
 
@@ -113,7 +113,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
 **Alternative — fal.ai or Replicate:** Connect via Connectors panel after installation for third-party image generation.
 
-The SessionStart hook checks for valid image generation credentials on every session and warns if missing.
+Run `/sf:status` to verify image and video generation credentials are configured. (As of v1.5.0, credential status is reported on demand instead of via a SessionStart banner that fired on every Claude Code launch in every project.)
 
 ## Admin Setup (One-Time)
 
@@ -318,7 +318,7 @@ SocialForge is part of the **Neelverse Marketing Suite** — three plugins that 
 
 | Plugin | What It Does | Install |
 |--------|-------------|---------|
-| **[Digital Marketing Pro](https://github.com/indranilbanerjee/digital-marketing-pro)** | Strategy, SEO, paid ads, analytics, email, social, PR — 141 skills, 25 agents | `claude plugin install digital-marketing-pro@neels-plugins` |
+| **[Digital Marketing Pro](https://github.com/indranilbanerjee/digital-marketing-pro)** | End-to-end engagement methodology — 12-Part Strategy Flow, Four Core Documents, Two-Views Model. 149 skills, 25 agents, 10 commands, 14 HTTP connectors | `claude plugin install digital-marketing-pro@neels-plugins` |
 | **[ContentForge](https://github.com/indranilbanerjee/contentforge)** | Publication-ready content via 10-phase pipeline — research, draft, fact-check, SEO, humanize | `claude plugin install contentforge@neels-plugins` |
 | **SocialForge** (this plugin) | Social media calendar automation with AI image + video generation (Vertex AI + Kling v3.0) | `claude plugin install socialforge@neels-plugins` |
 

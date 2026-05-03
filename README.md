@@ -295,9 +295,11 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.4.0)
+## Current Release (v1.5.1)
 
-100% spec coverage. Persistent storage, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
+Multi-plugin coexistence + manifest hardening. v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Write/Edit compliance check, SubagentStart brand-context injection, Stop image-approval verification) that previously fired on every Claude Code operation in every project. Credential status is now reported on demand via `/sf:status` instead of a banner on every Claude Code launch. Prior hook config preserved at `hooks/hooks-reference.example.json`. v1.5.1 hardened the plugin manifest with `$schema`, `homepage`, `repository`, `license`, `author.url`, and a 14-tag `keywords` array. All 10 MCP connectors are HTTP and fully Cowork-compatible.
+
+Earlier (v1.3–1.4): 100% spec coverage. Persistent storage via `${CLAUDE_PLUGIN_DATA}`, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
 
 ## Documentation
 

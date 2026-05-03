@@ -1,7 +1,7 @@
 {
   "name": "socialforge",
-  "version": "1.4.0",
-  "description": "Agency-grade social media calendar automation with asset-first compositing. Parse calendars, match brand assets, generate AI-composed creative, render carousels, adapt copy, produce review galleries. Multi-brand, multi-platform.",
+  "version": "1.5.0",
+  "description": "Agency-grade social media calendar automation with asset-first compositing. Parse calendars, match brand assets, generate AI-composed creative, render carousels, adapt copy, produce review galleries. Multi-brand, multi-platform. v1.5 ships zero global hooks for clean multi-plugin coexistence — credential status now via /sf:status on demand instead of every-session banner.",
   "author": {
     "name": "Indranil Banerjee"
   },

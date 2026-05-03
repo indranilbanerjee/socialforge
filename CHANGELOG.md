@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-05-03
+
+### Changed — Multi-Plugin Coexistence (Removed All Global Hooks)
+
+Audit of the v1.4 install footprint surfaced the same issue that prompted ContentForge v3.9.0: Claude Code plugin hooks fire *globally* when the plugin is enabled. There is no per-directory or per-project scoping. Earlier SocialForge versions registered four global hooks that worked well inside SocialForge work but added latency, token cost, and noise on every Claude Code operation in every project.
+
+#### Removed All 4 Global Hooks
+
+[hooks/hooks.json](hooks/hooks.json) now contains an empty `hooks: {}` object plus a `_readme` explaining the rationale. The four prior hooks are preserved with per-hook rationale notes at [hooks/hooks-reference.example.json](hooks/hooks-reference.example.json):
+
+- **SessionStart** — printed the SocialForge v1.4 banner with credential status (Vertex AI image-gen, WaveSpeed video-gen). Useful inside SocialForge work but ran on every Claude Code launch in every project. Replacement: run `/sf:status` on demand for the same info.
+- **PreToolUse Write|Edit** — brand compliance check for social copy and image prompts. Lived inside the agent files responsible for generating that content already; the hook was a redundant interception layer.
+- **SubagentStart** — brand context + creative-mode rules injected into every subagent call. Already encoded in each SocialForge agent's instruction body.
+- **Stop** — image approval and compliance verification. Already enforced in-flow by the brand-manager and image-generation agents.
+
+#### Why It Matters
+
+A user installing SocialForge to try it would see the Vertex AI status banner on every Claude Code launch — even when working on completely unrelated projects. Worse, every Write/Edit they performed anywhere triggered the brand-compliance prompt (which would respond "SKIP" but still cost a model invocation). v1.5.0 makes SocialForge a clean co-tenant.
+
+#### Behavior Preserved
+
+All compliance checks, image-approval gates, brand-asset rules, and credential reporting still run — they were always also encoded in the agent files and `/sf:status` command. The hook layer was a duplicate execution path. Removing it produces identical output quality with zero side-effects on other Claude Code work.
+
+### Migration
+
+No breaking changes to commands, skills, agents, or production behavior. Brand configs, asset indexes, credentials, and tracking data are all preserved. If you specifically want a hook back (e.g., the SessionStart credential banner), copy the relevant entry from `hooks/hooks-reference.example.json` into `hooks/hooks.json`.
+
+---
+
+## [1.4.0] - 2026-04-15
+
+### Added — (Release notes not previously documented; covered in commit history.)
+
+Note: v1.4.0 shipped without a CHANGELOG entry. See `git log v1.3.0..v1.4.0` for changes if needed.
+
+---
+
 ## [1.3.0] - 2026-03-31
 
 ### Added — Persistent Storage, Google Drive Assets, Cloudinary DAM

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.1] - 2026-05-03
+
+### Changed — Plugin Manifest Hardening
+
+Audit of the v1.5.0 manifest against the recommended Claude Code plugin spec found several missing fields that improve discoverability, editor validation, and policy compliance. v1.5.1 brings the manifest to parity with Digital Marketing Pro and ContentForge v3.9.1.
+
+#### [.claude-plugin/plugin.json](.claude-plugin/plugin.json) additions
+
+- `$schema`: `https://json.schemastore.org/claude-code-plugin` (enables editor validation in IDEs)
+- `homepage`: GitHub repo URL
+- `repository.url`: full git URL
+- `license`: MIT (matches the LICENSE file already shipped in the repo)
+- `author.url`: links to the author's GitHub profile
+- `keywords`: 14 SEO/discoverability tags including `claude-code`, `claude-cowork`, `image-generation`, `video-generation`
+
+### Cowork compatibility note
+
+All 10 HTTP MCP connectors shipped in `.mcp.json.example` (notion, canva, figma, slack, gmail, google-calendar, fal-ai, replicate, asana, cloudinary) are HTTP-based and work in both Claude Code CLI and Anthropic Cowork. SocialForge does not ship any stdio/npx MCPs — no Cowork-incompatible connectors to worry about.
+
+### Migration
+
+Pure manifest cleanup. No changes to commands, skills, agents, or behavior.
+
+---
+
 ## [1.5.0] - 2026-05-03
 
 ### Changed — Multi-Plugin Coexistence (Removed All Global Hooks)

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.2] - 2026-05-03
+
+### Fixed — Plugin Manifest Install Format (CRITICAL)
+
+The v1.5.1 manifest hardening introduced two fields that Claude Code's plugin schema does not accept, causing `claude plugins install socialforge` to fail. This release fixes both issues so install works.
+
+#### Changes
+
+- **`repository` field**: converted from npm-shorthand object form (`{type: "git", url: "..."}`) to the string URL form Claude Code's plugin schema requires. New value: `"https://github.com/indranilbanerjee/socialforge.git"`.
+- **`$schema` field removed**: Claude Code's plugin schema parser rejects this top-level key. Editor validation benefit isn't worth a broken install.
+
+Same fixes shipped same-day to ContentForge v3.9.2, digital-marketing-pro v3.2.1, and marketplace v2.8.0.
+
+### Migration
+
+Pure manifest fix. No behavioral changes.
+
+---
+
 ## [1.5.1] - 2026-05-03
 
 ### Changed — Plugin Manifest Hardening

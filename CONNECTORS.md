@@ -38,7 +38,7 @@ SocialForge supports multiple asset storage backends. The priority order:
 ### For Agencies (Recommended Setup)
 
 ```
-Google Drive (asset images) → /sf:index-assets (AI analysis) → asset-index.json (persistent)
+Google Drive (asset images) → /socialforge:index-assets (AI analysis) → asset-index.json (persistent)
                                                                      ↓
 Cloudinary (optional DAM) ────────────────────────────────→ CDN delivery + transformations
 ```
@@ -63,8 +63,8 @@ Some services are connected at the **Claude platform level** rather than through
 
 | Command | What it does |
 |---------|-------------|
-| `/sf:status` | Shows which connectors are active and what they enable |
-| `/sf:new-month` | Checks for required connectors at pipeline start |
+| `/socialforge:status` | Shows which connectors are active and what they enable |
+| `/socialforge:new-month` | Checks for required connectors at pipeline start |
 
 ## Advanced configuration (Claude Code)
 

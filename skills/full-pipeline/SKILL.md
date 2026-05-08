@@ -6,7 +6,7 @@ effort: max
 user-invocable: true
 ---
 
-# /sf:full-pipeline — Complete Production Pipeline
+# /socialforge:full-pipeline — Complete Production Pipeline
 
 Run all phases sequentially with quality gates between each.
 
@@ -29,17 +29,17 @@ Run all phases sequentially with quality gates between each.
 Before any production work begins, verify that the required API credentials are configured via `credential_manager.py`.
 
 1. Run `credential_manager.py status` to check Vertex AI and WaveSpeed configuration
-2. **Image generation** requires Vertex AI credentials configured via `/sf:setup`
+2. **Image generation** requires Vertex AI credentials configured via `/socialforge:setup`
 3. **Video generation** requires WaveSpeed API key (only checked if calendar contains video posts)
 4. If any required credential is missing, stop the pipeline and prompt the user:
-   "Required credentials not configured. Run `/sf:setup` to configure API keys before starting production."
+   "Required credentials not configured. Run `/socialforge:setup` to configure API keys before starting production."
 5. If all credentials are valid, proceed to Phase 0
 
 ## Phase 2: Compose Creative
 
 Phase 2 operates in two distinct modes depending on how it is invoked.
 
-### Interactive mode (`/sf:generate-post`)
+### Interactive mode (`/socialforge:generate-post`)
 
 Produces creative for a single post with full user control at each stage.
 
@@ -56,7 +56,7 @@ Produces creative for a single post with full user control at each stage.
 4. **Composite** — Overlay, logo, and captions applied; user approves
 5. **Resize** — Platform-specific aspect ratios produced; user confirms final set
 
-### Batch mode (`/sf:generate-all`)
+### Batch mode (`/socialforge:generate-all`)
 
 Produces creative for all posts in the calendar with minimal interruption.
 
@@ -67,7 +67,7 @@ Produces creative for all posts in the calendar with minimal interruption.
 
 ## Phase 5: Review Gallery
 
-The review gallery (`/sf:review`) now supports both image and video content:
+The review gallery (`/socialforge:review`) now supports both image and video content:
 - **Image posts** display as before — preview thumbnail, quality score, copy, and compliance status
 - **Video posts** display with side-by-side `<video>` tags showing the raw generated clip alongside the composited version with overlays, enabling direct comparison of motion, pacing, and brand overlay placement
 
@@ -105,12 +105,12 @@ Phase 6 (manage-reviews) is the only async gate — the pipeline pauses here bec
 **When pipeline reaches Phase 6:**
 1. Gallery is built and shared (Phase 5 output)
 2. Pipeline shows: "Review gallery ready. Pipeline paused — resume after reviews complete."
-3. User reviews posts via `/sf:review` or `/sf:manage-reviews`
-4. To resume after reviews: run `/sf:full-pipeline --resume` or `/sf:finalize` directly
+3. User reviews posts via `/socialforge:review` or `/socialforge:manage-reviews`
+4. To resume after reviews: run `/socialforge:full-pipeline --resume` or `/socialforge:finalize` directly
 
 **Escalation (per approval-chain.json):**
 - Reminder after N days (configurable per tier)
 - Escalate to next reviewer after M days
 - Auto-finalize HYGIENE tier after N days if configured
 
-**Timeout:** No automatic timeout — Phase 6 stays paused until human action. The `/sf:status` command shows pending review counts.
+**Timeout:** No automatic timeout — Phase 6 stays paused until human action. The `/socialforge:status` command shows pending review counts.

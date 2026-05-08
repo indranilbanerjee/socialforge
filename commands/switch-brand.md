@@ -9,7 +9,7 @@ Switch SocialForge to work on a different brand. Loads the brand's config, platf
 
 ## Usage
 ```
-/sf:switch-brand acme-corp
+/socialforge:switch-brand acme-corp
 ```
 
 ## What Happens

@@ -157,7 +157,7 @@ After user picks the final video:
 
 ---
 
-## BATCH MODE (for /sf:generate-all)
+## BATCH MODE (for /socialforge:generate-all)
 
 When generating all posts (28+), individual approval per post is impractical:
 

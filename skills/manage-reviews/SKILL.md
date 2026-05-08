@@ -7,7 +7,7 @@ user-invocable: true
 disable-model-invocation: true
 ---
 
-# /sf:manage-reviews — Review & Approval Manager
+# /socialforge:manage-reviews — Review & Approval Manager
 
 Manage the multi-tier approval workflow per brand's approval-chain.json.
 
@@ -17,10 +17,10 @@ Manage the multi-tier approval workflow per brand's approval-chain.json.
 - **HYGIENE content**: Internal review only (auto-approvable if configured)
 
 ## Actions
-- `/sf:manage-reviews --approve P04` — Approve post P04 at current tier
-- `/sf:manage-reviews --revise P04 "Make the background warmer"` — Request revision with feedback
-- `/sf:manage-reviews --client-send` — Send all internally-approved posts to client review
-- `/sf:manage-reviews --check` — Check pending approvals and send reminders
+- `/socialforge:manage-reviews --approve P04` — Approve post P04 at current tier
+- `/socialforge:manage-reviews --revise P04 "Make the background warmer"` — Request revision with feedback
+- `/socialforge:manage-reviews --client-send` — Send all internally-approved posts to client review
+- `/socialforge:manage-reviews --check` — Check pending approvals and send reminders
 
 ## State Transitions
 QUEUED → ASSET_MATCHING → GENERATING → PENDING_REVIEW

@@ -15,5 +15,5 @@ Run the asset matching algorithm to pair brand photos with calendar posts.
 5. User can override any match before proceeding
 
 ## Prerequisites
-- Calendar parsed (/sf:parse-calendar)
-- Asset index built (/sf:index-assets)
+- Calendar parsed (/socialforge:parse-calendar)
+- Asset index built (/socialforge:index-assets)

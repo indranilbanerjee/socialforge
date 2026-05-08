@@ -82,7 +82,7 @@ JSON schema for `asset-index.json` — the catalog of all indexed brand visual a
 
 ## Indexing Behavior
 
-- Indexing runs via `/sf:index-assets` or automatically during `/sf:brand-setup`.
+- Indexing runs via `/socialforge:index-assets` or automatically during `/socialforge:brand-setup`.
 - Assets with `usage_history` entries in the current month are deprioritized to avoid repetition.
 - `is_style_reference: true` assets are candidates for STYLE_REFERENCED image generation mode.
 - `platforms_compatible` is computed from `dimensions` against platform specs.

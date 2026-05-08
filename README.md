@@ -24,12 +24,12 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 ## Quick Start
 
 ```
-1. /sf:brand-setup [brand-name]    — Configure brand (5-10 min)
-2. /sf:index-assets [brand-name]   — Index brand photo library
-3. /sf:new-month [brand] [YYYY-MM] — Start monthly production
-4. /sf:generate-all                — Produce all creative
-5. /sf:review                      — Review and approve
-6. /sf:finalize                    — Package for delivery
+1. /socialforge:brand-setup [brand-name]    — Configure brand (5-10 min)
+2. /socialforge:index-assets [brand-name]   — Index brand photo library
+3. /socialforge:new-month [brand] [YYYY-MM] — Start monthly production
+4. /socialforge:generate-all                — Produce all creative
+5. /socialforge:review                      — Review and approve
+6. /socialforge:finalize                    — Package for delivery
 ```
 
 ## Architecture
@@ -39,7 +39,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/sf:status` on demand. See [Current Release](#current-release-v151) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v151) for the rationale.
 
 ## Installation
 
@@ -64,7 +64,7 @@ claude plugins add /path/to/socialforge
 After installing the plugin, run the setup command in Claude Code:
 
 ```
-/sf:setup
+/socialforge:setup
 ```
 
 This configures two external API services that power SocialForge’s image and video generation:
@@ -76,9 +76,9 @@ Your admin provides you with:
 - A **Google Cloud service account JSON key file** (for Vertex AI image generation)
 - A **WaveSpeed API key** (for video generation)
 
-`/sf:setup` copies these credentials to persistent storage (`${CLAUDE_PLUGIN_DATA}`), so they work across all sessions automatically. You only need to run it once.
+`/socialforge:setup` copies these credentials to persistent storage (`${CLAUDE_PLUGIN_DATA}`), so they work across all sessions automatically. You only need to run it once.
 
-**Without running `/sf:setup`, image and video generation will not work.** All other SocialForge features (calendar parsing, copy adaptation, review galleries, etc.) function normally without it.
+**Without running `/socialforge:setup`, image and video generation will not work.** All other SocialForge features (calendar parsing, copy adaptation, review galleries, etc.) function normally without it.
 
 ### Updating to Latest Version
 
@@ -100,9 +100,9 @@ After updating, start a new conversation for changes to take effect.
 
 SocialForge uses **Google Cloud Vertex AI** for image generation. Without it, image generation will fail (it will NOT silently create placeholders).
 
-**Setup via /sf:setup (recommended):**
+**Setup via /socialforge:setup (recommended):**
 1. Your admin provides a Google Cloud service account JSON key file with Vertex AI access
-2. Run `/sf:setup` and point it to the JSON key file
+2. Run `/socialforge:setup` and point it to the JSON key file
 3. Credentials are stored persistently — no need to set environment variables manually
 
 **Alternative — Direct environment variable:**
@@ -113,11 +113,11 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
 **Alternative — fal.ai or Replicate:** Connect via Connectors panel after installation for third-party image generation.
 
-Run `/sf:status` to verify image and video generation credentials are configured. (As of v1.5.0, credential status is reported on demand instead of via a SessionStart banner that fired on every Claude Code launch in every project.)
+Run `/socialforge:status` to verify image and video generation credentials are configured. (As of v1.5.0, credential status is reported on demand instead of via a SessionStart banner that fired on every Claude Code launch in every project.)
 
 ## Admin Setup (One-Time)
 
-Admins configure the cloud accounts once. Team members then just run `/sf:setup` with the credentials the admin shares.
+Admins configure the cloud accounts once. Team members then just run `/socialforge:setup` with the credentials the admin shares.
 
 ### Google Cloud (Vertex AI — Image Generation)
 
@@ -226,7 +226,7 @@ Share both the API key AND secret with your team. Both are needed for authentica
 Team members do NOT need any cloud accounts. The admin shares credentials, and the team member runs:
 
 ```
-/sf:setup
+/socialforge:setup
 ```
 
 The setup wizard asks for:
@@ -277,12 +277,12 @@ All video generation goes through human-in-the-loop approval. Videos are generat
 
 ### Requirements
 
-- WaveSpeed API key configured via `/sf:setup`
-- Google Cloud Vertex AI credentials configured via `/sf:setup` (for keyframe generation)
+- WaveSpeed API key configured via `/socialforge:setup`
+- Google Cloud Vertex AI credentials configured via `/socialforge:setup` (for keyframe generation)
 - Python dependencies: `pip install google-genai wavespeed Pillow imageio-ffmpeg`
 - Video duration: 3-15 seconds per clip
 
-Use `/sf:generate-video` to produce video for a specific post, or `/sf:generate-all` to include video posts in batch production.
+Use `/socialforge:generate-video` to produce video for a specific post, or `/socialforge:generate-all` to include video posts in batch production.
 
 ## Connectors
 
@@ -297,7 +297,7 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 
 ## Current Release (v1.5.1)
 
-Multi-plugin coexistence + manifest hardening. v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Write/Edit compliance check, SubagentStart brand-context injection, Stop image-approval verification) that previously fired on every Claude Code operation in every project. Credential status is now reported on demand via `/sf:status` instead of a banner on every Claude Code launch. Prior hook config preserved at `hooks/hooks-reference.example.json`. v1.5.1 hardened the plugin manifest with `$schema`, `homepage`, `repository`, `license`, `author.url`, and a 14-tag `keywords` array. All 10 MCP connectors are HTTP and fully Cowork-compatible.
+Multi-plugin coexistence + manifest hardening. v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Write/Edit compliance check, SubagentStart brand-context injection, Stop image-approval verification) that previously fired on every Claude Code operation in every project. Credential status is now reported on demand via `/socialforge:status` instead of a banner on every Claude Code launch. Prior hook config preserved at `hooks/hooks-reference.example.json`. v1.5.1 hardened the plugin manifest with `$schema`, `homepage`, `repository`, `license`, `author.url`, and a 14-tag `keywords` array. All 10 MCP connectors are HTTP and fully Cowork-compatible.
 
 Earlier (v1.3–1.4): 100% spec coverage. Persistent storage via `${CLAUDE_PLUGIN_DATA}`, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
 

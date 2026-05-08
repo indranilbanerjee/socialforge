@@ -21,4 +21,4 @@ Get from your admin:
 - **WaveSpeed API key** (for video generation via Kling v3.0)
 
 ## Quick Check
-`/sf:setup --status` shows what is currently configured without changing anything.
+`/socialforge:setup --status` shows what is currently configured without changing anything.

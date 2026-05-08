@@ -6,7 +6,7 @@ effort: medium
 user-invocable: true
 ---
 
-# /sf:adapt-copy — Copy Adapter
+# /socialforge:adapt-copy — Copy Adapter
 
 Transform a single caption brief into platform-optimized copy for each target platform.
 

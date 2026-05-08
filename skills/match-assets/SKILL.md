@@ -6,7 +6,7 @@ effort: high
 user-invocable: true
 ---
 
-# /sf:match-assets — Asset Matcher
+# /socialforge:match-assets — Asset Matcher
 
 Match brand assets to parsed calendar posts using the multi-factor scoring algorithm. Assigns one of 4 creative modes per post.
 
@@ -14,7 +14,7 @@ Match brand assets to parsed calendar posts using the multi-factor scoring algor
 - Calendar parsed (calendar-data.json exists)
 - Asset index built (asset-index.json exists)
 
-If either is missing, prompt: "Run `/sf:parse-calendar` first, then `/sf:index-assets`."
+If either is missing, prompt: "Run `/socialforge:parse-calendar` first, then `/socialforge:index-assets`."
 
 ## The Matching Algorithm
 

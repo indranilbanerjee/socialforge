@@ -5,12 +5,12 @@ argument-hint: "<brand-name> [--source <path>] [--refresh]"
 
 # Index Assets
 
-Scan and analyze a brand's photo library. Runs /sf:index-assets skill.
+Scan and analyze a brand's photo library. Runs /socialforge:index-assets skill.
 
 ## Usage
 ```
-/sf:index-assets acme-corp --source /path/to/photos
-/sf:index-assets acme-corp --refresh  (only new/changed files)
+/socialforge:index-assets acme-corp --source /path/to/photos
+/socialforge:index-assets acme-corp --refresh  (only new/changed files)
 ```
 
 ## Output

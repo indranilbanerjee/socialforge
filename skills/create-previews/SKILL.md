@@ -7,7 +7,7 @@ user-invocable: true
 disable-model-invocation: true
 ---
 
-# /sf:create-previews — Preview Generator
+# /socialforge:create-previews — Preview Generator
 
 Generate realistic platform mockups showing exactly how each post will appear when published.
 

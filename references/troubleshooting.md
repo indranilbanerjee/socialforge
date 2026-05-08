@@ -11,7 +11,7 @@ Common SocialForge errors with causes and fixes.
 **Cause:** No `brand-config.json` exists at `~/socialforge-workspace/brands/<brand-slug>/`, or the slug doesn't match.
 
 **Fix:**
-1. Run `/sf:brand-setup` to create a new brand profile.
+1. Run `/socialforge:brand-setup` to create a new brand profile.
 2. If the brand exists, check the slug: `ls ~/socialforge-workspace/brands/` and verify the directory name matches exactly.
 3. Ensure `brand-config.json` contains valid JSON with `brand_name` and `brand_slug` fields.
 
@@ -24,7 +24,7 @@ Common SocialForge errors with causes and fixes.
 **Cause:** `asset-index.json` doesn't exist or contains zero assets.
 
 **Fix:**
-1. Run `/sf:index-assets` to scan and index the brand's asset directory.
+1. Run `/socialforge:index-assets` to scan and index the brand's asset directory.
 2. Verify assets exist in the brand's `assets/` folder — the indexer needs actual image files.
 3. Check that image files are in supported formats: `.jpg`, `.jpeg`, `.png`, `.webp`.
 4. If assets are in a non-standard location, specify the path when running the indexer.
@@ -75,7 +75,7 @@ Common SocialForge errors with causes and fixes.
    GEMINI_API_KEY=your-key-here
    ```
 3. Restart the session after updating `.env`.
-4. For MCP connectors (Slack, Notion, etc.), follow `/sf:connect <name>` for OAuth setup — these don't use `.env` keys.
+4. For MCP connectors (Slack, Notion, etc.), follow `/socialforge:connect <name>` for OAuth setup — these don't use `.env` keys.
 
 ---
 

@@ -6,7 +6,7 @@ effort: medium
 user-invocable: true
 ---
 
-# /sf:build-review-gallery — Review Gallery Builder
+# /socialforge:build-review-gallery — Review Gallery Builder
 
 Build an interactive HTML gallery showing all generated posts with quality scores, copy, and approval controls.
 

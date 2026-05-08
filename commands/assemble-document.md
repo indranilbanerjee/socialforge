@@ -16,4 +16,4 @@ Package all approved posts into a professional delivery document.
 
 ## Prerequisites
 - Posts must be approved (status: APPROVED_INTERNAL or higher)
-- Run after /sf:finalize or as part of the full pipeline
+- Run after /socialforge:finalize or as part of the full pipeline

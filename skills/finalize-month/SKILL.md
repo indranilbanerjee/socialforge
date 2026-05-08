@@ -7,7 +7,7 @@ user-invocable: true
 disable-model-invocation: true
 ---
 
-# /sf:finalize-month — Month Finalizer
+# /socialforge:finalize-month — Month Finalizer
 
 Package all approved posts into the organized delivery folder structure.
 

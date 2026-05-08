@@ -25,6 +25,6 @@ By Tier:
   HUB: 10/14 generated
   HYGIENE: 4/10 generated
 
-Next: Generate remaining 10 posts (/sf:generate-all)
-      Review generated posts (/sf:review)
+Next: Generate remaining 10 posts (/socialforge:generate-all)
+      Review generated posts (/socialforge:review)
 ```

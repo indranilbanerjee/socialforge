@@ -6,7 +6,7 @@ effort: medium
 user-invocable: true
 ---
 
-# /sf:parse-calendar — Calendar Parser
+# /socialforge:parse-calendar — Calendar Parser
 
 Parse a monthly social media content calendar into structured JSON that drives the entire production pipeline.
 
@@ -67,7 +67,7 @@ Calendar saved: ~/socialforge-workspace/output/acme-corp/2026-04/calendar-data.j
 ## After Parsing
 
 Ask: "Would you like to:
-- Match assets to posts? (`/sf:match-assets`)
+- Match assets to posts? (`/socialforge:match-assets`)
 - Review the parsed calendar first? (I'll show the full post list)
 - Fix issues? (I'll walk through each flagged item)"
 

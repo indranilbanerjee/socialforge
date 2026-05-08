@@ -6,7 +6,7 @@ effort: high
 user-invocable: true
 ---
 
-# /sf:render-carousels — Carousel Renderer
+# /socialforge:render-carousels — Carousel Renderer
 
 Produce multi-slide carousel images from HTML/CSS templates using Playwright headless rendering.
 

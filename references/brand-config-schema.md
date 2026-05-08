@@ -1,6 +1,6 @@
 # Brand Config Schema Reference
 
-JSON schema for `brand-config.json` — the core brand identity file loaded by `/sf:brand-setup`.
+JSON schema for `brand-config.json` — the core brand identity file loaded by `/socialforge:brand-setup`.
 
 ## Location
 

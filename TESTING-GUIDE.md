@@ -34,7 +34,7 @@
 
 ### Post-Install Verification
 - [ ] New session shows SocialForge welcome message | "SocialForge v1.0 loaded" with Quick Start
-- [ ] `/sf:status` returns valid response | Shows "No active brand" or brand status
+- [ ] `/socialforge:status` returns valid response | Shows "No active brand" or brand status
 - [ ] All 25 commands appear in Customize panel | Count matches expected 18
 - [ ] All 15 skills appear in Skills section | Count matches expected 14
 - [ ] `.mcp.json` loaded (9 connectors) | No MCP initialization errors in logs
@@ -45,25 +45,25 @@
 
 | # | Command | Test Action | Expected Result |
 |---|---------|------------|-----------------|
-| 1 | `/sf:brand-setup test-brand` | Run with test brand name | Interactive wizard starts, `brand-config.json` created |
-| 2 | `/sf:switch-brand test-brand` | Switch to existing brand | Active brand changes, confirmed in status |
-| 3 | `/sf:index-assets test-brand` | Index test asset folder | `asset-index.json` created with per-image metadata |
-| 4 | `/sf:new-month test-brand 2026-04` | Start April production | Calendar prompt or data initialized |
-| 5 | `/sf:sync-calendar --source test.xlsx` | Parse test calendar | `calendar-data.json` created with post entries |
-| 6 | `/sf:generate-all` | Run full production | All posts processed, images generated |
-| 7 | `/sf:generate-post <post-id>` | Generate single post | One post's creative produced |
-| 8 | `/sf:edit-post <post-id> --copy` | Edit post copy | Copy updated in calendar data |
-| 9 | `/sf:edit-image <post-id> "warmer tones"` | Edit generated image | Image regenerated with instruction |
-| 10 | `/sf:swap-asset <post-id> --browse` | Browse and swap asset | Asset replaced, image regenerated |
-| 11 | `/sf:preview-batch` | Generate previews | Platform mockups created for all posts |
-| 12 | `/sf:review` | Open review gallery | HTML gallery renders with all posts |
-| 13 | `/sf:revision <post-id> "feedback"` | Apply revision | Affected elements regenerated |
-| 14 | `/sf:check-approvals` | Check approval status | Pending approvals listed by tier |
-| 15 | `/sf:client-review --tier HERO` | Send for client review | Posts sent via Slack/email or export prepared |
-| 16 | `/sf:finalize` | Finalize month | Delivery folder created with all assets |
-| 17 | `/sf:reactive-post "trending topic"` | Create reactive post | New post created outside calendar |
-| 18 | `/sf:status` | Check status | Shows brand, month, post counts, pipeline phase |
-| 19 | `/sf:cost-report` | Check costs | API cost breakdown displayed |
+| 1 | `/socialforge:brand-setup test-brand` | Run with test brand name | Interactive wizard starts, `brand-config.json` created |
+| 2 | `/socialforge:switch-brand test-brand` | Switch to existing brand | Active brand changes, confirmed in status |
+| 3 | `/socialforge:index-assets test-brand` | Index test asset folder | `asset-index.json` created with per-image metadata |
+| 4 | `/socialforge:new-month test-brand 2026-04` | Start April production | Calendar prompt or data initialized |
+| 5 | `/socialforge:sync-calendar --source test.xlsx` | Parse test calendar | `calendar-data.json` created with post entries |
+| 6 | `/socialforge:generate-all` | Run full production | All posts processed, images generated |
+| 7 | `/socialforge:generate-post <post-id>` | Generate single post | One post's creative produced |
+| 8 | `/socialforge:edit-post <post-id> --copy` | Edit post copy | Copy updated in calendar data |
+| 9 | `/socialforge:edit-image <post-id> "warmer tones"` | Edit generated image | Image regenerated with instruction |
+| 10 | `/socialforge:swap-asset <post-id> --browse` | Browse and swap asset | Asset replaced, image regenerated |
+| 11 | `/socialforge:preview-batch` | Generate previews | Platform mockups created for all posts |
+| 12 | `/socialforge:review` | Open review gallery | HTML gallery renders with all posts |
+| 13 | `/socialforge:revision <post-id> "feedback"` | Apply revision | Affected elements regenerated |
+| 14 | `/socialforge:check-approvals` | Check approval status | Pending approvals listed by tier |
+| 15 | `/socialforge:client-review --tier HERO` | Send for client review | Posts sent via Slack/email or export prepared |
+| 16 | `/socialforge:finalize` | Finalize month | Delivery folder created with all assets |
+| 17 | `/socialforge:reactive-post "trending topic"` | Create reactive post | New post created outside calendar |
+| 18 | `/socialforge:status` | Check status | Shows brand, month, post counts, pipeline phase |
+| 19 | `/socialforge:cost-report` | Check costs | API cost breakdown displayed |
 
 ---
 
@@ -252,11 +252,11 @@ Test each of the 8 templates renders correctly.
 ## 12. Edge Cases
 
 ### Missing Brand
-- [ ] Running `/sf:generate-all` with no active brand | Clear error: "Brand not found" with fix instructions
-- [ ] Running `/sf:index-assets` with nonexistent brand slug | Error with suggestion to run brand-setup
+- [ ] Running `/socialforge:generate-all` with no active brand | Clear error: "Brand not found" with fix instructions
+- [ ] Running `/socialforge:index-assets` with nonexistent brand slug | Error with suggestion to run brand-setup
 
 ### Empty Calendar
-- [ ] Running `/sf:generate-all` with empty calendar-data.json | Graceful message: "No posts in calendar"
+- [ ] Running `/socialforge:generate-all` with empty calendar-data.json | Graceful message: "No posts in calendar"
 - [ ] Parsing a blank DOCX | Error: "No posts found in calendar source"
 
 ### No Assets

@@ -17,4 +17,4 @@ Produce the complete creative package for one post.
 7. Update status-tracker.json
 
 ## Variants
-`/sf:generate-post P04 --variant b` generates an alternative version for A/B testing.
+`/socialforge:generate-post P04 --variant b` generates an alternative version for A/B testing.

@@ -6,7 +6,7 @@ effort: low
 user-invocable: true
 ---
 
-# /sf:setup — API Credential Configuration
+# /socialforge:setup — API Credential Configuration
 
 One-time setup that stores credentials persistently. Run once, works forever across all sessions.
 
@@ -28,7 +28,7 @@ If you are the admin, see the Admin Setup section below.
 ## How to Run
 
 ```
-/sf:setup
+/socialforge:setup
 ```
 
 ## Interactive Flow
@@ -133,7 +133,7 @@ SocialForge API Setup Complete
 
   Credentials stored persistently. No further setup needed.
 
-  Next: /sf:brand-setup [brand-name] to configure your first brand.
+  Next: /socialforge:brand-setup [brand-name] to configure your first brand.
 ```
 
 ## Arguments

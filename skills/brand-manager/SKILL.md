@@ -6,7 +6,7 @@ effort: medium
 user-invocable: true
 ---
 
-# /sf:brand-setup — Brand Manager
+# /socialforge:brand-setup — Brand Manager
 
 Set up a new brand profile or update an existing one. Brand profiles control visual identity, platform config, compliance rules, approval chains, and asset sources for all SocialForge workflows.
 
@@ -16,7 +16,7 @@ SocialForge generates AI images for social media posts. Before setting up a bran
 
 **Step 0: Check image API (MANDATORY — do this before anything else)**
 
-Run `/sf:setup` to configure Google Cloud Vertex AI credentials. Your admin provides a service account JSON file, which `/sf:setup` stores securely in the plugin data directory.
+Run `/socialforge:setup` to configure Google Cloud Vertex AI credentials. Your admin provides a service account JSON file, which `/socialforge:setup` stores securely in the plugin data directory.
 
 **Alternative providers:** Connect fal.ai or Replicate via the Connectors panel.
 
@@ -27,11 +27,11 @@ Run `/sf:setup` to configure Google Cloud Vertex AI credentials. Your admin prov
 WARNING: No image generation API configured.
 Vertex AI credentials are not set. AI image generation will FAIL.
 
-To fix: Run /sf:setup to configure Google Cloud Vertex AI credentials.
+To fix: Run /socialforge:setup to configure Google Cloud Vertex AI credentials.
 Or connect fal.ai/Replicate via the Connectors panel.
 
 Do you want to:
-  1. Run /sf:setup now (recommended)
+  1. Run /socialforge:setup now (recommended)
   2. Continue without image generation (limited functionality)
 ```
 
@@ -47,9 +47,9 @@ After confirming the image API, users need these 5 things:
 4. **Active platforms** — Which social media platforms (LinkedIn, Instagram, X, Facebook, YouTube, etc.)
 5. **Asset source** — Where are brand photos? (Google Drive folder URL, local path, or "I'll add later")
 
-That's it. Run `/sf:brand-setup [brand-name]` and answer these questions. SocialForge creates a working brand profile.
+That's it. Run `/socialforge:brand-setup [brand-name]` and answer these questions. SocialForge creates a working brand profile.
 
-**Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags via `/sf:brand-setup --update [brand]`
+**Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags via `/socialforge:brand-setup --update [brand]`
 
 ## Full Setup
 
@@ -224,7 +224,7 @@ Creates these files in `~/socialforge-workspace/brands/{brand-slug}/`:
 ## Pre-Flight Validation
 
 Before any SocialForge workflow starts, the brand profile is validated:
-- Image generation API configured (Vertex AI via `/sf:setup` or MCP connector)
+- Image generation API configured (Vertex AI via `/socialforge:setup` or MCP connector)
 - Brand name and slug set
 - At least one platform configured
 - Colors (primary + secondary) set
@@ -234,14 +234,14 @@ Missing fields trigger a warning with options to continue or fix.
 
 ## Timeout & Interruption Handling
 
-- If user closes or interrupts during multi-step setup: save whatever was collected so far. On next `/sf:brand-setup [brand]`, detect the partial profile and ask: "Resume setup from Step {N}? Or start fresh?"
+- If user closes or interrupts during multi-step setup: save whatever was collected so far. On next `/socialforge:brand-setup [brand]`, detect the partial profile and ask: "Resume setup from Step {N}? Or start fresh?"
 - Each step saves incrementally — no data is lost on interruption.
 - If brand-config.json write fails: retry once, then save to `~/socialforge-workspace/brands/{slug}/brand-config.partial.json` and inform user.
 
 ## Switching Brands
 
 ```
-/sf:brand-setup --switch [brand-name]
+/socialforge:brand-setup --switch [brand-name]
 ```
 
 Instantly reloads the brand context. All subsequent commands use the switched brand.

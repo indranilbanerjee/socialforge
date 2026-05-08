@@ -6,7 +6,7 @@ effort: high
 user-invocable: true
 ---
 
-# /sf:index-assets — Asset Indexer
+# /socialforge:index-assets — Asset Indexer
 
 Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by Gemini Vision to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
 
@@ -35,8 +35,8 @@ Before indexing, verify:
 If asset source is not configured:
 ```
 ⚠️ No asset source configured for brand "{brand}".
-Run /sf:brand-setup --update {brand} to add an asset source.
-Or provide a path now: /sf:index-assets {brand} --source local --path /path/to/photos
+Run /socialforge:brand-setup --update {brand} to add an asset source.
+Or provide a path now: /socialforge:index-assets {brand} --source local --path /path/to/photos
 ```
 
 ## Progress Updates
@@ -71,8 +71,8 @@ Asset Index Complete: acme-corp
 
 Would you like to:
 - Review style reference candidates? (I'll show all 8 with descriptions)
-- Start monthly production? (/sf:new-month)
-- Update specific assets? (/sf:index-assets --refresh)
+- Start monthly production? (/socialforge:new-month)
+- Update specific assets? (/socialforge:index-assets --refresh)
 ```
 
 ## Timeout & Fallback
@@ -83,7 +83,7 @@ Would you like to:
 
 ## Refresh Mode
 
-`/sf:index-assets [brand] --refresh`
+`/socialforge:index-assets [brand] --refresh`
 
 Only re-analyzes new or modified images since last index. Compares file timestamps with `indexed_at` in asset-index.json.
 

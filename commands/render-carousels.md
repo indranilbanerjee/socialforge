@@ -27,5 +27,5 @@ Produce carousel slide images from HTML/CSS templates with brand theming.
 
 ## Prerequisites
 - Calendar parsed with carousel posts identified
-- Playwright installed (auto-installed via /sf:setup)
+- Playwright installed (auto-installed via /socialforge:setup)
 - Brand config with colors and fonts set

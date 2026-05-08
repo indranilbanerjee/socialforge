@@ -6,17 +6,17 @@ effort: high
 user-invocable: true
 ---
 
-# /sf:generate-video — Video Production Kit
+# /socialforge:generate-video — Video Production Kit
 
 Generate video production assets through a 5-stage human-in-the-loop pipeline. Each stage requires user approval before advancing.
 
 ## Prerequisites
 
-- Credentials must be configured via `/sf:setup`:
+- Credentials must be configured via `/socialforge:setup`:
   - **Vertex AI** (Gemini Imagen) — used for first-frame and last-frame keyframe generation
   - **WaveSpeed API** — used for image-to-video generation via Kling v3.0 Pro
-- Brand profile must be active (`/sf:switch-brand` if needed)
-- Calendar must be parsed (`/sf:parse-calendar`) with video posts identified
+- Brand profile must be active (`/socialforge:switch-brand` if needed)
+- Calendar must be parsed (`/socialforge:parse-calendar`) with video posts identified
 
 ## The 5-Stage Pipeline
 

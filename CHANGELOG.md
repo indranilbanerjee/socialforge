@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.3] - 2026-05-09
+
+### Fixed — Slash Command Namespace Consistency
+
+All `/sf:` references in docs and runtime files swept to the canonical `/socialforge:` form that Claude Code auto-namespacing actually produces. The `/sf:` shorthand was used inconsistently across README, USER-GUIDE, TESTING-GUIDE, OPERATIONS, CONNECTORS, CHANGELOG, all agent files, all skill SKILL.md files, all command files, and reference files (~200 references across ~30 files). Users can now copy-paste any command from any doc and have it work.
+
+Skill filenames preserved — skill names are unchanged.
+
+No behavioral changes.
+
+---
+
 ## [1.5.2] - 2026-05-03
 
 ### Fixed — Plugin Manifest Install Format (CRITICAL)
@@ -61,7 +73,7 @@ Audit of the v1.4 install footprint surfaced the same issue that prompted Conten
 
 [hooks/hooks.json](hooks/hooks.json) now contains an empty `hooks: {}` object plus a `_readme` explaining the rationale. The four prior hooks are preserved with per-hook rationale notes at [hooks/hooks-reference.example.json](hooks/hooks-reference.example.json):
 
-- **SessionStart** — printed the SocialForge v1.4 banner with credential status (Vertex AI image-gen, WaveSpeed video-gen). Useful inside SocialForge work but ran on every Claude Code launch in every project. Replacement: run `/sf:status` on demand for the same info.
+- **SessionStart** — printed the SocialForge v1.4 banner with credential status (Vertex AI image-gen, WaveSpeed video-gen). Useful inside SocialForge work but ran on every Claude Code launch in every project. Replacement: run `/socialforge:status` on demand for the same info.
 - **PreToolUse Write|Edit** — brand compliance check for social copy and image prompts. Lived inside the agent files responsible for generating that content already; the hook was a redundant interception layer.
 - **SubagentStart** — brand context + creative-mode rules injected into every subagent call. Already encoded in each SocialForge agent's instruction body.
 - **Stop** — image approval and compliance verification. Already enforced in-flow by the brand-manager and image-generation agents.
@@ -72,7 +84,7 @@ A user installing SocialForge to try it would see the Vertex AI status banner on
 
 #### Behavior Preserved
 
-All compliance checks, image-approval gates, brand-asset rules, and credential reporting still run — they were always also encoded in the agent files and `/sf:status` command. The hook layer was a duplicate execution path. Removing it produces identical output quality with zero side-effects on other Claude Code work.
+All compliance checks, image-approval gates, brand-asset rules, and credential reporting still run — they were always also encoded in the agent files and `/socialforge:status` command. The hook layer was a duplicate execution path. Removing it produces identical output quality with zero side-effects on other Claude Code work.
 
 ### Migration
 
@@ -249,7 +261,7 @@ Production-ready release. All 4 critical + 8 high-priority audit findings resolv
 - **C4:** compose_image.py remove-bg now has Pillow threshold fallback when rembg unavailable (Cowork compatibility)
 
 #### High-Priority Fixes
-- **H1:** full-pipeline resume documented: `/sf:full-pipeline --resume` or `/sf:finalize`
+- **H1:** full-pipeline resume documented: `/socialforge:full-pipeline --resume` or `/socialforge:finalize`
 - **H2:** finalize-month `--force` flag gets explicit WARNING + audit trail (`force_finalized: true`)
 - **H5:** manage-reviews now documents complete 14-state machine (was 6 states)
 - **H7:** new-month command expanded with calendar source options (DOCX/XLSX/Notion/text)

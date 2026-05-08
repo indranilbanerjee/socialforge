@@ -5,7 +5,7 @@ argument-hint: "[--brand <name>] [--force]"
 
 # Finalize
 
-Package all approved content into the delivery folder structure. Runs /sf:finalize-month skill.
+Package all approved content into the delivery folder structure. Runs /socialforge:finalize-month skill.
 
 ## Pre-Check
 - All posts must be FINAL status (or --force to include unapproved)

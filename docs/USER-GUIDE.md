@@ -9,7 +9,7 @@
 Before you start, make sure you have:
 
 - **Claude Code CLI** or **Claude Desktop with Code tab** (any plan)
-- **API credentials configured via `/sf:setup`** (one-time setup):
+- **API credentials configured via `/socialforge:setup`** (one-time setup):
   - **Google Cloud service account JSON file** -- for Vertex AI image generation
   - **WaveSpeed API key** -- for Kling v3.0 video generation
 - **Python dependencies installed:**
@@ -26,7 +26,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 0. [Prerequisites](#prerequisites)
 1. [What You Need](#1-what-you-need)
 2. [Installation](#2-installation)
-3. [Setting Up API Credentials (/sf:setup)](#3-setting-up-api-credentials-sfsetup)
+3. [Setting Up API Credentials (/socialforge:setup)](#3-setting-up-api-credentials-sfsetup)
 4. [Your First Brand Setup](#4-your-first-brand-setup)
 5. [Indexing Brand Assets](#5-indexing-brand-assets)
 6. [Starting a New Month](#6-starting-a-new-month)
@@ -54,12 +54,12 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 - A monthly content calendar (DOCX, XLSX, Notion database, or just text)
 
 **For AI image generation (recommended):**
-- Google Cloud Vertex AI credentials (configured via `/sf:setup`)
+- Google Cloud Vertex AI credentials (configured via `/socialforge:setup`)
 - fal.ai account -- connected via Connectors panel (HTTP, works in Cowork)
 - Replicate account -- connected via Connectors panel (HTTP, works in Cowork)
 
 **For AI video generation:**
-- **WaveSpeed API key via `/sf:setup`** -- powers Kling v3.0 video generation
+- **WaveSpeed API key via `/socialforge:setup`** -- powers Kling v3.0 video generation
 
 **Optional (enhances workflow):**
 - Google Drive — store brand assets (connects automatically in Cowork via Settings > Integrations)
@@ -74,7 +74,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 Run this once after installing the plugin:
 
 ```
-/sf:setup
+/socialforge:setup
 ```
 
 Step 1 — Image generation (Google Cloud Vertex AI):
@@ -87,9 +87,9 @@ Step 2 — Video generation (WaveSpeed / Kling v3.0):
 - When prompted, paste the key
 - Models: Kling v3.0 Pro (image-to-video, text-to-video, 3-15 seconds)
 
-Credentials are stored persistently. You never need to run /sf:setup again unless credentials change.
+Credentials are stored persistently. You never need to run /socialforge:setup again unless credentials change.
 
-Check status anytime: `/sf:setup --status`
+Check status anytime: `/socialforge:setup --status`
 
 ---
 
@@ -117,11 +117,11 @@ After installing, you should see:
 SocialForge v1.3 loaded
 
 Quick Start:
-  1. /sf:brand-setup   — Configure a brand (do this first, 5-10 min)
-  2. /sf:index-assets  — Index brand photo library (Drive or local)
-  3. /sf:new-month     — Start monthly calendar production
+  1. /socialforge:brand-setup   — Configure a brand (do this first, 5-10 min)
+  2. /socialforge:index-assets  — Index brand photo library (Drive or local)
+  3. /socialforge:new-month     — Start monthly calendar production
 
-Already set up? /sf:status | /sf:switch-brand <name>
+Already set up? /socialforge:status | /socialforge:switch-brand <name>
 
 Connectors: 10 HTTP (Notion, Canva, Figma, Slack, Gmail, Calendar, fal.ai, Replicate, Asana, Cloudinary)
 Storage: persistent via plugin data directory
@@ -129,7 +129,7 @@ Storage: persistent via plugin data directory
 
 ---
 
-## 3. Setting Up API Credentials (/sf:setup)
+## 3. Setting Up API Credentials (/socialforge:setup)
 
 Before generating images or video, configure your API credentials. This is a one-time setup -- credentials persist across all sessions.
 
@@ -138,7 +138,7 @@ Before generating images or video, configure your API credentials. This is a one
 Run the setup command:
 
 ```
-/sf:setup
+/socialforge:setup
 ```
 
 SocialForge walks you through two steps:
@@ -175,7 +175,7 @@ Both persist across sessions -- you won't need to do this again.
 ### Checking Credential Status
 
 ```
-/sf:setup --status
+/socialforge:setup --status
 ```
 
 ```
@@ -186,11 +186,11 @@ SocialForge Credentials
 
 ### Updating Credentials
 
-Run `/sf:setup` again at any time to replace either credential. The new values overwrite the old ones immediately.
+Run `/socialforge:setup` again at any time to replace either credential. The new values overwrite the old ones immediately.
 
 ### Credential Management
 
-All API credentials are managed through `/sf:setup`. Run it anytime to configure or update your Vertex AI service account or WaveSpeed API key.
+All API credentials are managed through `/socialforge:setup`. Run it anytime to configure or update your Vertex AI service account or WaveSpeed API key.
 
 ---
 
@@ -201,7 +201,7 @@ Let's set up a real brand. Say you're an agency working with **GreenLeaf Organic
 ### Quick Setup (3 minutes)
 
 ```
-/sf:brand-setup GreenLeaf
+/socialforge:brand-setup GreenLeaf
 ```
 
 SocialForge asks you 5 questions:
@@ -221,7 +221,7 @@ SocialForge asks you 5 questions:
 
 ### Adding More Detail Later
 
-Anytime, run `/sf:brand-setup --update GreenLeaf` to add:
+Anytime, run `/socialforge:brand-setup --update GreenLeaf` to add:
 
 - **Visual style** — "warm natural light, rustic, earthy, farm-to-table aesthetic"
 - **Image rules** — "Always include natural green tones", "Avoid plastic packaging in any visual"
@@ -250,7 +250,7 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/brands/greenleaf-organics/
 GreenLeaf has a Google Drive folder with 45 photos: products, farm scenes, team photos, packaging shots, recipe images.
 
 ```
-/sf:index-assets GreenLeaf
+/socialforge:index-assets GreenLeaf
 ```
 
 **What happens:**
@@ -297,7 +297,7 @@ To use Drive in Cowork: Settings > Integrations > Google Drive > Connect. No API
 When GreenLeaf adds new photos to their Drive folder:
 
 ```
-/sf:index-assets GreenLeaf --refresh
+/socialforge:index-assets GreenLeaf --refresh
 ```
 
 Only analyzes new/changed images. Existing index preserved.
@@ -309,7 +309,7 @@ Only analyzes new/changed images. Existing index preserved.
 GreenLeaf's social media manager sends you the April 2026 calendar as a Word document (DOCX). It has 28 posts across LinkedIn, Instagram, and Facebook.
 
 ```
-/sf:new-month GreenLeaf 2026-04
+/socialforge:new-month GreenLeaf 2026-04
 ```
 
 SocialForge asks for the calendar source:
@@ -427,7 +427,7 @@ The `match-assets` skill scores each post against the asset index using five fac
 Override any assignment:
 
 ```
-/sf:swap-asset P18 --mode ANCHOR_COMPOSE --asset asset_023
+/socialforge:swap-asset P18 --mode ANCHOR_COMPOSE --asset asset_023
 ```
 
 ---
@@ -446,7 +446,7 @@ Image production uses a **4-stage human-in-the-loop flow**. You stay in control 
 ### Example: Single Image Post
 
 ```
-/sf:generate-post P03
+/socialforge:generate-post P03
 ```
 
 **Stage 1 -- Creative Direction:**
@@ -489,7 +489,7 @@ Approve? (yes / regenerate / skip) > yes
 ### Generate All Posts
 
 ```
-/sf:generate-all
+/socialforge:generate-all
 ```
 
 ```
@@ -505,7 +505,7 @@ Production complete: 28/28 posts generated
 ### Generate a Single Post
 
 ```
-/sf:generate-post P03
+/socialforge:generate-post P03
 ```
 
 Useful for reactive content, fixing individual posts, or testing different creative directions before committing to a full run.
@@ -513,7 +513,7 @@ Useful for reactive content, fixing individual posts, or testing different creat
 ### Generate by Week
 
 ```
-/sf:generate-all --week 1
+/socialforge:generate-all --week 1
 ```
 
 Produces only Week 1 posts (April 1-7). Handy when you need the first week delivered immediately while the rest of the month is still in planning.
@@ -535,9 +535,9 @@ The adapter handles character limits, hashtag placement strategy, CTA style (lin
 ### Edit After Generation
 
 ```
-/sf:edit-image P03 "Make the background warmer, more golden light"
-/sf:edit-post P03 --copy "Updated headline: Introducing our new Avocado Oil..."
-/sf:swap-asset P03 --asset asset_015
+/socialforge:edit-image P03 "Make the background warmer, more golden light"
+/socialforge:edit-post P03 --copy "Updated headline: Introducing our new Avocado Oil..."
+/socialforge:swap-asset P03 --asset asset_015
 ```
 
 Each edit regenerates only the affected element — not the entire post.
@@ -545,7 +545,7 @@ Each edit regenerates only the affected element — not the entire post.
 ### Generate Variants for A/B Testing
 
 ```
-/sf:generate-post P03 --variant b
+/socialforge:generate-post P03 --variant b
 ```
 
 Creates an alternative version. Both variants appear side-by-side in the review gallery so you or the client can pick the winner.
@@ -555,7 +555,7 @@ Creates an alternative version. Both variants appear side-by-side in the review 
 A trending topic or breaking news warrants an unplanned post:
 
 ```
-/sf:reactive-post "Earth Day celebration" --brand GreenLeaf --platform instagram
+/socialforge:reactive-post "Earth Day celebration" --brand GreenLeaf --platform instagram
 ```
 
 Creates a one-off post with the same quality pipeline (asset matching, creative mode, copy adaptation, compliance check) but outside the planned calendar.
@@ -567,7 +567,7 @@ Creates a one-off post with the same quality pipeline (asset matching, creative 
 ### Open the Review Gallery
 
 ```
-/sf:review
+/socialforge:review
 ```
 
 This builds an interactive HTML gallery showing all 28 posts with:
@@ -579,8 +579,8 @@ This builds an interactive HTML gallery showing all 28 posts with:
 **Filter by tier, platform, or status:**
 
 ```
-/sf:review --tier HERO
-/sf:review --platform instagram
+/socialforge:review --tier HERO
+/socialforge:review --platform instagram
 ```
 
 ### Approve or Request Revisions
@@ -588,19 +588,19 @@ This builds an interactive HTML gallery showing all 28 posts with:
 Bulk approve posts that look good:
 
 ```
-/sf:manage-reviews --approve P01 P02 P03 P04 P05
+/socialforge:manage-reviews --approve P01 P02 P03 P04 P05
 ```
 
 Flag posts that need changes:
 
 ```
-/sf:manage-reviews --revise P06 "The background color doesn't match our brand green"
+/socialforge:manage-reviews --revise P06 "The background color doesn't match our brand green"
 ```
 
 The revision command regenerates only the affected elements:
 
 ```
-/sf:revision P06 "Use darker green (#2D5016) in the background, keep the product placement"
+/socialforge:revision P06 "Use darker green (#2D5016) in the background, keep the product placement"
 ```
 
 ### Tiered Approval Workflow
@@ -616,7 +616,7 @@ The approval chain is configured per brand during setup:
 ### Send to Client (HERO Content)
 
 ```
-/sf:client-review --tier HERO
+/socialforge:client-review --tier HERO
 ```
 
 Sends the 4 HERO posts to the client via Slack (if connected) or packages them for email delivery. The client reviews and responds with approve/revise per post.
@@ -624,7 +624,7 @@ Sends the 4 HERO posts to the client via Slack (if connected) or packages them f
 ### Check Status Anytime
 
 ```
-/sf:status
+/socialforge:status
 ```
 
 ```
@@ -644,7 +644,7 @@ By Tier:
 ### Send Reminders for Overdue Reviews
 
 ```
-/sf:check-approvals --send-reminders
+/socialforge:check-approvals --send-reminders
 ```
 
 Nudges reviewers who have pending approvals past the configured deadline.
@@ -656,7 +656,7 @@ Nudges reviewers who have pending approvals past the configured deadline.
 Once all posts are approved:
 
 ```
-/sf:finalize
+/socialforge:finalize
 ```
 
 ```
@@ -722,7 +722,7 @@ Calendar document generated
 If you need to deliver before all approvals are complete:
 
 ```
-/sf:finalize --force
+/socialforge:finalize --force
 ```
 
 Use sparingly — this bypasses the approval chain and logs that it was force-finalized.
@@ -734,21 +734,21 @@ Use sparingly — this bypasses the approval chain and logs that it was force-fi
 Agencies handle multiple clients. Switch between them instantly:
 
 ```
-/sf:switch-brand ClientB
+/socialforge:switch-brand ClientB
 ```
 
 Now all commands operate on ClientB's brand config, assets, and calendar:
 
 ```
-/sf:new-month ClientB 2026-04
-/sf:generate-all
-/sf:finalize
+/socialforge:new-month ClientB 2026-04
+/socialforge:generate-all
+/socialforge:finalize
 ```
 
 Switch back:
 
 ```
-/sf:switch-brand GreenLeaf
+/socialforge:switch-brand GreenLeaf
 ```
 
 Each brand has completely isolated:
@@ -761,9 +761,9 @@ There is no limit on the number of brands. A typical agency runs 5-15 brands thr
 ### Checking Across Brands
 
 ```
-/sf:status --brand GreenLeaf
-/sf:status --brand ClientB
-/sf:cost-report --brand all
+/socialforge:status --brand GreenLeaf
+/socialforge:status --brand ClientB
+/socialforge:cost-report --brand all
 ```
 
 ---
@@ -817,32 +817,32 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 
 | Command | What It Does | Example |
 |---------|-------------|---------|
-| `/sf:setup` | Configure API credentials (one-time) | `/sf:setup --status` |
-| `/sf:brand-setup` | Configure a brand profile | `/sf:brand-setup GreenLeaf` |
-| `/sf:index-assets` | Index brand photo library | `/sf:index-assets GreenLeaf --source /path` |
-| `/sf:match-assets` | Match brand assets to posts | `/sf:match-assets --brand GreenLeaf` |
-| `/sf:new-month` | Start monthly production | `/sf:new-month GreenLeaf 2026-04` |
-| `/sf:parse-calendar` | Import and parse monthly calendar | `/sf:parse-calendar calendar.docx` |
-| `/sf:generate-all` | Produce all posts | `/sf:generate-all --week 1` |
-| `/sf:generate-post` | Produce one post | `/sf:generate-post P03` |
-| `/sf:adapt-copy` | Adapt copy per platform | `/sf:adapt-copy --all` |
-| `/sf:render-carousels` | Render carousel slides | `/sf:render-carousels --post P05` |
-| `/sf:edit-post` | Edit copy/visual/metadata | `/sf:edit-post P03 --copy "new headline"` |
-| `/sf:edit-image` | AI edit a generated image | `/sf:edit-image P03 "warmer background"` |
-| `/sf:swap-asset` | Change the matched asset | `/sf:swap-asset P03 --asset asset_015` |
-| `/sf:review` | Open review gallery | `/sf:review --tier HERO` |
-| `/sf:revision` | Apply revision feedback | `/sf:revision P06 "fix background color"` |
-| `/sf:preview-batch` | Generate preview mockups for all posts | `/sf:preview-batch --brand GreenLeaf` |
-| `/sf:manage-reviews` | Bulk approve/revise posts | `/sf:manage-reviews --approve P01 P02 P03` |
-| `/sf:client-review` | Send to client for review | `/sf:client-review --tier HERO` |
-| `/sf:check-approvals` | Check pending approvals | `/sf:check-approvals --send-reminders` |
-| `/sf:assemble-document` | Create delivery DOCX | `/sf:assemble-document` |
-| `/sf:finalize` | Package for delivery | `/sf:finalize` |
-| `/sf:switch-brand` | Switch active brand | `/sf:switch-brand ClientB` |
-| `/sf:reactive-post` | Create unplanned post | `/sf:reactive-post "Earth Day" --brand GreenLeaf` |
-| `/sf:sync-calendar` | Re-read calendar source | `/sf:sync-calendar` |
-| `/sf:status` | Show production dashboard | `/sf:status` |
-| `/sf:cost-report` | API cost breakdown | `/sf:cost-report --brand GreenLeaf` |
+| `/socialforge:setup` | Configure API credentials (one-time) | `/socialforge:setup --status` |
+| `/socialforge:brand-setup` | Configure a brand profile | `/socialforge:brand-setup GreenLeaf` |
+| `/socialforge:index-assets` | Index brand photo library | `/socialforge:index-assets GreenLeaf --source /path` |
+| `/socialforge:match-assets` | Match brand assets to posts | `/socialforge:match-assets --brand GreenLeaf` |
+| `/socialforge:new-month` | Start monthly production | `/socialforge:new-month GreenLeaf 2026-04` |
+| `/socialforge:parse-calendar` | Import and parse monthly calendar | `/socialforge:parse-calendar calendar.docx` |
+| `/socialforge:generate-all` | Produce all posts | `/socialforge:generate-all --week 1` |
+| `/socialforge:generate-post` | Produce one post | `/socialforge:generate-post P03` |
+| `/socialforge:adapt-copy` | Adapt copy per platform | `/socialforge:adapt-copy --all` |
+| `/socialforge:render-carousels` | Render carousel slides | `/socialforge:render-carousels --post P05` |
+| `/socialforge:edit-post` | Edit copy/visual/metadata | `/socialforge:edit-post P03 --copy "new headline"` |
+| `/socialforge:edit-image` | AI edit a generated image | `/socialforge:edit-image P03 "warmer background"` |
+| `/socialforge:swap-asset` | Change the matched asset | `/socialforge:swap-asset P03 --asset asset_015` |
+| `/socialforge:review` | Open review gallery | `/socialforge:review --tier HERO` |
+| `/socialforge:revision` | Apply revision feedback | `/socialforge:revision P06 "fix background color"` |
+| `/socialforge:preview-batch` | Generate preview mockups for all posts | `/socialforge:preview-batch --brand GreenLeaf` |
+| `/socialforge:manage-reviews` | Bulk approve/revise posts | `/socialforge:manage-reviews --approve P01 P02 P03` |
+| `/socialforge:client-review` | Send to client for review | `/socialforge:client-review --tier HERO` |
+| `/socialforge:check-approvals` | Check pending approvals | `/socialforge:check-approvals --send-reminders` |
+| `/socialforge:assemble-document` | Create delivery DOCX | `/socialforge:assemble-document` |
+| `/socialforge:finalize` | Package for delivery | `/socialforge:finalize` |
+| `/socialforge:switch-brand` | Switch active brand | `/socialforge:switch-brand ClientB` |
+| `/socialforge:reactive-post` | Create unplanned post | `/socialforge:reactive-post "Earth Day" --brand GreenLeaf` |
+| `/socialforge:sync-calendar` | Re-read calendar source | `/socialforge:sync-calendar` |
+| `/socialforge:status` | Show production dashboard | `/socialforge:status` |
+| `/socialforge:cost-report` | API cost breakdown | `/socialforge:cost-report --brand GreenLeaf` |
 
 ---
 
@@ -909,27 +909,27 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ### "Brand not found"
 
 **Cause:** The command requires an active brand, but none is set or the name doesn't match.
-**Fix:** Run `/sf:brand-setup [name]` to create the brand profile, or `/sf:switch-brand [name]` if it already exists. Brand names are stored as lowercase-kebab-case slugs (e.g., "GreenLeaf Organics" becomes `greenleaf-organics`).
+**Fix:** Run `/socialforge:brand-setup [name]` to create the brand profile, or `/socialforge:switch-brand [name]` if it already exists. Brand names are stored as lowercase-kebab-case slugs (e.g., "GreenLeaf Organics" becomes `greenleaf-organics`).
 
 ### "No assets indexed"
 
 **Cause:** The brand has no asset index. Creative modes that depend on brand photos (ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED) cannot run.
-**Fix:** Run `/sf:index-assets [brand] --source /path/to/photos` or provide a Google Drive folder URL. Need at least 5 images for meaningful matching.
+**Fix:** Run `/socialforge:index-assets [brand] --source /path/to/photos` or provide a Google Drive folder URL. Need at least 5 images for meaningful matching.
 
 ### "Image generation failed"
 
 **Cause:** No image generation API is available.
-**Fix:** Run `/sf:setup --status` to verify Vertex AI credentials. If not configured, run `/sf:setup` to configure. The pipeline supports resuming — fix the credentials and rerun `/sf:generate-all`.
+**Fix:** Run `/socialforge:setup --status` to verify Vertex AI credentials. If not configured, run `/socialforge:setup` to configure. The pipeline supports resuming — fix the credentials and rerun `/socialforge:generate-all`.
 
 ### "Video generation failed"
 
 **Cause:** WaveSpeed API key is missing or invalid.
-**Fix:** Check WaveSpeed API key via `/sf:setup --status`. Verify credits at wavespeed.ai. If not configured, run `/sf:setup`.
+**Fix:** Check WaveSpeed API key via `/socialforge:setup --status`. Verify credits at wavespeed.ai. If not configured, run `/socialforge:setup`.
 
 ### "Credentials not found"
 
 **Cause:** API credentials have not been configured or were removed.
-**Fix:** Run `/sf:setup` again to reconfigure.
+**Fix:** Run `/socialforge:setup` again to reconfigure.
 
 ### "Playwright not installed"
 
@@ -939,12 +939,12 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ### "Quality score below 7.0"
 
 **Cause:** Usually a vague visual brief or weak asset match.
-**Fix:** Try a more specific prompt, a different brand asset, or switch to STYLE_REFERENCED mode. You can also regenerate: `/sf:generate-post P14 --regenerate`.
+**Fix:** Try a more specific prompt, a different brand asset, or switch to STYLE_REFERENCED mode. You can also regenerate: `/socialforge:generate-post P14 --regenerate`.
 
 ### "Compliance blocked"
 
 **Cause:** A post triggered a block-severity rule in the brand's `compliance-rules.json`.
-**Fix:** Read the error for the specific banned phrase. Edit the copy to remove or rephrase it: `/sf:edit-post P09 --copy`. If the rule is a false positive, update the compliance config via `/sf:brand-setup --update [brand]`.
+**Fix:** Read the error for the specific banned phrase. Edit the copy to remove or rephrase it: `/socialforge:edit-post P09 --copy`. If the rule is a false positive, update the compliance config via `/socialforge:brand-setup --update [brand]`.
 
 ### "Calendar parse failed"
 
@@ -954,14 +954,14 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ### Posts Not Persisting Across Sessions
 
 **Cause:** Data may have been written to a temporary directory instead of the plugin data directory.
-**Fix:** Verify the plugin is installed (not just loaded from local path). Installed plugins use `${CLAUDE_PLUGIN_DATA}` which persists. Run `/sf:status` to confirm the storage path shown is under the plugin data directory.
+**Fix:** Verify the plugin is installed (not just loaded from local path). Installed plugins use `${CLAUDE_PLUGIN_DATA}` which persists. Run `/socialforge:status` to confirm the storage path shown is under the plugin data directory.
 
 ---
 
 ## 16. FAQ
 
 **Q: How much does it cost per month?**
-A: For a 28-post calendar: ~$2-4 in Gemini API calls. Carousels and previews are free (local rendering via Playwright). Video generation costs more (~$0.10-0.50 per clip via fal.ai/Replicate). Run `/sf:cost-report` for exact figures.
+A: For a 28-post calendar: ~$2-4 in Gemini API calls. Carousels and previews are free (local rendering via Playwright). Video generation costs more (~$0.10-0.50 per clip via fal.ai/Replicate). Run `/socialforge:cost-report` for exact figures.
 
 **Q: Can I use my own images instead of AI generation?**
 A: Yes. Upload your pre-made image and it bypasses all generation — just gets resized, overlaid with logo, and adapted per platform. Set the post's creative mode to ANCHOR_COMPOSE and provide the image directly.
@@ -979,7 +979,7 @@ A: DOCX (Word tables), XLSX (Excel rows with column headers), Notion databases (
 A: For 28 posts across 3 platforms: approximately 45 minutes total. Brand setup: 5 min (one-time). Asset indexing: 5 min (one-time). Production: 30 min. Review: 5 min. Subsequent months for the same brand are faster since setup and indexing are already done.
 
 **Q: What if my calendar changes mid-month?**
-A: Run `/sf:sync-calendar` to re-parse. Existing approved posts are preserved. New posts enter the pipeline. Removed posts are flagged for your confirmation before deletion.
+A: Run `/socialforge:sync-calendar` to re-parse. Existing approved posts are preserved. New posts enter the pipeline. Removed posts are flagged for your confirmation before deletion.
 
 **Q: Do I need all 10 connectors?**
 A: No. SocialForge works fully without any connectors. They add convenience (pull calendars from Notion, send reviews via Slack, access Cloudinary assets) but every core feature works with local files and direct API calls.
@@ -988,7 +988,7 @@ A: No. SocialForge works fully without any connectors. They add convenience (pul
 A: Yes. The 8 built-in HTML templates live in `assets/carousel-templates/`. Edit them directly or create new ones following the same variable injection pattern. Brand colors, fonts, and logos are injected automatically.
 
 **Q: How do I add a reactive/trending post not in the calendar?**
-A: Run `/sf:reactive-post "topic" --platform instagram --brand GreenLeaf`. It creates a one-off post outside the planned calendar with the same quality pipeline.
+A: Run `/socialforge:reactive-post "topic" --platform instagram --brand GreenLeaf`. It creates a one-off post outside the planned calendar with the same quality pipeline.
 
 **Q: What platforms are supported?**
 A: LinkedIn, Instagram, Facebook, X/Twitter, YouTube (thumbnails), Pinterest, and TikTok. Each has its own dimension specs and character limits configured in the copy adapter.
@@ -997,7 +997,7 @@ A: LinkedIn, Instagram, Facebook, X/Twitter, YouTube (thumbnails), Pinterest, an
 A: Yes. ANCHOR_COMPOSE mode works with brand assets alone using Pillow for compositing. Carousel rendering uses Playwright (no AI). You can also provide pre-made visuals for every post and skip generation entirely. Only STYLE_REFERENCED and PURE_CREATIVE modes require an image generation API.
 
 **Q: Where do I set API keys?**
-A: Run `/sf:setup` to configure all credentials. They are stored securely in the plugin data directory. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
+A: Run `/socialforge:setup` to configure all credentials. They are stored securely in the plugin data directory. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
 
 ---
 

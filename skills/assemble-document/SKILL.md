@@ -7,7 +7,7 @@ user-invocable: true
 disable-model-invocation: true
 ---
 
-# /sf:assemble-document — Document Assembler
+# /socialforge:assemble-document — Document Assembler
 
 Create the final delivery document containing the complete monthly calendar with images, copy, and metadata.
 

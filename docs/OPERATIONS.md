@@ -468,9 +468,9 @@ SocialForge checks for API keys at specific execution points, not at startup:
 
 | Moment | Key Needed | What Happens If Missing |
 |--------|-----------|------------------------|
-| `/sf:index-assets` | `GEMINI_API_KEY` | Metadata-only index (dimensions, filename, folder). No AI analysis. Warning shown. |
-| `/sf:generate-all` or `/sf:generate-post` | `GEMINI_API_KEY` or fal.ai/Replicate connected | Placeholder images generated. Warning: "Connect an image generation provider." |
-| `/sf:generate-video --generate-video` | `GEMINI_API_KEY` (for Veo) | Script + storyboard only. No actual video clip. |
+| `/socialforge:index-assets` | `GEMINI_API_KEY` | Metadata-only index (dimensions, filename, folder). No AI analysis. Warning shown. |
+| `/socialforge:generate-all` or `/socialforge:generate-post` | `GEMINI_API_KEY` or fal.ai/Replicate connected | Placeholder images generated. Warning: "Connect an image generation provider." |
+| `/socialforge:generate-video --generate-video` | `GEMINI_API_KEY` (for Veo) | Script + storyboard only. No actual video clip. |
 | Brand setup | None | No API needed for configuration |
 | Calendar parsing | None | Claude reads the document directly |
 | Asset matching | None | Uses existing index, pure math |
@@ -818,7 +818,7 @@ When a reviewer requests revision:
 
 ## 13. Batch vs Individual Processing
 
-### Batch: `/sf:generate-all`
+### Batch: `/socialforge:generate-all`
 
 Processes ALL posts in the calendar sequentially:
 
@@ -842,7 +842,7 @@ For each post (ordered by date):
 - `--platform instagram` -- Only Instagram posts
 - Filters can be combined: `--week 1 --tier HERO` processes only HERO posts in week 1
 
-### Individual: `/sf:generate-post P03`
+### Individual: `/socialforge:generate-post P03`
 
 Same pipeline, single post. Used for:
 - Regenerating after revision feedback
@@ -856,7 +856,7 @@ Posts are processed one at a time, not in parallel. The reason: each post requir
 
 For HYGIENE-tier posts with auto-approve configured in approval-chain.json, the pipeline can process without pausing for user approval at each post. The quality gate (score >= 7.0) still applies -- posts below threshold are flagged for later review.
 
-### Full Pipeline: `/sf:full-pipeline`
+### Full Pipeline: `/socialforge:full-pipeline`
 
 Runs all 8 phases in sequence. Phases execute sequentially (Phase 0 -> 1 -> 2 -> ...). There is no parallel phase execution because each phase depends on the previous phase's output.
 
@@ -930,7 +930,7 @@ output/greenleaf-organics/
 +-- 2026-05/    <- May (can be set up in advance)
 ```
 
-Previous months are preserved as archives. `/sf:new-month` creates a fresh directory structure -- it never overwrites or deletes old months.
+Previous months are preserved as archives. `/socialforge:new-month` creates a fresh directory structure -- it never overwrites or deletes old months.
 
 ### Per-Platform Organization (in FINAL/)
 
@@ -1014,9 +1014,9 @@ SocialForge is designed so that non-deterministic steps are always sandwiched be
 | Step | API Key | Notes |
 |------|---------|-------|
 | Install plugin | None | Plugin files are static |
-| Brand setup (`/sf:brand-setup`) | None | Configuration only, user provides values |
-| Calendar parsing (`/sf:new-month`) | None | Claude reads the document directly |
-| Asset matching (`/sf:generate-all` phase 1) | None | Uses existing index, pure math scoring |
+| Brand setup (`/socialforge:brand-setup`) | None | Configuration only, user provides values |
+| Calendar parsing (`/socialforge:new-month`) | None | Claude reads the document directly |
+| Asset matching (`/socialforge:generate-all` phase 1) | None | Uses existing index, pure math scoring |
 | Copy adaptation | None | Claude handles text transformation |
 | Compliance checking | None | Regex/string matching against local rules |
 | Carousel rendering | None | Playwright is local (requires pip install) |
@@ -1091,7 +1091,7 @@ Failed API calls are also logged (with `"success": false`) but are not counted t
 
 ### Monthly Cost Report
 
-The `/sf:cost-report` command reads cost-log.json and produces:
+The `/socialforge:cost-report` command reads cost-log.json and produces:
 
 ```
 Total: $2.87 (28 posts)
@@ -1184,13 +1184,13 @@ All connectors are optional. The plugin works without any of them. `.mcp.json` c
 
 | Storage Backend | Best For | How It Works |
 |-----------------|----------|-------------|
-| Google Drive | Agencies (natural client folder structure) | Connect at platform level (Cowork) or download locally (Claude Code). Index with `/sf:index-assets`. |
+| Google Drive | Agencies (natural client folder structure) | Connect at platform level (Cowork) or download locally (Claude Code). Index with `/socialforge:index-assets`. |
 | Cloudinary | Professional DAM needs (tagging, CDN, transformations) | Connect via HTTP MCP. Index directly from Cloudinary URLs. |
-| Local folder | Solo users, local workflows | Point `/sf:index-assets` at a local directory. Persistent in Claude Code, session-only in Cowork. |
+| Local folder | Solo users, local workflows | Point `/socialforge:index-assets` at a local directory. Persistent in Claude Code, session-only in Cowork. |
 
 The recommended agency setup:
 ```
-Google Drive (asset images) -> /sf:index-assets (AI analysis) -> asset-index.json (persistent)
+Google Drive (asset images) -> /socialforge:index-assets (AI analysis) -> asset-index.json (persistent)
                                                                        |
 Cloudinary (optional DAM) ---------------------------------> CDN delivery + transformations
 ```

@@ -82,19 +82,34 @@ Your admin provides you with:
 
 ### Updating to Latest Version
 
-Plugins do NOT auto-update. When a new version is released, run:
+**Third-party marketplaces — including this one — have auto-update OFF by default in Claude Code.** When v1.6.0 is the marketplace's latest and you're still on v1.5.3, nothing tells you. There is no banner, no badge, no notification.
+
+**Option 1 (recommended) — turn auto-update on, once:**
+
+Open `/plugin`, go to the **Marketplaces** tab, find `neels-plugins`, and toggle **Enable auto-update**. From then on, Claude Code refreshes the catalog at startup and pulls new SocialForge releases automatically. After an auto-update fires, run `/reload-plugins` when prompted to apply changes mid-session — no full restart, conversation context preserved.
+
+**Option 2 — manual update each time:**
+
 ```
-claude plugin marketplace update neels-plugins
-claude plugin update socialforge@neels-plugins
+/plugin marketplace update neels-plugins
+/plugin uninstall socialforge@neels-plugins
+/plugin install socialforge@neels-plugins
+/reload-plugins
 ```
 
-If the version number hasn’t changed but content was updated, force a reinstall:
+`/plugin marketplace update` only refreshes the catalog — it does not bump installed plugin versions. The uninstall + reinstall is what actually pulls the new version.
+
+**Force-reinstall (version unchanged but content changed):**
+
 ```
-claude plugin uninstall socialforge@neels-plugins
-claude plugin install socialforge@neels-plugins
+rm -rf ~/.claude/plugins/cache/neels-plugins
+/plugin install socialforge@neels-plugins
+/reload-plugins
 ```
 
-After updating, start a new conversation for changes to take effect.
+### Installs in Cowork
+
+Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 19 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 10 connectors are all HTTP and fully Cowork-compatible.
 
 ### Pre-Requisites for Image Generation
 

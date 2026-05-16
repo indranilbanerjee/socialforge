@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - 2026-05-17
+
+### Added — C2PA Content Provenance for EU AI Act Article 50 (CRITICAL — 76 days to enforcement)
+
+EU AI Act Article 50 becomes applicable **2 Aug 2026**. Any AI-generated marketing asset distributed in EU markets must carry machine-readable provenance metadata. Penalty: up to **€15M or 3% global annual turnover**. SocialForge is the plugin where this obligation lands (it generates AI images and video). v1.6.0 closes the gap.
+
+#### `scripts/c2pa_sign.py` (NEW)
+
+Self-contained C2PA signing — SF does NOT depend on `digital-marketing-pro` being installed; signing logic mirrors DMP v3.4.1's `embed-c2pa.py` so an asset signed by either plugin verifies identically (same C2PA v2.0 schema, same IPTC vocabulary). Wraps `c2pa-python>=0.32` with the current `Builder` + `Signer.from_info(C2paSignerInfo)` API. Supports `.png .jpg .jpeg .webp .gif .tiff .mp4 .mov .webm .mp3 .wav`. Manifest embeds brand (CreativeWork.author), generator name, prompt, target platform, IPTC digital-source-type. Round-trip verified via `c2pa.Reader`. **Empirically tested:** 75-byte test PNG → 42,996-byte signed PNG with `manifest_embedded_and_verified=true`.
+
+#### `/socialforge:c2pa-sign` skill (NEW)
+
+`skills/c2pa-sign/SKILL.md` — usage examples, AI claim values, signing-cert guidance (CAI-recognized authority for prod, auto-generated 90-day self-signed cert for dev), Neelverse Suite integration.
+
+#### `scripts/generate_image.py` (MODIFIED)
+
+New `--c2pa-sign` flag triggers post-generation signing. Required companion: `--brand`. Optional: `--platform`, `--c2pa-signing-cert`, `--c2pa-signing-key`. Signed file replaces unsigned output in place — caller's `--output` path unchanged. Non-fatal on failure (unsigned asset remains, `c2pa_error` recorded). Generation log records `c2pa_signed` boolean.
+
+#### `scripts/video_postprocess.py` (MODIFIED)
+
+New `--c2pa-sign` flag signs each per-platform output video (tiktok.mp4, instagram.mp4, etc.) after the resize+watermark+subs+music pipeline. Each per-platform output gets its own manifest with `platform` recorded. Per-platform results returned in a new `c2pa` block.
+
+### Added — May 2026 reference docs
+
+#### `references/eu-ai-act-article50.md` (NEW)
+
+Regulatory context. Covers machine-readable marking requirement, visible deepfake disclosure (C2PA alone is NOT enough for deepfakes), AI-generated text on matters of public interest, carve-outs (artistic/satirical doesn't help marketing), penalties, what SF does vs what still needs human-in-the-loop.
+
+#### `references/channel-changes-may-2026.md` (NEW)
+
+- **TikTok post-USDS Joint Venture (Jan 22 2026):** Oracle + Silver Lake + MGX 45%, ByteDance <20%. AI creator labeling mandatory; AI content excluded from Creator Rewards Program. Daily shoppable-post limits effective 11 May 2026.
+- **LinkedIn (March 12 2026 algorithm):** relevance-based + LLM Generative Recommenders. New Depth Score is dominant signal. External links + engagement bait penalized ~60%.
+- **Meta/Instagram:** Apple MPP affects ~64% of B2C email opens — open rate dropped as primary KPI. Advantage+ shopping with in-app checkout + AI overlays.
+- **YouTube:** AI-generated Shorts now require labeling.
+- **X:** image posts ~30% more engagement than text; native video ~80% more than image.
+- **Sora deprecation:** consumer app shut down 26 Apr 2026; API shut down 24 Sep 2026.
+- **Third-party cookies — deprecation cancelled.** First-party + MMM + incrementality stack.
+
+### Changed — `SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md`
+
+Section 16.3 — Sora 2 row marked DEPRECATED with actual shutdown dates; added Runway Gen-4 / Gen-4.5 and Kling 3.0 Omni rows.
+
+### Changed — README Updating section
+
+Rewritten to mirror DMP/CF auto-update toggle guidance (third-party marketplaces have auto-update OFF by default). New "Installs in Cowork" subsection — Cowork is desktop with local FS, so the full SF pipeline including all 19 Python scripts runs natively; only HTTP-MCPs-only limit applies.
+
+### Audit
+
+All three modified/new scripts syntax-checked with `python3 -m py_compile`. `c2pa_sign.py` tested end-to-end (signed PNG round-trips with valid C2PA manifest). Integration wiring in `generate_image.py` verified by importing `sign_asset` directly and producing a valid signed PNG. `video_postprocess.py` syntax-validated; full end-to-end video test requires a real video input (deferred to user QA on a real generation).
+
+---
+
 ## [1.5.3] - 2026-05-09
 
 ### Fixed — Slash Command Namespace Consistency

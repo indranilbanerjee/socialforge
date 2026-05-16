@@ -541,6 +541,20 @@ def main():
                         help="Override logo position (top-left, top-right, bottom-left, bottom-right, center)")
     parser.add_argument("--logo-opacity", type=float, default=None,
                         help="Override logo opacity (0.0 to 1.0)")
+    # v1.6 — EU AI Act Article 50: optional C2PA provenance signing of each per-platform video output
+    parser.add_argument("--c2pa-sign", action="store_true",
+                        help="Embed C2PA provenance manifest in each per-platform output video (EU AI Act Article 50 compliance).")
+    parser.add_argument("--c2pa-generator", default="WaveSpeed Kling v3.0 Pro / Vertex AI Veo",
+                        help='Generator name to record in the C2PA manifest, e.g. "WaveSpeed Kling v3.0 Pro" or "Runway Gen-4"')
+    parser.add_argument("--c2pa-ai-claim", default="ai-generated-content",
+                        choices=["ai-generated-content", "ai-assisted-edits", "ai-no-substantive-changes"],
+                        help="IPTC digital-source-type claim for the signed video")
+    parser.add_argument("--c2pa-prompt", default=None,
+                        help="Generation prompt to record in the C2PA actions assertion (optional)")
+    parser.add_argument("--c2pa-signing-cert", default=None,
+                        help="PEM signing certificate (omit for dev 90-day self-signed cert)")
+    parser.add_argument("--c2pa-signing-key", default=None,
+                        help="PEM signing key (must accompany --c2pa-signing-cert)")
     args = parser.parse_args()
 
     if not Path(args.input).exists():
@@ -587,6 +601,52 @@ def main():
         burn_subs=args.burn_subs,
         add_music=args.add_music,
     )
+
+    # v1.6 — Optional C2PA provenance signing of each per-platform output
+    # (EU AI Act Article 50 compliance, applicable 2 Aug 2026)
+    if args.c2pa_sign and result.get("status") in ("success", "partial"):
+        scripts_dir = Path(__file__).parent
+        if str(scripts_dir) not in sys.path:
+            sys.path.insert(0, str(scripts_dir))
+        try:
+            from c2pa_sign import sign_asset
+            c2pa_results = []
+            for entry in result.get("platforms_processed", []):
+                video_path = Path(entry["output"])
+                if not video_path.exists():
+                    continue
+                tmp_signed = video_path.with_suffix(".c2pa-tmp" + video_path.suffix)
+                try:
+                    sign_result = sign_asset(
+                        in_path=str(video_path), out_path=str(tmp_signed),
+                        brand=args.brand, generator=args.c2pa_generator,
+                        ai_claim=args.c2pa_ai_claim, prompt=args.c2pa_prompt,
+                        platform=entry["platform"],
+                        signing_cert=args.c2pa_signing_cert,
+                        signing_key=args.c2pa_signing_key,
+                    )
+                    video_path.unlink()
+                    tmp_signed.rename(video_path)
+                    c2pa_results.append({
+                        "platform": entry["platform"],
+                        "output": str(video_path),
+                        "c2pa_signed": True,
+                        "manifest_id": sign_result.get("c2pa_active_manifest_id"),
+                        "using_dev_cert": sign_result.get("using_dev_cert", False),
+                    })
+                except Exception as exc:
+                    c2pa_results.append({
+                        "platform": entry["platform"],
+                        "output": str(video_path),
+                        "c2pa_signed": False,
+                        "error": f"{type(exc).__name__}: {exc}",
+                    })
+            result["c2pa"] = {
+                "requested": True,
+                "results": c2pa_results,
+            }
+        except ImportError as exc:
+            result["c2pa"] = {"requested": True, "error": f"could not import c2pa_sign: {exc}"}
 
     print(json.dumps(result, indent=2))
 

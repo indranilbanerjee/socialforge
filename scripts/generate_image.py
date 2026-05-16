@@ -276,6 +276,43 @@ def generate_placeholder(prompt, output_path, width=1080, height=1080):
     }
 
 
+def _maybe_c2pa_sign(result, args):
+    """If --c2pa-sign is on, embed a C2PA provenance manifest in the output
+    asset (EU AI Act Article 50 compliance). Replaces the file in place so
+    the caller's --output contract stays the same. Non-fatal on failure —
+    the unsigned generated asset is left on disk and c2pa_error is recorded.
+    """
+    if not args.c2pa_sign or not args.brand or result.get("status") != "success":
+        return result
+    out_path = Path(args.output)
+    if not out_path.exists():
+        return result
+    # Import c2pa_sign as a sibling module
+    scripts_dir = Path(__file__).parent
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from c2pa_sign import sign_asset
+        tmp_signed = out_path.with_suffix(".c2pa-tmp" + out_path.suffix)
+        generator_name = f"{result.get('provider', 'unknown')} / {result.get('model', args.model)}"
+        sign_result = sign_asset(
+            in_path=str(out_path), out_path=str(tmp_signed),
+            brand=args.brand, generator=generator_name,
+            ai_claim="ai-generated-content",
+            prompt=args.prompt, platform=args.platform,
+            signing_cert=args.c2pa_signing_cert, signing_key=args.c2pa_signing_key,
+        )
+        out_path.unlink()
+        tmp_signed.rename(out_path)
+        result["c2pa_signed"] = True
+        result["c2pa_active_manifest_id"] = sign_result.get("c2pa_active_manifest_id")
+        result["c2pa_using_dev_cert"] = sign_result.get("using_dev_cert", False)
+    except Exception as exc:
+        result["c2pa_signed"] = False
+        result["c2pa_error"] = f"{type(exc).__name__}: {exc}"
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Image Generator (Vertex AI + AI Studio)")
     parser.add_argument("--prompt", required=True, help="Text prompt for image generation")
@@ -290,6 +327,17 @@ def main():
     parser.add_argument("--placeholder", action="store_true", help="Generate placeholder only (no AI)")
     parser.add_argument("--width", type=int, default=1080)
     parser.add_argument("--height", type=int, default=1080)
+    # v1.6 — EU AI Act Article 50 compliance: optional C2PA provenance signing
+    parser.add_argument("--c2pa-sign", action="store_true",
+                        help="Embed C2PA provenance manifest in the output asset (EU AI Act Article 50 compliance). Requires --brand.")
+    parser.add_argument("--brand", default=None,
+                        help="Brand name for C2PA CreativeWork.author (required with --c2pa-sign)")
+    parser.add_argument("--platform", default=None,
+                        help="Target social platform for C2PA c2pa.published action: tiktok / instagram / linkedin / meta / youtube / x / threads")
+    parser.add_argument("--c2pa-signing-cert", default=None,
+                        help="PEM signing certificate (omit for dev 90-day self-signed cert; production use REQUIRES a real CAI-recognized cert)")
+    parser.add_argument("--c2pa-signing-key", default=None,
+                        help="PEM signing key (must accompany --c2pa-signing-cert)")
     args = parser.parse_args()
 
     if args.placeholder:
@@ -298,6 +346,9 @@ def main():
         result = edit_image(args.edit, args.prompt, args.output, args.model)
     else:
         result = generate_image(args.prompt, args.output, args.references, args.aspect_ratio, args.model)
+
+    # Optional: embed C2PA provenance manifest (EU AI Act Article 50)
+    result = _maybe_c2pa_sign(result, args)
 
     # Log
     log_dir = WORKSPACE / "shared" / "prompt-logs"
@@ -310,6 +361,7 @@ def main():
         "model": result.get("model", args.model),
         "references": args.references,
         "result": result.get("status", "unknown"),
+        "c2pa_signed": result.get("c2pa_signed", False),
     }
     log_file = log_dir / f"{datetime.utcnow().strftime('%Y-%m-%d')}-generation.jsonl"
     with open(log_file, "a", encoding="utf-8") as f:

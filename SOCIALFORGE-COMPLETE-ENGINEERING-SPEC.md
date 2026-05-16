@@ -3166,7 +3166,9 @@ Only used when video generation is explicitly enabled AND the video duration exc
 
 | API | Purpose | When to Add |
 |---|---|---|
-| Sora 2 (OpenAI) | Alternative video generation | If Veo 3.1 quality is insufficient |
+| ~~Sora 2 (OpenAI)~~ — **DEPRECATED** | OpenAI announced the consumer Sora app shuts down 26 Apr 2026 and the Sora API on 24 Sep 2026. Do NOT add as a new dependency. | — |
+| Runway Gen-4 / Gen-4.5 | Alternative video generation with reference-image control, character consistency, brand-friendly output | If both Veo 3.x and Kling v3.0 quality are insufficient for a specific use case |
+| Kling 3.0 Omni | Lip-sync video generation (5 languages) | When lip-sync quality dominates the requirement |
 | Flux (Replicate) | Alternative image generation | If Gemini has content policy issues with certain prompts |
 | ElevenLabs | AI voiceover for video scripts | When video production module matures |
 | Buffer / Hootsuite / Later API | Auto-publishing to platforms | Future module — currently out of scope |

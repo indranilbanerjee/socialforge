@@ -1,7 +1,7 @@
 {
   "name": "socialforge",
-  "version": "1.5.3",
-  "description": "Agency-grade social media calendar automation with asset-first compositing. Parse calendars, match brand assets, generate AI-composed creative, render carousels, adapt copy, produce review galleries. Multi-brand, multi-platform. v1.5 ships zero global hooks for clean multi-plugin coexistence — credential status now via /socialforge:status on demand. v1.5.1 hardened the plugin manifest with homepage, repository, and license fields. v1.5.2 fixes the plugin manifest format so install works (repository as string, $schema removed). All 10 HTTP MCP connectors are Cowork-compatible.",
+  "version": "1.6.0",
+  "description": "Agency-grade social media calendar automation with asset-first compositing. Parse calendars, match brand assets, generate AI-composed creative, render carousels, adapt copy, produce review galleries. Multi-brand, multi-platform. **v1.6.0** adds end-to-end-tested C2PA content provenance for EU AI Act Article 50 compliance (applicable 2 Aug 2026): new scripts/c2pa_sign.py wrapping c2pa-python 0.32, new /socialforge:c2pa-sign skill, and optional auto-sign hook in generate_image.py + video_postprocess.py (post-generation step that embeds machine-readable provenance manifests with brand + generator + prompt + platform metadata before the asset hits delivery). Also: May 2026 channel-pack reference (TikTok USDS structure post-Jan 2026, LinkedIn March 2026 algorithm + Depth Score, Apple MPP B2C open-rate decline, Meta Advantage+, YouTube AI labeling), Sora deprecation note in engineering spec, README auto-update toggle guidance. v1.5 ships zero global hooks for clean multi-plugin coexistence — credential status now via /socialforge:status on demand. All 10 HTTP MCP connectors are Cowork-compatible.",
   "author": {
     "name": "Indranil Banerjee",
     "url": "https://github.com/indranilbanerjee"
@@ -22,6 +22,9 @@
     "automation",
     "agency",
     "multi-brand",
+    "c2pa",
+    "eu-ai-act",
+    "content-provenance",
     "claude-code",
     "claude-cowork"
   ]

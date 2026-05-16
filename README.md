@@ -39,7 +39,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v151) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v160) for the rationale.
 
 ## Installation
 
@@ -310,11 +310,23 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.5.1)
+## Current Release (v1.6.0)
 
-Multi-plugin coexistence + manifest hardening. v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Write/Edit compliance check, SubagentStart brand-context injection, Stop image-approval verification) that previously fired on every Claude Code operation in every project. Credential status is now reported on demand via `/socialforge:status` instead of a banner on every Claude Code launch. Prior hook config preserved at `hooks/hooks-reference.example.json`. v1.5.1 hardened the plugin manifest with `$schema`, `homepage`, `repository`, `license`, `author.url`, and a 14-tag `keywords` array. All 10 MCP connectors are HTTP and fully Cowork-compatible.
+**EU AI Act Article 50 readiness** (applicable 2 Aug 2026). New `scripts/c2pa_sign.py` wraps `c2pa-python>=0.32` to embed machine-readable provenance manifests in AI-generated assets — brand (CreativeWork.author), generator name, prompt, target platform, IPTC digital-source-type. New `/socialforge:c2pa-sign` skill exposes it. Optional `--c2pa-sign` flag on `generate_image.py` (post-image-generation step) and `video_postprocess.py` (post-per-platform-resize step) auto-signs before delivery. Empirically tested: 75-byte test PNG → ~43 KB signed PNG with `manifest_embedded_and_verified=true`. Production deployment requires a CAI-recognized signing certificate (Adobe Content Credentials, Truepic, Numbers Protocol, or Microsoft Azure Confidential Ledger) — see `references/c2pa-production-cert.md`.
 
-Earlier (v1.3–1.4): 100% spec coverage. Persistent storage via `${CLAUDE_PLUGIN_DATA}`, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
+**May 2026 channel pack** added at `references/channel-changes-may-2026.md` — TikTok USDS Joint Venture (post-Jan 22 2026; AI creator labeling mandatory, AI content excluded from Creator Rewards Program, daily shoppable-post limits May 11 2026), LinkedIn March 12 2026 algorithm + Depth Score (external links and engagement bait penalized ~60%), Apple MPP affects ~64% of B2C opens (open rate dropped as primary KPI), YouTube AI Shorts labeling, Sora deprecation timeline (consumer app 26 Apr 2026, API 24 Sep 2026 → default to Runway Gen-4 / Veo 3.x / Kling 3.0). Third-party cookies deprecation cancelled.
+
+**Engineering spec correction** — SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md section 16.3: Sora 2 row marked DEPRECATED; Runway Gen-4 and Kling 3.0 Omni added as replacements.
+
+**README correctness** — Updating section rewritten to mirror DMP/CF pattern; explicit two-option flow since third-party marketplaces have auto-update OFF by default in Claude Code; new "Installs in Cowork" subsection clarifying that the full SF pipeline including all 20 Python scripts runs natively in Cowork.
+
+### Earlier (v1.5.x)
+
+v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Write/Edit compliance check, SubagentStart brand-context injection, Stop image-approval verification) that previously fired on every Claude Code operation in every project. Credential status reported on demand via `/socialforge:status`. v1.5.1 hardened the plugin manifest. v1.5.2 fixed manifest install format. v1.5.3 swept all `/sf:` shorthand to canonical `/socialforge:` across ~200 references.
+
+### Earlier (v1.3–1.4)
+
+100% spec coverage. Persistent storage via `${CLAUDE_PLUGIN_DATA}`, Google Drive asset source, Cloudinary DAM, Veo 3.1 video generation, edge feathering, color temp matching, PDF carousel assembly, Instagram first-comment strategy, bilingual copy support.
 
 ## Documentation
 

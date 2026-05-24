@@ -1,6 +1,6 @@
 {
   "name": "socialforge",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Agency-grade social media calendar automation with asset-first compositing — image generation (Vertex AI Nano Banana Pro), video generation (WaveSpeed Kling v3.0 Pro), C2PA content provenance for EU AI Act Article 50 compliance, multi-brand multi-platform. 16 skills, 5 agents, 20 scripts, 10 HTTP MCP connectors. Zero global hooks.",
   "author": {
     "name": "Indranil Banerjee",

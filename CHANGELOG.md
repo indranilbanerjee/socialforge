@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.1] - 2026-05-24
+
+**Polish + discoverability + community-standards pass.** Patch bump — no functional changes; no new commands, skills, agents, scripts, or MCP connectors.
+
+### Added
+
+- **`CODE_OF_CONDUCT.md`** (Contributor Covenant v2.1, adapted for the Neelverse Marketing Suite scope)
+- **`SECURITY.md`** with supported-versions table (1.8.x ✅, 1.7.x ⚠️, < 1.7 ❌), private-vulnerability-reporting flow via GitHub Private Security Advisories, coordinated-disclosure timeline, operator hardening recommendations
+- **`.github/PULL_REQUEST_TEMPLATE.md`** — 5-platform coverage checklist, version-bump-in-all-sibling-manifests reminder
+- **`.github/ISSUE_TEMPLATE/`** with `bug_report.md` and `feature_request.md`
+- **Star History chart** in README — visual social proof via star-history.com
+- **"5 coding-agent surfaces" install matrix** at top of README
+- **"About the maintainer" section** with [indranil.in](https://indranil.in), [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow), [@askneelnow](https://x.com/askneelnow), other Neelverse plugins, Discussions, Issues, Security
+- **"Contributing" section** in README references CoC + PR template + SECURITY.md explicitly
+- **⭐ Star CTAs** at hero, maintainer section, and footer
+
+### Changed
+
+- **Hero rewritten** — leads with "Open-source agency-grade social media production engine" positioning, badges row (version 1.8.1, license, stars, forks, issues, last-commit, Cowork-compatible, EU AI Act Article 50 ready, 5 platforms), install command at top
+- **plugin.json description** rewritten to be 1700+ chars covering the four creative modes, Vertex AI Nano Banana Pro + WaveSpeed Kling v3.0 Pro stack, 5-platform install matrix, May 2026 channel pack, indranil.in attribution
+- **plugin.json keywords expanded 17 → 47** for Claude marketplace + Codex/Cursor/Copilot directory search. Added: `social-media-automation`, `social-media-marketing`, `content-production`, `ai-image`, `ai-video`, `vertex-ai`, `nano-banana-pro`, `kling-v3`, `wavespeed`, `veo-3`, `runway-gen-4`, `carousel-generator`, `brand-guidelines`, `agency-operations`, `marketing-automation`, `marketing-plugin`, `ai-marketing`, `synthid`, `article-50`, `deepfake-disclosure`, `instagram`, `tiktok`, `linkedin`, `threads`, `claude-code-plugin`, `claude-skills`, `agent-skills`, `openai-codex`, `cursor-plugin`, `github-copilot`, `antigravity`, `mcp`, `neelverse`.
+- **Neelverse Marketing Suite table** corrected: DMP "149 skills" → "150 skills"; ContentForge description expanded to mention fact-checker + humanizer + C2PA `.docx` signing
+
+### Fixed
+
+- **README hero** — stale `Version: 1.5.1` (~9 versions behind!) → 1.8.1
+- **README architecture section** — stale "15 skills" → 16, "19 scripts" → 20
+- **README anchor link** — `#current-release-v180` → `#current-release-v181`
+
+### Audit method (everything passed)
+
+- JSON-validated all 6 manifest/config files
+- Smoke-tested all 20 Python scripts via `--help` (20 pass / 0 fail)
+- Verified all 16 SKILL.md files have valid `name:` + `description:` frontmatter (16 valid / 0 missing)
+- Checked all internal markdown links in README.md for broken references (0 broken)
+
+### Compatibility
+
+- No breaking changes for existing Claude Code, Codex, Cursor, Copilot CLI users.
+- Plugin version: 1.8.0 → 1.8.1 (patch — docs + branding + community-standards files).
+- All 4 sibling manifests bumped to 1.8.1.
+- Skills count (16), commands count (25), agents count (5), scripts count (20): unchanged from v1.8.0.
+
+---
+
 ## [1.8.0] - 2026-05-24
 
 **Install-surface expansion: GitHub Copilot CLI (auto-discovered) + Google Antigravity 2.0 (experimental).** SocialForge now installs cleanly on five coding-agent surfaces from a single source repository — Claude Code (canonical), OpenAI Codex, Cursor (added v1.7), GitHub Copilot CLI, and Google Antigravity 2.0 (experimental).

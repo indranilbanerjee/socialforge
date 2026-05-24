@@ -1,10 +1,30 @@
 # SocialForge — Social Media Calendar Automation
 
-**Version:** 1.5.1
-**Platform:** Claude Code & Cowork
-**Status:** Production Ready (15 skills, 19 scripts, 5 agents, 25 commands, 10 HTTP connectors, 0 global hooks)
+**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 20 scripts · 10 HTTP MCP connectors · 0 global hooks.** Installs on **5 coding-agent surfaces**: Claude Code, Claude Cowork, OpenAI Codex, Cursor, GitHub Copilot CLI, and Google Antigravity 2.0 (experimental).
 
-Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents.
+Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
+
+[![Version](https://img.shields.io/badge/version-1.8.1-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
+[![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
+[![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
+[![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](docs/CROSS-PLATFORM-GUIDE.md)
+[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
+[![5 platforms](https://img.shields.io/badge/installs%20on-5%20platforms-success.svg)](docs/CROSS-PLATFORM-GUIDE.md)
+
+```bash
+# Install — one line on any of 5 supported platforms
+/plugin marketplace add indranilbanerjee/neels-plugins
+/plugin install socialforge@neels-plugins
+```
+
+> If SocialForge saves your team time, [give it a star ⭐](https://github.com/indranilbanerjee/socialforge/stargazers) — it's the single thing that helps other agencies find it.
+
+**Status:** Production Ready · 16 skills · 25 commands · 5 agents · 20 scripts · 10 HTTP MCP connectors · 0 global hooks
+
+Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery.
 
 ## Core Principle
 
@@ -32,14 +52,26 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
+## Installs on 5 coding-agent surfaces (one repo, no fork)
+
+| Platform | Install command | Status |
+|---|---|---|
+| **Claude Code** CLI + Desktop + **Anthropic Cowork** | `/plugin install socialforge@neels-plugins` | Full support (canonical) |
+| **OpenAI Codex** CLI | `codex plugin install indranilbanerjee/socialforge` | Skills + MCP + scripts |
+| **Cursor** IDE + CLI | `cursor plugin install indranilbanerjee/socialforge` | Skills + scripts; MCP via Cursor's global `mcp.json` (paste 8 of 10 connectors — Gmail + Google Calendar are Anthropic-hosted only) |
+| **GitHub Copilot CLI** | `copilot plugin install indranilbanerjee/socialforge` | Full support — auto-discovers `.claude-plugin/plugin.json` |
+| **Google Antigravity 2.0** CLI | `agy plugin install indranilbanerjee/socialforge` | **Experimental** — manifest will firm up as Antigravity publishes v2-native spec |
+
+Agent Skills became an open standard (Dec 2025; adopted by 32+ tools by May 2026), so the same 16 SKILL.md files work everywhere. Full per-platform install guide: [`docs/CROSS-PLATFORM-GUIDE.md`](docs/CROSS-PLATFORM-GUIDE.md).
+
 ## Architecture
 
-- **15 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management
+- **16 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
 - **25 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
+- **20 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v180) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v181) for the rationale.
 
 ## Installation
 
@@ -310,7 +342,11 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.8.0)
+## Current Release (v1.8.1)
+
+**Polish + discoverability + community-standards pass.** Patch bump — no functional changes. Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + 5-platform install matrix + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→20 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
+
+### Earlier (v1.8.0)
 
 **Install-surface expansion to 5 platforms.** SocialForge now installs cleanly on Claude Code + Cowork (canonical), OpenAI Codex, Cursor, **GitHub Copilot CLI** (no new manifest — Copilot CLI auto-discovers `.claude-plugin/plugin.json` as one of its accepted manifest paths; install: `copilot plugin install indranilbanerjee/socialforge`), and **Google Antigravity 2.0** (experimental `.antigravity/plugin.json` mirroring the Gemini-CLI-extensions importer format Antigravity's `agy plugin import gemini` accepts; will be updated against the v2-native spec when Google publishes it). Single `skills/`, single `scripts/`, single MCP catalog. Full per-platform install guide at [`docs/CROSS-PLATFORM-GUIDE.md`](docs/CROSS-PLATFORM-GUIDE.md). No breaking changes for existing Claude Code users.
 
@@ -347,15 +383,44 @@ v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Wr
 - **[Troubleshooting](references/troubleshooting.md)** — Common issues and fixes
 - **[Changelog](CHANGELOG.md)** — Release history
 
+## Star history
+
+[![Star History Chart](https://api.star-history.com/svg?repos=indranilbanerjee/socialforge&type=Date)](https://star-history.com/#indranilbanerjee/socialforge&Date)
+
+---
+
+## About the maintainer
+
+SocialForge is built and maintained by **[Indranil Banerjee](https://indranil.in)** — a digital marketing practitioner shipping social-creative automation as code. The asset-first compositing principle ("brand assets are sacred, AI is the creative layer around them") and the four creative modes come from real agency work producing monthly content calendars at scale.
+
+- 🌐 **Website:** [indranil.in](https://indranil.in)
+- 💼 **LinkedIn:** [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow)
+- 🐦 **X / Twitter:** [@askneelnow](https://x.com/askneelnow)
+- 💻 **GitHub:** [@indranilbanerjee](https://github.com/indranilbanerjee)
+- 📦 **Other plugins:** [Digital Marketing Pro](https://github.com/indranilbanerjee/digital-marketing-pro) · [ContentForge](https://github.com/indranilbanerjee/contentforge)
+- 💬 **Discussions:** [GitHub Discussions](https://github.com/indranilbanerjee/socialforge/discussions)
+- 🐛 **Bug reports:** [GitHub Issues](https://github.com/indranilbanerjee/socialforge/issues)
+- 🔒 **Security:** [Private Security Advisory](https://github.com/indranilbanerjee/socialforge/security/advisories/new) (see [SECURITY.md](SECURITY.md))
+
+If SocialForge saves your team time, [⭐ star the repo](https://github.com/indranilbanerjee/socialforge/stargazers). Sharing on **LinkedIn** ([linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow)) or **X** ([@askneelnow](https://x.com/askneelnow)) helps too — tag me, I'll re-share.
+
+---
+
+## Contributing
+
+PRs welcome — especially on the four creative modes, platform-specific copy adaptation rules, and AI image/video model integrations. See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) for the PR checklist, and [TESTING-GUIDE.md](TESTING-GUIDE.md) for the test plan. All contributors are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: use [Private Security Advisories](https://github.com/indranilbanerjee/socialforge/security/advisories/new) per [SECURITY.md](SECURITY.md) — do not file public issues for vulnerabilities.
+
+---
+
 ## Neelverse Marketing Suite
 
-SocialForge is part of the **Neelverse Marketing Suite** — three plugins that work together for end-to-end marketing:
+SocialForge is part of the **Neelverse Marketing Suite** by [Indranil Banerjee](https://indranil.in) — three plugins that work together for end-to-end marketing:
 
 | Plugin | What It Does | Install |
 |--------|-------------|---------|
-| **[Digital Marketing Pro](https://github.com/indranilbanerjee/digital-marketing-pro)** | End-to-end engagement methodology — 12-Part Strategy Flow, Four Core Documents, Two-Views Model. 149 skills, 25 agents, 10 commands, 14 HTTP connectors | `claude plugin install digital-marketing-pro@neels-plugins` |
-| **[ContentForge](https://github.com/indranilbanerjee/contentforge)** | Publication-ready content via 10-phase pipeline — research, draft, fact-check, SEO, humanize | `claude plugin install contentforge@neels-plugins` |
-| **SocialForge** (this plugin) | Social media calendar automation with AI image + video generation (Vertex AI + Kling v3.0) | `claude plugin install socialforge@neels-plugins` |
+| **[Digital Marketing Pro](https://github.com/indranilbanerjee/digital-marketing-pro)** | End-to-end engagement methodology — 12-Part Strategy Flow, Four Core Documents, Two-Views Model. 150 skills, 25 agents, 10 commands, 14 HTTP connectors | `/plugin install digital-marketing-pro@neels-plugins` |
+| **[ContentForge](https://github.com/indranilbanerjee/contentforge)** | Publication-ready content via 11-phase pipeline — research, fact-check, draft, SEO, humanize, `.docx` export with C2PA signing | `/plugin install contentforge@neels-plugins` |
+| **SocialForge** (this plugin) | Social media calendar automation with AI image + video generation (Vertex AI Nano Banana Pro + WaveSpeed Kling v3.0 Pro), C2PA signing | `/plugin install socialforge@neels-plugins` |
 
 **Use together:** Plan campaigns in DM Pro, produce articles with ContentForge, create social visuals and videos with SocialForge. All share the same brand profiles and marketplace.
 
@@ -368,4 +433,8 @@ claude plugin install socialforge@neels-plugins
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE). Free to use commercially.
+
+---
+
+<sub>Made with care by [Indranil Banerjee](https://indranil.in) · MIT-licensed · [⭐ Star the repo](https://github.com/indranilbanerjee/socialforge) if it helps you</sub>

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2026-05-24
+
+**Install-surface expansion: GitHub Copilot CLI (auto-discovered) + Google Antigravity 2.0 (experimental).** SocialForge now installs cleanly on five coding-agent surfaces from a single source repository — Claude Code (canonical), OpenAI Codex, Cursor (added v1.7), GitHub Copilot CLI, and Google Antigravity 2.0 (experimental).
+
+### Added
+
+- **GitHub Copilot CLI compatibility — no new manifest needed.** Copilot CLI's plugin discovery explicitly accepts `.claude-plugin/plugin.json` as one of its manifest paths. SocialForge's existing Claude Code manifest is directly readable by Copilot CLI. Install: `copilot plugin install indranilbanerjee/socialforge`. The MCP catalog (8 of 10 connectors — Gmail + Google Calendar are Anthropic-hosted), `hooks/hooks.json`, and SKILL.md auto-discovery all work natively. Credentials use shell env vars instead of `/sf:setup`.
+- **`.antigravity/plugin.json`** — Experimental manifest for Google Antigravity 2.0 CLI (launched 19 May 2026, replacing Gemini CLI). Mirrors the Gemini-CLI-extensions format that Antigravity's `agy plugin import gemini` converter accepts. Includes `_status` field flagging the experimental nature.
+- **`docs/CROSS-PLATFORM-GUIDE.md` — expanded** to cover all 5 platforms with install commands, what works natively per platform, credential persistence per platform (Claude Code's `/sf:setup` is Claude-Code-specific; Codex uses its secret store; Cursor uses workspace env vars; Copilot CLI uses shell env vars; Antigravity uses its secret store), update commands per platform, and where to file platform-specific bugs.
+
+### Compatibility
+
+- No breaking changes for existing Claude Code, Codex, or Cursor users.
+- Plugin version: 1.7.0 → 1.8.0 (minor bump — new install surfaces).
+- Files added: 1 (`.antigravity/plugin.json`); 1 expanded (`docs/CROSS-PLATFORM-GUIDE.md`).
+- Skills count, agents count, commands count, scripts count: unchanged from v1.7.0.
+
+---
+
 ## [1.7.0] - 2026-05-24
 
 **Cross-platform compatibility pack.** SocialForge now installs cleanly on three coding-agent surfaces from a single source repository — Claude Code (canonical), OpenAI Codex, and Cursor — by adding platform-native manifest files alongside the existing Claude Code manifest. No skill duplication: all three platforms read the same `skills/`, `scripts/`, `.mcp.json`, and `hooks/hooks.json`.

@@ -4,7 +4,7 @@
 
 Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
 
-[![Version](https://img.shields.io/badge/version-1.8.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.8.2-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
@@ -71,7 +71,7 @@ Agent Skills became an open standard (Dec 2025; adopted by 32+ tools by May 2026
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **20 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v181) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v182) for the rationale.
 
 ## Installation
 
@@ -261,8 +261,8 @@ HiggsField provides additional resilience. If both Vertex AI and WaveSpeed are d
 3. New accounts get 150 free credits
 
 #### Step 2: Get API Credentials
-1. Go to https://cloud.higgsfield.ai/api-keys
-2. Create a new API key pair — you’ll get an API Key AND an API Secret
+1. Log in at https://cloud.higgsfield.ai and open the API / Developer section of your dashboard
+2. Create a new API key pair — you'll get an API Key AND an API Secret
 3. Save both values
 
 #### Step 3: Share with Your Team
@@ -342,9 +342,13 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.8.1)
+## Current Release (v1.8.2)
 
-**Polish + discoverability + community-standards pass.** Patch bump — no functional changes. Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + 5-platform install matrix + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→20 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
+**Model curator + correctness sweep.** Adds the shared model-selection infrastructure (`scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`, see [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md)) so model ids are no longer hardcoded across image / edit / vision / video scripts. Replaced deprecated `gemini-2.0-flash` (×1), `gemini-2.0-flash-exp-image-generation` (×1), and `veo-2.0-generate-001` (×2) with curator-resolved defaults; added `--model` / `--video-model` / `--list-models` flags. Fixed the dead `cloud.higgsfield.ai/api-keys` URL in README + setup SKILL. Replaced dead `gmail.mcp.claude.com` / `gcal.mcp.claude.com` / `drive.mcp.claude.com` MCP URLs with the working Google-hosted equivalents. Swept shorthand `/sf:X` slash refs to canonical `/socialforge:X`. Fixed a pre-existing arg-order bug in the Kling call site (aspect_ratio was being passed as duration).
+
+### Earlier (v1.8.1)
+
+**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + 5-platform install matrix + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→20 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
 
 ### Earlier (v1.8.0)
 

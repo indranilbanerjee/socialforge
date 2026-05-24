@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.2] - 2026-05-25
+
+**Model curator + correctness sweep.** Adds shared model-selection infrastructure used across the Neelverse Marketing Suite, eliminates several hardcoded deprecated model ids, and fixes URLs / slash refs.
+
+### Added
+
+- **Model curator (`scripts/model_registry.json` + `scripts/resolve_model.py` + `scripts/refresh_models.py`)** — single source of truth for AI model ids. Catalog covers Gemini 3 Pro / 3.5 Flash / Omni, Nano Banana Pro / 2 / 3.1 Flash Image, Imagen 4, Veo 3.1, Kling v3.0 Pro via WaveSpeed, Higgsfield Soul v2, plus deprecated ids (gemini-2.0-flash, veo-2.0-generate-001, gemini-2.0-flash-exp-image-generation) with `replacement_id` so calls auto-fall-forward. `refresh_models.py` polls live provider catalogs for drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
+- **`--model` + `--list-models` flags** on `scripts/generate_image.py`, `scripts/edit_image.py`, `scripts/index_assets.py`, and **`--video-model` + `--list-models`** on `scripts/generate_video.py`. Defaults pull from the curator (`latest-image-balanced-google`, `latest-image-edit-google`, `latest-vision-google`, `latest-video-wavespeed`, `latest-video-google`). Passing a deprecated id prints a stderr warning and substitutes the registered replacement.
+
+### Changed
+
+- **`scripts/generate_image.py`** — `--model` no longer constrained to a hardcoded enum; defaults via curator and accepts any registered id. `_maybe_c2pa_sign` now logs the resolved model id (not `None`).
+- **`scripts/edit_image.py`** — replaced hardcoded deprecated `gemini-2.0-flash-exp-image-generation` with curator-resolved `latest-image-edit-google` (Nano Banana Pro by default).
+- **`scripts/index_assets.py`** — replaced hardcoded deprecated `gemini-2.0-flash` with curator-resolved `latest-vision-google` (Gemini 3.5 Flash).
+- **`scripts/generate_video.py`** — replaced hardcoded `veo-2.0-generate-001` (×2 callsites) and the `kling-v2` routing label with curator-resolved defaults. Module docstring rewritten (`Kling v2.0` → `Kling v3.0 Pro`; `Veo 2.0` → `Veo 3.1`). Fixed a pre-existing argument-order bug where `aspect_ratio` was being passed as `duration` in the Kling call site. `route_video_provider()` now returns the curator's resolved ids and corrects the Kling max-duration from 10s to 15s (Kling v3.0 Pro supports up to 15s).
+- **Gmail / Calendar / Drive MCP endpoints** — replaced dead `*.mcp.claude.com` URLs with Google-hosted equivalents in `.mcp.json.example`, `docs/USER-GUIDE.md`, `docs/OPERATIONS.md`, and `SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md`.
+- **HiggsField API-key URL** in `README.md` and `skills/setup/SKILL.md` — replaced broken `cloud.higgsfield.ai/api-keys` (HTTP 404) with `cloud.higgsfield.ai` and an instruction to navigate to the API / Developer section of the dashboard.
+- **`references/c2pa-production-cert.md`** — replaced broken `contentauthenticity.org/community/cr-cli` URL with `opensource.contentauthenticity.org/docs/c2patool/`.
+- **Slash-command refs in Python error messages** — swept shorthand `/sf:X` references and rewrote to the canonical `/socialforge:X` namespace.
+
+### Quality
+
+- Per-file content sweep across all `skills/**/SKILL.md` + `agents/` + `references/`. Frontmatter, slash refs, model ids, MCP URLs, and hardcoded paths all clean.
+- License compliance: MIT across all manifests; no GPL imports.
+
 ## [1.8.1] - 2026-05-24
 
 **Polish + discoverability + community-standards pass.** Patch bump — no functional changes; no new commands, skills, agents, scripts, or MCP connectors.

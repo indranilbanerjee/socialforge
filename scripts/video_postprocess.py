@@ -569,7 +569,7 @@ def main():
         print(json.dumps({
             "status": "FAILED",
             "error": f"Brand config not found: {config_path}",
-            "hint": "Run /sf:brand-manager to set up the brand first.",
+            "hint": "Run /socialforge:brand-manager to set up the brand first.",
         }))
         sys.exit(1)
 

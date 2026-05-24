@@ -11,7 +11,7 @@
 
 | Option | Best for | Cost |
 |---|---|---|
-| **Adobe Content Credentials** | Brands on Creative Cloud | Free basic tier; partner cert via https://contentauthenticity.org/community/cr-cli |
+| **Adobe Content Credentials** | Brands on Creative Cloud | Free basic identity in Creative Cloud; partner / API-signing certificates via the Content Authenticity Initiative — start at https://contentauthenticity.org/ and use the open-source `c2patool` CLI documented at https://opensource.contentauthenticity.org/docs/c2patool/ |
 | **Truepic** | High-volume API-first signing (SocialForge production pipelines) | Tiered SaaS — contact for quote |
 | **Numbers Protocol** | Brands wanting on-chain anchoring | Free tier exists |
 | **Microsoft Azure Confidential Ledger** | Azure shops with KMS policy | Azure consumption pricing |

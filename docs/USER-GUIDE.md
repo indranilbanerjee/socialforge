@@ -885,8 +885,8 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 | Canva | `https://mcp.canva.com/mcp` | Design templates, brand kit | Optional |
 | Figma | `https://mcp.figma.com/mcp` | Brand design files | Optional |
 | Slack | `https://mcp.slack.com/mcp` | Approval notifications, delivery | Optional |
-| Gmail | `https://gmail.mcp.claude.com/mcp` | Email delivery, reminders | Optional |
-| Google Calendar | `https://gcal.mcp.claude.com/mcp` | Posting schedule | Optional |
+| Gmail | `https://gmailmcp.googleapis.com/mcp/v1` | Email delivery, reminders | Optional |
+| Google Calendar | `https://calendarmcp.googleapis.com/mcp/v1` | Posting schedule | Optional |
 | fal.ai | `https://fal.ai/mcp` | AI image generation | Recommended |
 | Replicate | `https://replicate.com/mcp` | Alternative AI image gen | Optional |
 | Asana | `https://mcp.asana.com/sse` | Production task tracking | Optional |

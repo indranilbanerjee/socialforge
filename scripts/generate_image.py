@@ -5,7 +5,11 @@ generate_image.py — AI image generation via Google Vertex AI (Gemini).
 Uses the unified google-genai SDK. Supports Vertex AI (production) with
 AI Studio fallback. Reference images supported for style-guided generation.
 
-Models: gemini-2.5-flash-image (Nano Banana 2), gemini-3-pro-image-preview (Nano Banana Pro)
+Model selection: pass --model to override. Defaults pull from the curator
+(scripts/model_registry.json) via the `latest-image-balanced-google` alias,
+so a registry refresh propagates without touching this file. Run
+`python scripts/resolve_model.py --list --modality image-gen` to see what's
+available; `python scripts/resolve_model.py --check <id>` to validate one.
 
 Setup (Vertex AI — recommended):
     1. gcloud services enable aiplatform.googleapis.com
@@ -32,10 +36,33 @@ if _plugin_data and Path(_plugin_data).exists():
 else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
-DEFAULT_MODEL = "gemini-2.5-flash-image"
-
-# Add scripts dir to path for credential_manager import
+# Add scripts dir to path for credential_manager + curator imports
 sys.path.insert(0, str(Path(__file__).parent))
+
+# Resolve default via the model curator (auto-updates as registry is refreshed)
+try:
+    from resolve_model import resolve as _resolve_model, check as _check_model
+    DEFAULT_MODEL = _resolve_model("latest-image-balanced-google")
+except (ImportError, KeyError, ValueError):  # pragma: no cover — fallback if curator missing
+    _resolve_model = None
+    _check_model = None
+    DEFAULT_MODEL = "gemini-2.5-flash-image"
+
+
+def _negotiate_model(user_value: str | None, alias: str) -> str:
+    """If --model was supplied, validate via curator and warn on deprecation.
+    Otherwise return the alias-resolved id."""
+    if _resolve_model is None or _check_model is None:
+        return user_value or alias  # curator unavailable, trust caller
+    if user_value:
+        status, replacement = _check_model(user_value)
+        if status == "deprecated" and replacement:
+            print(f"WARNING: model {user_value!r} is deprecated; using {replacement!r}", file=sys.stderr)
+            return replacement
+        if status == "unknown":
+            print(f"WARNING: model {user_value!r} is not in the curated registry — proceeding without safety net", file=sys.stderr)
+        return user_value
+    return _resolve_model(alias)
 
 
 def create_client():
@@ -76,7 +103,7 @@ def create_client():
             except Exception as e:
                 return None, None, f"AI Studio init failed: {e}"
 
-        return None, None, "No credentials. Run /sf:setup or set GOOGLE_CLOUD_PROJECT."
+        return None, None, "No credentials. Run /socialforge:setup or set GOOGLE_CLOUD_PROJECT."
 
 
 def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1", model=DEFAULT_MODEL):
@@ -315,12 +342,15 @@ def _maybe_c2pa_sign(result, args):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Image Generator (Vertex AI + AI Studio)")
-    parser.add_argument("--prompt", required=True, help="Text prompt for image generation")
-    parser.add_argument("--output", required=True, help="Output file path")
+    parser.add_argument("--prompt", required=False, default="", help="Text prompt for image generation (required unless --list-models)")
+    parser.add_argument("--output", required=False, default="", help="Output file path (required unless --list-models)")
     parser.add_argument("--references", nargs="*", default=None, help="Style reference image paths (max 14)")
-    parser.add_argument("--model", default=DEFAULT_MODEL,
-                        choices=["gemini-2.5-flash-image", "gemini-3-pro-image-preview", "gemini-3.1-flash-image"],
-                        help="Gemini model for image generation")
+    parser.add_argument("--model", default=None,
+                        help=f"Image model id (default: registry alias `latest-image-balanced-google` -> {DEFAULT_MODEL}). "
+                             f"Run `python scripts/resolve_model.py --list --modality image-gen` to see options. "
+                             f"Deprecated ids auto-fall-forward to their replacement.")
+    parser.add_argument("--list-models", action="store_true",
+                        help="Print the curated image-generation models and exit")
     parser.add_argument("--aspect-ratio", default="1:1", choices=["1:1", "16:9", "9:16", "4:3", "3:4", "4:5"],
                         help="Output aspect ratio")
     parser.add_argument("--edit", default=None, help="Source image path for editing mode")
@@ -340,14 +370,40 @@ def main():
                         help="PEM signing key (must accompany --c2pa-signing-cert)")
     args = parser.parse_args()
 
+    if args.list_models:
+        if _resolve_model is None:
+            print("Model curator not available", file=sys.stderr)
+            sys.exit(2)
+        from resolve_model import list_models as _ll, get_registry as _gr
+        reg = _gr()
+        print(f"Image-generation models (registry last_updated: {reg.get('last_updated')})")
+        for m in _ll(modality="image-gen", status="current"):
+            print(f"  {m['id']:55s}  {m.get('vendor', '?'):10s}  {m.get('display_name', '')}")
+        return
+
+    if not args.prompt or not args.output:
+        parser.error("--prompt and --output are required (unless --list-models is set)")
+
+    # Resolve --model via curator (auto-falls-forward if user passed a deprecated id)
+    model_id = _negotiate_model(args.model, "latest-image-balanced-google")
+
+    # Some image flows need a higher-fidelity model for edits — prefer Pro when --edit is set
+    if args.edit and not args.model and _resolve_model is not None:
+        try:
+            model_id = _resolve_model("latest-image-edit-google")
+        except (KeyError, ValueError):
+            pass  # fall back to balanced default
+
     if args.placeholder:
         result = generate_placeholder(args.prompt, args.output, args.width, args.height)
     elif args.edit:
-        result = edit_image(args.edit, args.prompt, args.output, args.model)
+        result = edit_image(args.edit, args.prompt, args.output, model_id)
     else:
-        result = generate_image(args.prompt, args.output, args.references, args.aspect_ratio, args.model)
+        result = generate_image(args.prompt, args.output, args.references, args.aspect_ratio, model_id)
 
     # Optional: embed C2PA provenance manifest (EU AI Act Article 50)
+    # Pass the resolved model_id back through args so _maybe_c2pa_sign records the real id
+    args.model = model_id
     result = _maybe_c2pa_sign(result, args)
 
     # Log
@@ -358,7 +414,7 @@ def main():
         "prompt": args.prompt,
         "output": args.output,
         "provider": result.get("provider", "unknown"),
-        "model": result.get("model", args.model),
+        "model": result.get("model", model_id),
         "references": args.references,
         "result": result.get("status", "unknown"),
         "c2pa_signed": result.get("c2pa_signed", False),

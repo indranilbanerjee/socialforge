@@ -2,7 +2,7 @@
 """
 install_deps.py - Auto-install Python dependencies for SocialForge.
 
-Called by /sf:setup and as a fallback from other scripts when imports fail.
+Called by /socialforge:setup and as a fallback from other scripts when imports fail.
 Handles: google-genai, wavespeed, Pillow, playwright.
 """
 

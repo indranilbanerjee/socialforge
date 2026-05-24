@@ -77,9 +77,9 @@ def validate_vertex_ai():
     creds = _load_creds()
     va = creds.get("vertex_ai")
     if not va:
-        return {"configured": False, "error": "Not configured. Run /sf:setup"}
+        return {"configured": False, "error": "Not configured. Run /socialforge:setup"}
     if not Path(va["credentials_file"]).exists():
-        return {"configured": False, "error": "Credentials file missing. Run /sf:setup again"}
+        return {"configured": False, "error": "Credentials file missing. Run /socialforge:setup again"}
     return {
         "configured": True,
         "project_id": va["project_id"],
@@ -128,7 +128,7 @@ def get_gemini_client():
         except Exception as e:
             return None, f"AI Studio init failed: {e}"
 
-    return None, "No image generation credentials. Run /sf:setup or set GOOGLE_CLOUD_PROJECT."
+    return None, "No image generation credentials. Run /socialforge:setup or set GOOGLE_CLOUD_PROJECT."
 
 
 def setup_wavespeed(api_key):
@@ -148,7 +148,7 @@ def validate_wavespeed():
     if not ws or not ws.get("api_key"):
         if os.environ.get("WAVESPEED_API_KEY"):
             return {"configured": True, "source": "env_var"}
-        return {"configured": False, "error": "Not configured. Run /sf:setup --video"}
+        return {"configured": False, "error": "Not configured. Run /socialforge:setup --video"}
     return {"configured": True, "source": "plugin_data"}
 
 

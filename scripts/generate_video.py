@@ -2,14 +2,19 @@
 """
 generate_video.py — Video production with AI generation.
 
-Pipeline: Gemini generates image → Kling (via WaveSpeed) or Veo (via Vertex AI) animates to video.
+Pipeline: Gemini generates image -> Kling (WaveSpeed) or Veo (Vertex AI) animates to video.
 
 Video providers:
-  - Kling v2.0 via WaveSpeed: image-to-video (5-10s clips). Best price/quality for short-form.
-  - Veo 2.0 via Vertex AI: text-to-video and image-to-video (up to 8s). Google-native.
+  - Kling v3.0 Pro via WaveSpeed: image-to-video (5-15s clips). Best price/quality for short-form.
+  - Veo 3.1 via Vertex AI: text-to-video and image-to-video (up to 8s). Google-native.
+  - HiggsField (Kling v2.1 Pro) as a third fallback.
+
+Model selection: model ids are resolved through the curator
+(scripts/model_registry.json) so a registry refresh propagates automatically.
+Override per-call with --video-model.
 
 Setup (WaveSpeed — for Kling):
-    export WAVESPEED_API_KEY=your-fal-key (get at https://wavespeed.ai/accesskey)
+    export WAVESPEED_API_KEY=your-key (get at https://wavespeed.ai/accesskey)
     pip install wavespeed
 
 Setup (Vertex AI — for Veo):
@@ -27,8 +32,36 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-# Add scripts dir to path for credential_manager import
+# Add scripts dir to path for credential_manager + curator imports
 sys.path.insert(0, str(Path(__file__).parent))
+
+try:
+    from resolve_model import resolve as _resolve_model, check as _check_model
+    DEFAULT_KLING_MODEL = _resolve_model("latest-video-wavespeed")
+    DEFAULT_VEO_MODEL = _resolve_model("latest-video-google")
+except (ImportError, KeyError, ValueError):  # pragma: no cover
+    _resolve_model = None
+    _check_model = None
+    DEFAULT_KLING_MODEL = "kwaivgi/kling-v3.0-pro/image-to-video"
+    DEFAULT_VEO_MODEL = "veo-3.1-generate-001"
+
+
+def _negotiate_video_model(user_value, alias):
+    """Resolve user-supplied --video-model or fall back to alias."""
+    if _check_model is None or _resolve_model is None:
+        return user_value or alias
+    if user_value:
+        status, replacement = _check_model(user_value)
+        if status == "deprecated" and replacement:
+            print(f"WARNING: video model {user_value!r} is deprecated; using {replacement!r}", file=sys.stderr)
+            return replacement
+        if status == "unknown":
+            print(f"WARNING: video model {user_value!r} not in curated registry", file=sys.stderr)
+        return user_value
+    try:
+        return _resolve_model(alias)
+    except (KeyError, ValueError):
+        return None
 
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
 if _plugin_data and Path(_plugin_data).exists():
@@ -50,10 +83,12 @@ VIDEO_TYPES = {
 # ---------------------------------------------------------------------------
 
 def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=None,
-                         duration=5, model="kwaivgi/kling-v3.0-pro/image-to-video", sound=False):
-    """Generate video using Kling v3.0 via WaveSpeed API.
+                         duration=5, model=None, sound=False):
+    """Generate video using Kling via WaveSpeed API.
+    Model id defaults to the curator's `latest-video-wavespeed` alias.
     Takes first frame (required) and optionally last frame as keyframes.
     Kling animates between them guided by the motion prompt."""
+    model = model or DEFAULT_KLING_MODEL
     try:
         import wavespeed
     except ImportError:
@@ -180,8 +215,10 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
 # Video Generation — Veo via Vertex AI
 # ---------------------------------------------------------------------------
 
-def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9"):
-    """Generate video using Google Veo 2.0 via Vertex AI."""
+def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9", model=None):
+    """Generate video using Google Veo via Vertex AI.
+    Model id defaults to the curator's `latest-video-google` alias (Veo 3.1)."""
+    model = model or DEFAULT_VEO_MODEL
     try:
         from google import genai
         from google.genai import types
@@ -234,13 +271,13 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
             mime = "image/jpeg" if Path(image_path).suffix.lower() in (".jpg", ".jpeg") else "image/png"
             image = types.Image(image_bytes=img_bytes, mime_type=mime)
             operation = client.models.generate_videos(
-                model="veo-2.0-generate-001",
+                model=model,
                 image=image,
                 config=gen_config,
             )
         else:
             operation = client.models.generate_videos(
-                model="veo-2.0-generate-001",
+                model=model,
                 config=gen_config,
             )
 
@@ -262,7 +299,8 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                 f.write(video_bytes)
             return {
                 "status": "success",
-                "provider": f"veo-2.0-{backend}",
+                "provider": f"veo-{backend}",
+                "model": model,
                 "output": str(output_path),
                 "duration": min(duration, 8),
                 "mode": "image-to-video" if image_path else "text-to-video",
@@ -351,13 +389,13 @@ def route_video_provider(duration_seconds, video_type):
     gemini_key = os.environ.get("GEMINI_API_KEY")
 
     if duration_seconds <= 8 and (gcp_project or gemini_key):
-        return {"provider": "veo", "model": "veo-2.0-generate-001", "max_duration": 8}
+        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
     elif duration_seconds <= 10 and fal_key:
-        return {"provider": "kling", "model": "kling-v2", "max_duration": 10}
+        return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15}
     elif fal_key:
-        return {"provider": "kling", "model": "kling-v2", "max_duration": 10}
+        return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15}
     elif gcp_project or gemini_key:
-        return {"provider": "veo", "model": "veo-2.0-generate-001", "max_duration": 8}
+        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
     else:
         return {
             "provider": "none",
@@ -372,10 +410,10 @@ def route_video_provider(duration_seconds, video_type):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Video Generator (Kling + Veo)")
-    parser.add_argument("--brand", required=True)
-    parser.add_argument("--month", required=True)
-    parser.add_argument("--post-id", required=True)
-    parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--brand", required=False, default="")
+    parser.add_argument("--month", required=False, default="")
+    parser.add_argument("--post-id", required=False, default="")
+    parser.add_argument("--output-dir", required=False, default="")
     parser.add_argument("--generate-video", action="store_true", help="Generate AI video")
     parser.add_argument("--image", default=None, help="Input image for image-to-video")
     parser.add_argument("--provider", default="auto", choices=["auto", "kling", "veo"],
@@ -390,7 +428,30 @@ def main():
     parser.add_argument("--music", default=None, help="Background music file to mix in")
     parser.add_argument("--platforms", default=None,
                         help="Comma-separated platforms for resizing (e.g., instagram_reel,linkedin,tiktok)")
+    parser.add_argument("--video-model", default=None,
+                        help=f"Override video model id. Defaults via curator: kling=`{DEFAULT_KLING_MODEL}` / veo=`{DEFAULT_VEO_MODEL}`. "
+                             f"Deprecated ids auto-fall-forward.")
+    parser.add_argument("--list-models", action="store_true",
+                        help="Print the curated video models and exit")
     args = parser.parse_args()
+
+    if args.list_models:
+        if _resolve_model is None:
+            print("Model curator not available", file=sys.stderr)
+            sys.exit(2)
+        from resolve_model import list_models as _ll, get_registry as _gr
+        reg = _gr()
+        print(f"Video models (registry last_updated: {reg.get('last_updated')})")
+        for m in _ll(modality="video-gen", status="current"):
+            print(f"  {m['id']:55s}  {m.get('vendor', '?'):10s}  {m.get('display_name', '')}")
+        return
+
+    if not (args.brand and args.month and args.post_id and args.output_dir):
+        parser.error("--brand, --month, --post-id, and --output-dir are required (unless --list-models is set)")
+
+    # Resolve --video-model via curator (kling uses wavespeed alias; veo uses google alias)
+    chosen_kling = _negotiate_video_model(args.video_model, "latest-video-wavespeed") if args.provider in {"auto", "kling"} else None
+    chosen_veo = _negotiate_video_model(args.video_model, "latest-video-google") if args.provider in {"auto", "veo"} else None
 
     # Load post data
     calendar_path = WORKSPACE / "output" / args.brand / args.month / "calendar-data.json"
@@ -440,9 +501,11 @@ def main():
         provider = args.provider if args.provider != "auto" else routing["provider"]
 
         if provider == "kling":
-            video_result = generate_video_kling(prompt, str(video_path), args.image, duration, args.aspect_ratio)
+            video_result = generate_video_kling(prompt, str(video_path), args.image, None,
+                                                 duration, model=chosen_kling)
         elif provider == "veo":
-            video_result = generate_video_veo(prompt, str(video_path), args.image, duration, args.aspect_ratio)
+            video_result = generate_video_veo(prompt, str(video_path), args.image, duration,
+                                              args.aspect_ratio, model=chosen_veo)
     elif args.generate_video and routing["provider"] == "none":
         video_result = {"status": "FAILED", "error": routing["error"], "action_required": True}
 

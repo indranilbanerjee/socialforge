@@ -1171,8 +1171,8 @@ All 10 HTTP connectors work identically on both platforms:
 | Canva | `https://mcp.canva.com/mcp` | Brand templates, design assets |
 | Figma | `https://mcp.figma.com/mcp` | Design system access, brand assets |
 | Slack | `https://mcp.slack.com/mcp` | Approval notifications, review requests |
-| Gmail | `https://gmail.mcp.claude.com/mcp` | Delivery emails, approval reminders |
-| Google Calendar | `https://gcal.mcp.claude.com/mcp` | Posting schedule sync |
+| Gmail | `https://gmailmcp.googleapis.com/mcp/v1` | Delivery emails, approval reminders |
+| Google Calendar | `https://calendarmcp.googleapis.com/mcp/v1` | Posting schedule sync |
 | fal.ai | `https://mcp.fal.ai/mcp` | Alternative image generation (Flux 2, SDXL) |
 | Replicate | `https://mcp.replicate.com/sse` | Alternative image generation |
 | Asana | `https://mcp.asana.com/sse` | Post status tracking, publishing schedule |

@@ -246,7 +246,7 @@ HiggsField provides additional resilience. If both Vertex AI and WaveSpeed are d
 3. New accounts get 150 free credits
 
 #### Step 2: Get API Credentials
-1. Go to https://cloud.higgsfield.ai/api-keys
+1. Log in at https://cloud.higgsfield.ai and open the API / Developer section of your dashboard
 2. Create a new API key pair — you'll get an API Key AND an API Secret
 3. Save both values
 

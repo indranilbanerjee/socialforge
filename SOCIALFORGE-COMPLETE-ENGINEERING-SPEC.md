@@ -2246,7 +2246,7 @@ Compliance report per post with:
 {
   "mcpServers": {
     "google-drive": {
-      "url": "https://drive.mcp.claude.com/mcp",
+      "url": "https://drivemcp.googleapis.com/mcp/v1",
       "description": "Read calendar files from Drive. Connect to brand asset libraries in Drive. Upload final assets to Drive.",
       "required": false,
       "fallback": "Manual file upload/download"
@@ -2270,13 +2270,13 @@ Compliance report per post with:
       "fallback": "HTML template rendering via Playwright"
     },
     "gmail": {
-      "url": "https://gmail.mcp.claude.com/mcp",
+      "url": "https://gmailmcp.googleapis.com/mcp/v1",
       "description": "Draft and send client review packages via email.",
       "required": false,
       "fallback": "Manual email with attachments"
     },
     "google-calendar": {
-      "url": "https://gcal.mcp.claude.com/mcp",
+      "url": "https://calendarmcp.googleapis.com/mcp/v1",
       "description": "Create publishing schedule events. Production deadline reminders.",
       "required": false,
       "fallback": "Schedule exported as JSON/XLSX only"

@@ -23,12 +23,12 @@
     },
     "gmail": {
       "type": "http",
-      "url": "https://gmail.mcp.claude.com/mcp",
+      "url": "https://gmailmcp.googleapis.com/mcp/v1",
       "_description": "Email finalized documents and approval reminders. Connect via Google OAuth."
     },
     "google-calendar": {
       "type": "http",
-      "url": "https://gcal.mcp.claude.com/mcp",
+      "url": "https://calendarmcp.googleapis.com/mcp/v1",
       "_description": "Sync posting schedule with Google Calendar. Connect via Google OAuth."
     },
     "fal-ai": {

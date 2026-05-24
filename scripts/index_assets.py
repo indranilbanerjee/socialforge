@@ -2,6 +2,10 @@
 """
 index_assets.py — Index brand visual assets using AI vision analysis.
 Scans image libraries, analyzes each with Gemini Vision, builds asset-index.json.
+
+Model selection: pass --model to override. Defaults pull from the curator
+(scripts/model_registry.json) via the `latest-vision-google` alias so a
+registry refresh propagates without touching this file.
 """
 
 import argparse
@@ -12,8 +16,16 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Add scripts dir to path for credential_manager import
+# Add scripts dir to path for credential_manager + curator imports
 sys.path.insert(0, str(Path(__file__).parent))
+
+try:
+    from resolve_model import resolve as _resolve_model, check as _check_model
+    DEFAULT_VISION_MODEL = _resolve_model("latest-vision-google")
+except (ImportError, KeyError, ValueError):  # pragma: no cover
+    _resolve_model = None
+    _check_model = None
+    DEFAULT_VISION_MODEL = "gemini-3.5-flash"
 
 # Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
 # fall back to ~/socialforge-workspace (legacy/local)
@@ -70,7 +82,7 @@ def scan_images(source_path):
     return images
 
 
-def analyze_image_gemini(image_path):
+def analyze_image_gemini(image_path, model=None):
     """Analyze a single image with Gemini Vision."""
     try:
         from credential_manager import get_gemini_client
@@ -95,7 +107,7 @@ def analyze_image_gemini(image_path):
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=model or DEFAULT_VISION_MODEL,
             contents=[
                 types.Part.from_bytes(data=img_data, mime_type=mime),
                 VISION_PROMPT,
@@ -144,7 +156,7 @@ def build_basic_entry(image_path, source_root, asset_id):
     }
 
 
-def index_all(brand, source_path, refresh=False):
+def index_all(brand, source_path, refresh=False, model=None):
     """Index all images for a brand."""
     brand_dir = WORKSPACE / "brands" / brand
     index_path = brand_dir / "asset-index.json"
@@ -192,7 +204,7 @@ def index_all(brand, source_path, refresh=False):
         entry = build_basic_entry(img_path, Path(source_path), asset_id)
 
         # Try AI analysis
-        ai_result = analyze_image_gemini(img_path)
+        ai_result = analyze_image_gemini(img_path, model=model)
         if ai_result:
             entry["ai_description"] = ai_result.get("description", "")
             entry["tags"] = ai_result.get("tags", [])
@@ -242,9 +254,22 @@ def main():
     parser.add_argument("--brand", required=True)
     parser.add_argument("--source", required=True, help="Path to image folder")
     parser.add_argument("--refresh", action="store_true", help="Only index new/changed images")
+    parser.add_argument("--model", default=None,
+                        help=f"Vision model id (default: registry alias `latest-vision-google` -> {DEFAULT_VISION_MODEL}). "
+                             f"Deprecated ids auto-fall-forward to their replacement.")
     args = parser.parse_args()
 
-    index_all(args.brand, args.source, args.refresh)
+    # Validate / resolve --model via curator
+    chosen_model = args.model
+    if _check_model is not None and chosen_model:
+        status, replacement = _check_model(chosen_model)
+        if status == "deprecated" and replacement:
+            print(f"WARNING: model {chosen_model!r} is deprecated; using {replacement!r}", file=sys.stderr)
+            chosen_model = replacement
+        elif status == "unknown":
+            print(f"WARNING: model {chosen_model!r} not in curated registry", file=sys.stderr)
+
+    index_all(args.brand, args.source, args.refresh, model=chosen_model)
 
 
 if __name__ == "__main__":

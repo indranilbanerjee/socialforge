@@ -1,204 +1,119 @@
-# Cross-Platform Guide: Using SocialForge on Other AI Coding Tools
+# Cross-platform install guide
 
-SocialForge is built as a Claude Code plugin, but its core components follow the open Agent Skills standard (SKILL.md) and Model Context Protocol (MCP), making it portable to other AI coding tools.
+SocialForge v1.7.0 ships **three platform-native manifests** alongside the Claude Code manifest, so the same 16 Agent Skills, 20 Python scripts, and 10 HTTP MCP connectors install cleanly on:
 
-## What Works Everywhere (Zero Changes)
+| Platform | Manifest path | Status |
+|---|---|---|
+| **Claude Code** (CLI + Desktop) + **Anthropic Cowork** | `.claude-plugin/plugin.json` | Full support — agents, skills, commands, hooks, MCP, scripts |
+| **OpenAI Codex** (CLI) | `.codex-plugin/plugin.json` | Skills + MCP + hooks + scripts; commands and agents via Codex-native invocation patterns |
+| **Cursor** (IDE + CLI) | `.cursor-plugin/plugin.json` | Skills + hooks + scripts; MCP via Cursor's global mcp.json (see below) |
 
-| Component | Count | Works On |
-|-----------|-------|----------|
-| Skills (SKILL.md) | 15 | Codex, Cursor, Gemini CLI, Copilot, Windsurf |
-| Python scripts | 19 | Any platform with Python 3.10+ |
-| MCP connectors | 8 of 10 | Any MCP-compatible platform |
-| Reference docs | 11 | Universal |
+> **What changed in v1.7.0:** Earlier versions of this guide told users to manually copy SocialForge and rename `.claude-plugin/` to `.codex-plugin/` or similar. That's no longer needed. v1.7.0 ships all three manifests in-repo so users install via their platform's native plugin manager — no copy, no rename, no fork.
 
-## What Needs Adaptation Per Platform
-
-| Component | Change Needed | Effort |
-|-----------|--------------|--------|
-| Plugin manifest dir | Rename `.claude-plugin/` | 2 min |
-| Environment variables | `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PLUGIN_DATA` | 10 min |
-| Hooks (lifecycle) | Platform-specific event names | 1-2 hours |
-| 2 MCP connectors | Gmail + Calendar are Claude-hosted | 5 min (remove) |
+The key insight: **Agent Skills are an open standard.** The `name:` + `description:` SKILL.md frontmatter is interpreted the same way by every major coding agent surface as of May 2026. SocialForge reuses the same `skills/` directory across all three platform manifests — no skill duplication, no maintenance fork.
 
 ---
 
-## OpenAI Codex CLI
+## Install on Claude Code (canonical)
 
-**Compatibility: HIGH** -- Codex plugins are intentionally cross-compatible with Claude Code.
-
-### Porting Steps
-
-1. **Copy the plugin:**
-   ```
-   cp -r socialforge socialforge-codex
-   cd socialforge-codex
-   ```
-
-2. **Rename plugin directory:**
-   ```
-   mv .claude-plugin .codex-plugin
-   ```
-
-3. **Replace environment variables:**
-   - In `hooks/hooks.json`: replace `CLAUDE_PLUGIN_ROOT` with `CODEX_PLUGIN_ROOT`
-   - In `scripts/*.py`: replace `CLAUDE_PLUGIN_DATA` with `CODEX_PLUGIN_DATA`
-   
-   Linux/macOS:
-   ```bash
-   sed -i 's/CLAUDE_PLUGIN_ROOT/CODEX_PLUGIN_ROOT/g' hooks/hooks.json
-   find scripts/ -name "*.py" -exec sed -i 's/CLAUDE_PLUGIN_DATA/CODEX_PLUGIN_DATA/g' {} +
-   ```
-   
-   Windows (PowerShell):
-   ```powershell
-   (Get-Content hooks/hooks.json) -replace 'CLAUDE_PLUGIN_ROOT','CODEX_PLUGIN_ROOT' | Set-Content hooks/hooks.json
-   Get-ChildItem scripts/*.py | ForEach-Object { (Get-Content $_) -replace 'CLAUDE_PLUGIN_DATA','CODEX_PLUGIN_DATA' | Set-Content $_ }
-   ```
-
-4. **Remove Claude-specific MCP connectors** from `.mcp.json`:
-   - Remove `gmail` entry (gmail.mcp.claude.com)
-   - Remove `google-calendar` entry (gcal.mcp.claude.com)
-   - Keep all 8 other connectors (Notion, Canva, Slack, Figma, fal.ai, Replicate, Asana, Cloudinary)
-
-5. **Install:** `codex plugin add ./socialforge-codex`
-
-### What Works in Codex
-
-| Feature | Status |
-|---------|--------|
-| All 15 skills | Works |
-| All 18 Python scripts | Works |
-| All 5 agents | Works |
-| 8 MCP connectors | Works |
-| Hooks (lifecycle events) | Likely works (similar lifecycle) |
-| Gmail and Calendar connectors | Does NOT work (Claude-hosted) |
-
----
-
-## Cursor
-
-**Compatibility: HIGH** -- Very similar plugin architecture.
-
-### Porting Steps
-
-1. Copy and rename: `mv .claude-plugin .cursor-plugin`
-2. Replace `CLAUDE_PLUGIN_ROOT` with `CURSOR_PLUGIN_ROOT` in hooks.json
-3. Replace `CLAUDE_PLUGIN_DATA` with `CURSOR_PLUGIN_DATA` in scripts
-4. Remove Claude-specific MCP connectors (Gmail, Calendar)
-5. Optionally add `.mdc` rules files for Cursor-specific brand compliance rules
-6. Install via Cursor marketplace or `cursor plugin add ./socialforge-cursor`
-
-### Cursor-Specific Addition
-
-Cursor supports `.mdc` rules files. You can add `rules/brand-compliance.mdc` for brand enforcement during development.
-
----
-
-## Google Gemini CLI
-
-**Compatibility: MEDIUM** -- Skills and agents work. Different manifest format.
-
-### Porting Steps
-
-1. Copy the plugin
-2. Create `gemini-extension.json` in the root:
-   ```json
-   {
-     "name": "socialforge",
-     "version": "1.4.0",
-     "description": "Social media calendar automation with AI image and video generation",
-     "skills": "skills/",
-     "agents": "agents/"
-   }
-   ```
-3. Skills (SKILL.md) work as-is -- same Agent Skills standard
-4. Remove Claude-specific MCP connectors
-5. Hooks will be ignored (Gemini CLI has a different lifecycle system)
-
-### Limitations
-
-- No hook lifecycle events (compliance checks will not auto-run)
-- Extension spec is still evolving
-- Multi-agent orchestration may work differently
-
----
-
-## GitHub Copilot CLI
-
-**Compatibility: MEDIUM** -- Skills work. Agents need renaming.
-
-### Porting Steps
-
-1. Copy the plugin
-2. Rename agent files from `*.md` to `*.agent.md`:
-   ```bash
-   cd agents
-   for f in *.md; do mv "$f" "${f%.md}.agent.md"; done
-   ```
-3. Create `plugin.json` in root (not in `.claude-plugin/`)
-4. Move MCP config: `cp .mcp.json .github/mcp.json`
-5. Remove Claude-specific connectors from `.github/mcp.json`
-
-### Limitations
-
-- Multi-agent orchestration support is limited
-- SubagentStart hook may not exist
-- Agent files require `.agent.md` suffix
-
----
-
-## Windsurf (Codeium)
-
-**Compatibility: LOW** -- Skills only. No full plugin packaging.
-
-### Porting Steps
-
-1. Copy skills to your project:
-   ```bash
-   mkdir -p .windsurf/skills
-   cp -r socialforge/skills/* .windsurf/skills/
-   ```
-2. Windsurf discovers skills automatically from `.windsurf/skills/`
-3. No hooks, commands, or agent files supported
-4. Scripts must be invoked manually through skill instructions
-
----
-
-## Universal Installation via OpenSkills
-
-For the simplest cross-platform experience:
 ```bash
-npm install -g openskills
-openskills install socialforge
+/plugin marketplace add indranilbanerjee/neels-plugins
+/plugin install socialforge@neels-plugins
 ```
 
-OpenSkills places SKILL.md files in the correct location for your AI tool (Claude, Codex, Cursor, Windsurf, Gemini, Aider).
-
-Note: installs skills only, not the full plugin (no agents, hooks, scripts, or MCP connectors).
+See the [main README](../README.md) for the full Claude Code experience plus one-time `/sf:setup` to store Vertex AI + WaveSpeed credentials.
 
 ---
 
-## Compatibility Matrix
+## Install on OpenAI Codex
 
-| Feature | Claude Code | Codex | Cursor | Gemini CLI | Copilot | Windsurf |
-|---------|------------|-------|--------|------------|---------|----------|
-| Skills (SKILL.md) | Full | Full | Full | Full | Full | Full |
-| Agents | Full | Full | Full | Partial | Rename .agent.md | No |
-| Commands | Full | Partial | Full | Partial | Partial | No |
-| Hooks | Full | Likely | Different events | No | Partial | No |
-| MCP connectors | 10/10 | 8/10 | 8/10 | 8/10 | 8/10 | 8/10 |
-| Python scripts (19) | Full | Full | Full | Full | Full | Full |
-| Image generation | Full | Full | Full | Full | Full | Full |
-| Video generation | Full | Full | Full | Full | Full | Full |
+```bash
+codex plugin install indranilbanerjee/socialforge
+```
 
-**Note:** Video post-processing requires `imageio-ffmpeg` (which bundles an ffmpeg binary via pip — no system-level ffmpeg install needed).
-| Full pipeline | Full | Full | Likely | Partial | Partial | No |
+After install, restart your Codex session. Try:
+
+```
+"Run today's SocialForge calendar for brand acme."
+"Generate three Instagram carousel concepts for our Q3 product launch."
+"Compose a 9:16 video for TikTok with our brand template overlay."
+```
+
+**What works on Codex:**
+- All 16 Agent Skills (auto-discovered via SKILL.md frontmatter — same open standard as Claude Code)
+- 8 of 10 HTTP MCP connectors work universally; 2 (Gmail + Google Calendar) are Anthropic-hosted endpoints — use a platform-native alternative on Codex (OpenAI's own Google integrations, or self-host these connectors)
+- All 20 Python scripts (`generate_image.py`, `video_postprocess.py`, `c2pa_sign.py`, etc.) run when Python 3.10+ is present
+- `hooks/hooks.json` (empty by default — zero global hooks, matches Claude Code v1.5+ behaviour)
+- **Credentials**: Codex uses its own secret-store mechanism. Re-create your Vertex AI service-account JSON path + WaveSpeed API key as Codex secrets (the `/sf:setup` skill is Claude-Code-specific — but it just writes to `~/.claude/plugins/data/socialforge/credentials.json`, which Codex won't read)
+
+**What's Claude-Code-native and isn't auto-invoked on Codex:**
+- Slash commands in `commands/` are Claude Code's `/sf:*` syntax. On Codex, invoke the underlying workflow via natural language and the SKILL.md routing picks up the same handler
+- 5 specialist sub-agents in `agents/*.md` use Claude Code's specific sub-agent format. Codex has its own sub-agent / app concept; skills embed the relevant agent instructions inline so outputs are equivalent
 
 ---
 
-## Resources
+## Install on Cursor
 
-- Agent Skills specification: https://agentskills.io/specification
-- OpenSkills (universal installer): https://github.com/numman-ali/openskills
-- SocialForge repo: https://github.com/indranilbanerjee/socialforge
-- Claude Code plugin docs: https://code.claude.com/docs/en/plugins
+```bash
+cursor plugin install indranilbanerjee/socialforge
+```
+
+After install, restart Cursor (or `Cursor: Reload Window`).
+
+**What works on Cursor:**
+- All 16 Agent Skills auto-discovered via SKILL.md frontmatter
+- `hooks/hooks.json` empty by default
+- All 20 Python scripts run from Cursor's terminal context
+- **Credentials**: Cursor doesn't have a plugin-scoped secret store. Configure Vertex AI service-account path + WaveSpeed API key as workspace environment variables in your shell profile or a `.env` file at the workspace root
+
+**MCP on Cursor — manual one-time configuration:**
+
+Cursor reads MCP servers from a global `mcp.json` (no leading dot). To enable any of SocialForge's HTTP connectors on Cursor:
+
+1. Open Cursor → Settings → MCP Servers
+2. Copy the 8 cross-platform connector entries from SocialForge's `.mcp.json` (Notion, Canva, Slack, Webflow, Figma, etc.) into Cursor's MCP configuration
+3. Skip Gmail + Google Calendar (Anthropic-hosted only — use Cursor's own Google integration or a self-hosted MCP)
+4. Set required env vars per connector
+
+This is a Cursor platform constraint, not a SocialForge limitation. Cursor's plugin-scoped MCP is not yet GA (May 2026).
+
+**What's Claude-Code-native and isn't auto-invoked on Cursor:**
+- Slash commands (`/sf:*`) — Cursor Agent picks the right skill from natural-language intent
+- 5 specialist sub-agents — Cursor has rules and modes instead of sub-agents
+
+---
+
+## What's portable vs platform-specific
+
+| Component | Claude Code | Codex | Cursor | Notes |
+|---|---|---|---|---|
+| **Skills** (`skills/<name>/SKILL.md`) | yes | yes | yes | Open Agent Skills standard |
+| **Python scripts** (`scripts/*.py`) | yes | yes | yes | Run when Python 3.10+ present |
+| **HTTP MCP catalog** (`.mcp.json`) | yes (auto-loaded) | yes (auto-loaded) | manual paste into Cursor global mcp.json | 8 of 10 connectors are universal; 2 (Gmail + Google Calendar) are Claude-hosted |
+| **Hooks** (`hooks/hooks.json`) | yes | yes | yes | Empty by default — zero global hooks |
+| **Slash commands** (`commands/*.md`) | yes | partial | n/a (natural language) | |
+| **Sub-agents** (`agents/*.md`) | yes | partial | n/a | Skills embed agent instructions inline |
+| **Credential persistence** | `/sf:setup` writes to Claude Code plugin data dir | Codex secrets store | workspace env vars / `.env` | Each platform owns its own secret persistence pattern |
+
+---
+
+## Updating
+
+| Platform | Update command |
+|---|---|
+| Claude Code | `/plugin update socialforge@neels-plugins` |
+| Codex | `codex plugin update socialforge` |
+| Cursor | `cursor plugin update socialforge` |
+
+All three platforms pull from the same GitHub `main` branch — no version drift between platform builds.
+
+---
+
+## Reporting platform-specific bugs
+
+| Platform | Where to file |
+|---|---|
+| Claude Code platform bug | https://github.com/anthropics/claude-code/issues |
+| Codex platform bug | https://github.com/openai/codex/issues |
+| Cursor platform bug | https://github.com/cursor/plugins/issues |
+| SocialForge skill/content bug (any platform) | https://github.com/indranilbanerjee/socialforge/issues |

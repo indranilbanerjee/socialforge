@@ -1,0 +1,27 @@
+{
+  "name": "socialforge",
+  "version": "1.7.0",
+  "description": "Agency-grade social media calendar automation for Cursor — asset-first compositing, AI image generation (Vertex AI Nano Banana Pro), video generation (WaveSpeed Kling v3.0 Pro), C2PA content provenance for EU AI Act Article 50.",
+  "author": {
+    "name": "Indranil Banerjee",
+    "url": "https://github.com/indranilbanerjee"
+  },
+  "homepage": "https://github.com/indranilbanerjee/socialforge",
+  "repository": "https://github.com/indranilbanerjee/socialforge.git",
+  "license": "MIT",
+  "keywords": [
+    "social-media",
+    "content-calendar",
+    "image-generation",
+    "video-generation",
+    "compositing",
+    "carousel",
+    "brand-assets",
+    "marketing",
+    "agency",
+    "c2pa",
+    "cursor"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

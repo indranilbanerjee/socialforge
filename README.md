@@ -39,7 +39,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **19 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v160) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v170) for the rationale.
 
 ## Installation
 
@@ -310,7 +310,11 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.6.0)
+## Current Release (v1.7.0)
+
+**Cross-platform compatibility pack.** SocialForge now installs cleanly on **OpenAI Codex** and **Cursor** in addition to Claude Code, via two new sibling manifest files (`.codex-plugin/plugin.json` and `.cursor-plugin/plugin.json`) — same `skills/` directory, same `scripts/`, same `.mcp.json`, same `hooks/hooks.json`. No skill duplication. Works because Agent Skills became an open standard (Dec 2025) and all three platforms parse the same SKILL.md `name:` + `description:` frontmatter. The previous cross-platform guide that told users to manually rename `.claude-plugin/` is no longer needed — the renamed sibling manifests now ship in-repo. Full per-platform install guide at [`docs/CROSS-PLATFORM-GUIDE.md`](docs/CROSS-PLATFORM-GUIDE.md): install commands, what works natively per platform, the Cursor MCP gotcha (paste 8 of 10 connectors into Cursor's global mcp.json — Gmail + Google Calendar are Anthropic-hosted), credential persistence per platform, update commands per platform, and where to file platform-specific bugs. No breaking changes for existing Claude Code users.
+
+### Earlier (v1.6.0)
 
 **EU AI Act Article 50 readiness** (applicable 2 Aug 2026). New `scripts/c2pa_sign.py` wraps `c2pa-python>=0.32` to embed machine-readable provenance manifests in AI-generated assets — brand (CreativeWork.author), generator name, prompt, target platform, IPTC digital-source-type. New `/socialforge:c2pa-sign` skill exposes it. Optional `--c2pa-sign` flag on `generate_image.py` (post-image-generation step) and `video_postprocess.py` (post-per-platform-resize step) auto-signs before delivery. Empirically tested: 75-byte test PNG → ~43 KB signed PNG with `manifest_embedded_and_verified=true`. Production deployment requires a CAI-recognized signing certificate (Adobe Content Credentials, Truepic, Numbers Protocol, or Microsoft Azure Confidential Ledger) — see `references/c2pa-production-cert.md`.
 

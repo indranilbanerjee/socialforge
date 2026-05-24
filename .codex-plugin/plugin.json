@@ -1,0 +1,40 @@
+{
+  "name": "socialforge",
+  "version": "1.7.0",
+  "description": "Agency-grade social media calendar automation with asset-first compositing — image generation (Vertex AI Nano Banana Pro), video generation (WaveSpeed Kling v3.0 Pro), C2PA content provenance for EU AI Act Article 50 compliance, multi-brand multi-platform. 16 skills, 5 agents, 20 scripts, 10 HTTP MCP connectors. Zero global hooks.",
+  "author": {
+    "name": "Indranil Banerjee",
+    "url": "https://github.com/indranilbanerjee"
+  },
+  "homepage": "https://github.com/indranilbanerjee/socialforge",
+  "repository": "https://github.com/indranilbanerjee/socialforge.git",
+  "license": "MIT",
+  "keywords": [
+    "social-media",
+    "content-calendar",
+    "image-generation",
+    "video-generation",
+    "compositing",
+    "carousel",
+    "brand-assets",
+    "marketing",
+    "automation",
+    "agency",
+    "c2pa",
+    "eu-ai-act",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "SocialForge",
+    "shortDescription": "Agency-grade social media calendar automation — asset-first compositing, AI image/video generation, C2PA provenance, multi-brand.",
+    "longDescription": "SocialForge brings agency-grade social media production to OpenAI Codex via 16 portable Agent Skills. Parse a calendar (Google Sheets, Notion, Airtable), match brand assets, generate AI-composed creative (Vertex AI Nano Banana Pro for stills, WaveSpeed Kling v3.0 Pro for video), render multi-slide carousels, adapt copy per platform (Instagram, TikTok, LinkedIn, Threads, X, Facebook), produce review galleries with human-in-the-loop approval at every creative stage. Skills are platform-portable (same SKILL.md frontmatter open standard used by Claude Code, Cursor, Copilot CLI). C2PA content provenance via scripts/c2pa_sign.py for EU AI Act Article 50 compliance (applicable 2 Aug 2026) — embeds machine-readable provenance manifests with brand + generator + prompt + platform metadata. 10 HTTP MCP connectors (Notion, Canva, Slack, Webflow, Figma, etc.) connect only when env vars are configured — zero global hooks.",
+    "developerName": "Indranil Banerjee",
+    "category": "marketing",
+    "capabilities": ["skills", "mcp", "scripts"],
+    "websiteURL": "https://github.com/indranilbanerjee/socialforge",
+    "defaultPrompt": "Set up a new brand and run today's social media calendar."
+  }
+}

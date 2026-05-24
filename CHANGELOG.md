@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.0] - 2026-05-24
+
+**Cross-platform compatibility pack.** SocialForge now installs cleanly on three coding-agent surfaces from a single source repository — Claude Code (canonical), OpenAI Codex, and Cursor — by adding platform-native manifest files alongside the existing Claude Code manifest. No skill duplication: all three platforms read the same `skills/`, `scripts/`, `.mcp.json`, and `hooks/hooks.json`.
+
+### Added
+
+- **`.codex-plugin/plugin.json`** — OpenAI Codex plugin manifest with the `interface` block (displayName, shortDescription, longDescription, category, capabilities, defaultPrompt) Codex uses to render the plugin in its install surfaces. Points at `./skills/`, `./.mcp.json`, `./hooks/hooks.json` — same directories Claude Code reads.
+- **`.cursor-plugin/plugin.json`** — Cursor plugin manifest. Minimal manifest (Cursor only requires `name`) plus author, repository, license, keywords, and skills path. Cursor auto-discovers `skills/` via the open SKILL.md frontmatter standard.
+
+### Changed
+
+- **`docs/CROSS-PLATFORM-GUIDE.md`** — Rewritten to reflect v1.7.0 reality. Previous version told users to manually copy SocialForge and rename `.claude-plugin/` to `.codex-plugin/` — that's no longer needed. New guide documents per-platform install commands, what works natively per platform, the Cursor MCP gotcha (paste 8 of 10 connectors into Cursor's global mcp.json — Gmail + Google Calendar are Anthropic-hosted only), credential persistence per platform (Claude Code's `/sf:setup` is Claude-Code-specific; Codex uses its secret store; Cursor uses workspace env vars), update commands per platform, and where to file platform-specific bugs.
+
+### Why this works without code duplication
+
+Agent Skills became an open standard (Dec 2025, donated to the Agentic AI Foundation; adopted by 32+ tools by May 2026). All three target platforms — Claude Code, Codex, Cursor — parse the same `name:` + `description:` SKILL.md frontmatter the same way. SocialForge's 16 skills are platform-portable as written; the v1.7 manifests are thin platform-specific wrappers around shared content.
+
+### Compatibility
+
+- No breaking changes for Claude Code users.
+- No new dependencies — the new manifests are sibling JSON files.
+- Plugin version: 1.6.0 → 1.7.0 (minor bump — new platform surfaces, no breaking changes).
+- Files added: 2 manifests; 1 file rewritten (CROSS-PLATFORM-GUIDE.md).
+- Skills count, agents count, commands count, scripts count: unchanged from v1.6.0.
+
+---
+
 ## [1.6.0] - 2026-05-17
 
 ### Added — C2PA Content Provenance for EU AI Act Article 50 (CRITICAL — 76 days to enforcement)

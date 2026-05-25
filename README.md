@@ -1,6 +1,6 @@
 # SocialForge — Social Media Calendar Automation
 
-**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 20 scripts · 10 HTTP MCP connectors · 0 global hooks.** Installs on **5 coding-agent surfaces**: Claude Code, Claude Cowork, OpenAI Codex, Cursor, GitHub Copilot CLI, and Google Antigravity 2.0 (experimental).
+**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks.** Installs on **5 coding-agent surfaces**: Claude Code, Claude Cowork, OpenAI Codex, Cursor, GitHub Copilot CLI, and Google Antigravity 2.0 (experimental).
 
 Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
 
@@ -22,7 +22,7 @@ Built for agencies and in-house teams running monthly content calendars across I
 
 > If SocialForge saves your team time, [give it a star ⭐](https://github.com/indranilbanerjee/socialforge/stargazers) — it's the single thing that helps other agencies find it.
 
-**Status:** Production Ready · 16 skills · 25 commands · 5 agents · 20 scripts · 10 HTTP MCP connectors · 0 global hooks
+**Status:** Production Ready · 16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks
 
 Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery.
 
@@ -69,9 +69,10 @@ Agent Skills became an open standard (Dec 2025; adopted by 32+ tools by May 2026
 - **16 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
 - **25 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **20 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
+- **22 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **10 HTTP connectors** — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
 - **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See [Current Release](#current-release-v182) for the rationale.
+- **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
 
@@ -348,7 +349,7 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 
 ### Earlier (v1.8.1)
 
-**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + 5-platform install matrix + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→20 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
+**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + 5-platform install matrix + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→22 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
 
 ### Earlier (v1.8.0)
 

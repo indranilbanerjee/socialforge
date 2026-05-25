@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.3] - 2026-05-25
+
+**README fix for the "claude.ai web" gotcha.** Cross-plugin patch ride-along — same fix shipped to CF v3.12.5 and DMP v3.7.8. Documents that `/plugin` slash commands are not supported in claude.ai web chat (only in Claude Code CLI / Desktop / Cowork), with explicit recovery paths for SocialForge users who hit `"/plugin isn't available in this environment"`.
+
+### Changed
+
+- **`README.md`** — added a prominent "If you see /plugin isn't available in this environment" callout at the top of the Updating section.
+
 ## [1.8.2] - 2026-05-25
 
 **Model curator + correctness sweep.** Adds shared model-selection infrastructure used across the Neelverse Marketing Suite, eliminates several hardcoded deprecated model ids, and fixes URLs / slash refs.

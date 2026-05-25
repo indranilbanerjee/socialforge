@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.4] - 2026-05-25
+
+**Corrects an inaccuracy in the v1.8.3 README callout.** v1.8.3 said the `/plugin isn't available in this environment` error applies to **claude.ai web chat**. User correction: it also applies to the **Claude Desktop app**. The actual rule: `/plugin` slash commands are supported only in **Claude Code** (CLI / IDE at claude.com/code) and **Anthropic Cowork** — not in the standard Claude chat app, whether browser OR installed desktop. Same correction as CF v3.12.6 + DMP v3.7.9.
+
+### Changed
+
+- **`README.md`** — re-worded the "/plugin isn't available" callout to name both environments accurately.
+
 ## [1.8.3] - 2026-05-25
 
 **README fix for the "claude.ai web" gotcha.** Cross-plugin patch ride-along — same fix shipped to CF v3.12.5 and DMP v3.7.8. Documents that `/plugin` slash commands are not supported in claude.ai web chat (only in Claude Code CLI / Desktop / Cowork), with explicit recovery paths for SocialForge users who hit `"/plugin isn't available in this environment"`.

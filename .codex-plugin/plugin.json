@@ -1,6 +1,6 @@
 {
   "name": "socialforge",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "Agency-grade social media calendar automation with asset-first compositing \u2014 image generation (Vertex AI Nano Banana Pro), video generation (WaveSpeed Kling v3.0 Pro), C2PA content provenance for EU AI Act Article 50 compliance, multi-brand multi-platform. 16 skills, 5 agents, 22 scripts, 10 HTTP MCP connectors. Zero global hooks. Shared model curator (scripts/model_registry.json + resolve_model.py): image / video / vision model ids resolved via aliases (latest-image-google, latest-image-edit-google, latest-vision-google, latest-video-wavespeed, latest-video-google); deprecated ids auto-fall-forward; --model and --video-model flags accept any registered id. See docs/MODEL-CURATOR.md.",
   "author": {
     "name": "Indranil Banerjee",

@@ -1,7 +1,7 @@
 {
   "_status": "experimental \u2014 Antigravity 2.0 (launched 19 May 2026) has not yet published an open plugin manifest spec. This file mirrors the Gemini CLI Extensions format that Antigravity's `agy plugin import gemini` converter accepts. When Antigravity publishes a v2-native plugin manifest spec, this file will be updated to match. See docs/CROSS-PLATFORM-GUIDE.md for the current install workflow.",
   "name": "socialforge",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "Agency-grade social media calendar automation with asset-first compositing, AI image generation (Vertex AI Nano Banana Pro), video generation (WaveSpeed Kling v3.0 Pro), C2PA content provenance for EU AI Act Article 50 compliance. Shared model curator (scripts/model_registry.json + resolve_model.py): image / video / vision model ids resolved via aliases (latest-image-google, latest-image-edit-google, latest-vision-google, latest-video-wavespeed, latest-video-google); deprecated ids auto-fall-forward; --model and --video-model flags accept any registered id. See docs/MODEL-CURATOR.md.",
   "author": {
     "name": "Indranil Banerjee",

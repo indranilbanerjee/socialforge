@@ -4,7 +4,7 @@
 
 Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
 
-[![Version](https://img.shields.io/badge/version-1.8.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.8.4-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
@@ -115,12 +115,14 @@ Your admin provides you with:
 
 ### Updating to Latest Version
 
-> **If you see "/plugin isn't available in this environment"** — you're in **claude.ai web chat**, which does NOT support `/plugin` slash commands. The plugin IS installed (your SocialForge skills work); it just can't be managed via slash command in web chat. Fix:
+> **If you see "/plugin isn't available in this environment"** — you're in the standard **Claude chat app** (browser OR installed desktop app). The `/plugin` slash command is **only** supported in two environments: **Claude Code** (the developer CLI / IDE at [claude.com/code](https://claude.com/code), `npm install -g @anthropic-ai/claude-code`) and **Anthropic Cowork**. Everywhere else — `claude.ai` web chat, the Claude Desktop app, mobile — plugins are managed through the UI, not slash commands.
 >
-> 1. **Use the UI** — click the **Plugins** button at the bottom of the chat → **Manage plugins** → find SocialForge → look for Update / Refresh / Remove. If no Update button, **Remove** then **Add plugin** → re-install from `indranilbanerjee/neels-plugins`. The re-pull fetches the latest version.
-> 2. **Or switch to Claude Code CLI / Desktop / Cowork** for plugin management — `npm install -g @anthropic-ai/claude-code` or download from [claude.com/code](https://claude.com/code). The plugin runs identically across every platform; you're choosing where to type management commands.
+> The plugin IS installed (your SocialForge skills work); only the management command is unavailable. Fix:
 >
-> Once you're on Claude Code CLI / Desktop / Cowork, the rest of this section applies.
+> 1. **In the chat UI** — click the **Plugins** button at the bottom of the chat → **Manage plugins** → find SocialForge → look for Update / Refresh / Remove. If no Update button, **Remove** then **Add plugin** → re-install from `indranilbanerjee/neels-plugins`. The re-pull fetches the latest version.
+> 2. **For slash-command management** — switch to Claude Code (CLI or IDE) or Cowork. The plugin runs identically across every Anthropic surface; you're choosing where to type management commands.
+>
+> Once you're in Claude Code or Cowork, the rest of this section applies.
 
 **Third-party marketplaces — including this one — have auto-update OFF by default in Claude Code.** When v1.6.0 is the marketplace's latest and you're still on v1.5.3, nothing tells you. There is no banner, no badge, no notification.
 

@@ -1,10 +1,10 @@
 # SocialForge — Social Media Calendar Automation
 
-**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks.** Installs on **Claude Code** (CLI + IDE extensions) and **Anthropic Cowork**.
+**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks.** **Installs on 5 verified agent surfaces** from a single source repo: **Claude Code** (CLI + IDE extensions), **Anthropic Cowork**, **OpenAI Codex** (CLI + IDE + App), **Cursor 2.5+**, **GitHub Copilot CLI**, and **Google Antigravity 2.0** (CLI + IDE).
 
 Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
 
-[![Version](https://img.shields.io/badge/version-1.8.5-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
@@ -51,14 +51,18 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces
+## Supported surfaces (v1.9.0)
 
-| Platform | Install command | Status |
-|---|---|---|
-| **Claude Code** CLI + IDE extensions | `/plugin install socialforge@neels-plugins` | Full support (canonical) |
-| **Anthropic Cowork** | Plugins UI → Add marketplace → `indranilbanerjee/neels-plugins` → Install SocialForge | Full support (same `.claude-plugin/` files; no `/plugin` slash commands in Cowork) |
+| Platform | Install command | Manifest path | Status |
+|---|---|---|---|
+| **Claude Code** CLI + IDE extensions | `/plugin install socialforge@neels-plugins` | `.claude-plugin/plugin.json` | Full support (canonical) |
+| **Anthropic Cowork** | Plugins UI → Add marketplace → `indranilbanerjee/neels-plugins` → Install SocialForge | same `.claude-plugin/` files | Full support — no `/plugin` slash commands in Cowork (UI-only) |
+| **OpenAI Codex** CLI + IDE + App | `codex plugin marketplace add indranilbanerjee/neels-plugins` then `codex plugin install socialforge@neels-plugins` | `.codex-plugin/plugin.json` (published OpenAI schema) | Full skills + MCP support |
+| **Cursor 2.5+** | In any Cursor Agent chat: `/add-plugin socialforge@https://github.com/indranilbanerjee/socialforge` | `.cursor-plugin/plugin.json` (verified Cursor 2.5+ JSON Schema) | Full skills + agents + commands support |
+| **GitHub Copilot CLI** | `copilot plugin marketplace add indranilbanerjee/neels-plugins` then `copilot plugin install socialforge@neels-plugins` | `.github/plugin/plugin.json` (Copilot also recognizes `.claude-plugin/plugin.json` as fallback) | Full skills + MCP support |
+| **Google Antigravity 2.0** CLI + IDE | `agy plugin install https://github.com/indranilbanerjee/socialforge` | `gemini-extension.json` (at repo root, per Google's reference pattern) | Full skills + hooks support |
 
-OpenAI Codex / Cursor / GitHub Copilot CLI / Google Antigravity 2.0 support is on the roadmap. The v1.7 / v1.8 era manifests for those platforms were invented (did not match the platforms' actual install specs) and were removed in v1.8.5. Research is saved at `memory/{antigravity,codex}-plugin-spec-may-2026.md`; real build is deferred.
+**Why this works:** Agent Skills became an open standard in December 2025 (~40 agent products by May 2026). All 16 SKILL.md files in SocialForge are platform-portable as written.
 
 ## Architecture
 
@@ -356,9 +360,13 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 
 **Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→22 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
 
-### Earlier (v1.8.0 + v1.7.0 — superseded by v1.8.5)
+### Earlier (v1.9.0 — real native manifests for 5 surfaces, 2026-05-27)
 
-v1.7.0 added `.codex-plugin/plugin.json` + `.cursor-plugin/plugin.json` and v1.8.0 added `.antigravity/plugin.json` + a GitHub Copilot CLI auto-discovery claim. **All four were removed in v1.8.5** after a May 2026 research pass confirmed those manifests did not match the platforms' actual install specs and would have failed real install attempts. Real OpenAI Codex / Cursor / GitHub Copilot CLI / Google Antigravity 2.0 support is on the roadmap (research saved at `memory/{antigravity,codex}-plugin-spec-may-2026.md`).
+Ships verified-real native manifests for OpenAI Codex (`.codex-plugin/plugin.json` per the published OpenAI schema), Google Antigravity 2.0 (`gemini-extension.json` at repo root per Google's `gemini-cli-extensions/data-agent-kit-starter-pack` reference pattern), Cursor 2.5+ (`.cursor-plugin/plugin.json` per the verified Cursor JSON Schema), and GitHub Copilot CLI (`.github/plugin/plugin.json` per the verified GitHub schema). Adds `AGENTS.md` at root (auto-loaded by Codex + Antigravity + Copilot + Cursor agent context chains). All 16 skills share via the Agent Skills open standard — no duplication.
+
+### Earlier (v1.8.0 + v1.7.0 — superseded by v1.8.5 honesty cleanup, then properly rebuilt in v1.9.0)
+
+v1.7.0 added invented `.codex-plugin/plugin.json` + `.cursor-plugin/plugin.json` and v1.8.0 added invented `.antigravity/plugin.json` + an unverified GitHub Copilot CLI auto-discovery claim. **All four were removed in v1.8.5** after a May 2026 research pass confirmed those manifests did not match the platforms' actual install specs. v1.9.0 then ships the REAL native manifests against the verified published schemas — see the v1.9.0 entry above.
 
 ### Earlier (v1.6.0)
 

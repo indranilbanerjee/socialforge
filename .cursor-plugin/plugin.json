@@ -1,0 +1,32 @@
+{
+  "name": "socialforge",
+  "displayName": "SocialForge",
+  "version": "1.9.0",
+  "description": "Open-source agency-grade social media production engine — calendar parsing, asset-first compositing, AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, C2PA signing. Installable on Cursor 2.5+ via /add-plugin socialforge@https://github.com/indranilbanerjee/socialforge in any Agent chat.",
+  "author": {
+    "name": "Indranil Banerjee",
+    "email": "neel@neelverse.com"
+  },
+  "publisher": "indranilbanerjee",
+  "homepage": "https://indranil.in",
+  "repository": "https://github.com/indranilbanerjee/socialforge",
+  "license": "MIT",
+  "keywords": [
+    "social-media",
+    "content-calendar",
+    "image-generation",
+    "video-generation",
+    "vertex-ai",
+    "nano-banana-pro",
+    "kling-v3",
+    "c2pa",
+    "eu-ai-act",
+    "agent-skills"
+  ],
+  "category": "productivity",
+  "tags": ["social-media", "content", "ai-image", "ai-video", "carousel"],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "commands": "./commands/",
+  "mcpServers": "./.mcp.json"
+}

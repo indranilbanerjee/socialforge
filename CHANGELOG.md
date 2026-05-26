@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-05-27
+
+**Real native manifests for 5 verified agent surfaces.** Ships verified-real manifests for OpenAI Codex, Google Antigravity 2.0, Cursor 2.5+, and GitHub Copilot CLI — replacing the v1.7/v1.8 era invented manifests that were correctly removed in v1.8.5.
+
+### Per-surface manifest (verified-real schemas)
+
+| Surface | Manifest path | Schema source |
+|---|---|---|
+| Claude Code (CLI + IDE extensions) + Anthropic Cowork | `.claude-plugin/plugin.json` | Claude Code published format (unchanged from v1.8.5) |
+| OpenAI Codex (CLI + IDE + App) | `.codex-plugin/plugin.json` | `developers.openai.com/codex/plugins/build` |
+| Cursor 2.5+ | `.cursor-plugin/plugin.json` | `cursor.com/schemas/cursor-plugin/plugin.json` (JSON Schema draft-07) |
+| GitHub Copilot CLI | `.github/plugin/plugin.json` | `docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating`. Copilot also recognizes `.claude-plugin/plugin.json` as documented fallback path |
+| Google Antigravity 2.0 (CLI + IDE) | `gemini-extension.json` (at repo root, not `.antigravity/`) | Per Google's `gemini-cli-extensions/data-agent-kit-starter-pack` reference repo |
+
+### Added
+
+- `gemini-extension.json` at repo root — Antigravity manifest with `contextFileName: "AGENTS.md"`. Same `skills/` directory shared with Claude Code + Codex + Cursor + Copilot via the Agent Skills open standard.
+- `.codex-plugin/plugin.json` — OpenAI Codex manifest with `interface` block.
+- `.cursor-plugin/plugin.json` — Cursor 2.5+ manifest per the published JSON Schema.
+- `.github/plugin/plugin.json` — GitHub Copilot CLI manifest at primary path.
+- `AGENTS.md` at repo root — auto-loaded by Codex + Antigravity + Copilot CLI + Cursor agent context chains.
+
+### Verified
+
+- All 16 SocialForge skill names pass the Codex `[a-z0-9-]` regex; SKILL.md frontmatter `name:` matches folder; descriptions ≤ 1024 chars. (Suite-wide: 190/190 across DMP + CF + SF.)
+- All 4 new JSON manifests parse cleanly.
+
+### Not changed
+
+- Zero changes to `skills/`, `commands/`, `agents/`, `scripts/`, `hooks/hooks.json`, `.mcp.json`, `.mcp.json.connectors-reference`. SocialForge behavior in Claude Code + Cowork **byte-identical** to v1.8.5.
+- 16 skills + 25 commands + 5 agents + 22 scripts + 10 HTTP MCP connectors all unchanged.
+- C2PA signing (`scripts/c2pa_sign.py`), image generation (Vertex AI Nano Banana Pro), video generation (WaveSpeed Kling v3.0 Pro) — all unchanged.
+
+### Caveats per platform
+
+- **Codex subagents** are TOML; our `agents/*.md` are Claude-only as static files.
+- **Copilot CLI custom slash commands not yet supported** (open issues #618 and #1113); our `commands/*.md` won't auto-discover.
+- **Antigravity slash commands** fold into skills during `agy plugin import gemini`.
+
 ## [1.8.5] - 2026-05-26
 
 **Honest positioning: removed invented multi-platform manifests. Zero functional change for Claude Code + Cowork users.**

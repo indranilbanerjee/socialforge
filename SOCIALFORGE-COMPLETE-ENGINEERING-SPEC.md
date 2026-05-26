@@ -1,10 +1,10 @@
 # SOCIALFORGE — COMPLETE ENGINEERING SPECIFICATION
 
-## Plugin for Claude Code / Cowork / Antigravity
+## Plugin for Claude Code / Cowork
 ## Social Media Calendar Automation with Asset-First Compositing
 
 **Spec Version:** 1.0.0
-**Target Runtime:** Claude Code (Antigravity), Claude Cowork, Claude Code Terminal
+**Target Runtime:** Claude Code (CLI + IDE extensions), Anthropic Cowork
 **Author:** Neel (Indranil Banerjee)
 **Date:** March 2026
 
@@ -3177,7 +3177,7 @@ Only used when video generation is explicitly enabled AND the video duration exc
 
 # PART 17: CROSS-PLATFORM DEPLOYMENT
 
-## 17.1 Claude Code (Terminal) + Antigravity
+## 17.1 Claude Code (CLI + IDE extensions) + Anthropic Cowork
 
 The primary development and execution environment.
 
@@ -3186,12 +3186,14 @@ The primary development and execution environment.
 # Clone or install the plugin
 claude plugin install --local ./socialforge
 # Or from marketplace
-claude plugin marketplace add [publisher]/socialforge
-claude plugin install socialforge@[marketplace]
+claude plugin marketplace add indranilbanerjee/neels-plugins
+claude plugin install socialforge@neels-plugins
 ```
 
-**For Antigravity specifically:**
-Add to the project's CLAUDE.md:
+**In Anthropic Cowork:**
+Open Plugins panel → Add marketplace → paste `indranilbanerjee/neels-plugins`
+→ Install SocialForge from the listed plugins. (No `/plugin` slash commands
+in Cowork — UI-only.) Add to the project's CLAUDE.md / AGENTS.md:
 ```markdown
 ## SocialForge Plugin
 This project uses the SocialForge social media calendar automation plugin.
@@ -3307,4 +3309,4 @@ Full plugin: All layers. ~10-13 weeks.
 
 *END OF SPECIFICATION*
 
-*This document contains everything needed for Claude Code (inside Antigravity or standalone) to build the complete SocialForge plugin: every schema, every skill body, every script's logic, every hook configuration, every template specification, every edge case, every workflow, and the complete implementation dependency graph. Feed this to Claude Code as the project specification.*
+*This document contains everything needed for Claude Code (CLI, IDE extension, or Cowork) to build the complete SocialForge plugin: every schema, every skill body, every script's logic, every hook configuration, every template specification, every edge case, every workflow, and the complete implementation dependency graph. Feed this to Claude Code as the project specification.*

@@ -24,7 +24,7 @@ If you cannot use Private Security Advisories, contact the maintainer via the em
 
 - A clear description of the vulnerability and its impact
 - Steps to reproduce (with example commands, payloads, or files if applicable)
-- Affected version(s) and platform (Claude Code / Codex / Cursor / Copilot CLI / Antigravity)
+- Affected version(s) and surface (Claude Code CLI / Claude Code IDE extension / Anthropic Cowork)
 - Suggested remediation if you have one
 - Whether you'd like credit in the security advisory (and how you'd like to be named)
 
@@ -45,7 +45,7 @@ In scope:
 - Plugin manifest parsing edge cases that could be exploited
 
 Out of scope:
-- Vulnerabilities in Claude Code, OpenAI Codex, Cursor, GitHub Copilot CLI, or Google Antigravity 2.0 themselves — please report to those vendors
+- Vulnerabilities in Claude Code or Anthropic Cowork themselves — please report to Anthropic
 - Vulnerabilities in third-party MCP servers (Slack, HubSpot, etc.) — please report to those vendors
 - Vulnerabilities in upstream Python dependencies — please report to those projects (and let us know so we can upgrade)
 - Anthropic Claude model behavior issues — please report via Anthropic's official channels

@@ -1,21 +1,20 @@
 # SocialForge — Social Media Calendar Automation
 
-**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks.** Installs on **5 coding-agent surfaces**: Claude Code, Claude Cowork, OpenAI Codex, Cursor, GitHub Copilot CLI, and Google Antigravity 2.0 (experimental).
+**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks.** Installs on **Claude Code** (CLI + IDE extensions) and **Anthropic Cowork**.
 
 Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
 
-[![Version](https://img.shields.io/badge/version-1.8.4-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.8.5-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](docs/CROSS-PLATFORM-GUIDE.md)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
-[![5 platforms](https://img.shields.io/badge/installs%20on-5%20platforms-success.svg)](docs/CROSS-PLATFORM-GUIDE.md)
 
 ```bash
-# Install — one line on any of 5 supported platforms
+# Install — one line
 /plugin marketplace add indranilbanerjee/neels-plugins
 /plugin install socialforge@neels-plugins
 ```
@@ -52,17 +51,14 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Installs on 5 coding-agent surfaces (one repo, no fork)
+## Supported surfaces
 
 | Platform | Install command | Status |
 |---|---|---|
-| **Claude Code** CLI + Desktop + **Anthropic Cowork** | `/plugin install socialforge@neels-plugins` | Full support (canonical) |
-| **OpenAI Codex** CLI | `codex plugin install indranilbanerjee/socialforge` | Skills + MCP + scripts |
-| **Cursor** IDE + CLI | `cursor plugin install indranilbanerjee/socialforge` | Skills + scripts; MCP via Cursor's global `mcp.json` (paste 8 of 10 connectors — Gmail + Google Calendar are Anthropic-hosted only) |
-| **GitHub Copilot CLI** | `copilot plugin install indranilbanerjee/socialforge` | Full support — auto-discovers `.claude-plugin/plugin.json` |
-| **Google Antigravity 2.0** CLI | `agy plugin install indranilbanerjee/socialforge` | **Experimental** — manifest will firm up as Antigravity publishes v2-native spec |
+| **Claude Code** CLI + IDE extensions | `/plugin install socialforge@neels-plugins` | Full support (canonical) |
+| **Anthropic Cowork** | Plugins UI → Add marketplace → `indranilbanerjee/neels-plugins` → Install SocialForge | Full support (same `.claude-plugin/` files; no `/plugin` slash commands in Cowork) |
 
-Agent Skills became an open standard (Dec 2025; adopted by 32+ tools by May 2026), so the same 16 SKILL.md files work everywhere. Full per-platform install guide: [`docs/CROSS-PLATFORM-GUIDE.md`](docs/CROSS-PLATFORM-GUIDE.md).
+OpenAI Codex / Cursor / GitHub Copilot CLI / Google Antigravity 2.0 support is on the roadmap. The v1.7 / v1.8 era manifests for those platforms were invented (did not match the platforms' actual install specs) and were removed in v1.8.5. Research is saved at `memory/{antigravity,codex}-plugin-spec-may-2026.md`; real build is deferred.
 
 ## Architecture
 
@@ -358,15 +354,11 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 
 ### Earlier (v1.8.1)
 
-**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + 5-platform install matrix + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→22 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
+**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→16 skills, 19→22 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
 
-### Earlier (v1.8.0)
+### Earlier (v1.8.0 + v1.7.0 — superseded by v1.8.5)
 
-**Install-surface expansion to 5 platforms.** SocialForge now installs cleanly on Claude Code + Cowork (canonical), OpenAI Codex, Cursor, **GitHub Copilot CLI** (no new manifest — Copilot CLI auto-discovers `.claude-plugin/plugin.json` as one of its accepted manifest paths; install: `copilot plugin install indranilbanerjee/socialforge`), and **Google Antigravity 2.0** (experimental `.antigravity/plugin.json` mirroring the Gemini-CLI-extensions importer format Antigravity's `agy plugin import gemini` accepts; will be updated against the v2-native spec when Google publishes it). Single `skills/`, single `scripts/`, single MCP catalog. Full per-platform install guide at [`docs/CROSS-PLATFORM-GUIDE.md`](docs/CROSS-PLATFORM-GUIDE.md). No breaking changes for existing Claude Code users.
-
-### Earlier (v1.7.0)
-
-**Cross-platform compatibility pack.** SocialForge added native manifests for **OpenAI Codex** and **Cursor** alongside the canonical Claude Code manifest, via two new sibling manifest files (`.codex-plugin/plugin.json` and `.cursor-plugin/plugin.json`) — same `skills/` directory, same `scripts/`, same `.mcp.json`, same `hooks/hooks.json`. Works because Agent Skills are an open standard (Dec 2025).
+v1.7.0 added `.codex-plugin/plugin.json` + `.cursor-plugin/plugin.json` and v1.8.0 added `.antigravity/plugin.json` + a GitHub Copilot CLI auto-discovery claim. **All four were removed in v1.8.5** after a May 2026 research pass confirmed those manifests did not match the platforms' actual install specs and would have failed real install attempts. Real OpenAI Codex / Cursor / GitHub Copilot CLI / Google Antigravity 2.0 support is on the roadmap (research saved at `memory/{antigravity,codex}-plugin-spec-may-2026.md`).
 
 ### Earlier (v1.6.0)
 
@@ -389,7 +381,6 @@ v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Wr
 ## Documentation
 
 - **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery (with real agency examples)
-- **[Cross-Platform Guide](docs/CROSS-PLATFORM-GUIDE.md)** — Use SocialForge on Codex, Cursor, Gemini CLI, Copilot, Windsurf
 - **[Technical Operations](docs/OPERATIONS.md)** — Pipeline logic, scoring algorithms, AI models, folder structures, cost tracking
 - **[Connectors](CONNECTORS.md)** — All 10 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists

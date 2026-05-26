@@ -13,14 +13,11 @@
 - [ ] Repository hygiene (CI, templates, dependency bump, refactor)
 - [ ] Other (explain):
 
-## Which platform(s) affected
+## Which surface(s) affected
 
-- [ ] Claude Code + Cowork (`.claude-plugin/plugin.json`)
-- [ ] OpenAI Codex (`.codex-plugin/plugin.json`)
-- [ ] Cursor (`.cursor-plugin/plugin.json`)
-- [ ] GitHub Copilot CLI (no manifest — auto-discovers `.claude-plugin/plugin.json`)
-- [ ] Google Antigravity 2.0 (`.antigravity/plugin.json`, experimental)
-- [ ] All / cross-platform
+- [ ] Claude Code (CLI + IDE extensions) via `.claude-plugin/plugin.json`
+- [ ] Anthropic Cowork (same `.claude-plugin/` files)
+- [ ] Both / either (text-only docs change)
 
 ## Checklist
 
@@ -29,7 +26,7 @@
 - [ ] My change does not break any existing skill, script, or command
 - [ ] I ran the relevant smoke test (e.g., `python3 scripts/<script>.py --help` exits 0 for any modified script)
 - [ ] I updated the matching docs / SKILL.md / CHANGELOG.md entry if behavior changed
-- [ ] I bumped the version in **all sibling manifests** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`, `.antigravity/`) if this is a release
+- [ ] I bumped the version in `.claude-plugin/plugin.json` if this is a release
 - [ ] I updated the README badge + "Current version" + "Release notes" if this is a release
 - [ ] My PR title follows the convention `vX.Y.Z: short description` for releases, or `fix:` / `feat:` / `docs:` / `chore:` prefix otherwise
 

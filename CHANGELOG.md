@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.5] - 2026-05-26
+
+**Honest positioning: removed invented multi-platform manifests. Zero functional change for Claude Code + Cowork users.**
+
+A May 2026 deep research pass (saved at `memory/antigravity-plugin-spec-may-2026.md` and `memory/codex-plugin-spec-may-2026.md`) confirmed that the v1.7 / v1.8 era `.codex-plugin/`, `.cursor-plugin/`, `.antigravity/` manifests and the GitHub Copilot CLI auto-discovery claim were all invented or unverified:
+
+- **Antigravity** uses `gemini-extension.json` at repo root — not `.antigravity/plugin.json`. Google's reference repo (`gemini-cli-extensions/data-agent-kit-starter-pack`) and the `agy plugin import gemini` migrator both confirm this.
+- **OpenAI Codex** uses the `.codex-plugin/plugin.json` path (that part was right), but the schema we hand-rolled was invented. The real schema is published at `developers.openai.com/codex/plugins/build`.
+- **Cursor** plugin format we shipped was not a real Cursor manifest path.
+- **GitHub Copilot CLI** auto-discovery of `.claude-plugin/plugin.json` was unverified.
+
+Honest position from v1.8.5 onwards: **Claude Code (CLI + IDE extensions) + Anthropic Cowork.** Real OpenAI Codex / Cursor / GitHub Copilot CLI / Google Antigravity 2.0 support is on the roadmap with research complete — build deferred.
+
+### Removed
+
+- `.antigravity/plugin.json` — wrong path entirely. Real Antigravity manifest is `gemini-extension.json` at repo root.
+- `.codex-plugin/plugin.json` — path was right, schema was invented and would fail real Codex install.
+- `.cursor-plugin/plugin.json` — invented format.
+- `docs/CROSS-PLATFORM-GUIDE.md` — documented install commands that did not work.
+
+### Changed
+
+- `.claude-plugin/plugin.json` — description rewritten to advertise Claude Code + Cowork only. Misleading keywords dropped (`openai-codex`, `cursor-plugin`, `github-copilot`, `antigravity`). Version bumped to 1.8.5.
+- `README.md` — hero, badge row, "Installs on 5 coding-agent surfaces" matrix, "Earlier (v1.8.0 + v1.7.0)" release-notes entry, and "Cross-Platform Guide" docs link all updated to reflect supported surfaces (Claude Code + Cowork). The "5 platforms" badge is gone.
+- `SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md` — section title "Plugin for Claude Code / Cowork / Antigravity" → "Plugin for Claude Code / Cowork". "Target Runtime" line, section 17.1, "For Antigravity specifically" block, and closing footer all updated to drop Antigravity install-surface claims. Gemini image-generation references (the actual image API SocialForge uses for Vertex AI Nano Banana Pro) are unchanged — those are model references, not install claims.
+- `.github/PULL_REQUEST_TEMPLATE.md` — platform-checkbox list reduced to Claude Code + Cowork.
+- `SECURITY.md` — scope + reporting fields updated to Claude Code + Cowork only.
+
+### Not changed
+
+- Zero changes to `skills/`, `commands/`, `agents/`, `scripts/`, `hooks/hooks.json`, `.mcp.json`, `.mcp.json.connectors-reference`. SocialForge behavior in Claude Code + Cowork is byte-identical to v1.8.4.
+- 16 skills, 25 commands, 5 agents, 22 scripts, 10 HTTP MCP connectors, shared model curator — all unchanged.
+- C2PA signing (`scripts/c2pa_sign.py`), image generation (Vertex AI Nano Banana Pro), and video generation (WaveSpeed Kling v3.0 Pro) flows untouched.
+- Historical CHANGELOG entries for v1.7.0, v1.8.0, v1.8.1 are intact below — they describe what was shipped at the time. v1.8.5 is the correction.
+
+### Verified
+
+- `.claude-plugin/plugin.json` parses cleanly (`python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"`).
+
 ## [1.8.4] - 2026-05-25
 
 **Corrects an inaccuracy in the v1.8.3 README callout.** v1.8.3 said the `/plugin isn't available in this environment` error applies to **claude.ai web chat**. User correction: it also applies to the **Claude Desktop app**. The actual rule: `/plugin` slash commands are supported only in **Claude Code** (CLI / IDE at claude.com/code) and **Anthropic Cowork** — not in the standard Claude chat app, whether browser OR installed desktop. Same correction as CF v3.12.6 + DMP v3.7.9.

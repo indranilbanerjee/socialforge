@@ -7,32 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.9.1] - 2026-05-27 (hotfix)
+## [1.9.1] - 2026-05-27 (catalog addition + corrected positioning)
 
-**Cowork install hazard fix: empty `.mcp.json` so plugin enable doesn't cascade 10 OAuth prompts.**
+**Correction (also 2026-05-27)**: the original v1.9.1 release notes framed this as a Cowork install hazard fix from a populated `.mcp.json`. That framing was wrong. `.mcp.json` is gitignored in this repo (so credentials never get committed) — my local file had drifted to a populated state, but the published install bundle has never contained `.mcp.json` at all. The published v1.9.0 install state was already Cowork-safe.
 
-Live Cowork readiness testing surfaced two bugs the v1.9.0 release didn't catch:
+What this release **does** actually add (genuine value):
 
-1. **`.mcp.json` was populated with 10 auto-connecting HTTP MCPs** (notion, canva, slack, gmail, google-calendar, figma, fal-ai, replicate, asana, cloudinary). Cowork would auto-connect all 10 on plugin enable → cascade of OAuth prompts → broken UX. The plugin description has claimed "0 global hooks" + opt-in MCP catalog — the live `.mcp.json` had silently drifted (this is the original state from March 2026 that was never cleaned up the way ContentForge was in v3.9.0). This release matches reality to the documented zero-auto-connect policy.
-2. **Two of those URLs were stale** (`gmail.mcp.claude.com`, `gcal.mcp.claude.com`) — both retired May 2026 and now return HTTP 404. Even if a user authorized those connectors, they would fail to connect.
+- **NEW `.mcp.json.connectors-reference`** file — previously SocialForge only shipped `.mcp.json.example` (older naming convention); now it matches DMP and CF's naming pattern. 10 connectors (notion, canva, figma, slack, gmail, google-calendar, fal-ai, replicate, asana, cloudinary) catalogued with **corrected Gmail and Calendar URLs** (`gmailmcp.googleapis.com/mcp/v1` and `calendarmcp.googleapis.com/mcp/v1` — the old `.claude.com` URLs were retired May 2026 and would 404). Users opting in to specific connectors can now copy from `.mcp.json.connectors-reference` and not hit the stale-URL trap.
+- Version bumped to 1.9.1 across all 5 manifests for marketplace coordination with DMP v3.8.1 and marketplace v3.7.1.
 
-### Fixed
+### What did NOT change
 
-- `.mcp.json` is now `{"_readme": "...", "mcpServers": {}}` matching the documented zero-auto-connect policy (same pattern ContentForge has used since v3.9.0 and DMP adopts in v3.8.1).
-- **Created `.mcp.json.connectors-reference`** (was missing — SF only had `.mcp.json.example` previously). The 10-entry catalog with corrected Gmail (`gmailmcp.googleapis.com/mcp/v1`) and Calendar (`calendarmcp.googleapis.com/mcp/v1`) URLs is now in `.mcp.json.connectors-reference`, matching the file-naming convention DMP and CF use.
-- Version bumped to 1.9.1 across all 5 manifests.
+- Skills (16), agents (5), commands (25), scripts (22), hooks — all unchanged
+- v1.9.0's 5-surface native manifests untouched
+- C2PA signing, Vertex AI Nano Banana Pro image gen, WaveSpeed Kling video gen flows untouched
+- Plugin behavior on Cowork install byte-identical to v1.9.0 (the published artifact was already Cowork-safe)
 
-### Not changed
+### Lesson recorded to memory
 
-- Zero changes to skills, agents, commands, scripts, hooks. This is a one-file fix to one JSON file that was silently populated since March 2026.
-- v1.9.0's 5-surface native manifests (Codex / Cursor / Copilot CLI / Antigravity) all unchanged.
-- C2PA signing, Vertex AI Nano Banana Pro image gen, WaveSpeed Kling video gen flows untouched.
-
-### Verified
-
-- Post-fix `.mcp.json` is `{"mcpServers": {}}` — zero auto-connecting MCPs (Cowork-safe install).
-- 10-entry catalog (with corrected URLs) in new `.mcp.json.connectors-reference`.
-- All other manifests still parse cleanly.
+`.mcp.json` is gitignored across all 3 plugins so credentials never get committed. Future "Cowork install hazard" checks must inspect the published GitHub artifact, not local dev state.
 
 ## [1.9.0] - 2026-05-27
 

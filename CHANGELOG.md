@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.1] - 2026-05-27 (hotfix)
+
+**Cowork install hazard fix: empty `.mcp.json` so plugin enable doesn't cascade 10 OAuth prompts.**
+
+Live Cowork readiness testing surfaced two bugs the v1.9.0 release didn't catch:
+
+1. **`.mcp.json` was populated with 10 auto-connecting HTTP MCPs** (notion, canva, slack, gmail, google-calendar, figma, fal-ai, replicate, asana, cloudinary). Cowork would auto-connect all 10 on plugin enable → cascade of OAuth prompts → broken UX. The plugin description has claimed "0 global hooks" + opt-in MCP catalog — the live `.mcp.json` had silently drifted (this is the original state from March 2026 that was never cleaned up the way ContentForge was in v3.9.0). This release matches reality to the documented zero-auto-connect policy.
+2. **Two of those URLs were stale** (`gmail.mcp.claude.com`, `gcal.mcp.claude.com`) — both retired May 2026 and now return HTTP 404. Even if a user authorized those connectors, they would fail to connect.
+
+### Fixed
+
+- `.mcp.json` is now `{"_readme": "...", "mcpServers": {}}` matching the documented zero-auto-connect policy (same pattern ContentForge has used since v3.9.0 and DMP adopts in v3.8.1).
+- **Created `.mcp.json.connectors-reference`** (was missing — SF only had `.mcp.json.example` previously). The 10-entry catalog with corrected Gmail (`gmailmcp.googleapis.com/mcp/v1`) and Calendar (`calendarmcp.googleapis.com/mcp/v1`) URLs is now in `.mcp.json.connectors-reference`, matching the file-naming convention DMP and CF use.
+- Version bumped to 1.9.1 across all 5 manifests.
+
+### Not changed
+
+- Zero changes to skills, agents, commands, scripts, hooks. This is a one-file fix to one JSON file that was silently populated since March 2026.
+- v1.9.0's 5-surface native manifests (Codex / Cursor / Copilot CLI / Antigravity) all unchanged.
+- C2PA signing, Vertex AI Nano Banana Pro image gen, WaveSpeed Kling video gen flows untouched.
+
+### Verified
+
+- Post-fix `.mcp.json` is `{"mcpServers": {}}` — zero auto-connecting MCPs (Cowork-safe install).
+- 10-entry catalog (with corrected URLs) in new `.mcp.json.connectors-reference`.
+- All other manifests still parse cleanly.
+
 ## [1.9.0] - 2026-05-27
 
 **Real native manifests for 5 verified agent surfaces.** Ships verified-real manifests for OpenAI Codex, Google Antigravity 2.0, Cursor 2.5+, and GitHub Copilot CLI — replacing the v1.7/v1.8 era invented manifests that were correctly removed in v1.8.5.

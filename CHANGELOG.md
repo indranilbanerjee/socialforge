@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.10.0] - 2026-05-27
+
+**Distribution & context-efficiency polish — discoverability + leaner asset-skill loads.**
+
+### Changed
+
+- **Plugin descriptions trimmed to ~150 chars across all 5 manifests** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`, `.github/plugin/`, `gemini-extension.json`). Install-UI now reads as one clear sentence across Claude Code, Codex, Cursor, Copilot CLI, and Antigravity. Long-form positioning lives in README + `interface.longDescription` (Codex). Inspired by the Understand-Anything distribution pattern (35k★).
+- **README hero rewritten pain-first.** Opens with the real scenario the plugin solves ("Your client wants 30 days of social content across six platforms with brand-faithful imagery, AI-generated video, and provenance signed for EU markets…") then states what the plugin does.
+- **GitHub repo topics curated to 20-max with platform-skill topics added**: `cursor-plugin`, `copilot-cli-plugin`, `gemini-cli-extension` joined `claude-code` / `claude-plugin` / `openai-codex` / `agent-skills` for discoverability via GitHub's topic browser.
+- **Context-efficiency callout added to all 10 skills** (`setup`, `brand-manager`, `compose-creative`, `c2pa-sign`, `full-pipeline`, `generate-video`, `index-assets`, `match-assets`, `parse-calendar`, `adapt-copy`). Tells the agent to grep-before-read the asset catalog at `${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json` rather than listing the asset directory, and to reference generated images / videos by path (not by loading metadata into context). Brand profile loads once per session.
+
+### Unchanged
+
+- 16 skills, 25 commands, 5 agents, 22 scripts, 10 HTTP MCP connectors, 0 global hooks
+- Four creative modes (ANCHOR_COMPOSE / ENHANCE_EXTEND / STYLE_REFERENCED / PURE_CREATIVE)
+- AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), 7-platform copy adaptation
+- C2PA content provenance signing for EU AI Act Article 50 compliance
+- Shared model curator
+- v1.9.0's 5-surface native manifests untouched aside from version bump + description trim
+- Zero global hooks, zero auto-connecting MCPs (`.mcp.json` remains gitignored)
+
+### How to update
+
+```bash
+/plugin update socialforge@neels-plugins
+/reload-plugins
+```
+
+If on Cowork / claude.ai / Desktop: Plugins panel → Update.
+
+---
+
 ## [1.9.1] - 2026-05-27 (catalog addition + corrected positioning)
 
 **Correction (also 2026-05-27)**: the original v1.9.1 release notes framed this as a Cowork install hazard fix from a populated `.mcp.json`. That framing was wrong. `.mcp.json` is gitignored in this repo (so credentials never get committed) — my local file had drifted to a populated state, but the published install bundle has never contained `.mcp.json` at all. The published v1.9.0 install state was already Cowork-safe.

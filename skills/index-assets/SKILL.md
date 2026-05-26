@@ -10,6 +10,10 @@ user-invocable: true
 
 Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by Gemini Vision to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## How It Works
 
 1. **Locate assets** — Read asset-source.json for the brand's photo library location

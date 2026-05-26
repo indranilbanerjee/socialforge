@@ -1,10 +1,12 @@
 # SocialForge — Social Media Calendar Automation
 
-**Open-source agency-grade social media production engine** — calendar parsing, asset-first compositing, **AI image generation (Vertex AI Nano Banana Pro)**, **AI video generation (WaveSpeed Kling v3.0 Pro)**, multi-platform copy adaptation, human-in-the-loop review galleries, and **C2PA content provenance signing for EU AI Act Article 50 compliance** (applicable 2 Aug 2026). **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks.** **Installs on 5 verified agent surfaces** from a single source repo: **Claude Code** (CLI + IDE extensions), **Anthropic Cowork**, **OpenAI Codex** (CLI + IDE + App), **Cursor 2.5+**, **GitHub Copilot CLI**, and **Google Antigravity 2.0** (CLI + IDE).
+> **Your client wants 30 days of social content across six platforms with brand-faithful imagery, AI-generated video, and provenance signed for EU markets. You have five days. The last calendar got rejected because the product photo got "AI-enhanced" beyond recognition.**
 
-Built for agencies and in-house teams running monthly content calendars across Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts. Created by [Indranil Banerjee](https://indranil.in).
+Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:review`. Asset-first compositing keeps brand photos pixel-faithful while AI generates the scene around them. Per-platform copy adaptation handles Instagram + TikTok + LinkedIn + Threads + X + Facebook + YouTube Shorts in one pass. C2PA signing happens before review. No more "AI enhanced our logo into something else" disasters.
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](CHANGELOG.md)
+Open-source agency-grade social media production engine — **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, and **Google Antigravity 2.0**. Created by [Indranil Banerjee](https://indranil.in).
+
+[![Version](https://img.shields.io/badge/version-1.10.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
@@ -51,7 +53,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.9.0)
+## Supported surfaces (v1.10.0)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|

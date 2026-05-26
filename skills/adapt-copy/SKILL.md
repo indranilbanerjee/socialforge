@@ -10,6 +10,10 @@ user-invocable: true
 
 Transform a single caption brief into platform-optimized copy for each target platform.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## Process (Per Post x Per Platform)
 
 1. Load post brief (topic, caption_brief, CTA, hashtags, campaign)

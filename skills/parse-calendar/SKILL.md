@@ -10,6 +10,10 @@ user-invocable: true
 
 Parse a monthly social media content calendar into structured JSON that drives the entire production pipeline.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## Supported Formats
 
 | Format | How It Works |

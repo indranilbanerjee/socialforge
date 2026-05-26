@@ -10,6 +10,10 @@ user-invocable: true
 
 The core production skill. Takes asset matching results and produces visual and video assets for each post according to its assigned creative mode, using a staged human-in-the-loop approval flow.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## The 4 Creative Modes
 
 ### MODE 1: ANCHOR_COMPOSE

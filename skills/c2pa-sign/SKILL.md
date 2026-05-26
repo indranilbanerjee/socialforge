@@ -7,6 +7,10 @@ description: "Embed C2PA (Content Authenticity Initiative) provenance manifests 
 
 ## Purpose
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 Wraps `scripts/c2pa_sign.py` to add a **C2PA manifest** to any SocialForge-generated marketing asset. The manifest carries:
 
 - Machine-readable provenance trail (brand, generator name, timestamp, prompt, target platform)

@@ -1,7 +1,7 @@
 {
   "name": "socialforge",
-  "version": "1.9.1",
-  "description": "Open-source agency-grade social media production engine — calendar parsing, asset-first compositing, AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. 16 skills, 25 commands, 5 agents, 22 scripts, 10 HTTP MCP connectors. Four creative modes (ANCHOR_COMPOSE / ENHANCE_EXTEND / STYLE_REFERENCED / PURE_CREATIVE). v1.9.0 (2026-05-27): native OpenAI Codex manifest with real published schema (replaces the invented schema correctly removed in v1.8.5). Same skills/ directory shared with .claude-plugin/ and gemini-extension.json (Agent Skills open standard).",
+  "version": "1.10.0",
+  "description": "Open-source social media engine — asset-first compositing, AI image+video, 7-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
   "author": {
     "name": "Indranil Banerjee",
     "url": "https://github.com/indranilbanerjee"
@@ -24,8 +24,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "SocialForge",
-    "shortDescription": "Agency-grade social media production engine — calendar parsing, asset-first compositing, AI image + video generation, C2PA signing.",
-    "longDescription": "SocialForge brings a complete monthly social media production pipeline to OpenAI Codex via 16 portable Agent Skills. Take monthly content calendars, match brand assets, generate AI-composed creative (Vertex AI Nano Banana Pro), render carousels, produce AI-generated video clips (WaveSpeed Kling v3.0 Pro), adapt copy per platform (Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts), produce review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery. Four creative modes: ANCHOR_COMPOSE (brand photo is centerpiece, AI generates scene around it), ENHANCE_EXTEND (brand photo is base, AI extends periphery), STYLE_REFERENCED (AI generates using brand's style reference photos as visual DNA), PURE_CREATIVE (AI generates from text prompt + brand colors/mood). 10 opt-in HTTP MCP connectors (all Cowork-compatible). Zero global hooks.",
+    "shortDescription": "Open-source social media engine — asset-first compositing, AI image+video, 7-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
+    "longDescription": "16 skills + 25 commands + 5 agents + 22 scripts + 10 HTTP MCP connectors. Asset-first compositing (brand assets are sacred, AI is the creative layer around them). AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), 7-platform copy adaptation (Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts), human-in-the-loop review galleries, C2PA content provenance signing for EU AI Act Article 50. Portable across Claude Code, Codex, Cursor, and Antigravity via the Agent Skills open standard.",
     "developerName": "Indranil Banerjee",
     "category": "Productivity",
     "capabilities": [

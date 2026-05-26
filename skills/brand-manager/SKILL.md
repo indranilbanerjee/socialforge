@@ -10,6 +10,10 @@ user-invocable: true
 
 Set up a new brand profile or update an existing one. Brand profiles control visual identity, platform config, compliance rules, approval chains, and asset sources for all SocialForge workflows.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## Pre-Requisite: Image Generation API
 
 SocialForge generates AI images for social media posts. Before setting up a brand, check that Google Cloud Vertex AI credentials are configured.

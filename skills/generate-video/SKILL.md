@@ -10,6 +10,10 @@ user-invocable: true
 
 Generate video production assets through a 5-stage human-in-the-loop pipeline. Each stage requires user approval before advancing.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## Prerequisites
 
 - Credentials must be configured via `/socialforge:setup`:

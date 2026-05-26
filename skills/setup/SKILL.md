@@ -10,6 +10,10 @@ user-invocable: true
 
 One-time setup that stores credentials persistently. Run once, works forever across all sessions.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## What This Does
 
 Configures two services that SocialForge needs for creative production:

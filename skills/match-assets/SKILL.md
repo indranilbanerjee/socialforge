@@ -10,6 +10,10 @@ user-invocable: true
 
 Match brand assets to parsed calendar posts using the multi-factor scoring algorithm. Assigns one of 4 creative modes per post.
 
+## Context efficiency
+
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+
 ## Prerequisites
 - Calendar parsed (calendar-data.json exists)
 - Asset index built (asset-index.json exists)

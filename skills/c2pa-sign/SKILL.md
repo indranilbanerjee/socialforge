@@ -21,6 +21,16 @@ Wraps `scripts/c2pa_sign.py` to add a **C2PA manifest** to any SocialForge-gener
 
 The resulting asset is verifiable at [contentcredentials.org/verify](https://contentcredentials.org/verify) or in any C2PA-aware viewer (Adobe Photoshop, Lightroom, Truepic, Microsoft Copilot, etc.).
 
+### C2PA spec versions relevant to SocialForge (June 2026)
+
+- **Content Credentials 2.3** (released 9 February 2026 — [launch post](https://c2pa.org/the-c2pa-launches-content-credentials-2-3-and-celebrates-5-years-of-impact-across-the-digital-ecosystem/)) added support for **live video** (broadcast/streaming), **plain text documents**, **OGG Vorbis audio**, **large AVI video files**, and **EXIF Original Preservation Images**. Relevant to SocialForge because:
+  - Live video signing matters if you're producing Reels / TikTok / Shorts streaming content alongside the planned monthly batch.
+  - EXIF Original Preservation Image format is the cleanest path for signing product photography that the brand wants to preserve through ad ops cropping.
+- **C2PA Spec 2.4** (April 2026 — [spec.c2pa.org/specifications/specifications/2.4](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html)) introduces the **AI Disclosure Assertion (`c2pa.ai-disclosure`)** — machine-readable AI transparency info that the EU AI Act Article 50 deployer pathway will read. When `c2pa_sign.py` is on a C2PA SDK ≥ 0.36 that handles 2.4, include this assertion alongside the existing IPTC + schema.org tags. The combination is what the **EU Code of Practice WG1/WG2** drafts reference as the canonical machine-readable mark.
+- **C2PA Trust List** is now handled via the public C2PA Conformance Program — production signing certificates should come from a Conformance-Program-listed CA.
+
+For the regulatory context (EU Article 50 voluntary Code of Practice, WG1 providers vs WG2 deployers split, where SocialForge falls), see Digital Marketing Pro's `skills/context-engine/eu-code-of-practice.md` — this is shared regulatory knowledge across the Neelverse Marketing Suite.
+
 ## When SocialForge invokes this automatically
 
 If a brand profile sets `c2pa_auto_sign: true`, the image and video generation pipelines call this script as a post-generation step before delivering the asset. The signed file replaces the unsigned one — original output path is preserved.

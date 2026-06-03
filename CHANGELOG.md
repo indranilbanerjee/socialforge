@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.11.0] - 2026-06-04
+
+**C2PA 2.3 / 2.4 spec refresh — live video, plain text, OGG Vorbis, large AVI, EXIF formats + `c2pa.ai-disclosure` assertion.**
+
+### Changed
+
+- **`skills/c2pa-sign/SKILL.md`** — added C2PA Content Credentials 2.3 (released 9 February 2026) expanded format support: live video for broadcast/streaming, plain text documents, OGG Vorbis audio, large AVI video, EXIF Original Preservation Images. Relevant for Reels / TikTok / Shorts streaming workflows and product photography. Also added C2PA Spec 2.4 (April 2026) `c2pa.ai-disclosure` assertion — machine-readable AI transparency info that the EU AI Act Article 50 deployer pathway will read. When the underlying `c2pa_sign.py` is on a C2PA SDK ≥ 0.36 that handles 2.4, the new assertion should be embedded alongside the existing IPTC + schema.org tags. Cross-references to DMP's new `skills/context-engine/eu-code-of-practice.md` for the regulatory context (WG1 providers / WG2 deployers / final code targeted May–June 2026 / Article 50 applicable 2 Aug 2026).
+- **Trust List** — now handled via the public C2PA Conformance Program (any CA meeting the Certificate Policy can join). Production signing certs should come from a Conformance-Program-listed CA.
+
+Sources: [C2PA 2.3 launch post 9 Feb 2026](https://c2pa.org/the-c2pa-launches-content-credentials-2-3-and-celebrates-5-years-of-impact-across-the-digital-ecosystem/), [C2PA Spec 2.4](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), [EU Code of Practice page 22 May 2026](https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content).
+
+### Unchanged
+
+- 16 skills, 25 commands, 5 agents, 22 scripts, 10 HTTP MCP connectors, 0 global hooks
+- Four creative modes, AI image (Nano Banana Pro), AI video (Kling v3.0 Pro), 7-platform copy adaptation
+- All v1.10.0 distribution polish + manifests untouched aside from version bump
+
+### How to update
+
+```bash
+/plugin update socialforge@neels-plugins
+/reload-plugins
+```
+
+If on Cowork / claude.ai / Desktop: Plugins panel → Update.
+
+---
+
 ## [1.10.0] - 2026-05-27
 
 **Distribution & context-efficiency polish — discoverability + leaner asset-skill loads.**

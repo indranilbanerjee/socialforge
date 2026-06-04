@@ -4,7 +4,7 @@
 
 Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:review`. Asset-first compositing keeps brand photos pixel-faithful while AI generates the scene around them. Per-platform copy adaptation handles Instagram + TikTok + LinkedIn + Threads + X + Facebook + YouTube Shorts in one pass. C2PA signing happens before review. No more "AI enhanced our logo into something else" disasters.
 
-Open-source agency-grade social media production engine — **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, and **Google Antigravity 2.0**. Created by [Indranil Banerjee](https://indranil.in).
+Open-source agency-grade social media production engine — **16 skills · 25 commands · 5 agents · 22 scripts · 10 HTTP MCP connectors · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, and **Google Antigravity 2.0**. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
 [![Version](https://img.shields.io/badge/version-1.11.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -354,7 +354,15 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#11-where-your-data-lives) for details.
 
-## Current Release (v1.8.2)
+## Current Release (v1.11.0)
+
+**C2PA 2.3 / 2.4 spec refresh — June 4, 2026.** `skills/c2pa-sign/SKILL.md` updated for **C2PA Content Credentials 2.3** (released 9 February 2026) expanded format support: live video for broadcast/streaming, plain text documents, OGG Vorbis audio, large AVI video files, EXIF Original Preservation Images. Relevant for Reels / TikTok / Shorts streaming workflows and product photography preservation. Also added **C2PA Spec 2.4** (April 2026) **AI Disclosure Assertion (`c2pa.ai-disclosure`)** — machine-readable AI transparency info that the EU AI Act Article 50 deployer pathway will read. When `c2pa_sign.py` is on a C2PA SDK ≥ 0.36, embed the assertion alongside existing IPTC + schema.org tags. Trust List now via the public **C2PA Conformance Program**. Cross-references DMP v3.10.0's new `skills/context-engine/eu-code-of-practice.md` for the regulatory context (WG1 providers / WG2 deployers / final code targeted May–June 2026 / Article 50 applicable 2 Aug 2026).
+
+### Earlier (v1.10.0 — distribution & context-efficiency polish, 2026-05-27)
+
+Trimmed install-UI descriptions to ~150 chars across all 5 platform manifests. Rewrote README hero pain-first. Added platform-skill GitHub topics. Inserted context-efficiency callouts in all 10 heaviest skills (grep-before-read pattern, `${CLAUDE_PLUGIN_DATA}` directory-list-before-open, offset+limit on partial reads).
+
+### Earlier (v1.8.2)
 
 **Model curator + correctness sweep.** Adds the shared model-selection infrastructure (`scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`, see [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md)) so model ids are no longer hardcoded across image / edit / vision / video scripts. Replaced deprecated `gemini-2.0-flash` (×1), `gemini-2.0-flash-exp-image-generation` (×1), and `veo-2.0-generate-001` (×2) with curator-resolved defaults; added `--model` / `--video-model` / `--list-models` flags. Fixed the dead `cloud.higgsfield.ai/api-keys` URL in README + setup SKILL. Replaced dead `gmail.mcp.claude.com` / `gcal.mcp.claude.com` / `drive.mcp.claude.com` MCP URLs with the working Google-hosted equivalents. Swept shorthand `/sf:X` slash refs to canonical `/socialforge:X`. Fixed a pre-existing arg-order bug in the Kling call site (aspect_ratio was being passed as duration).
 

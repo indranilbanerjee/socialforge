@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.12.1] - 2026-06-09
+
+**Test-infrastructure polish — release-consistency suite + description sharpening.**
+
+A short follow-up to v1.12.0 that hardens the release pipeline against the kinds of cross-manifest drift that escaped earlier ships. Inspired by DMP's v3.13.1 polish round.
+
+### Added — Release-consistency test suite (`tests/test_release_consistency.py`, +31 tests)
+
+The suite catches drift before it reaches users by checking:
+- All 7 platform manifest versions are in sync (5 Claude-family + Hermes `plugin.yaml` + OpenClaw)
+- The Hermes `__init__.py` `PLUGIN_VERSION` constant matches the canonical version
+- The README version badge matches the canonical version
+- The README `## Supported surfaces (vX.Y.Z)` section heading matches the canonical version
+- The README `## Current Release (vX.Y.Z)` section heading matches the canonical version
+- The README "Just shipped — vX.Y.Z" hero callout matches the canonical version
+- The CHANGELOG's most recent `## [X.Y.Z]` header matches the canonical version
+- All 5 Claude-family manifest descriptions are byte-identical
+- Every Claude-family description mentions the actual `16 skills` count
+- The README test-count badge matches the actual count of `def test_*` methods
+- All 7 native platform install commands appear verbatim in the README
+- 12 critical README sections (Core Principle, Four Creative Modes, Quick Start, Supported surfaces, Architecture, Installation, First-Time Setup, Video Generation, Connectors, Storage, Current Release, plus an 8-platform name-mention check) are present
+- Every internal anchor link in the README resolves to a real heading
+
+Test count: 23 → **54**. All passing.
+
+### Fixed
+
+- README hero callout, version badge, and Current Release section heading now lock-step with `plugin.json` canonical version (caught by the new tests)
+- Broken internal anchor `#current-release-v182` (pointed at a renamed v1.8.2 section) re-pointed at the live Current Release section
+- Plugin descriptions across all 5 Claude-family manifests (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`, `.github/plugin/`, `gemini-extension.json`) now lead with `16 skills` — improves marketplace search relevance + lets the consistency test enforce the count going forward
+
+### Changed
+
+- README test badge bumped: `tests-23%2F23` → `tests-54%2F54`
+- README hero "Just shipped" callout updated to mention v1.12.1 + new test count
+- All 8 version declarations bumped to 1.12.1: `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.github/plugin/plugin.json`, `gemini-extension.json`, `openclaw.plugin.json`, `plugin.yaml`, `__init__.py`
+
+### Why this matters
+
+The v1.12.0 ship had a stale internal anchor and an undiscoverable skill count in plugin search descriptions. Both are now structurally prevented by `python -m unittest discover -s tests`. Zero runtime behavior change.
+
+---
+
 ## [1.12.0] - 2026-06-09
 
 **Multi-harness expansion: native Hermes Agent + native OpenClaw + test suite.**

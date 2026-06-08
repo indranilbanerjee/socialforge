@@ -2,7 +2,7 @@
   "id": "socialforge",
   "name": "SocialForge",
   "description": "Open-source agency-grade social media production plugin — 16 skills, 25 commands, asset-first compositing + AI image (Vertex AI Nano Banana Pro) + AI video (Kling v3.0 Pro) + C2PA signing (EU AI Act Article 50 ready).",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "skills": ["./skills"],
   "configSchema": {
     "type": "object",

@@ -406,6 +406,7 @@ v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Wr
 - **[Technical Operations](docs/OPERATIONS.md)** — Pipeline logic, scoring algorithms, AI models, folder structures, cost tracking
 - **[Connectors](CONNECTORS.md)** — All 10 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
+- **[X/Twitter Research Intake](references/x-twitter-research-intake.md)** - Optional TweetClaw source workflow for reactive posts and X copy evidence
 - **[Contributing](CONTRIBUTING.md)** — How to contribute to SocialForge
 - **[Troubleshooting](references/troubleshooting.md)** — Common issues and fixes
 - **[Changelog](CHANGELOG.md)** — Release history

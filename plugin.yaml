@@ -1,0 +1,27 @@
+# Hermes Agent native plugin manifest.
+#
+# This file is read ONLY by Hermes Agent (Nous Research). Claude Code, Cowork,
+# OpenAI Codex, Cursor, GitHub Copilot CLI, Google Antigravity, and OpenClaw
+# all read their own manifest paths and ignore this file. See README.md
+# "Supported surfaces" for per-platform install commands.
+#
+# Spec source: https://hermes-agent.nousresearch.com/docs/guides/build-a-hermes-plugin
+# Tested against: Hermes Desktop v0.15.2 (June 2026 public preview)
+#
+# Install for Hermes users:
+#   hermes plugins install indranilbanerjee/socialforge
+
+name: socialforge
+version: 1.12.0
+description: >-
+  Open-source agency-grade social media production plugin. 16 skills, 25
+  commands, asset-first compositing + AI image (Vertex AI Nano Banana Pro) +
+  AI video (Kling v3.0 Pro) + C2PA signing (EU AI Act Article 50 ready).
+  Now native on Hermes.
+author: Indranil Banerjee
+license: MIT
+homepage: https://github.com/indranilbanerjee/socialforge
+
+provides_tools: []
+provides_hooks: []
+requires_env: []

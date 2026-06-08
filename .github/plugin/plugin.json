@@ -1,7 +1,7 @@
 {
   "name": "socialforge",
   "description": "Open-source social media engine — asset-first compositing, AI image+video, 7-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "author": {
     "name": "Indranil Banerjee",
     "email": "neel@neelverse.com",

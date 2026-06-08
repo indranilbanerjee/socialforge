@@ -53,7 +53,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.11.0)
+## Supported surfaces (v1.12.0)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -63,8 +63,12 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | **Cursor 2.5+** | In any Cursor Agent chat: `/add-plugin socialforge@https://github.com/indranilbanerjee/socialforge` | `.cursor-plugin/plugin.json` (verified Cursor 2.5+ JSON Schema) | Full skills + agents + commands support |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add indranilbanerjee/neels-plugins` then `copilot plugin install socialforge@neels-plugins` | `.github/plugin/plugin.json` (Copilot also recognizes `.claude-plugin/plugin.json` as fallback) | Full skills + MCP support |
 | **Google Antigravity 2.0** CLI + IDE | `agy plugin install https://github.com/indranilbanerjee/socialforge` | `gemini-extension.json` (at repo root, per Google's reference pattern) | Full skills + hooks support |
+| **Hermes Agent** (Nous Research) — Desktop + CLI on macOS / Windows / Linux | `hermes plugins install indranilbanerjee/socialforge` | `plugin.yaml` + `__init__.py` at repo root (Hermes native spec) | Native plugin — adapter walks `skills/` at register time and exposes all 16 skills via `ctx.register_skill()`. Targets Hermes Desktop v0.15.2+ (public preview June 2 2026). |
+| **OpenClaw** (formerly Clawdbot / Moltbot) | `openclaw plugins install git:github.com/indranilbanerjee/socialforge` | `openclaw.plugin.json` at repo root (also auto-detects `.claude-plugin/plugin.json` as Claude-compatible bundle) | Native plugin via `openclaw.plugin.json`; `skills` field points at `./skills`. |
 
-**Why this works:** Agent Skills became an open standard in December 2025 (~40 agent products by May 2026). All 16 SKILL.md files in SocialForge are platform-portable as written.
+**Why this works:** Agent Skills became an open standard in December 2025 (41+ agent products by June 2026). All 16 SKILL.md files in SocialForge are platform-portable as written.
+
+**Works on 35+ additional Agent Skills platforms** without per-platform manifests — Goose (Block), OpenHands, OpenCode (sst), Junie (JetBrains), Gemini CLI, Roo Code, Cline/Windsurf, Kiro, Amp, Letta, Mux, Factory, Workshop, Tabnine, Mistral Vibe, and more. Point any Agent-Skills-compatible client at `https://github.com/indranilbanerjee/socialforge/tree/main/skills` and all 16 SocialForge skills are immediately discoverable.
 
 ## Architecture
 

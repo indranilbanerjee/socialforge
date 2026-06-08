@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.12.0] - 2026-06-09
+
+**Multi-harness expansion: native Hermes Agent + native OpenClaw + test suite.**
+
+Brings SocialForge into parity with DMP v3.13.0+ on cross-platform support. Every claim verified against primary platform docs.
+
+### Added — Native Hermes Agent plugin
+
+- **`plugin.yaml`** at repo root with required fields (name, version, description, author, license, homepage). Zero env vars, zero global hooks.
+- **`__init__.py`** at repo root exposing `register(ctx)` that Hermes calls at plugin load. Walks the `skills/` directory and exposes all 16 SocialForge skills via `ctx.register_skill(name, path)`. Defensive coding throughout — stdlib only; if Hermes API differs from spec, the adapter logs and degrades gracefully instead of crashing. Includes an `audit()` introspection function for pre-install sanity checks.
+- Install command: `hermes plugins install indranilbanerjee/socialforge`.
+- Spec source: https://hermes-agent.nousresearch.com/docs/guides/build-a-hermes-plugin
+- Targets Hermes Desktop v0.15.2 (public preview June 2 2026).
+
+### Added — Native OpenClaw manifest
+
+- **`openclaw.plugin.json`** at repo root with required `id` + `configSchema`, optional `name`/`description`/`version`/`skills: ["./skills"]`. OpenClaw auto-detects our existing `.claude-plugin/plugin.json` as a Claude-compatible bundle fallback, but shipping the native manifest enables ClawHub marketplace eligibility + first-class discoverability.
+- Install command: `openclaw plugins install git:github.com/indranilbanerjee/socialforge`.
+- Spec source: https://docs.openclaw.ai/plugins/manifest
+
+### Added — Test suite (0 → 23, all passing)
+
+- **`tests/test_hermes_adapter.py`** (12 tests) covering plugin.yaml schema (name / version / semver / description / provides_hooks: [] / requires_env: []), adapter import smoke, `register()` against mock ctx (all skills register), graceful degradation when ctx is missing register_skill / is None, version consistency between plugin.yaml and __init__.py.
+- **`tests/test_openclaw_manifest.py`** (11 tests) covering manifest existence, id required + kebab-case + matches Claude plugin name, configSchema validation, skills field points at ./skills directory that exists, version matches canonical Claude plugin, no unexpected top-level fields, cross-manifest version consistency.
+- `tests/run_all.py` runs everything: `python tests/run_all.py` → 23/23 passing.
+
+### Changed
+
+- All 5 platform manifests bumped to v1.12.0. Description (where it changes) reflects new Hermes + OpenClaw support.
+- README "Supported surfaces" table now has 8 rows (added Hermes Agent + OpenClaw).
+- Added "Works on 35+ additional Agent Skills platforms" callout pointing at the skills/ folder for any Agent-Skills-compatible client.
+
+### Why no breaking changes — each platform reads its own manifest path
+
+- `plugin.yaml` read ONLY by Hermes
+- `__init__.py` executed ONLY by Hermes (Claude Code doesn't auto-execute Python files)
+- `openclaw.plugin.json` read ONLY by OpenClaw
+- Auto-connecting MCPs unchanged (still empty `.mcp.json`)
+- Global hooks unchanged (still empty `hooks/hooks.json`)
+- Skill descriptions unchanged
+- Claude Code + Cowork behavior byte-identical to v1.11.0
+
 ## [1.11.0] - 2026-06-04
 
 **C2PA 2.3 / 2.4 spec refresh — live video, plain text, OGG Vorbis, large AVI, EXIF formats + `c2pa.ai-disclosure` assertion.**

@@ -1,0 +1,42 @@
+{
+  "name": "@indranilbanerjee/socialforge",
+  "version": "1.12.1",
+  "description": "Open-source agency-grade social media production plugin — 16 skills, 25 commands, asset-first compositing, AI image (Nano Banana Pro) + AI video (Kling v3.0 Pro), C2PA signing. Native on Claude Code, Cowork, Codex, Cursor, Copilot CLI, Antigravity, Hermes Agent, OpenClaw.",
+  "license": "MIT",
+  "homepage": "https://github.com/indranilbanerjee/socialforge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/indranilbanerjee/socialforge.git"
+  },
+  "author": {
+    "name": "Indranil Banerjee",
+    "url": "https://indranil.in"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-plugin",
+    "agent-skills",
+    "openai-codex",
+    "cursor-plugin",
+    "copilot-cli-plugin",
+    "google-antigravity",
+    "hermes-plugin",
+    "openclaw-plugin",
+    "social-media",
+    "ai-image",
+    "ai-video",
+    "vertex-ai",
+    "c2pa",
+    "eu-ai-act"
+  ],
+  "openclaw": {
+    "type": "bundle",
+    "skills": ["./skills"],
+    "compat": {
+      "pluginApi": ">=2026.3.24-beta.2"
+    },
+    "build": {
+      "openclawVersion": "2026.3.24-beta.2"
+    }
+  }
+}

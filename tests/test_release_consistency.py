@@ -28,6 +28,7 @@ PLATFORM_MANIFESTS_JSON = [
     PLUGIN_ROOT / ".github" / "plugin" / "plugin.json",
     PLUGIN_ROOT / "gemini-extension.json",
     PLUGIN_ROOT / "openclaw.plugin.json",
+    PLUGIN_ROOT / "package.json",
 ]
 PLUGIN_YAML = PLUGIN_ROOT / "plugin.yaml"
 HERMES_ADAPTER_PY = PLUGIN_ROOT / "__init__.py"
@@ -126,7 +127,8 @@ class TestDescriptionConsistency(unittest.TestCase):
         cls.descriptions = {}
         for manifest_path in PLATFORM_MANIFESTS_JSON:
             # Skip OpenClaw — its description is intentionally longer.
-            if manifest_path.name == "openclaw.plugin.json":
+            # Skip package.json — it's npm/ClawHub metadata with its own description shape.
+            if manifest_path.name in ("openclaw.plugin.json", "package.json"):
                 continue
             data = json.loads(manifest_path.read_text(encoding="utf-8"))
             cls.descriptions[manifest_path.name] = data.get("description", "")

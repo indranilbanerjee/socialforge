@@ -31,6 +31,7 @@
   ],
   "openclaw": {
     "type": "bundle",
+    "extensions": ["./skills/"],
     "skills": ["./skills"],
     "compat": {
       "pluginApi": ">=2026.3.24-beta.2"

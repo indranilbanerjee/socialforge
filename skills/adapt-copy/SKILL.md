@@ -19,7 +19,8 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 1. Load post brief (topic, caption_brief, CTA, hashtags, campaign)
 2. Load brand-config.json (tone, hashtags, language settings)
 3. Load compliance-rules.json (banned phrases, disclaimers)
-4. Generate platform-specific copy:
+4. For X/Twitter posts with live-source context, read the optional [X/Twitter research intake](../../references/x-twitter-research-intake.md) note and use only reviewed evidence
+5. Generate platform-specific copy:
 
 | Platform | Tone | Limit | Hashtags | Link |
 |----------|------|-------|----------|------|
@@ -29,10 +30,10 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 | Facebook | Casual | 500 chars optimal | 1-3 | Direct URL |
 | YouTube | Description format | 5,000 chars | 3-5 | Direct URLs |
 
-5. Apply brand hashtags (always_include + campaign-specific)
-6. Run compliance check — flag banned phrases, add disclaimers
-7. Handle bilingual posts if configured
-8. Save to `production/copy/post-{id}-{platform}-copy.txt`
+6. Apply brand hashtags (always_include + campaign-specific)
+7. Run compliance check - flag banned phrases, add disclaimers
+8. Handle bilingual posts if configured
+9. Save to `production/copy/post-{id}-{platform}-copy.txt`
 
 ## Compliance Check (Mandatory)
 
@@ -41,6 +42,7 @@ Before saving any copy:
 - Check data claims against data_claim_rules
 - Add required disclaimers per platform
 - Verify platform-specific rules (link policy, hashtag limits)
+- For X/Twitter source notes, verify quotes, public metrics, and dates before using them as claims
 
 **Critical violations BLOCK** — copy cannot proceed.
 **Warnings are noted** but don't block.

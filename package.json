@@ -1,6 +1,6 @@
 {
   "name": "@indranilbanerjee/socialforge",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "description": "Open-source agency-grade social media production plugin — 16 skills, 25 commands, asset-first compositing, AI image (Nano Banana Pro) + AI video (Kling v3.0 Pro), C2PA signing. Native on Claude Code, Cowork, Codex, Cursor, Copilot CLI, Antigravity, Hermes Agent, OpenClaw.",
   "license": "MIT",
   "homepage": "https://github.com/indranilbanerjee/socialforge",

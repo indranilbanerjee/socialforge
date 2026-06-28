@@ -95,8 +95,14 @@ def _model_index() -> dict[str, dict[str, Any]]:
 def resolve(alias_or_id: str, *, allow_deprecated: bool = False) -> str:
     """Resolve an alias (e.g. "latest-fast-anthropic") OR an exact model ID
     to a concrete model ID. If the input is itself a current model ID, returns
-    it unchanged. If it's a deprecated model ID, returns the replacement (and
-    raises if allow_deprecated=False AND no replacement exists)."""
+    it unchanged. If it's a deprecated OR retired model ID, returns the
+    replacement (and raises if allow_deprecated=False AND no replacement exists).
+
+    `retired` models are always rewritten — they no longer respond at the API
+    layer, so passing them through unchanged would guarantee a 404. The
+    `allow_deprecated=True` flag only affects `deprecated` (not-yet-retired)
+    models.
+    """
     reg = get_registry()
     aliases = reg.get("aliases", {})
     if alias_or_id in aliases:
@@ -105,6 +111,13 @@ def resolve(alias_or_id: str, *, allow_deprecated: bool = False) -> str:
     if alias_or_id in idx:
         m = idx[alias_or_id]
         status = m.get("status", "current")
+        if status == "retired":
+            replacement = m.get("replacement_id")
+            if not replacement:
+                raise ValueError(
+                    f"Model {alias_or_id} is retired with no replacement_id in registry."
+                )
+            return replacement
         if status == "deprecated":
             replacement = m.get("replacement_id")
             if replacement and not allow_deprecated:
@@ -180,6 +193,77 @@ def _print(obj: Any, as_json: bool) -> None:
         print(obj)
 
 
+def _cmd_check_params(path_str: str, *, as_json: bool = False) -> int:
+    """Scan a Python file for unsafe Anthropic SDK calls.
+
+    Claude Opus 4.7 and Opus 4.8 reject `temperature`, `top_p`, and `top_k` with
+    HTTP 400 when set to a non-default value. This scanner does a textual sweep
+    — it's not an AST analyser, so it will produce false positives if the model
+    target is computed dynamically. It's intentionally noisy on the side of
+    caution: better one extra review than a 400 in production.
+
+    Returns 1 if any unsafe call is detected, 0 if clean, 2 if the path is bad.
+    """
+    from pathlib import Path as _Path
+    path = _Path(path_str)
+    if not path.is_file():
+        msg = f"ERROR: {path_str} is not a file"
+        if as_json:
+            print(json.dumps({"path": path_str, "error": msg}))
+        else:
+            print(msg, file=sys.stderr)
+        return 2
+
+    text = path.read_text(encoding="utf-8", errors="replace")
+    # Look for opus-4-7 or opus-4-8 string anywhere in the file (rough — but the
+    # whole resolver pattern is alias-first, so an explicit string hit is the
+    # one to catch).
+    import re as _re
+    risky_model_pat = _re.compile(r"claude-opus-4-[78]")
+    unsafe_params = ("temperature", "top_p", "top_k")
+    findings = []
+    has_opus_47_plus = bool(risky_model_pat.search(text))
+    has_alias_call = "latest-text-anthropic" in text  # resolves to opus-4-8 in the registry
+    targets_47_plus = has_opus_47_plus or has_alias_call
+
+    if targets_47_plus:
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            for param in unsafe_params:
+                # Match kwarg form: `temperature=`, `temperature =`, `"temperature":`
+                if _re.search(rf"\b{param}\s*[=:]", stripped):
+                    findings.append({
+                        "line": lineno,
+                        "param": param,
+                        "code": stripped[:120],
+                    })
+
+    payload = {
+        "path": path_str,
+        "targets_opus_47_plus": targets_47_plus,
+        "explicit_opus_47_plus_ref": has_opus_47_plus,
+        "uses_latest_text_anthropic_alias": has_alias_call,
+        "findings_count": len(findings),
+        "findings": findings,
+    }
+    if as_json:
+        print(json.dumps(payload, indent=2))
+    else:
+        if not targets_47_plus:
+            print(f"{path_str}: no Opus 4.7+ target detected — skipped")
+        elif not findings:
+            print(f"{path_str}: clean (no temperature/top_p/top_k near an Opus 4.7+ target)")
+        else:
+            print(f"{path_str}: {len(findings)} unsafe param uses found near an Opus 4.7+ target:")
+            for f in findings:
+                print(f"  L{f['line']:>4}  {f['param']:11s}  {f['code']}")
+            print("\nClaude Opus 4.7 / 4.8 return HTTP 400 when these are set. Omit them — "
+                  "see docs/MODEL-CURATOR.md § Parameter compatibility.")
+    return 1 if findings else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Resolve, check, and list curated AI models for the Neelverse Marketing Suite."
@@ -191,6 +275,8 @@ def main() -> int:
     group.add_argument("--registry-age", action="store_true", help="Print days since last_updated")
     group.add_argument("--registry-path", action="store_true", help="Print path to the loaded registry file")
     group.add_argument("--aliases", action="store_true", help="Print all aliases and their resolutions")
+    group.add_argument("--check-params", metavar="PATH",
+                       help="Scan a Python file for calls that pass temperature/top_p/top_k alongside a Claude Opus 4.7+ target. Exits 1 if any unsafe call is found.")
 
     parser.add_argument("--vendor")
     parser.add_argument("--modality")
@@ -258,6 +344,9 @@ def main() -> int:
                 for alias, target in aliases.items():
                     print(f"{alias:42s}  ->  {target}")
             return 0
+
+        if args.check_params:
+            return _cmd_check_params(args.check_params, as_json=args.json)
 
     except FileNotFoundError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

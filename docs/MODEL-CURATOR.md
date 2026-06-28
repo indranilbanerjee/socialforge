@@ -45,25 +45,40 @@ python scripts/resolve_model.py --list --vendor anthropic --status current
 
 ## Aliases (the public API for "give me the latest X")
 
-| Alias | What it resolves to today |
+| Alias | What it resolves to today (June 28, 2026) |
 |---|---|
-| `latest-text-anthropic` | Claude Opus 4.7 (frontier) |
+| `latest-text-anthropic` | Claude Opus 4.8 (frontier — Anthropic's current recommendation) |
 | `latest-balanced-anthropic` | Claude Sonnet 4.6 |
 | `latest-fast-anthropic` | Claude Haiku 4.5 |
-| `latest-text-openai` | GPT-5 |
-| `latest-balanced-openai` | GPT-5 mini |
+| `latest-text-openai` | GPT-5.5 (replaces GPT-5, deprecated June 11 / shutdown Dec 11 2026) |
+| `latest-balanced-openai` | GPT-5.4 mini |
+| `latest-fast-openai` | GPT-5.4 nano |
+| `latest-image-openai` | GPT Image 2 |
 | `latest-text-google` | Gemini 3 Pro |
-| `latest-balanced-google` | Gemini 3.5 Flash |
+| `latest-balanced-google` | Gemini 3.5 Flash (GA May 19 2026) |
 | `latest-vision-google` | Gemini 3.5 Flash |
-| `latest-image-google` | Nano Banana Pro (gemini-3-pro-image-preview) |
-| `latest-image-balanced-google` | Nano Banana 2 (gemini-2.5-flash-image) |
+| `latest-multimodal-google` | Gemini Omni |
+| `latest-image-google` | Nano Banana Pro (gemini-3-pro-image — GA May 28 2026; preview retired June 25) |
+| `latest-image-balanced-google` | Nano Banana 2 (gemini-3.1-flash-image — GA May 28; supersedes gemini-2.5-flash-image) |
 | `latest-image-edit-google` | Nano Banana Pro (for higher-fidelity edits) |
-| `latest-image-photoreal-google` | Imagen 4 |
-| `latest-video-google` | Veo 3.1 |
+| `latest-image-photoreal-google` | Nano Banana Pro (Imagen 4 was deprecated June 15 2026 — migrated to gemini-3-pro-image) |
+| `latest-video-google` | Veo 3.1 preview (replacement for Veo 2.0/3.0/3.0-Fast, all retired June 30 2026) |
 | `latest-video-wavespeed` | Kling v3.0 Pro |
 | `latest-image-character-higgsfield` | Higgsfield Soul v2 |
 
 Run `python scripts/resolve_model.py --aliases` to list the live mappings.
+
+---
+
+## ⚠ Parameter compatibility — Claude Opus 4.7 and later
+
+**Claude Opus 4.7 and Opus 4.8 reject `temperature`, `top_p`, and `top_k` with HTTP 400** when set to a non-default value. The Anthropic SDK still accepts these parameters in request types (for type-check compatibility), but the runtime returns a 400.
+
+If your script calls Opus 4.7+ via the SDK, **omit** these parameters entirely — let the system default apply. Use prompting to guide model behavior instead.
+
+Plugins call Opus 4.7+ via `resolve_model("latest-text-anthropic")` (now → Opus 4.8); the resolver's `--strict` mode warns when an active script also sets `temperature` / `top_p` / `top_k`. Run `python scripts/resolve_model.py --check-params script.py` to scan a file for unsafe param use before shipping.
+
+Source: [Claude model deprecations — API parameter deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
 
 ---
 

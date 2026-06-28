@@ -12,7 +12,7 @@
 #   hermes plugins install indranilbanerjee/socialforge
 
 name: socialforge
-version: 1.12.1
+version: 1.13.0
 description: >-
   Open-source agency-grade social media production plugin. 16 skills, 25
   commands, asset-first compositing + AI image (Vertex AI Nano Banana Pro) +

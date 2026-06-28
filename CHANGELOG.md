@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.0] - 2026-06-28
+
+**June 2026 market-refresh sync — model registry rebuilt, MODEL-CURATOR docs refreshed, resolver hardened against retired models.**
+
+Mirrors the DMP v3.14.0 suite-wide market-refresh sweep into SocialForge. No SF-side runtime behaviour change — `scripts/generate_video.py` and `scripts/compose_creative.py` already route through the resolver, which now picks up the corrected `latest-video-google` and image aliases automatically.
+
+### Fixed — automatic via resolver
+
+- **`latest-video-google` alias** now → `veo-3.1-generate-preview` (was `veo-3.1-generate-001`). Veo 2.0 / Veo 3.0 / Veo 3.0-Fast retire **2026-06-30** — SF callers will land on the GA preview replacement Google recommends.
+- **`latest-image-google` alias** now → `gemini-3-pro-image` (was `gemini-3-pro-image-preview`, which **retired 2026-06-25** — any direct preview-id callers would have been failing).
+- **`latest-image-balanced-google` alias** now → `gemini-3.1-flash-image` (Nano Banana 2 GA, supersedes `gemini-2.5-flash-image`).
+- **`latest-image-photoreal-google` alias** now → `gemini-3-pro-image` (Imagen 4 was deprecated 2026-06-15; previous alias would have stayed on a deprecation path).
+
+### Added — registry-handled retired status
+
+`scripts/resolve_model.py` now unconditionally rewrites `retired` model IDs to their `replacement_id` (the previous logic only fell forward for `deprecated` status). Means any direct-id caller passing `veo-2.0-generate-001` or `gemini-2.0-flash` from cached config gets routed to a working model instead of hitting HTTP 404. New test `test_retired_falls_forward_unconditionally` covers this.
+
+### Added — `--check-params` scanner
+
+`python scripts/resolve_model.py --check-params <file>` flags any Python file that passes `temperature` / `top_p` / `top_k` alongside Claude Opus 4.7+ targets — those return HTTP 400. Pre-flight scan of `socialforge/scripts/*.py` was clean.
+
+### Added — model registry rebuilt against vendor primary docs
+
+Same canonical content as DMP/CF: 47 entries verified against [platform.claude.com](https://platform.claude.com/docs/en/about-claude/model-deprecations), [developers.openai.com](https://developers.openai.com/api/docs/deprecations), [ai.google.dev](https://ai.google.dev/gemini-api/docs/deprecations). Notable adds: `claude-opus-4-8`, `gpt-5.5` family, `gpt-image-2`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite`. Notable retired entries: Gemini 2.0 family (shutdown 2026-06-01), Veo 2/3 family (shutdown 2026-06-30), Gemini 3 Pro/Flash Image previews (shutdown 2026-06-25). Notable deprecated entries: Gemini 2.5 Pro/Flash/Flash-Lite (shutdown 2026-10-16).
+
+### Added — `docs/MODEL-CURATOR.md` refresh
+
+Aliases table refreshed; new § **Parameter compatibility — Claude Opus 4.7 and later** explains the HTTP 400 risk for temperature/top_p/top_k. Same content shipped in DMP + CF.
+
+### Changed
+
+- All 9 version declarations bumped 1.12.1 → 1.13.0 (.claude-plugin, .codex-plugin, .cursor-plugin, .github/plugin, gemini-extension, openclaw.plugin, plugin.yaml, __init__.py, package.json)
+- README "Just shipped" callout updated for v1.13.0
+- Registry `last_updated` 2026-06-28; `next_review_due` 2026-09-28
+
+### Tests
+
+- 54/54 passing (existing release-consistency suite caught nothing because resolver-routed aliases insulate the user-facing API from registry shape changes)
+
+---
+
 ## [1.12.1] - 2026-06-09
 
 **Test-infrastructure polish — release-consistency suite + description sharpening.**

@@ -1,10 +1,13 @@
 {
   "$comment": "Canonical model registry for the Neelverse Marketing Suite (DMP / ContentForge / SocialForge). Update this file then run scripts/sync_model_registry.sh to distribute. The resolver consults this registry to map human-readable aliases to concrete model IDs and to warn when a deprecated model is being used. See refresh_models.py to poll provider APIs for drift.",
   "schema_version": "1.0",
-  "last_updated": "2026-05-25",
-  "last_updated_by": "manual curation",
-  "next_review_due": "2026-08-25",
-  "stewardship_policy": "Re-validate at least quarterly OR whenever a script call returns a 404 / deprecation warning. Frontier model landscape shifts every ~6 weeks; treat any entry older than 3 months as suspect.",
+  "last_updated": "2026-06-28",
+  "last_updated_by": "manual curation — June 2026 market-refresh sweep (verified against platform.claude.com, developers.openai.com, ai.google.dev primary docs)",
+  "next_review_due": "2026-09-28",
+  "stewardship_policy": "Re-validate at least quarterly OR whenever a script call returns a 404 / deprecation warning. Frontier model landscape shifts every ~6 weeks; treat any entry older than 3 months as suspect. Verify the next time `refresh_models.py` reports drift, or before any new feature ship.",
+  "param_compatibility_notes": {
+    "claude_opus_4_7_and_later": "Claude Opus 4.7 and Opus 4.8 reject `temperature`, `top_p`, and `top_k` with HTTP 400 when set to a non-default value. Omit these params entirely on those models — let the system default apply. Sources: https://platform.claude.com/docs/en/about-claude/model-deprecations (API parameter deprecations table). DMP, CF, SF scripts must strip these params before calls to Opus 4.7+ targets."
+  },
   "tiers": {
     "frontier": "Best-in-class capability, highest cost. Use for complex reasoning, multi-step planning, agentic flows.",
     "balanced": "Mid-tier capability and cost. Default for production workloads.",
@@ -17,6 +20,21 @@
   },
   "models": [
     {
+      "id": "claude-opus-4-8",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Opus 4.8",
+      "tier": "frontier",
+      "modality": ["text", "vision"],
+      "status": "current",
+      "released": "2026-05",
+      "context_window": 200000,
+      "best_for": ["complex reasoning", "agentic workflows", "code generation", "deep analysis"],
+      "api_endpoint": "https://api.anthropic.com/v1/messages",
+      "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models",
+      "notes": "Anthropic's current recommended frontier model as of 2026-06. Rejects temperature/top_p/top_k — see param_compatibility_notes."
+    },
+    {
       "id": "claude-opus-4-7",
       "vendor": "anthropic",
       "family": "claude",
@@ -25,25 +43,60 @@
       "modality": ["text", "vision"],
       "status": "current",
       "released": "2026-02",
+      "tentative_retirement": "2027-04-16",
       "context_window": 200000,
       "long_context_variant": "claude-opus-4-7[1m]",
       "best_for": ["complex reasoning", "agentic workflows", "code generation", "deep analysis"],
       "api_endpoint": "https://api.anthropic.com/v1/messages",
-      "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models"
+      "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models",
+      "notes": "Rejects temperature/top_p/top_k — see param_compatibility_notes."
     },
     {
-      "id": "claude-sonnet-4-7",
+      "id": "claude-opus-4-6",
       "vendor": "anthropic",
       "family": "claude",
-      "display_name": "Claude Sonnet 4.7",
-      "tier": "balanced",
+      "display_name": "Claude Opus 4.6",
+      "tier": "frontier",
       "modality": ["text", "vision"],
-      "status": "preview",
-      "released": "2026-05",
+      "status": "current",
+      "tentative_retirement": "2027-02-05",
       "context_window": 200000,
-      "best_for": ["general workloads", "balanced cost/quality"],
-      "api_endpoint": "https://api.anthropic.com/v1/messages",
-      "notes": "Preview / trial release as of May 2026. Validate availability before production use."
+      "best_for": ["complex reasoning", "agentic workflows", "code generation"]
+    },
+    {
+      "id": "claude-opus-4-5-20251101",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Opus 4.5",
+      "tier": "frontier",
+      "modality": ["text", "vision"],
+      "status": "current",
+      "released": "2025-11",
+      "tentative_retirement": "2026-11-24",
+      "context_window": 200000
+    },
+    {
+      "id": "claude-opus-4-1-20250805",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Opus 4.1",
+      "status": "deprecated",
+      "released": "2025-08",
+      "deprecation_date": "2026-06-05",
+      "shutdown_date": "2026-08-05",
+      "replacement_id": "claude-opus-4-8",
+      "notes": "Anthropic announced retirement 2026-06-05; shutdown 2026-08-05. Migrate to Opus 4.8."
+    },
+    {
+      "id": "claude-opus-4-20250514",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Opus 4 (May 2025)",
+      "status": "retired",
+      "deprecation_date": "2026-04-14",
+      "shutdown_date": "2026-06-15",
+      "replacement_id": "claude-opus-4-8",
+      "notes": "Retired 2026-06-15. Requests will fail."
     },
     {
       "id": "claude-sonnet-4-6",
@@ -54,8 +107,33 @@
       "modality": ["text", "vision"],
       "status": "current",
       "released": "2026-01",
+      "tentative_retirement": "2027-02-17",
       "context_window": 200000,
       "best_for": ["general production workloads", "writing", "analysis", "tool use"]
+    },
+    {
+      "id": "claude-sonnet-4-5-20250929",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Sonnet 4.5",
+      "tier": "balanced",
+      "modality": ["text", "vision"],
+      "status": "current",
+      "released": "2025-09",
+      "tentative_retirement": "2026-09-29",
+      "context_window": 200000,
+      "best_for": ["general production workloads", "writing", "analysis"],
+      "notes": "Still active per Anthropic deprecation page as of 2026-06-28. Earlier registry mis-marked this as deprecated — corrected."
+    },
+    {
+      "id": "claude-sonnet-4-20250514",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Sonnet 4 (May 2025)",
+      "status": "retired",
+      "deprecation_date": "2026-04-14",
+      "shutdown_date": "2026-06-15",
+      "replacement_id": "claude-sonnet-4-6"
     },
     {
       "id": "claude-haiku-4-5-20251001",
@@ -66,61 +144,148 @@
       "modality": ["text", "vision"],
       "status": "current",
       "released": "2025-10",
+      "tentative_retirement": "2026-10-15",
       "context_window": 200000,
       "best_for": ["high-volume classification", "low-latency UX", "cheap batch work"]
-    },
-    {
-      "id": "claude-sonnet-4-5-20250929",
-      "vendor": "anthropic",
-      "family": "claude",
-      "display_name": "Claude Sonnet 4.5",
-      "status": "deprecated",
-      "released": "2025-09",
-      "deprecation_date": "2026-03",
-      "replacement_id": "claude-sonnet-4-6",
-      "notes": "Endpoint may still respond but Anthropic recommends migrating to 4.6."
     },
     {
       "id": "claude-3-5-sonnet-20241022",
       "vendor": "anthropic",
       "family": "claude",
       "display_name": "Claude 3.5 Sonnet",
-      "status": "deprecated",
-      "released": "2024-10",
+      "status": "retired",
+      "shutdown_date": "2025-10-28",
       "replacement_id": "claude-sonnet-4-6"
+    },
+    {
+      "id": "gpt-5.5",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.5",
+      "tier": "frontier",
+      "modality": ["text", "vision", "audio"],
+      "status": "current",
+      "released": "2026-06",
+      "best_for": ["frontier reasoning", "multimodal", "agentic"],
+      "api_endpoint": "https://api.openai.com/v1/chat/completions",
+      "notes": "OpenAI's new flagship as of June 2026, replaces GPT-5 (deprecated June 11, retiring Dec 11 2026)."
+    },
+    {
+      "id": "gpt-5.5-pro",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.5 Pro",
+      "tier": "frontier",
+      "modality": ["text", "vision", "audio"],
+      "status": "current",
+      "released": "2026-06",
+      "best_for": ["deepest reasoning", "long-running agentic loops"]
+    },
+    {
+      "id": "gpt-5.4-mini",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.4 mini",
+      "tier": "balanced",
+      "modality": ["text", "vision"],
+      "status": "current",
+      "released": "2026-06",
+      "best_for": ["cost-sensitive production"]
+    },
+    {
+      "id": "gpt-5.4-nano",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.4 nano",
+      "tier": "fast",
+      "modality": ["text"],
+      "status": "current",
+      "released": "2026-06",
+      "best_for": ["high-volume cheap inference"]
+    },
+    {
+      "id": "gpt-image-2",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT Image 2",
+      "tier": "balanced-image",
+      "modality": ["image-gen", "image-edit"],
+      "status": "current",
+      "released": "2026-06",
+      "best_for": ["text-to-image", "image edits"],
+      "notes": "Replaces the deprecated gpt-image-1 family (June 2 2026 deprecation, Dec 1 2026 shutdown)."
     },
     {
       "id": "gpt-5",
       "vendor": "openai",
       "family": "gpt",
       "display_name": "GPT-5",
-      "tier": "frontier",
-      "modality": ["text", "vision", "audio"],
-      "status": "current",
+      "status": "deprecated",
       "released": "2025-08",
-      "best_for": ["frontier reasoning", "multimodal", "agentic"],
-      "api_endpoint": "https://api.openai.com/v1/chat/completions"
+      "deprecation_date": "2026-06-11",
+      "shutdown_date": "2026-12-11",
+      "replacement_id": "gpt-5.5",
+      "notes": "OpenAI announced June 11 2026; shutdown Dec 11 2026. Migrate to GPT-5.5."
     },
     {
       "id": "gpt-5-mini",
       "vendor": "openai",
       "family": "gpt",
       "display_name": "GPT-5 mini",
-      "tier": "balanced",
-      "modality": ["text", "vision"],
-      "status": "current",
-      "released": "2025-08",
-      "best_for": ["cost-sensitive production"]
+      "status": "deprecated",
+      "deprecation_date": "2026-06-11",
+      "shutdown_date": "2026-12-11",
+      "replacement_id": "gpt-5.4-mini"
     },
     {
       "id": "gpt-5-nano",
       "vendor": "openai",
       "family": "gpt",
       "display_name": "GPT-5 nano",
-      "tier": "fast",
-      "modality": ["text"],
-      "status": "current",
-      "best_for": ["high-volume cheap inference"]
+      "status": "deprecated",
+      "deprecation_date": "2026-06-11",
+      "shutdown_date": "2026-12-11",
+      "replacement_id": "gpt-5.4-nano"
+    },
+    {
+      "id": "gpt-5-pro",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5 Pro",
+      "status": "deprecated",
+      "deprecation_date": "2026-06-11",
+      "shutdown_date": "2026-12-11",
+      "replacement_id": "gpt-5.5-pro"
+    },
+    {
+      "id": "o3-2025-04-16",
+      "vendor": "openai",
+      "family": "openai-o",
+      "display_name": "OpenAI o3",
+      "status": "deprecated",
+      "deprecation_date": "2026-06-11",
+      "shutdown_date": "2026-12-11",
+      "replacement_id": "gpt-5.5"
+    },
+    {
+      "id": "o3-pro-2025-06-10",
+      "vendor": "openai",
+      "family": "openai-o",
+      "display_name": "OpenAI o3-pro",
+      "status": "deprecated",
+      "deprecation_date": "2026-06-11",
+      "shutdown_date": "2026-12-11",
+      "replacement_id": "gpt-5.5-pro"
+    },
+    {
+      "id": "gpt-4o-2024-05-13",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-4o (May 2024 snapshot)",
+      "status": "deprecated",
+      "deprecation_date": "2026-04-22",
+      "shutdown_date": "2026-10-23",
+      "replacement_id": "gpt-5.5"
     },
     {
       "id": "gpt-4o",
@@ -128,8 +293,8 @@
       "family": "gpt",
       "display_name": "GPT-4o",
       "status": "supported",
-      "replacement_id": "gpt-5",
-      "notes": "Still available; prefer GPT-5 for new work."
+      "replacement_id": "gpt-5.5",
+      "notes": "Latest GPT-4o snapshot still responds; OpenAI recommends migrating to GPT-5.5."
     },
     {
       "id": "gpt-4o-mini",
@@ -137,8 +302,7 @@
       "family": "gpt",
       "display_name": "GPT-4o mini",
       "status": "supported",
-      "replacement_id": "gpt-5-mini",
-      "notes": "Still available; prefer GPT-5 mini for new work."
+      "replacement_id": "gpt-5.4-mini"
     },
     {
       "id": "gemini-3-pro",
@@ -154,6 +318,18 @@
       "docs_url": "https://ai.google.dev/gemini-api/docs/models"
     },
     {
+      "id": "gemini-3.1-pro-preview",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 3.1 Pro (preview)",
+      "tier": "frontier",
+      "modality": ["text", "vision", "audio"],
+      "status": "current",
+      "released": "2026-06",
+      "best_for": ["frontier reasoning"],
+      "notes": "Google's recommended replacement for the deprecated Gemini 2.5 Pro (shutdown 2026-10-16)."
+    },
+    {
       "id": "gemini-3.5-flash",
       "vendor": "google",
       "family": "gemini",
@@ -161,8 +337,20 @@
       "tier": "balanced",
       "modality": ["text", "vision", "audio"],
       "status": "current",
-      "released": "2026-04",
-      "best_for": ["production workloads", "vision-text", "image understanding"]
+      "released": "2026-05-19",
+      "best_for": ["production workloads", "vision-text", "image understanding", "AI Mode backbone"],
+      "notes": "GA 2026-05-19. Powers Google Search AI Mode + Search box (I/O 2026). Aliased by `gemini-flash-latest`."
+    },
+    {
+      "id": "gemini-3.1-flash-lite",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 3.1 Flash-Lite",
+      "tier": "fast",
+      "modality": ["text", "vision"],
+      "status": "current",
+      "released": "2026-05-07",
+      "notes": "GA 2026-05-07. Replacement for the deprecated Gemini 2.5 Flash-Lite (shutdown 2026-10-16)."
     },
     {
       "id": "gemini-omni",
@@ -176,62 +364,139 @@
       "best_for": ["native multimodal: video understanding, audio + image + text in one call"]
     },
     {
-      "id": "gemini-3-pro-image-preview",
+      "id": "gemini-3-pro-image",
       "vendor": "google",
       "family": "gemini",
       "display_name": "Nano Banana Pro (Gemini 3 Pro Image)",
       "tier": "frontier-image",
       "modality": ["image-gen", "image-edit"],
       "status": "current",
-      "best_for": ["highest-fidelity image gen", "complex compositional editing"]
-    },
-    {
-      "id": "gemini-2.5-flash-image",
-      "vendor": "google",
-      "family": "gemini",
-      "display_name": "Nano Banana 2 (Gemini 2.5 Flash Image)",
-      "tier": "balanced-image",
-      "modality": ["image-gen", "image-edit"],
-      "status": "current",
-      "best_for": ["fast production image gen", "social-asset batch work"]
+      "released": "2026-05-28",
+      "best_for": ["highest-fidelity image gen", "complex compositional editing", "up-to-4K output", "character consistency up to 5 people", "blend up to 14 input images"],
+      "notes": "GA 2026-05-28. Replaces the now-retired gemini-3-pro-image-preview (shutdown 2026-06-25). Also available globally in Google Ads + Workspace (Slides, Vids) + Vertex AI + AI Studio + Flow + NotebookLM."
     },
     {
       "id": "gemini-3.1-flash-image",
       "vendor": "google",
       "family": "gemini",
-      "display_name": "Gemini 3.1 Flash Image",
+      "display_name": "Nano Banana 2 (Gemini 3.1 Flash Image)",
       "tier": "balanced-image",
-      "modality": ["image-gen", "image-edit"],
+      "modality": ["image-gen", "image-edit", "video-to-image"],
       "status": "current",
-      "notes": "Newer Flash image variant. May supersede gemini-2.5-flash-image."
+      "released": "2026-05-28",
+      "notes": "GA 2026-05-28. Replaces gemini-3.1-flash-image-preview (shutdown 2026-06-25) and supersedes gemini-2.5-flash-image. Unique capability: video-to-image generation (pass a video file or YouTube URL to extract high-quality thumbnails/posters)."
+    },
+    {
+      "id": "gemini-3-pro-image-preview",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 3 Pro Image (preview)",
+      "status": "retired",
+      "deprecation_date": "2026-05-28",
+      "shutdown_date": "2026-06-25",
+      "replacement_id": "gemini-3-pro-image",
+      "notes": "Retired 2026-06-25. Requests will fail. Use the GA replacement."
+    },
+    {
+      "id": "gemini-3.1-flash-image-preview",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 3.1 Flash Image (preview)",
+      "status": "retired",
+      "deprecation_date": "2026-05-28",
+      "shutdown_date": "2026-06-25",
+      "replacement_id": "gemini-3.1-flash-image",
+      "notes": "Retired 2026-06-25. Requests will fail. Use the GA replacement."
+    },
+    {
+      "id": "gemini-2.5-flash-image",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 2.5 Flash Image",
+      "status": "supported",
+      "replacement_id": "gemini-3.1-flash-image",
+      "notes": "Still functional; superseded by gemini-3.1-flash-image (Nano Banana 2 GA May 28). Migrate when convenient."
+    },
+    {
+      "id": "gemini-2.5-pro",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 2.5 Pro",
+      "status": "deprecated",
+      "released": "2025-06-17",
+      "shutdown_date": "2026-10-16",
+      "replacement_id": "gemini-3.1-pro-preview"
+    },
+    {
+      "id": "gemini-2.5-flash",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 2.5 Flash",
+      "status": "deprecated",
+      "released": "2025-06-17",
+      "shutdown_date": "2026-10-16",
+      "replacement_id": "gemini-3.5-flash"
+    },
+    {
+      "id": "gemini-2.5-flash-lite",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 2.5 Flash-Lite",
+      "status": "deprecated",
+      "released": "2025-07-22",
+      "shutdown_date": "2026-10-16",
+      "replacement_id": "gemini-3.1-flash-lite"
     },
     {
       "id": "gemini-2.0-flash",
       "vendor": "google",
       "family": "gemini",
       "display_name": "Gemini 2.0 Flash",
-      "status": "deprecated",
+      "status": "retired",
+      "shutdown_date": "2026-06-01",
       "replacement_id": "gemini-3.5-flash",
-      "notes": "Superseded by 3.5 Flash. May still respond, but quality and rate limits are no longer prioritised."
+      "notes": "Retired 2026-06-01. Requests will fail."
+    },
+    {
+      "id": "gemini-2.0-flash-lite",
+      "vendor": "google",
+      "family": "gemini",
+      "display_name": "Gemini 2.0 Flash-Lite",
+      "status": "retired",
+      "shutdown_date": "2026-06-01",
+      "replacement_id": "gemini-3.1-flash-lite"
     },
     {
       "id": "gemini-2.0-flash-exp-image-generation",
       "vendor": "google",
       "family": "gemini",
       "display_name": "Gemini 2.0 Flash (image experimental)",
-      "status": "deprecated",
-      "replacement_id": "gemini-2.5-flash-image",
-      "notes": "Experimental endpoint, superseded by the stable Nano Banana 2 / Nano Banana Pro endpoints."
+      "status": "retired",
+      "shutdown_date": "2026-06-01",
+      "replacement_id": "gemini-3.1-flash-image",
+      "notes": "Experimental endpoint; superseded by the stable Nano Banana 2 / Nano Banana Pro endpoints."
     },
     {
       "id": "imagen-4",
       "vendor": "google",
       "family": "imagen",
       "display_name": "Imagen 4",
-      "tier": "frontier-image",
-      "modality": ["image-gen"],
+      "status": "deprecated",
+      "deprecation_date": "2026-06-15",
+      "replacement_id": "gemini-3-pro-image",
+      "notes": "Google announced Imagen 4 deprecation on 2026-06-15 alongside Veo 2/3 shutdown. Migrate photoreal workloads to gemini-3-pro-image (Nano Banana Pro, up to 4K)."
+    },
+    {
+      "id": "veo-3.1-generate-preview",
+      "vendor": "google",
+      "family": "veo",
+      "display_name": "Veo 3.1 (preview)",
+      "tier": "frontier-video",
+      "modality": ["video-gen"],
       "status": "current",
-      "best_for": ["photoreal product shots", "high-resolution print-ready"]
+      "released": "2026-06",
+      "best_for": ["text-to-video", "image-to-video"],
+      "notes": "Google's official replacement for veo-2.0/veo-3.0/veo-3.0-fast (all retired 2026-06-30)."
     },
     {
       "id": "veo-3.1-generate-001",
@@ -240,16 +505,39 @@
       "display_name": "Veo 3.1",
       "tier": "frontier-video",
       "modality": ["video-gen"],
-      "status": "current",
-      "best_for": ["text-to-video", "image-to-video up to 8s"]
+      "status": "supported",
+      "best_for": ["text-to-video", "image-to-video up to 8s"],
+      "notes": "May coexist with veo-3.1-generate-preview during the post-2026-06-30 transition. Confirm availability via refresh_models.py before production use."
+    },
+    {
+      "id": "veo-3.0-generate-001",
+      "vendor": "google",
+      "family": "veo",
+      "display_name": "Veo 3.0",
+      "status": "retired",
+      "deprecation_date": "2026-06-15",
+      "shutdown_date": "2026-06-30",
+      "replacement_id": "veo-3.1-generate-preview"
+    },
+    {
+      "id": "veo-3.0-fast-generate-001",
+      "vendor": "google",
+      "family": "veo",
+      "display_name": "Veo 3.0 Fast",
+      "status": "retired",
+      "deprecation_date": "2026-06-15",
+      "shutdown_date": "2026-06-30",
+      "replacement_id": "veo-3.1-generate-preview"
     },
     {
       "id": "veo-2.0-generate-001",
       "vendor": "google",
       "family": "veo",
       "display_name": "Veo 2.0",
-      "status": "deprecated",
-      "replacement_id": "veo-3.1-generate-001"
+      "status": "retired",
+      "deprecation_date": "2026-06-15",
+      "shutdown_date": "2026-06-30",
+      "replacement_id": "veo-3.1-generate-preview"
     },
     {
       "id": "kwaivgi/kling-v3.0-pro/image-to-video",
@@ -294,22 +582,22 @@
     }
   ],
   "aliases": {
-    "latest-text-anthropic": "claude-opus-4-7",
+    "latest-text-anthropic": "claude-opus-4-8",
     "latest-balanced-anthropic": "claude-sonnet-4-6",
     "latest-fast-anthropic": "claude-haiku-4-5-20251001",
-    "latest-preview-anthropic": "claude-sonnet-4-7",
-    "latest-text-openai": "gpt-5",
-    "latest-balanced-openai": "gpt-5-mini",
-    "latest-fast-openai": "gpt-5-nano",
+    "latest-text-openai": "gpt-5.5",
+    "latest-balanced-openai": "gpt-5.4-mini",
+    "latest-fast-openai": "gpt-5.4-nano",
+    "latest-image-openai": "gpt-image-2",
     "latest-text-google": "gemini-3-pro",
     "latest-balanced-google": "gemini-3.5-flash",
     "latest-vision-google": "gemini-3.5-flash",
     "latest-multimodal-google": "gemini-omni",
-    "latest-image-google": "gemini-3-pro-image-preview",
-    "latest-image-balanced-google": "gemini-2.5-flash-image",
-    "latest-image-edit-google": "gemini-3-pro-image-preview",
-    "latest-image-photoreal-google": "imagen-4",
-    "latest-video-google": "veo-3.1-generate-001",
+    "latest-image-google": "gemini-3-pro-image",
+    "latest-image-balanced-google": "gemini-3.1-flash-image",
+    "latest-image-edit-google": "gemini-3-pro-image",
+    "latest-image-photoreal-google": "gemini-3-pro-image",
+    "latest-video-google": "veo-3.1-generate-preview",
     "latest-video-wavespeed": "kwaivgi/kling-v3.0-pro/image-to-video",
     "latest-image-character-higgsfield": "higgsfield-soul-v2"
   }

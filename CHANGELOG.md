@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.1] - 2026-06-28
+
+**README-sync patch — Current Release body rewritten with actual v1.13.0 content.**
+
+After v1.13.0 shipped, the user flagged that several README sections had stale version refs. SF's specific gap: the `## Current Release (v1.13.0)` heading had been renamed but the body still described the v1.12.0 (Hermes + OpenClaw + 23-test suite) release. SF release-consistency tests caught the heading bump but had no check for body freshness.
+
+### Fixed (SF README)
+
+- `## Current Release (v1.13.0)` body rewritten with actual v1.13.0 content (June 2026 market-refresh sync: resolver-routed alias updates, retired-model handling, --check-params scanner)
+- v1.12.1 + v1.12.0 release notes moved into "Earlier" sub-sections so chronological flow is preserved
+- README hero callout + Supported surfaces heading + Current Release heading + Cowork anchor + version badge all bumped to v1.13.1
+
+### Changed
+
+- All 9 SF version declarations 1.13.0 → 1.13.1
+
+### Notes
+
+- Zero pipeline change.
+
+---
+
 ## [1.13.0] - 2026-06-28
 
 **June 2026 market-refresh sync — model registry rebuilt, MODEL-CURATOR docs refreshed, resolver hardened against retired models.**

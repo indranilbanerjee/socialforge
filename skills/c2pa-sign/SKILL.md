@@ -29,7 +29,7 @@ The resulting asset is verifiable at [contentcredentials.org/verify](https://con
 - **C2PA Spec 2.4** (April 2026 — [spec.c2pa.org/specifications/specifications/2.4](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html)) introduces the **AI Disclosure Assertion (`c2pa.ai-disclosure`)** — machine-readable AI transparency info that the EU AI Act Article 50 deployer pathway will read. When `c2pa_sign.py` is on a C2PA SDK ≥ 0.36 that handles 2.4, include this assertion alongside the existing IPTC + schema.org tags. The combination is what the **EU Code of Practice WG1/WG2** drafts reference as the canonical machine-readable mark.
 - **C2PA Trust List** is now handled via the public C2PA Conformance Program — production signing certificates should come from a Conformance-Program-listed CA.
 
-For the regulatory context (EU Article 50 voluntary Code of Practice, WG1 providers vs WG2 deployers split, where SocialForge falls), see Digital Marketing Pro's `skills/context-engine/eu-code-of-practice.md` — this is shared regulatory knowledge across the Neelverse Marketing Suite.
+For the regulatory context (EU Article 50, the voluntary Code of Practice, the provider-vs-deployer obligations split, and where SocialForge falls), see `references/eu-ai-act-article50.md` in this plugin.
 
 ## When SocialForge invokes this automatically
 
@@ -126,11 +126,9 @@ JSON status report to stdout:
 }
 ```
 
-## Integration with the broader Neelverse Suite
+## Interoperability
 
-This skill is intentionally **self-contained** — SocialForge does not depend on `digital-marketing-pro` being installed. The signing logic mirrors DMP's `embed-c2pa.py` exactly, so an asset signed by either plugin verifies identically (same manifest schema, same IPTC vocabulary, same C2PA spec).
-
-If you run both plugins, a SocialForge-signed asset can be referenced from a DMP engagement (Part 11 — AI Creative Instructions output) without re-signing.
+This skill is intentionally **self-contained** — signing requires nothing beyond this plugin. Manifests follow the open C2PA spec (same manifest schema, same IPTC vocabulary), so any standards-compliant C2PA tool verifies a SocialForge-signed asset identically, and assets signed elsewhere verify here.
 
 ## Related
 
@@ -138,6 +136,5 @@ If you run both plugins, a SocialForge-signed asset can be referenced from a DMP
 - `scripts/generate_image.py` — calls `c2pa_sign.py` as a post-step when brand profile has `c2pa_auto_sign: true`
 - `scripts/video_postprocess.py` — same auto-sign hook for video output
 - `references/eu-ai-act-article50.md` — regulatory context
-- DMP `/digital-marketing-pro:c2pa-metadata` — equivalent skill in the DMP plugin; either produces interoperable manifests
 - [C2PA spec v2.0](https://c2pa.org/specifications/specifications/2.0/specs/C2PA_Specification.html)
 - [Content Authenticity Initiative](https://contentauthenticity.org/)

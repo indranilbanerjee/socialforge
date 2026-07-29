@@ -16,8 +16,14 @@
 ## Which surface(s) affected
 
 - [ ] Claude Code (CLI + IDE extensions) via `.claude-plugin/plugin.json`
-- [ ] Anthropic Cowork (same `.claude-plugin/` files)
-- [ ] Both / either (text-only docs change)
+- [ ] Anthropic Cowork (same `.claude-plugin/plugin.json`)
+- [ ] OpenAI Codex (CLI + IDE + App) via `.codex-plugin/plugin.json`
+- [ ] Cursor 2.5+ via `.cursor-plugin/plugin.json`
+- [ ] GitHub Copilot CLI via `.github/plugin/plugin.json`
+- [ ] Google Antigravity 2.0 via `gemini-extension.json`
+- [ ] Hermes Agent via `plugin.yaml` + `__init__.py`
+- [ ] OpenClaw via `openclaw.plugin.json` (+ `package.json` `openclaw` block)
+- [ ] All / any (text-only docs change)
 
 ## Checklist
 
@@ -26,7 +32,7 @@
 - [ ] My change does not break any existing skill, script, or command
 - [ ] I ran the relevant smoke test (e.g., `python3 scripts/<script>.py --help` exits 0 for any modified script)
 - [ ] I updated the matching docs / SKILL.md / CHANGELOG.md entry if behavior changed
-- [ ] I bumped the version in `.claude-plugin/plugin.json` if this is a release
+- [ ] If this is a release, I bumped the version in **every** manifest: `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.github/plugin/plugin.json`, `gemini-extension.json`, `plugin.yaml`, `openclaw.plugin.json`, `package.json`, and `__init__.py`
 - [ ] I updated the README badge + "Current version" + "Release notes" if this is a release
 - [ ] My PR title follows the convention `vX.Y.Z: short description` for releases, or `fix:` / `feat:` / `docs:` / `chore:` prefix otherwise
 

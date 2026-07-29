@@ -1,8 +1,8 @@
 {
   "$comment": "Canonical model registry for the Neelverse Marketing Suite (DMP / ContentForge / SocialForge). Update this file then run scripts/sync_model_registry.sh to distribute. The resolver consults this registry to map human-readable aliases to concrete model IDs and to warn when a deprecated model is being used. See refresh_models.py to poll provider APIs for drift.",
   "schema_version": "1.0",
-  "last_updated": "2026-06-28",
-  "last_updated_by": "manual curation — June 2026 market-refresh sweep (verified against platform.claude.com, developers.openai.com, ai.google.dev primary docs)",
+  "last_updated": "2026-07-29",
+  "last_updated_by": "July 2026 market refresh",
   "next_review_due": "2026-09-28",
   "stewardship_policy": "Re-validate at least quarterly OR whenever a script call returns a 404 / deprecation warning. Frontier model landscape shifts every ~6 weeks; treat any entry older than 3 months as suspect. Verify the next time `refresh_models.py` reports drift, or before any new feature ship.",
   "param_compatibility_notes": {
@@ -16,23 +16,98 @@
     "balanced-image": "Production-grade image generation, lower cost.",
     "frontier-image-character": "Specialised for consistent character / face preservation.",
     "frontier-video": "Best-in-class video generation.",
+    "balanced-video": "Production-grade video generation, lower cost.",
     "frontier-multimodal": "Native handling of text + image + audio + video in one call."
   },
   "models": [
+    {
+      "id": "claude-opus-5",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Opus 5",
+      "tier": "frontier",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "current",
+      "released": "2026-07",
+      "context_window": 1000000,
+      "best_for": [
+        "complex agentic coding",
+        "enterprise work",
+        "agentic workflows"
+      ],
+      "api_endpoint": "https://api.anthropic.com/v1/messages",
+      "docs_url": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "notes": "Anthropic's recommended default for complex agentic work as of 2026-07. $5/$25 per MTok; 128k max output; adaptive thinking; freshest reliable knowledge cutoff on the market (May 2026). Listed current in the Anthropic models overview, verified 2026-07-12."
+    },
+    {
+      "id": "claude-sonnet-5",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Sonnet 5",
+      "tier": "balanced",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "current",
+      "released": "2026-07",
+      "context_window": 1000000,
+      "best_for": [
+        "speed + intelligence balance",
+        "high-volume content",
+        "fast agents"
+      ],
+      "api_endpoint": "https://api.anthropic.com/v1/messages",
+      "docs_url": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "notes": "$3/$15 per MTok with introductory pricing $2/$10 through 2026-08-31; 128k max output; adaptive thinking; knowledge cutoff Jan 2026. Listed current in the Anthropic models overview, verified 2026-07-12."
+    },
+    {
+      "id": "claude-fable-5",
+      "vendor": "anthropic",
+      "family": "claude",
+      "display_name": "Claude Fable 5",
+      "tier": "frontier",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "current",
+      "released": "2026-06",
+      "context_window": 1000000,
+      "best_for": [
+        "most demanding reasoning",
+        "long-horizon agents",
+        "deep analysis"
+      ],
+      "api_endpoint": "https://api.anthropic.com/v1/messages",
+      "docs_url": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "notes": "Mythos-class flagship (GA 2026-06-09). $10/$50 per MTok; 128k max output; adaptive thinking always on (no thinking:disabled). Safety classifiers can return stop_reason:'refusal' as HTTP 200 — pair with the server-side 'fallbacks' parameter or a client-side retry on another Claude model (fallback credit refunds prompt-cache cost). Verified against Anthropic docs 2026-07-12."
+    },
     {
       "id": "claude-opus-4-8",
       "vendor": "anthropic",
       "family": "claude",
       "display_name": "Claude Opus 4.8",
       "tier": "frontier",
-      "modality": ["text", "vision"],
-      "status": "current",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "supported",
       "released": "2026-05",
-      "context_window": 200000,
-      "best_for": ["complex reasoning", "agentic workflows", "code generation", "deep analysis"],
+      "context_window": 1000000,
+      "best_for": [
+        "complex reasoning",
+        "agentic workflows",
+        "code generation",
+        "deep analysis"
+      ],
       "api_endpoint": "https://api.anthropic.com/v1/messages",
       "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models",
-      "notes": "Anthropic's current recommended frontier model as of 2026-06. Rejects temperature/top_p/top_k — see param_compatibility_notes."
+      "notes": "Moved to Anthropic's legacy table with the Claude 5 launches (still available; $5/$25). 1M context per current docs. Rejects temperature/top_p/top_k — see param_compatibility_notes. For new work Anthropic recommends claude-opus-5."
     },
     {
       "id": "claude-opus-4-7",
@@ -40,13 +115,21 @@
       "family": "claude",
       "display_name": "Claude Opus 4.7",
       "tier": "frontier",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2026-02",
       "tentative_retirement": "2027-04-16",
       "context_window": 200000,
       "long_context_variant": "claude-opus-4-7[1m]",
-      "best_for": ["complex reasoning", "agentic workflows", "code generation", "deep analysis"],
+      "best_for": [
+        "complex reasoning",
+        "agentic workflows",
+        "code generation",
+        "deep analysis"
+      ],
       "api_endpoint": "https://api.anthropic.com/v1/messages",
       "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models",
       "notes": "Rejects temperature/top_p/top_k — see param_compatibility_notes."
@@ -57,11 +140,18 @@
       "family": "claude",
       "display_name": "Claude Opus 4.6",
       "tier": "frontier",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "tentative_retirement": "2027-02-05",
       "context_window": 200000,
-      "best_for": ["complex reasoning", "agentic workflows", "code generation"]
+      "best_for": [
+        "complex reasoning",
+        "agentic workflows",
+        "code generation"
+      ]
     },
     {
       "id": "claude-opus-4-5-20251101",
@@ -69,7 +159,10 @@
       "family": "claude",
       "display_name": "Claude Opus 4.5",
       "tier": "frontier",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2025-11",
       "tentative_retirement": "2026-11-24",
@@ -84,8 +177,8 @@
       "released": "2025-08",
       "deprecation_date": "2026-06-05",
       "shutdown_date": "2026-08-05",
-      "replacement_id": "claude-opus-4-8",
-      "notes": "Anthropic announced retirement 2026-06-05; shutdown 2026-08-05. Migrate to Opus 4.8."
+      "replacement_id": "claude-opus-5",
+      "notes": "RETIRES 2026-08-05 per Anthropic model deprecations — migrate to claude-opus-5 before that date."
     },
     {
       "id": "claude-opus-4-20250514",
@@ -104,12 +197,20 @@
       "family": "claude",
       "display_name": "Claude Sonnet 4.6",
       "tier": "balanced",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2026-01",
       "tentative_retirement": "2027-02-17",
       "context_window": 200000,
-      "best_for": ["general production workloads", "writing", "analysis", "tool use"]
+      "best_for": [
+        "general production workloads",
+        "writing",
+        "analysis",
+        "tool use"
+      ]
     },
     {
       "id": "claude-sonnet-4-5-20250929",
@@ -117,12 +218,19 @@
       "family": "claude",
       "display_name": "Claude Sonnet 4.5",
       "tier": "balanced",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2025-09",
       "tentative_retirement": "2026-09-29",
       "context_window": 200000,
-      "best_for": ["general production workloads", "writing", "analysis"],
+      "best_for": [
+        "general production workloads",
+        "writing",
+        "analysis"
+      ],
       "notes": "Still active per Anthropic deprecation page as of 2026-06-28. Earlier registry mis-marked this as deprecated — corrected."
     },
     {
@@ -141,12 +249,19 @@
       "family": "claude",
       "display_name": "Claude Haiku 4.5",
       "tier": "fast",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2025-10",
       "tentative_retirement": "2026-10-15",
       "context_window": 200000,
-      "best_for": ["high-volume classification", "low-latency UX", "cheap batch work"]
+      "best_for": [
+        "high-volume classification",
+        "low-latency UX",
+        "cheap batch work"
+      ]
     },
     {
       "id": "claude-3-5-sonnet-20241022",
@@ -158,17 +273,87 @@
       "replacement_id": "claude-sonnet-4-6"
     },
     {
+      "id": "gpt-5.6-sol",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.6 Sol",
+      "tier": "frontier",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "current",
+      "released": "2026-07",
+      "context_window": 1000000,
+      "best_for": [
+        "frontier reasoning",
+        "coding",
+        "agentic workflows"
+      ],
+      "api_endpoint": "https://api.openai.com/v1/chat/completions",
+      "notes": "OpenAI flagship (GA 2026-07-09). $5/$30 per MTok; 128k max output; knowledge cutoff 2026-02-16; programmatic tool calling (model-composed JS orchestrating tool calls) + subagent spawning in the Responses API. Verified 2026-07-12."
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.6 Terra",
+      "tier": "balanced",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "current",
+      "released": "2026-07",
+      "context_window": 1000000,
+      "best_for": [
+        "balanced quality/cost",
+        "production workloads"
+      ],
+      "api_endpoint": "https://api.openai.com/v1/chat/completions",
+      "notes": "Balanced mid-tier of the GPT-5.6 family (GA 2026-07-09). $2.50/$15 per MTok; OpenAI positions it as GPT-5.5-class quality at roughly half the cost. Verified 2026-07-12."
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "vendor": "openai",
+      "family": "gpt",
+      "display_name": "GPT-5.6 Luna",
+      "tier": "fast",
+      "modality": [
+        "text",
+        "vision"
+      ],
+      "status": "current",
+      "released": "2026-07",
+      "context_window": 1000000,
+      "best_for": [
+        "high-volume",
+        "low-latency",
+        "cost-sensitive tasks"
+      ],
+      "api_endpoint": "https://api.openai.com/v1/chat/completions",
+      "notes": "Fastest/cheapest GPT-5.6 tier (GA 2026-07-09). $1/$6 per MTok. Verified 2026-07-12."
+    },
+    {
       "id": "gpt-5.5",
       "vendor": "openai",
       "family": "gpt",
       "display_name": "GPT-5.5",
       "tier": "frontier",
-      "modality": ["text", "vision", "audio"],
+      "modality": [
+        "text",
+        "vision",
+        "audio"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["frontier reasoning", "multimodal", "agentic"],
+      "best_for": [
+        "frontier reasoning",
+        "multimodal",
+        "agentic"
+      ],
       "api_endpoint": "https://api.openai.com/v1/chat/completions",
-      "notes": "OpenAI's new flagship as of June 2026, replaces GPT-5 (deprecated June 11, retiring Dec 11 2026)."
+      "notes": "OpenAI's new flagship as of June 2026, replaces GPT-5 (deprecated June 11, retiring Dec 11 2026). Superseded by the GPT-5.6 family (Sol/Terra/Luna, GA 2026-07-09); still available."
     },
     {
       "id": "gpt-5.5-pro",
@@ -176,10 +361,17 @@
       "family": "gpt",
       "display_name": "GPT-5.5 Pro",
       "tier": "frontier",
-      "modality": ["text", "vision", "audio"],
+      "modality": [
+        "text",
+        "vision",
+        "audio"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["deepest reasoning", "long-running agentic loops"]
+      "best_for": [
+        "deepest reasoning",
+        "long-running agentic loops"
+      ]
     },
     {
       "id": "gpt-5.4-mini",
@@ -187,10 +379,15 @@
       "family": "gpt",
       "display_name": "GPT-5.4 mini",
       "tier": "balanced",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["cost-sensitive production"]
+      "best_for": [
+        "cost-sensitive production"
+      ]
     },
     {
       "id": "gpt-5.4-nano",
@@ -198,10 +395,14 @@
       "family": "gpt",
       "display_name": "GPT-5.4 nano",
       "tier": "fast",
-      "modality": ["text"],
+      "modality": [
+        "text"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["high-volume cheap inference"]
+      "best_for": [
+        "high-volume cheap inference"
+      ]
     },
     {
       "id": "gpt-image-2",
@@ -209,10 +410,16 @@
       "family": "gpt",
       "display_name": "GPT Image 2",
       "tier": "balanced-image",
-      "modality": ["image-gen", "image-edit"],
+      "modality": [
+        "image-gen",
+        "image-edit"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["text-to-image", "image edits"],
+      "best_for": [
+        "text-to-image",
+        "image edits"
+      ],
       "notes": "Replaces the deprecated gpt-image-1 family (June 2 2026 deprecation, Dec 1 2026 shutdown)."
     },
     {
@@ -310,10 +517,18 @@
       "family": "gemini",
       "display_name": "Gemini 3 Pro",
       "tier": "frontier",
-      "modality": ["text", "vision", "audio"],
+      "modality": [
+        "text",
+        "vision",
+        "audio"
+      ],
       "status": "current",
       "released": "2026-03",
-      "best_for": ["frontier reasoning", "long-context", "multimodal"],
+      "best_for": [
+        "frontier reasoning",
+        "long-context",
+        "multimodal"
+      ],
       "api_endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
       "docs_url": "https://ai.google.dev/gemini-api/docs/models"
     },
@@ -323,10 +538,16 @@
       "family": "gemini",
       "display_name": "Gemini 3.1 Pro (preview)",
       "tier": "frontier",
-      "modality": ["text", "vision", "audio"],
+      "modality": [
+        "text",
+        "vision",
+        "audio"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["frontier reasoning"],
+      "best_for": [
+        "frontier reasoning"
+      ],
       "notes": "Google's recommended replacement for the deprecated Gemini 2.5 Pro (shutdown 2026-10-16)."
     },
     {
@@ -335,10 +556,19 @@
       "family": "gemini",
       "display_name": "Gemini 3.5 Flash",
       "tier": "balanced",
-      "modality": ["text", "vision", "audio"],
+      "modality": [
+        "text",
+        "vision",
+        "audio"
+      ],
       "status": "current",
       "released": "2026-05-19",
-      "best_for": ["production workloads", "vision-text", "image understanding", "AI Mode backbone"],
+      "best_for": [
+        "production workloads",
+        "vision-text",
+        "image understanding",
+        "AI Mode backbone"
+      ],
       "notes": "GA 2026-05-19. Powers Google Search AI Mode + Search box (I/O 2026). Aliased by `gemini-flash-latest`."
     },
     {
@@ -347,7 +577,10 @@
       "family": "gemini",
       "display_name": "Gemini 3.1 Flash-Lite",
       "tier": "fast",
-      "modality": ["text", "vision"],
+      "modality": [
+        "text",
+        "vision"
+      ],
       "status": "current",
       "released": "2026-05-07",
       "notes": "GA 2026-05-07. Replacement for the deprecated Gemini 2.5 Flash-Lite (shutdown 2026-10-16)."
@@ -358,10 +591,17 @@
       "family": "gemini",
       "display_name": "Gemini Omni",
       "tier": "frontier-multimodal",
-      "modality": ["text", "vision", "audio", "video"],
+      "modality": [
+        "text",
+        "vision",
+        "audio",
+        "video"
+      ],
       "status": "current",
       "released": "2026-04",
-      "best_for": ["native multimodal: video understanding, audio + image + text in one call"]
+      "best_for": [
+        "native multimodal: video understanding, audio + image + text in one call"
+      ]
     },
     {
       "id": "gemini-3-pro-image",
@@ -369,10 +609,19 @@
       "family": "gemini",
       "display_name": "Nano Banana Pro (Gemini 3 Pro Image)",
       "tier": "frontier-image",
-      "modality": ["image-gen", "image-edit"],
+      "modality": [
+        "image-gen",
+        "image-edit"
+      ],
       "status": "current",
       "released": "2026-05-28",
-      "best_for": ["highest-fidelity image gen", "complex compositional editing", "up-to-4K output", "character consistency up to 5 people", "blend up to 14 input images"],
+      "best_for": [
+        "highest-fidelity image gen",
+        "complex compositional editing",
+        "up-to-4K output",
+        "character consistency up to 5 people",
+        "blend up to 14 input images"
+      ],
       "notes": "GA 2026-05-28. Replaces the now-retired gemini-3-pro-image-preview (shutdown 2026-06-25). Also available globally in Google Ads + Workspace (Slides, Vids) + Vertex AI + AI Studio + Flow + NotebookLM."
     },
     {
@@ -381,7 +630,11 @@
       "family": "gemini",
       "display_name": "Nano Banana 2 (Gemini 3.1 Flash Image)",
       "tier": "balanced-image",
-      "modality": ["image-gen", "image-edit", "video-to-image"],
+      "modality": [
+        "image-gen",
+        "image-edit",
+        "video-to-image"
+      ],
       "status": "current",
       "released": "2026-05-28",
       "notes": "GA 2026-05-28. Replaces gemini-3.1-flash-image-preview (shutdown 2026-06-25) and supersedes gemini-2.5-flash-image. Unique capability: video-to-image generation (pass a video file or YouTube URL to extract high-quality thumbnails/posters)."
@@ -492,10 +745,15 @@
       "family": "veo",
       "display_name": "Veo 3.1 (preview)",
       "tier": "frontier-video",
-      "modality": ["video-gen"],
+      "modality": [
+        "video-gen"
+      ],
       "status": "current",
       "released": "2026-06",
-      "best_for": ["text-to-video", "image-to-video"],
+      "best_for": [
+        "text-to-video",
+        "image-to-video"
+      ],
       "notes": "Google's official replacement for veo-2.0/veo-3.0/veo-3.0-fast (all retired 2026-06-30)."
     },
     {
@@ -504,9 +762,14 @@
       "family": "veo",
       "display_name": "Veo 3.1",
       "tier": "frontier-video",
-      "modality": ["video-gen"],
+      "modality": [
+        "video-gen"
+      ],
       "status": "supported",
-      "best_for": ["text-to-video", "image-to-video up to 8s"],
+      "best_for": [
+        "text-to-video",
+        "image-to-video up to 8s"
+      ],
       "notes": "May coexist with veo-3.1-generate-preview during the post-2026-06-30 transition. Confirm availability via refresh_models.py before production use."
     },
     {
@@ -545,9 +808,14 @@
       "family": "kling",
       "display_name": "Kling v3.0 Pro (image-to-video)",
       "tier": "frontier-video",
-      "modality": ["video-gen"],
+      "modality": [
+        "video-gen"
+      ],
       "status": "current",
-      "best_for": ["5-15s social clips", "best price/quality for short-form"],
+      "best_for": [
+        "5-15s social clips",
+        "best price/quality for short-form"
+      ],
       "docs_url": "https://wavespeed.ai/models/kwaivgi/kling-v3.0-pro/image-to-video"
     },
     {
@@ -556,7 +824,9 @@
       "family": "kling",
       "display_name": "Kling Image v3 (text-to-image)",
       "tier": "balanced-image",
-      "modality": ["image-gen"],
+      "modality": [
+        "image-gen"
+      ],
       "status": "current"
     },
     {
@@ -565,9 +835,14 @@
       "family": "soul",
       "display_name": "Higgsfield Soul v2",
       "tier": "frontier-image-character",
-      "modality": ["image-gen"],
+      "modality": [
+        "image-gen"
+      ],
       "status": "current",
-      "best_for": ["character / face consistency", "lifestyle imagery with people"],
+      "best_for": [
+        "character / face consistency",
+        "lifestyle imagery with people"
+      ],
       "docs_url": "https://docs.higgsfield.ai/"
     },
     {
@@ -576,16 +851,18 @@
       "family": "kling",
       "display_name": "Kling v2.1 Pro via Higgsfield (image-to-video)",
       "tier": "balanced-video",
-      "modality": ["video-gen"],
+      "modality": [
+        "video-gen"
+      ],
       "status": "current",
       "notes": "Used as a fallback path when WaveSpeed is unavailable."
     }
   ],
   "aliases": {
-    "latest-text-anthropic": "claude-opus-4-8",
+    "latest-text-anthropic": "claude-opus-5",
     "latest-balanced-anthropic": "claude-sonnet-4-6",
     "latest-fast-anthropic": "claude-haiku-4-5-20251001",
-    "latest-text-openai": "gpt-5.5",
+    "latest-text-openai": "gpt-5.6-sol",
     "latest-balanced-openai": "gpt-5.4-mini",
     "latest-fast-openai": "gpt-5.4-nano",
     "latest-image-openai": "gpt-image-2",

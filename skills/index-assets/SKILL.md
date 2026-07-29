@@ -1,7 +1,7 @@
 ---
 name: index-assets
 description: "Index brand photo library using AI vision. Use when: setting up assets, adding new photos, or refreshing the index."
-argument-hint: "[brand-name] [--source drive|local] [--refresh]"
+argument-hint: "<brand-name> [--source <path>] [--refresh]"
 effort: high
 user-invocable: true
 ---
@@ -12,13 +12,13 @@ Scan a brand's photo library and create an AI-powered asset index. Each image is
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## How It Works
 
 1. **Locate assets** — Read asset-source.json for the brand's photo library location
 2. **Scan files** — Find all .jpg, .jpeg, .png, .webp files in the source
-3. **AI analysis** — For each image, use Gemini Vision (gemini-3-flash) to generate:
+3. **AI analysis** — For each image, use Gemini Vision (the registry alias `latest-vision-google`) to generate:
    - Natural language description of the image
    - Tags (categories, subjects, setting, mood)
    - Dominant colors detected
@@ -39,8 +39,8 @@ Before indexing, verify:
 If asset source is not configured:
 ```
 ⚠️ No asset source configured for brand "{brand}".
-Run /socialforge:brand-setup --update {brand} to add an asset source.
-Or provide a path now: /socialforge:index-assets {brand} --source local --path /path/to/photos
+Run /socialforge:brand-setup {brand} --update to add an asset source.
+Or provide a path now: /socialforge:index-assets {brand} --source /path/to/photos
 ```
 
 ## Progress Updates
@@ -71,12 +71,12 @@ Asset Index Complete: acme-corp
   Background-removable: 23 assets (suitable for ANCHOR_COMPOSE mode)
   Style reference candidates: 8 images suggested
 
-  Saved: ~/socialforge-workspace/brands/acme-corp/asset-index.json
+  Saved: ${CLAUDE_PLUGIN_DATA}/socialforge/brands/acme-corp/asset-index.json
 
 Would you like to:
 - Review style reference candidates? (I'll show all 8 with descriptions)
 - Start monthly production? (/socialforge:new-month)
-- Update specific assets? (/socialforge:index-assets --refresh)
+- Update specific assets? (/socialforge:index-assets acme-corp --source /path/to/photos --refresh)
 ```
 
 ## Timeout & Fallback
@@ -87,9 +87,9 @@ Would you like to:
 
 ## Refresh Mode
 
-`/socialforge:index-assets [brand] --refresh`
+`/socialforge:index-assets [brand] --source <path> --refresh`
 
-Only re-analyzes new or modified images since last index. Compares file timestamps with `indexed_at` in asset-index.json.
+`--source` is required even in refresh mode. Only re-analyzes new or modified images since last index. Compares file timestamps with `indexed_at` in asset-index.json.
 
 ## Cost Awareness
 

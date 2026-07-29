@@ -1,6 +1,6 @@
 ---
 description: Match brand assets to calendar posts and assign creative modes
-argument-hint: "[--brand <name>] [--post <id>] [--override]"
+argument-hint: "--brand <name> --month <YYYY-MM>"
 ---
 
 # Match Assets
@@ -15,5 +15,5 @@ Run the asset matching algorithm to pair brand photos with calendar posts.
 5. User can override any match before proceeding
 
 ## Prerequisites
-- Calendar parsed (/socialforge:parse-calendar)
-- Asset index built (/socialforge:index-assets)
+- Month initialized and calendar parsed (`/socialforge:new-month` or `/socialforge:parse-calendar`)
+- Asset index built (`/socialforge:index-assets`)

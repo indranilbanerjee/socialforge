@@ -1,6 +1,6 @@
 ---
 name: generate-video
-description: "Generate short-form video clips via a 5-stage human-in-the-loop pipeline: concept, keyframes, video generation, and delivery."
+description: "Generate short-form video clips via a 5-stage human-in-the-loop pipeline: concept, first frame, last frame, video generation, and delivery."
 argument-hint: "[--post <id>] [--script-only] [--thumbnail]"
 effort: high
 user-invocable: true
@@ -12,12 +12,12 @@ Generate video production assets through a 5-stage human-in-the-loop pipeline. E
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## Prerequisites
 
 - Credentials must be configured via `/socialforge:setup`:
-  - **Vertex AI** (Gemini Imagen) — used for first-frame and last-frame keyframe generation
+  - **Vertex AI** (Nano Banana Pro / Gemini 3 Pro Image, resolved via `latest-image-google`) — used for first-frame and last-frame keyframe generation
   - **WaveSpeed API** — used for image-to-video generation via Kling v3.0 Pro
 - Brand profile must be active (`/socialforge:switch-brand` if needed)
 - Calendar must be parsed (`/socialforge:parse-calendar`) with video posts identified
@@ -34,14 +34,14 @@ Claude generates **2-3 video concept ideas** based on the post brief, brand voic
 
 The user picks one concept (or requests refinements) before proceeding.
 
-### Stage 2: First Frame Generation (Vertex AI / Gemini Imagen)
+### Stage 2: First Frame Generation (Vertex AI / Nano Banana Pro)
 
 Generate **2 first-frame options** based on the chosen concept. These set the opening visual and establish the look and feel.
 
 - Images are shown **inline** in the terminal for immediate review
 - User selects one or requests a regeneration with adjusted direction
 
-### Stage 3: Last Frame Generation (Vertex AI / Gemini Imagen)
+### Stage 3: Last Frame Generation (Vertex AI / Nano Banana Pro)
 
 Generate **2 last-frame options** that complete the visual narrative arc, matching the approved first frame.
 
@@ -87,8 +87,8 @@ Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video ve
 |------|----------|--------------|-----------------|
 | hero_video | 30-90s | Partial — AI generates 3-15s hero clip; full version needs filming | Script + storyboard + AI teaser clip |
 | mini_case_study | 30-60s | Yes — AI animation from keyframes | Full pipeline supported |
-| short_reel | 15-30s | Yes — ideal for AI generation | Full pipeline supported |
-| story | 15s | Yes — image-to-video animation | Full pipeline supported |
+| short_reel | 15-30s recommended (Instagram Reels and YouTube Shorts accept up to 3 min) | Yes — ideal for AI generation | Full pipeline supported |
+| story | up to 60s per frame (Instagram Stories) | Yes — image-to-video animation | Full pipeline supported |
 | talking_head | 30-120s | No — needs filming | Script + storyboard only (use `--script-only`) |
 
 ## Rules

@@ -1,16 +1,26 @@
 #!/usr/bin/env node
 /**
- * assemble_docx.js — Generate DOCX delivery documents.
- * Uses docx-js to create professional calendar delivery documents.
+ * assemble_docx.js — Build the DOCX-ready JSON structure for calendar delivery documents.
  *
- * Fallback: If docx package not available, outputs a structured JSON
- * that can be converted to DOCX by other tools.
+ * DOCX emission is NOT implemented: the `docx` npm package is not a shipped
+ * dependency of this plugin. This script emits a fully structured JSON document
+ * (title, summary, weekly sections, publishing schedule) that a DOCX writer —
+ * or Claude itself — converts to .docx downstream. `docx_output` always reports
+ * that no .docx file was written.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const WORKSPACE = path.join(require('os').homedir(), 'socialforge-workspace');
+// Storage precedence mirrors the Python scripts:
+// ${CLAUDE_PLUGIN_DATA}/socialforge when it exists, else ~/socialforge-workspace
+const WORKSPACE = (() => {
+    const pluginData = process.env.CLAUDE_PLUGIN_DATA || '';
+    if (pluginData && fs.existsSync(pluginData)) {
+        return path.join(pluginData, 'socialforge');
+    }
+    return path.join(require('os').homedir(), 'socialforge-workspace');
+})();
 
 function buildDocxStructure(brand, month) {
     const monthDir = path.join(WORKSPACE, 'output', brand, month);
@@ -56,7 +66,8 @@ function buildDocxStructure(brand, month) {
     }
 
     // Weekly sections
-    for (const [weekNum, posts] of Object.entries(weeks).sort()) {
+    const weekEntries = Object.entries(weeks).sort((a, b) => Number(a[0]) - Number(b[0]));
+    for (const [weekNum, posts] of weekEntries) {
         const weekSection = {
             type: 'week',
             title: `Week ${weekNum}`,
@@ -116,29 +127,21 @@ function main() {
         process.exit(1);
     }
 
-    // Save structured JSON (can be converted to DOCX with docx-js if available)
+    // Save the DOCX-ready JSON structure
     const outputDir = path.join(WORKSPACE, 'output', brand, month, 'FINAL', '00-Calendar-Document');
     fs.mkdirSync(outputDir, { recursive: true });
 
     const jsonPath = path.join(outputDir, `${brand}-${month}-calendar.json`);
     fs.writeFileSync(jsonPath, JSON.stringify(doc, null, 2), 'utf-8');
 
-    // Try to generate DOCX if docx package is available
-    let docxPath = null;
-    try {
-        // docx package would be used here for actual DOCX generation
-        // For now, output the structured JSON
-        docxPath = null;
-    } catch (e) {
-        // docx package not available, JSON output only
-    }
-
     console.log(JSON.stringify({
         status: 'success',
         brand: brand,
         month: month,
+        output_contract: 'DOCX-ready JSON structure',
         json_output: jsonPath,
-        docx_output: docxPath || 'docx package not available — use JSON structure',
+        docx_output: null,
+        docx_note: 'DOCX emission is not implemented — the `docx` npm package is not a shipped dependency. Convert the JSON structure downstream.',
         sections: doc.sections.length,
         posts: doc.sections.filter(s => s.type === 'week').reduce((sum, w) => sum + w.posts.length, 0)
     }, null, 2));

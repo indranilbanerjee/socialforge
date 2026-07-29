@@ -91,10 +91,22 @@ def list_gemini() -> set[str] | None:
     }
 
 
-def diff(registry_ids: set[str], live_ids: set[str]) -> dict[str, list[str]]:
+def diff(registry_statuses: dict[str, str], live_ids: set[str]) -> dict[str, list[str]]:
+    """Status-aware drift.
+
+    `missing_from_live` is partitioned so a "current" model the provider stopped
+    listing (a real problem) is not reported alongside a "deprecated" or "retired"
+    one that is expected to disappear.
+    """
+    registry_ids = set(registry_statuses)
+    gone = registry_ids - live_ids
     return {
         "missing_from_registry": sorted(live_ids - registry_ids),
-        "missing_from_live": sorted(registry_ids - live_ids),
+        "missing_from_live": sorted(gone),
+        "current_missing_from_live": sorted(
+            i for i in gone if registry_statuses.get(i, "current") in ("current", "supported", "preview")),
+        "retired_missing_from_live": sorted(
+            i for i in gone if registry_statuses.get(i, "current") in ("deprecated", "retired")),
     }
 
 
@@ -110,9 +122,9 @@ def main() -> int:
 
     reg = get_registry()
     reg_path = _find_registry()
-    by_vendor: dict[str, set[str]] = {}
+    by_vendor: dict[str, dict[str, str]] = {}
     for m in reg.get("models", []):
-        by_vendor.setdefault(m.get("vendor", ""), set()).add(m.get("id"))
+        by_vendor.setdefault(m.get("vendor", ""), {})[m.get("id")] = m.get("status", "current")
 
     report: dict[str, dict] = {
         "registry_path": str(reg_path),
@@ -129,11 +141,11 @@ def main() -> int:
         if live is None:
             report[vendor] = {"status": "skipped (no API key or fetch failed)"}
             continue
-        d = diff(by_vendor.get(vendor, set()), live)
+        d = diff(by_vendor.get(vendor, {}), live)
         report[vendor] = {
             "status": "checked",
             "live_count": len(live),
-            "registry_count": len(by_vendor.get(vendor, set())),
+            "registry_count": len(by_vendor.get(vendor, {})),
             **d,
         }
 
@@ -156,13 +168,17 @@ def main() -> int:
             print(f"\n{v.upper()}: {r.get('status')}")
             if r.get("status") == "checked":
                 if r["missing_from_registry"]:
-                    print(f"  NEW (not in registry, may need to add):")
+                    print("  NEW (not in registry, may need to add):")
                     for m in r["missing_from_registry"]:
                         print(f"    + {m}")
-                if r["missing_from_live"]:
-                    print(f"  STALE (in registry, not in provider list):")
-                    for m in r["missing_from_live"]:
+                if r["current_missing_from_live"]:
+                    print("  STALE (marked current in registry, not in provider list):")
+                    for m in r["current_missing_from_live"]:
                         print(f"    - {m}")
+                if r["retired_missing_from_live"]:
+                    print("  EXPECTED (deprecated/retired in registry, provider stopped serving):")
+                    for m in r["retired_missing_from_live"]:
+                        print(f"    . {m}")
                 if not r["missing_from_registry"] and not r["missing_from_live"]:
                     print("  no drift")
     return 0

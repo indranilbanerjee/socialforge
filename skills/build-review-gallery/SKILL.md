@@ -1,28 +1,27 @@
 ---
 name: build-review-gallery
 description: Build an interactive HTML review gallery with all generated posts for team review.
-argument-hint: "[--brand <name>] [--tier HERO|HUB|HYGIENE]"
+argument-hint: "--brand <name> --month <YYYY-MM>"
 effort: medium
 user-invocable: true
 ---
 
 # /socialforge:build-review-gallery — Review Gallery Builder
 
-Build an interactive HTML gallery showing all generated posts with quality scores, copy, and approval controls.
+Build a self-contained HTML gallery showing every post in the month with its generated visual, metadata, and a copy excerpt.
 
 ## Process
-1. Load all generated previews and quality scores
-2. Populate gallery.html template with post cards
-3. Each card shows: preview image, quality score, copy text, compliance status, creative mode
-4. Filter by: tier (HERO/HUB/HYGIENE), platform, status
-5. Export as self-contained HTML file (all images embedded as base64)
-6. Save to `output/{brand}/{month}/review/gallery.html`
+1. Load calendar-data.json and status-tracker.json for the brand + month
+2. For each post, locate the generated image, video (plus any alternative cut), and copy file
+3. Build the gallery HTML — `build_gallery.py` generates the markup inline; it does not read a template file
+4. Embed images and videos as base64 data URIs so the file is self-contained
+5. Save to `${CLAUDE_PLUGIN_DATA}/socialforge/output/{brand}/{month}/review/gallery.html` (falls back to `~/socialforge-workspace/output/...` when `${CLAUDE_PLUGIN_DATA}` is unset)
 
-## Gallery Features
-- Sort by: date, tier priority, quality score
-- Filter by: tier, platform, status, creative mode
-- Actions per post: approve, flag for revision, add notes
-- Bulk actions: approve all HYGIENE, flag all below score X
+## What the Gallery Shows
+- Summary bar: total posts, images, videos, and counts per tier (HERO / HUB / HYGIENE)
+- Per-post card: visual (video preferred over image), post id, tier badge, status, title, date, platforms, content type, and the first 200 characters of the copy
+
+Review actions — approving, requesting revisions, adding notes — happen conversationally via `/socialforge:manage-reviews`, not inside the gallery. The gallery is a read-only view.
 
 ## Timeout & Fallback
-- Gallery build: 60-second timeout for 30 posts. If base64 encoding is too slow, link to image files instead.
+- Gallery build: 60-second timeout for 30 posts. Videos too large to embed render as a "Video not embeddable" placeholder.

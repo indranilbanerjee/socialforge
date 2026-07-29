@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.0] - 2026-07-29
+
+### Changed - The Line-by-Line Audit
+
+Every file in the repo (134 files, ~20K lines - all 16 skills, 5 agents, 25 commands, 22 Python scripts, every reference and doc) was read end-to-end by a 5-reader audit fleet, cross-checked against primary-source July-2026 facts and against the code itself, then fixed by a 4-worker fleet with disjoint file ownership. ~180 corrections:
+
+- **Model currency.** The registry had never received the July mirror: added the Claude 5 (`claude-opus-5`, `claude-sonnet-5`, `claude-fable-5`) and GPT-5.6 (`-sol`, `-terra`, `-luna`) families (51 -> 57 entries), re-pointed `latest-text-anthropic` -> claude-opus-5 and `latest-text-openai` -> gpt-5.6-sol, and flagged the Opus 4.1 retirement. Retired ids were live script defaults: `edit_image.py` defaulted to the RETIRED `gemini-3-pro-image-preview` and `generate_image.py` to the superseded `gemini-2.5-flash-image` - both corrected, and `--check`/`_negotiate_model` now fall forward on `retired`, not just `deprecated`.
+- **Fictions removed.** The carousel-template guide and `render-carousels` documented eight template names that do not exist (the real keys are generic, comparison, case-study, tips, playbook, recap, data, quote); `compositing-guide`, `troubleshooting`, `calendar-data-schema` and `image-gen-guide` named creative modes (ASSET_ONLY, AI_ORIGINAL) that exist nowhere - all realigned to the real four modes. `/socialforge:connect`, `parse_calendar.py`, three hook scripts and seven preview templates were documented but never shipped.
+- **Security and correctness.** Preview HTML now escapes all interpolated copy (a `<script>` payload in post copy previously injected into the mockup reviewers approve); credential files and the copied GCP service-account key are chmod 600 in a 700 directory, and secrets can be supplied via stdin/env instead of argv; `build_gallery.py` no longer crashes on a missing videos directory and now walks the real per-week production layout instead of always rendering empty; `status_manager.py init-month` no longer destroys existing post state and cost history on re-run; C2PA signing no longer risks destroying the asset on a failed rename, and stamps the live plugin version instead of a hardcoded `1.6.0`.
+- **Contract repair.** Documented flags that did not exist (`--tier`, `--post`, `--override`, `--path`) removed or implemented; `--list-platforms` / `--list-templates` / `--list-models` were unreachable behind required arguments and now work; `adapt_copy.py` gained Threads and Bluesky and wired up the bilingual path it had been silently ignoring; `cost_tracker.py` was logging $0.00 for every video because it had no WaveSpeed key; `compliance_check.py` and `match_assets.py` now accept both the documented and the legacy data shapes instead of crashing on schema-conformant input.
+- **Storage split-brain resolved.** Docs, schemas and skills led with the legacy `~/socialforge-workspace/...` path while the scripts prefer `${CLAUDE_PLUGIN_DATA}/socialforge/...`; every reference now leads with the canonical path and names the fallback.
+- **Self-containment.** The guard test now covers references/, docs/, scripts/, assets/ and root docs. It caught live leaks in `references/c2pa-production-cert.md`, `references/eu-ai-act-article50.md`, `references/channel-changes-may-2026.md`, `AGENTS.md`, `CHANGELOG.md` and `scripts/c2pa_sign.py` - all removed. The engineering spec also carried a third-party organization name in the author block, an example hashtag and the calendar-format description; removed.
+- Tests 55 -> **56**; suite green.
+
 ## [1.13.1] - 2026-06-28
 
 **README-sync patch — Current Release body rewritten with actual v1.13.0 content.**
@@ -155,13 +169,15 @@ Brings SocialForge into parity with DMP v3.13.0+ on cross-platform support. Ever
 - Skill descriptions unchanged
 - Claude Code + Cowork behavior byte-identical to v1.11.0
 
+---
+
 ## [1.11.0] - 2026-06-04
 
 **C2PA 2.3 / 2.4 spec refresh — live video, plain text, OGG Vorbis, large AVI, EXIF formats + `c2pa.ai-disclosure` assertion.**
 
 ### Changed
 
-- **`skills/c2pa-sign/SKILL.md`** — added C2PA Content Credentials 2.3 (released 9 February 2026) expanded format support: live video for broadcast/streaming, plain text documents, OGG Vorbis audio, large AVI video, EXIF Original Preservation Images. Relevant for Reels / TikTok / Shorts streaming workflows and product photography. Also added C2PA Spec 2.4 (April 2026) `c2pa.ai-disclosure` assertion — machine-readable AI transparency info that the EU AI Act Article 50 deployer pathway will read. When the underlying `c2pa_sign.py` is on a C2PA SDK ≥ 0.36 that handles 2.4, the new assertion should be embedded alongside the existing IPTC + schema.org tags. Cross-references to DMP's new `skills/context-engine/eu-code-of-practice.md` for the regulatory context (WG1 providers / WG2 deployers / final code targeted May–June 2026 / Article 50 applicable 2 Aug 2026).
+- **`skills/c2pa-sign/SKILL.md`** — added C2PA Content Credentials 2.3 (released 9 February 2026) expanded format support: live video for broadcast/streaming, plain text documents, OGG Vorbis audio, large AVI video, EXIF Original Preservation Images. Relevant for Reels / TikTok / Shorts streaming workflows and product photography. Also added C2PA Spec 2.4 (April 2026) `c2pa.ai-disclosure` assertion — machine-readable AI transparency info that the EU AI Act Article 50 deployer pathway will read. When the underlying `c2pa_sign.py` is on a C2PA SDK ≥ 0.36 that handles 2.4, the new assertion should be embedded alongside the existing IPTC + schema.org tags. Cross-references `references/eu-ai-act-article50.md` for the regulatory context (WG1 providers / WG2 deployers / Article 50 applicable 2 Aug 2026).
 - **Trust List** — now handled via the public C2PA Conformance Program (any CA meeting the Certificate Policy can join). Production signing certs should come from a Conformance-Program-listed CA.
 
 Sources: [C2PA 2.3 launch post 9 Feb 2026](https://c2pa.org/the-c2pa-launches-content-credentials-2-3-and-celebrates-5-years-of-impact-across-the-digital-ecosystem/), [C2PA Spec 2.4](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), [EU Code of Practice page 22 May 2026](https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content).
@@ -235,6 +251,8 @@ What this release **does** actually add (genuine value):
 
 `.mcp.json` is gitignored across all 3 plugins so credentials never get committed. Future "Cowork install hazard" checks must inspect the published GitHub artifact, not local dev state.
 
+---
+
 ## [1.9.0] - 2026-05-27
 
 **Real native manifests for 5 verified agent surfaces.** Ships verified-real manifests for OpenAI Codex, Google Antigravity 2.0, Cursor 2.5+, and GitHub Copilot CLI — replacing the v1.7/v1.8 era invented manifests that were correctly removed in v1.8.5.
@@ -273,6 +291,8 @@ What this release **does** actually add (genuine value):
 - **Codex subagents** are TOML; our `agents/*.md` are Claude-only as static files.
 - **Copilot CLI custom slash commands not yet supported** (open issues #618 and #1113); our `commands/*.md` won't auto-discover.
 - **Antigravity slash commands** fold into skills during `agy plugin import gemini`.
+
+---
 
 ## [1.8.5] - 2026-05-26
 
@@ -313,6 +333,8 @@ Honest position from v1.8.5 onwards: **Claude Code (CLI + IDE extensions) + Anth
 
 - `.claude-plugin/plugin.json` parses cleanly (`python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"`).
 
+---
+
 ## [1.8.4] - 2026-05-25
 
 **Corrects an inaccuracy in the v1.8.3 README callout.** v1.8.3 said the `/plugin isn't available in this environment` error applies to **claude.ai web chat**. User correction: it also applies to the **Claude Desktop app**. The actual rule: `/plugin` slash commands are supported only in **Claude Code** (CLI / IDE at claude.com/code) and **Anthropic Cowork** — not in the standard Claude chat app, whether browser OR installed desktop. Same correction as CF v3.12.6 + DMP v3.7.9.
@@ -321,6 +343,8 @@ Honest position from v1.8.5 onwards: **Claude Code (CLI + IDE extensions) + Anth
 
 - **`README.md`** — re-worded the "/plugin isn't available" callout to name both environments accurately.
 
+---
+
 ## [1.8.3] - 2026-05-25
 
 **README fix for the "claude.ai web" gotcha.** Cross-plugin patch ride-along — same fix shipped to CF v3.12.5 and DMP v3.7.8. Documents that `/plugin` slash commands are not supported in claude.ai web chat (only in Claude Code CLI / Desktop / Cowork), with explicit recovery paths for SocialForge users who hit `"/plugin isn't available in this environment"`.
@@ -328,6 +352,8 @@ Honest position from v1.8.5 onwards: **Claude Code (CLI + IDE extensions) + Anth
 ### Changed
 
 - **`README.md`** — added a prominent "If you see /plugin isn't available in this environment" callout at the top of the Updating section.
+
+---
 
 ## [1.8.2] - 2026-05-25
 
@@ -353,6 +379,8 @@ Honest position from v1.8.5 onwards: **Claude Code (CLI + IDE extensions) + Anth
 
 - Per-file content sweep across all `skills/**/SKILL.md` + `agents/` + `references/`. Frontmatter, slash refs, model ids, MCP URLs, and hardcoded paths all clean.
 - License compliance: MIT across all manifests; no GPL imports.
+
+---
 
 ## [1.8.1] - 2026-05-24
 

@@ -1,6 +1,6 @@
 # EU AI Act Article 50 — Generative AI Transparency Obligations
 
-**Status as of May 2026:** Applicable from **2 August 2026** (76 days from this revision).
+**Status as of July 2026:** Applicable from **2 August 2026**. The final Code of Practice on Transparency of AI-Generated Content was published **10 June 2026**, superseding the earlier drafts, and the standardized EU disclosure icons were published alongside it. The initial-signatory window closed **22 July 2026**.
 **Plugin coverage:** v1.6.0+ via the C2PA signing path (see `scripts/c2pa_sign.py` and `skills/c2pa-sign/SKILL.md`).
 
 ## What Article 50 actually requires
@@ -35,7 +35,7 @@ When the brand profile sets `c2pa_auto_sign: true` (or any image/video generatio
 - Records the IPTC digital-source-type tag: `TRAINED_ALGORITHMIC_MEDIA` for `ai-generated-content`, `COMPOSITE_WITH_TRAINED_ALGORITHMIC_MEDIA` for `ai-assisted-edits`, `HUMAN_EDITS` for `ai-no-substantive-changes`
 - Round-trips the manifest through `c2pa.Reader` to verify embedding succeeded before returning
 
-The signing logic is shared in spirit (not in implementation) with Digital Marketing Pro's `embed-c2pa.py` — both produce interoperable manifests verifiable at [contentcredentials.org/verify](https://contentcredentials.org/verify).
+Manifests are interoperable and verifiable at [contentcredentials.org/verify](https://contentcredentials.org/verify).
 
 ## What SocialForge does NOT do (and why you still need a human-in-the-loop)
 
@@ -59,4 +59,6 @@ The signing logic is shared in spirit (not in implementation) with Digital Marke
 - [C2PA Specification v2.0](https://c2pa.org/specifications/specifications/2.0/specs/C2PA_Specification.html)
 - [Content Authenticity Initiative — Signing manifests](https://opensource.contentauthenticity.org/docs/manifest/signing-manifests/)
 - [Bria.ai — Article 50 enterprise guide](https://bria.ai/blog/article-50-of-the-eu-ai-act-what-enterprises-need-to-change-before-august-2-2026)
-- DMP `skills/context-engine/compliance-rules.md` Section 1.1b (jurisdictional rule pack)
+- `references/c2pa-production-cert.md` — production signing certificates, key management, verification testing
+- `references/channel-changes-may-2026.md` — platform-level AI-labeling policies (TikTok, YouTube, X)
+- `skills/c2pa-sign/SKILL.md` — the signing skill and its flags

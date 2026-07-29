@@ -9,7 +9,7 @@ Start monthly content calendar production. Initializes the output directory, loa
 
 ## Steps
 1. Verify brand profile exists and is complete (pre-flight validation)
-2. Create output directory: `~/socialforge-workspace/output/{brand}/{YYYY-MM}/`
+2. Create output directory: `${CLAUDE_PLUGIN_DATA}/socialforge/output/{brand}/{YYYY-MM}/` (falls back to `~/socialforge-workspace/output/{brand}/{YYYY-MM}/` when `${CLAUDE_PLUGIN_DATA}` is unset)
 3. Initialize status-tracker.json and cost-log.json
 4. Ask for calendar source:
    - **DOCX** — Upload a Word document with the monthly calendar

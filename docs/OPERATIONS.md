@@ -192,7 +192,7 @@ Requires Notion MCP connector. Claude queries the Notion database and maps prope
 
 1. **Scan source directory** -- Recursively find all .jpg/.jpeg/.png/.webp files under the asset source path.
 2. **Incremental detection** -- Compare the file list against the existing asset-index.json. Only new or modified files (by modification timestamp) are sent for AI analysis. Already-indexed files are skipped.
-3. **For each new image** -- Call Gemini Vision API (`gemini-3-flash`) with a structured prompt requesting JSON analysis:
+3. **For each new image** -- Call Gemini Vision API (`gemini-3.5-flash`) with a structured prompt requesting JSON analysis:
    - Description (2-3 sentences of what the image shows)
    - Subjects (person, product, office, event, nature, abstract, etc.)
    - Tags (15-20 descriptive keywords covering subject, setting, mood, style, colors, composition)
@@ -402,7 +402,7 @@ The SSIM (structural similarity) check in step 4 compares the edited image again
 5. Text overlay + logo + resize                    [Deterministic]
 ```
 
-Nano Banana 2 (`gemini-3.1-flash-image-preview`) accepts up to 14 reference images per request. The references cause the AI to absorb the brand's visual DNA -- lighting style, color temperature, composition patterns. The output is a new image that looks like it belongs in the same photo library.
+Nano Banana 2 (`gemini-3.1-flash-image`) accepts up to 14 reference images per request. The references cause the AI to absorb the brand's visual DNA -- lighting style, color temperature, composition patterns. The output is a new image that looks like it belongs in the same photo library.
 
 ### PURE_CREATIVE Pipeline
 
@@ -430,7 +430,8 @@ Same as STYLE_REFERENCED but without reference images in the API call. Only the 
 
 | Provider | Model ID | When Used | Fallback |
 |----------|----------|-----------|----------|
-| **Gemini (primary)** | `gemini-3.1-flash-image-preview` (Nano Banana 2) | All 4 creative modes, ref image support | fal.ai MCP |
+| **Gemini (primary)** | `gemini-3.1-flash-image` (Nano Banana 2) — registry alias `latest-image-balanced-google` | All 4 creative modes, ref image support | fal.ai MCP |
+| **Gemini (top tier)** | `gemini-3-pro-image` (Nano Banana Pro) — registry alias `latest-image-google` | Pass `--model` when you want the higher-fidelity/4K path | fal.ai MCP |
 | **fal.ai (HTTP MCP)** | Flux 2, SDXL, etc. | When Gemini unavailable or user prefers | Replicate MCP |
 | **Replicate (HTTP MCP)** | Various (user's choice) | Alternative provider | Placeholder |
 | **Placeholder (Pillow)** | None (local rendering) | When ALL providers fail | Gray image with prompt text overlay |
@@ -441,15 +442,15 @@ The fallback chain is: Gemini -> fal.ai -> Replicate -> Placeholder. Each transi
 
 | Provider | Model ID | When Used |
 |----------|----------|-----------|
-| **Gemini** | `gemini-3.1-flash-image-preview` | ENHANCE_EXTEND mode edits, iterative refinement |
+| **Gemini** | `gemini-3-pro-image` (Nano Banana Pro) — registry alias `latest-image-edit-google` | ENHANCE_EXTEND mode edits, iterative refinement |
 
-Image editing uses the same model as generation. The original image is sent as the first content part, edit instructions as text, and optional style references alongside.
+Image editing runs on the same Gemini image family as generation. The original image is sent as the first content part, edit instructions as text, and optional style references alongside.
 
 ### Vision Analysis (Asset Indexing)
 
 | Provider | Model ID | When Used |
 |----------|----------|-----------|
-| **Gemini** | `gemini-3-flash` | Asset indexing (understanding what each photo contains) |
+| **Gemini** | `gemini-3.5-flash` — registry alias `latest-vision-google` | Asset indexing (understanding what each photo contains) |
 
 This is a different model from the image generator. Flash is used because vision analysis is a classification/description task, not a generation task.
 
@@ -459,7 +460,7 @@ This is a different model from the image generator. Flash is used because vision
 |----------|----------|-----------|----------|
 | **Veo 3.1 (fast)** | `veo-3.1-generate-preview` | Quick social clips | <=10 seconds |
 | **Veo 3.1 (standard)** | `veo-3.1-generate-preview` | Reels, stories | 10-30 seconds |
-| **Kling** | `kling-v2` | Longer form content | 30s-3min |
+| **Kling v3.0 Pro** | `kwaivgi/kling-v3.0-pro/image-to-video` | Longer form content | 30s-3min |
 | **Manual** | None | Extended content | Script + storyboard only |
 
 ### When API Keys Are Checked
@@ -665,8 +666,8 @@ The quality reviewer is an AI agent, not a script. Implications:
 ### How It Works
 
 1. Select the HTML template based on `carousel_type` from calendar-data.json (8 templates available).
-2. Inject brand CSS variables: `--brand-primary`, `--brand-secondary`, `--brand-accent`, `--brand-bg`, `--brand-text`, `--brand-font-heading`, `--brand-font-body` from brand-config.json.
-3. For each slide: replace template placeholders (`{{slide_title}}`, `{{slide_body}}`, `{{data_point}}`) with content from the carousel slide briefs.
+2. Substitute the brand mustache tokens from brand-config.json into the template: `{{brand_primary}}`, `{{brand_secondary}}`, `{{brand_accent}}`, `{{brand_bg_light}}`, `{{brand_bg_dark}}`, `{{brand_text}}`, `{{font_heading}}`, `{{font_body}}`, `{{brand_name}}`. (These are plain string replacements, not CSS custom properties — a template is free to bind them to `--brand-*` variables itself.)
+3. For each slide: replace `{{slide_<key>}}` placeholders (e.g. `{{slide_title}}`, `{{slide_body}}`) with the matching keys from that slide's brief in calendar-data.json.
 4. Render each slide at 1080x1080px (or custom dimensions) via Playwright headless Chromium -> PNG screenshot.
 5. Assemble all PNGs into a single PDF using Pillow multi-page save.
 6. Output: slide-01.png through slide-NN.png + carousel.pdf in production/carousels/post-{id}/.
@@ -748,7 +749,7 @@ The calendar's `video_details.video_type` field determines production approach:
 - **hero_video**: Full production treatment. Multiple scenes, music considerations, high polish.
 - **mini_case_study**: Interview/narrative structure. May require real footage.
 - **short_reel**: 15-30 second vertical clip. Fast cuts, trending format.
-- **story**: Ephemeral, 15 seconds max. Can be animated from a static image.
+- **story**: Ephemeral, up to 60 seconds per frame. Can be animated from a static image.
 - **talking_head**: Requires real footage of a person. Script + teleprompter text only.
 
 ---
@@ -772,9 +773,9 @@ QUEUED -> ASSET_MATCHING -> GENERATING -> PENDING_REVIEW
                           |
               +-----------+-----------+
               v           v           v
-       APPROVED_CLIENT  REV_REQ_CLI  REJECTED_CLI
-              |           |                |
-              |           +-> GENERATING   +-> QUEUED
+       APPROVED_CLIENT  REVISION_REQ_CLIENT  REJECTED_CLIENT
+              |                 |                    |
+              |                 +-> GENERATING       +-> QUEUED
               v
        PENDING_CEO (if required by tier)
               |
@@ -1078,7 +1079,7 @@ Every API call made by any script writes an entry to `cost-log.json`:
 {
   "timestamp": "2026-04-01T10:30:15Z",
   "operation": "image_generation",
-  "model": "gemini-3.1-flash-image-preview",
+  "model": "gemini-3.1-flash-image",
   "post_id": 1,
   "reference_count": 5,
   "resolution": "1024",
@@ -1197,21 +1198,23 @@ Cloudinary (optional DAM) ---------------------------------> CDN delivery + tran
 
 ---
 
-## Hooks
+## Hooks — none shipped (zero global hooks)
 
-SocialForge uses 4 hooks to enforce quality and brand consistency at the platform level:
+**SocialForge ships no hooks.** `hooks/hooks.json` is empty by design. The four hooks below were removed in v1.5.0 because they fired on every Claude Code operation in every project, not just SocialForge work. Credential status is now reported on demand via `/socialforge:status`.
 
-### SessionStart
+The removed configuration is preserved at `hooks/hooks-reference.example.json` as an **opt-in example only** — nothing loads it. If you want any of these behaviours, copy the relevant block into your own project's hook settings; SocialForge will not do it for you.
+
+### SessionStart (opt-in reference example — not shipped active)
 Runs `status_manager.py --action session-init` to restore session state, then displays the quick-start banner with available commands.
 
-### PreToolUse (Write|Edit)
+### PreToolUse (Write|Edit) (opt-in reference example — not shipped active)
 Fires before any file write or edit. If the content being written is social media copy or an image prompt, it checks:
 1. No banned phrases from compliance-rules.json.
 2. No fabricated statistics or unsourced claims.
 3. Platform character limits respected.
 4. Brand hashtags included where required.
 
-### SubagentStart
+### SubagentStart (opt-in reference example — not shipped active)
 Fires when any subagent is spawned. Loads the active brand-config.json and enforces:
 1. Brand colors, fonts, and visual style must be respected.
 2. Brand assets are sacred -- AI generates around them, never replaces them.
@@ -1219,7 +1222,7 @@ Fires when any subagent is spawned. Loads the active brand-config.json and enfor
 4. The 4 creative modes must be followed.
 5. Compliance rules must be respected.
 
-### Stop
+### Stop (opt-in reference example — not shipped active)
 Fires when a task completes. Verifies:
 1. All generated images were approved by the user.
 2. Copy respects platform character limits.
@@ -1227,7 +1230,7 @@ Fires when a task completes. Verifies:
 4. Logo overlay was applied where required.
 5. Correct image dimensions for target platforms.
 
-If any check fails, the hook lists the issues and asks how to proceed instead of silently completing.
+If any check fails, the hook lists the issues and asks how to proceed instead of silently completing. (Again: this is the archived example, not shipped behaviour.)
 
 ---
 
@@ -1247,4 +1250,4 @@ This serves two purposes:
 
 ---
 
-*SocialForge Technical Operations Reference -- v1.3*
+*SocialForge Technical Operations Reference -- v1.13.1*

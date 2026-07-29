@@ -19,6 +19,25 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+def platform_key(p):
+    """Platform entries may be dicts ({"key": ...}) or plain strings."""
+    if isinstance(p, dict):
+        return str(p.get("key") or p.get("name") or "")
+    return str(p)
+
+
+def crop_feasible_for(compat, key):
+    """`platforms_compatible` may be a dict-of-dicts or a flat list of names."""
+    if isinstance(compat, dict):
+        entry = compat.get(key)
+        if isinstance(entry, dict):
+            return bool(entry.get("crop_feasible", False))
+        return bool(entry)
+    if isinstance(compat, list):
+        return key in {platform_key(c) for c in compat}
+    return False
+
+
 def extract_keywords(post):
     """Extract matching keywords from a post."""
     keywords = set()
@@ -63,11 +82,11 @@ def score_asset(asset, post_keywords, post, month_usage, week_usage=None):
     crop_feasible = 0
     compat = asset.get("platforms_compatible", {})
     for p in platforms:
-        if compat.get(p.get("key", ""), {}).get("crop_feasible", False):
+        if crop_feasible_for(compat, platform_key(p)):
             crop_feasible += 1
     crop_score = crop_feasible / max(len(platforms), 1)
 
-    # Factor 5: Freshness penalty (10%)
+    # Factor 5: Freshness (10%)
     asset_id = asset.get("id", "")
     uses = month_usage.get(asset_id, 0)
     freshness_penalty = 0 if uses == 0 else (0.15 if uses == 1 else (0.40 if uses == 2 else 0.70))
@@ -77,8 +96,51 @@ def score_asset(asset, post_keywords, post, month_usage, week_usage=None):
     if post_week and asset_id in week_usage.get(post_week, set()):
         freshness_penalty = min(freshness_penalty + 0.50, 1.0)  # Additional 0.50, cap at 1.0
 
-    final = (tag_score * 0.30) + (suit_score * 0.25) + (bucket_score * 0.20) + (crop_score * 0.15) - (freshness_penalty * 0.10)
+    freshness_score = 1.0 - freshness_penalty
+
+    # The five weights sum to 1.00
+    final = (tag_score * 0.30) + (suit_score * 0.25) + (bucket_score * 0.20) + (crop_score * 0.15) + (freshness_score * 0.10)
     return max(0, min(final, 1.0))
+
+
+def load_prior_usage(matches_path, calendar_post_ids):
+    """Seed month/week usage from a previous asset-matches.json (repetition avoidance).
+
+    Entries for posts that are about to be re-scored in this run are skipped so a
+    re-run does not compound freshness penalties against its own previous output.
+    """
+    month_usage = {}
+    week_usage = {}
+    if not matches_path.exists():
+        return month_usage, week_usage
+    try:
+        prior = json.loads(matches_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return month_usage, week_usage
+
+    for match in prior.get("matches", []):
+        if not isinstance(match, dict):
+            continue
+        if match.get("post_id") in calendar_post_ids:
+            continue
+        primary = match.get("primary_asset") or {}
+        asset_id = primary.get("asset_id")
+        if not asset_id:
+            continue
+        month_usage[asset_id] = month_usage.get(asset_id, 0) + 1
+        week = match.get("week_number", 0)
+        if week:
+            week_usage.setdefault(week, set()).add(asset_id)
+
+    return month_usage, week_usage
+
+
+def write_json_atomic(path, data):
+    """Write JSON via a temp file + os.replace so a crash can't truncate the output."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def recommend_mode(score):
@@ -109,14 +171,19 @@ def match_all(brand, month):
     index = json.loads(index_path.read_text(encoding="utf-8"))
     assets = index.get("assets", [])
 
+    posts = calendar.get("posts", [])
+    output_path = WORKSPACE / "output" / brand / month / "asset-matches.json"
+
     # Build month + week usage from existing matches
-    month_usage = {}
-    week_usage = {}
+    month_usage, week_usage = load_prior_usage(output_path, {p.get("post_id") for p in posts})
+
+    # Style references are brand-level, not per-post — compute once
+    style_refs = [a["id"] for a in assets if a.get("is_style_reference")][:5]
 
     results = []
     mode_counts = {"ANCHOR_COMPOSE": 0, "ENHANCE_EXTEND": 0, "STYLE_REFERENCED": 0, "PURE_CREATIVE": 0}
 
-    for post in calendar.get("posts", []):
+    for post in posts:
         post_keywords = extract_keywords(post)
 
         # Score all assets
@@ -132,9 +199,10 @@ def match_all(brand, month):
         mode = recommend_mode(best_score)
 
         # Handle content type overrides
-        if post.get("content_type") == "carousel":
+        content_type = str(post.get("content_type", "")).replace("-", "_").lower()
+        if content_type == "carousel":
             mode = "CAROUSEL_TEMPLATE"
-        elif post.get("content_type") == "text_only":
+        elif content_type == "text_only":
             mode = "TEXT_ONLY"
 
         mode_counts[mode] = mode_counts.get(mode, 0) + 1
@@ -146,11 +214,9 @@ def match_all(brand, month):
             if post_week:
                 week_usage.setdefault(post_week, set()).add(top[0]["asset_id"])
 
-        # Select style references
-        style_refs = [a["id"] for a in assets if a.get("is_style_reference")][:5]
-
         results.append({
             "post_id": post["post_id"],
+            "week_number": post.get("week_number", 0),
             "recommendation": mode,
             "primary_asset": top[0] if top else None,
             "alternatives": top[1:],
@@ -160,8 +226,7 @@ def match_all(brand, month):
 
     output = {"brand": brand, "month": month, "matches": results, "mode_distribution": mode_counts}
 
-    output_path = WORKSPACE / "output" / brand / month / "asset-matches.json"
-    output_path.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
+    write_json_atomic(output_path, output)
 
     print(json.dumps({"matched": len(results), "modes": mode_counts, "output": str(output_path)}, indent=2))
 

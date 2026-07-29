@@ -13,11 +13,14 @@ Transform a single caption brief into platform-optimized copy for each target pl
 2. Load brand-config.json (tone, hashtags, language settings)
 3. Load compliance-rules.json (banned phrases, disclaimers, platform rules)
 4. Generate copy per platform:
-   - LinkedIn: Professional tone, 1300 chars max (3000 with "see more"), 3-5 hashtags
+   - LinkedIn: Professional tone, 3000 chars max (~140 visible before the "see more" fold), 3-5 hashtags
    - Instagram: Conversational, 2200 chars max, 20-30 hashtags in first comment
    - X/Twitter: Punchy, 280 chars, 1-2 hashtags
    - Facebook: Casual, 500 chars optimal, 1-3 hashtags
    - YouTube: Description format, timestamps, links
+   - TikTok: Casual and trend-aware, 2200 chars, 3-5 hashtags (trending + branded)
+   - Threads: Conversational, 500 chars, 1-3 hashtags
+   - Bluesky: Concise and community-first, 300 chars, 1-2 hashtags (via tag facets)
 5. Apply brand hashtags (always_include + campaign-specific)
 6. Run compliance check — flag banned phrases, add required disclaimers
 7. Handle bilingual posts if brand.languages.bilingual_posts is true

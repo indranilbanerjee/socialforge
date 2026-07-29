@@ -1,7 +1,7 @@
 ---
 name: match-assets
 description: "Match brand assets to calendar posts and assign creative modes. Use when: after calendar parsing or asset re-matching."
-argument-hint: "[--brand <name>] [--post <id>] [--override]"
+argument-hint: "--brand <name> --month <YYYY-MM>"
 effort: high
 user-invocable: true
 ---
@@ -12,7 +12,7 @@ Match brand assets to parsed calendar posts using the multi-factor scoring algor
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## Prerequisites
 - Calendar parsed (calendar-data.json exists)
@@ -30,9 +30,9 @@ For each post, calculate a multi-factor score against every indexed asset:
 | Suitability Match | 25% | Asset's "suitable_for" vs post context |
 | Content Bucket Match | 20% | Does asset suit this content bucket? |
 | Crop Feasibility | 15% | Can asset be cropped to all required platform ratios? |
-| Freshness Penalty | 10% | Penalize assets used recently this month |
+| Freshness | 10% | Favours assets not already used this month |
 
-**Freshness penalty:** 0 uses = no penalty | 1 use = score x 0.85 | 2 uses = score x 0.60 | 3+ uses = score x 0.30
+**Freshness factor:** scored as `1 - penalty` and weighted at 10% alongside the other four factors (the five weights sum to 1.00). Penalty by prior uses this month: 0 uses = 0.00 | 1 use = 0.15 | 2 uses = 0.40 | 3+ uses = 0.70. Reusing an asset within the same week adds a further 0.50 to the penalty (capped at 1.00).
 
 ## Creative Mode Assignment
 
@@ -62,18 +62,19 @@ Asset Matching Complete: 28 posts
   PURE_CREATIVE: 4 posts (full AI generation)
   CAROUSEL_TEMPLATE: 2 posts (HTML template rendering)
 
-  Asset gaps: 3 posts flagged (should have brand assets but none found)
-    - P07: Founder post but no founder photos indexed
-    - P14: Product demo but no product screenshots available
-    - P22: Office culture post but no office photos
+  Asset gaps: 3 posts flagged — P07, P14, P22
 
   Top used assets: asset_012 (3 posts), asset_005 (2 posts)
 ```
+
+The gap flag is a boolean (`gap_flag`), raised when a HERO or HUB post's best asset scores below 0.3. It marks which posts need attention; it does not explain which kind of asset is missing — inspect the flagged posts to decide what to shoot or upload.
 
 5. Present for user confirmation — user can override any match
 6. Save to `output/{brand}/{YYYY-MM}/asset-matches.json`
 
 ## User Override
+
+Overrides are conversational, not flags — `match_assets.py` accepts only `--brand` and `--month`. Adjustments are made at the confirmation step (step 5) and written back to asset-matches.json.
 
 For any post, user can:
 - Accept the recommendation

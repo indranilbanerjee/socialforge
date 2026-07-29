@@ -135,7 +135,7 @@ def resolve(alias_or_id: str, *, allow_deprecated: bool = False) -> str:
 
 def check(model_id: str) -> tuple[str, str | None]:
     """Return (status, replacement_id) for a model ID.
-    status is one of: current, supported, preview, deprecated, unknown."""
+    status is one of: current, supported, preview, deprecated, retired, unknown."""
     idx = _model_index()
     if model_id not in idx:
         return ("unknown", None)
@@ -219,11 +219,18 @@ def _cmd_check_params(path_str: str, *, as_json: bool = False) -> int:
     # whole resolver pattern is alias-first, so an explicit string hit is the
     # one to catch).
     import re as _re
-    risky_model_pat = _re.compile(r"claude-opus-4-[78]")
+    # Opus 4.7/4.8 and the whole Claude 5 family reject sampling params
+    risky_model_pat = _re.compile(r"claude-opus-4-[78]|claude-(?:opus|sonnet|fable)-5")
     unsafe_params = ("temperature", "top_p", "top_k")
     findings = []
     has_opus_47_plus = bool(risky_model_pat.search(text))
-    has_alias_call = "latest-text-anthropic" in text  # resolves to opus-4-8 in the registry
+    # Resolve the alias live rather than assuming what it points at
+    try:
+        _alias_target = resolve("latest-text-anthropic")
+    except (KeyError, ValueError, OSError):
+        _alias_target = None
+    has_alias_call = "latest-text-anthropic" in text and bool(
+        _alias_target is None or risky_model_pat.search(_alias_target))
     targets_47_plus = has_opus_47_plus or has_alias_call
 
     if targets_47_plus:
@@ -245,6 +252,7 @@ def _cmd_check_params(path_str: str, *, as_json: bool = False) -> int:
         "targets_opus_47_plus": targets_47_plus,
         "explicit_opus_47_plus_ref": has_opus_47_plus,
         "uses_latest_text_anthropic_alias": has_alias_call,
+        "latest_text_anthropic_resolves_to": _alias_target,
         "findings_count": len(findings),
         "findings": findings,
     }
@@ -310,7 +318,7 @@ def main() -> int:
                 if replacement:
                     line += f" (use {replacement})"
                 print(line)
-            return 1 if status in {"deprecated", "unknown"} else 0
+            return 1 if status in {"deprecated", "retired", "unknown"} else 0
 
         if args.list:
             models = list_models(args.vendor, args.modality, args.status, args.tier)

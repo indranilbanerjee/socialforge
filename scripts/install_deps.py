@@ -19,9 +19,7 @@ REQUIRED = {
     "optional": ["rembg"],
 }
 
-ALL_PACKAGES = []
-for group in REQUIRED.values():
-    ALL_PACKAGES.extend(group)
+OPTIONAL_PACKAGES = set(REQUIRED["optional"])
 
 
 def check_package(package_name):
@@ -114,12 +112,21 @@ def main():
         print(json.dumps(results, indent=2))
 
         missing = [k for k, v in results.items() if v["status"] == "missing"]
-        if missing:
-            print("Failed to install: " + ", ".join(missing))
-            print("Try manually: pip install " + " ".join(missing))
+        # Optional packages (rembg) must not fail the run — warn and continue
+        optional_missing = [k for k in missing if k in OPTIONAL_PACKAGES]
+        required_missing = [k for k in missing if k not in OPTIONAL_PACKAGES]
+
+        if optional_missing:
+            print("Optional packages not installed (features degrade gracefully): "
+                  + ", ".join(optional_missing))
+            print("Install manually if needed: pip install " + " ".join(optional_missing))
+
+        if required_missing:
+            print("Failed to install: " + ", ".join(required_missing))
+            print("Try manually: pip install " + " ".join(required_missing))
             sys.exit(1)
         else:
-            print("All dependencies ready.")
+            print("All required dependencies ready.")
 
 
 if __name__ == "__main__":

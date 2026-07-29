@@ -11,9 +11,9 @@ This is the technical mechanism for EU AI Act Article 50 compliance
 generative-AI content distributed in EU markets without machine-readable
 marking).
 
-This script is self-contained — SocialForge does NOT depend on
-digital-marketing-pro being installed. The signing logic mirrors DMP's
-embed-c2pa.py exactly so an asset signed here verifies identically.
+This script is fully self-contained. Manifests follow the open C2PA v2
+schema and the IPTC digital-source-type vocabulary, so any conformant
+verifier reads them identically.
 
 Usage (standalone):
     python3 c2pa_sign.py \
@@ -32,7 +32,7 @@ Usage (auto-called from SocialForge pipeline):
     calls this script as a finalization step.
 
 Tested with c2pa-python 0.32.6 — uses the current Builder + Signer.from_info
-API. Empirically verified end-to-end as part of DMP v3.4.1.
+API. Verified end-to-end against contentcredentials.org/verify.
 
 Exit codes:
     0  success
@@ -89,6 +89,15 @@ def ensure_c2pa():
         sys.exit(2)
 
 
+def _plugin_version() -> str:
+    """Read the shipped plugin version so signed assets carry accurate provenance."""
+    try:
+        manifest = Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json"
+        return json.loads(manifest.read_text(encoding="utf-8")).get("version", "unknown")
+    except Exception:
+        return "unknown"
+
+
 def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_format):
     actions = [
         {
@@ -125,7 +134,7 @@ def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_
     return {
         "claim_generator_info": [{
             "name": "SocialForge",
-            "version": "1.6.0",
+            "version": _plugin_version(),
         }],
         "title": f"{brand} — AI-generated social asset",
         "format": SUPPORTED_FORMATS[asset_format],

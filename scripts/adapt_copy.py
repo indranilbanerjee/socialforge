@@ -26,6 +26,8 @@ PLATFORM_LIMITS = {
     "youtube": {"char_limit": 5000, "hashtag_limit": 5, "link": "direct"},
     "tiktok": {"char_limit": 2200, "hashtag_limit": 10, "link": "bio"},
     "pinterest": {"char_limit": 500, "hashtag_limit": 20, "link": "direct"},
+    "threads": {"char_limit": 500, "hashtag_limit": 3, "link": "direct"},
+    "bluesky": {"char_limit": 300, "hashtag_limit": 2, "hashtag_placement": "tag_facets", "link": "direct"},
 }
 
 
@@ -117,8 +119,9 @@ def generate_bilingual(copy_text, platform, primary_lang="en", secondary_lang=No
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Copy Adapter")
-    parser.add_argument("--text", required=True, help="Source copy text")
-    parser.add_argument("--platform", required=True, help="Target platform")
+    # Required for an adaptation, but must stay optional so --list-platforms works
+    parser.add_argument("--text", help="Source copy text")
+    parser.add_argument("--platform", help="Target platform")
     parser.add_argument("--brand", default=None, help="Brand slug for hashtags")
     parser.add_argument("--cta", default=None, help="Call-to-action text or URL")
     parser.add_argument("--secondary-lang", default=None, help="Secondary language for bilingual posts")
@@ -131,6 +134,10 @@ def main():
         print(json.dumps(PLATFORM_LIMITS, indent=2))
         return
 
+    missing = [flag for flag, value in (("--text", args.text), ("--platform", args.platform)) if not value]
+    if missing:
+        parser.error("the following arguments are required: " + ", ".join(missing))
+
     brand_hashtags = []
     if args.brand:
         config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
@@ -142,6 +149,21 @@ def main():
         brand_hashtags.extend(args.campaign_hashtags)
 
     result = adapt_for_platform(args.text, args.platform, brand_hashtags, args.cta)
+
+    # Bilingual variants when a secondary language is requested
+    if args.secondary_lang and "error" not in result:
+        primary_lang = "en"
+        if args.brand:
+            config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
+            if config_path.exists():
+                config = json.loads(config_path.read_text(encoding="utf-8"))
+                languages = config.get("languages") or []
+                if languages:
+                    primary_lang = languages[0]
+        result["bilingual"] = generate_bilingual(
+            result["copy"], args.platform, primary_lang, args.secondary_lang, args.bilingual_mode
+        )
+
     print(json.dumps(result, indent=2))
 
 

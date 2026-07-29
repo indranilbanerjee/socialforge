@@ -12,7 +12,7 @@ Parse a monthly social media content calendar into structured JSON that drives t
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## Supported Formats
 
@@ -51,7 +51,7 @@ Every post in the calendar must have (or the system will ask for missing ones):
 5. **Assign post IDs** — Sequential (P01, P02, ...) if not already present
 6. **Cross-reference platforms** — Check all platforms exist in brand's platform-config.json
 7. **Flag issues** — Duplicate dates, missing briefs, unsupported content types
-8. **Save** — Write calendar-data.json to `~/socialforge-workspace/output/{brand}/{YYYY-MM}/`
+8. **Save** — Write calendar-data.json to `${CLAUDE_PLUGIN_DATA}/socialforge/output/{brand}/{YYYY-MM}/` (falls back to `~/socialforge-workspace/output/...` when `${CLAUDE_PLUGIN_DATA}` is unset)
 
 ## Output
 
@@ -65,7 +65,7 @@ Issues found: 2
   - P14: Missing visual_brief (will need manual input during asset matching)
   - P22: Date falls on Sunday — confirm intentional weekend post?
 
-Calendar saved: ~/socialforge-workspace/output/acme-corp/2026-04/calendar-data.json
+Calendar saved: ${CLAUDE_PLUGIN_DATA}/socialforge/output/acme-corp/2026-04/calendar-data.json
 ```
 
 ## After Parsing

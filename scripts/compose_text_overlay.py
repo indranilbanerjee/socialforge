@@ -19,6 +19,23 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+def _hex_to_rgb(value):
+    """Parse a hex color into an (r, g, b) tuple.
+
+    Accepts `#RRGGBB`, `RRGGBB`, `#RGB`, and `RGB`. Raises ValueError on anything else
+    rather than letting int() fail mid-render with an opaque message.
+    """
+    raw = str(value).strip().lstrip("#")
+    if len(raw) == 3:
+        raw = "".join(c * 2 for c in raw)
+    if len(raw) != 6:
+        raise ValueError(f"{value!r} is not a 3- or 6-digit hex color")
+    try:
+        return int(raw[0:2], 16), int(raw[2:4], 16), int(raw[4:6], 16)
+    except ValueError:
+        raise ValueError(f"{value!r} contains non-hex characters") from None
+
+
 def add_text_overlay(image_path, output_path, text, brand=None, position="bottom", font_size=48, color="#FFFFFF", bg_color=None, opacity=0.85):
     """Add text overlay to an image with optional background strip."""
     try:
@@ -86,7 +103,10 @@ def add_text_overlay(image_path, output_path, text, brand=None, position="bottom
 
     # Draw background strip if bg_color is set
     if bg_color:
-        r, g, b = int(bg_color[1:3], 16), int(bg_color[3:5], 16), int(bg_color[5:7], 16)
+        try:
+            r, g, b = _hex_to_rgb(bg_color)
+        except ValueError as exc:
+            return {"error": f"--bg-color: {exc}"}
         a = int(opacity * 255)
         draw.rectangle(
             [(0, strip_y), (img.width, strip_y + text_h + padding * 2)],
@@ -94,7 +114,10 @@ def add_text_overlay(image_path, output_path, text, brand=None, position="bottom
         )
 
     # Draw text
-    r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+    try:
+        r, g, b = _hex_to_rgb(color)
+    except ValueError as exc:
+        return {"error": f"--color: {exc}"}
     draw.text((text_x, text_y), text, fill=(r, g, b, 255), font=font)
 
     # Composite
@@ -127,6 +150,7 @@ def main():
 
     result = add_text_overlay(args.image, args.output, args.text, args.brand, args.position, args.font_size, args.color, args.bg_color, args.opacity)
     print(json.dumps(result, indent=2))
+    sys.exit(1 if result.get("error") else 0)
 
 
 if __name__ == "__main__":

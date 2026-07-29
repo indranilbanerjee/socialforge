@@ -5,7 +5,13 @@ JSON schema for `calendar-data.json` — the monthly content calendar with all p
 ## Location
 
 ```
-~/socialforge-workspace/brands/<brand-slug>/calendar-data.json
+${CLAUDE_PLUGIN_DATA}/socialforge/output/<brand-slug>/<month>/calendar-data.json
+```
+
+When `CLAUDE_PLUGIN_DATA` is unset, the scripts fall back to:
+
+```
+~/socialforge-workspace/output/<brand-slug>/<month>/calendar-data.json
 ```
 
 ## Top-Level Fields
@@ -35,15 +41,33 @@ JSON schema for `calendar-data.json` — the monthly content calendar with all p
 | `post_id` | string | Unique ID (e.g., `"post-2026-04-07-lin-001"`) |
 | `date` | string | Scheduled date (YYYY-MM-DD) |
 | `tier` | string | `"HERO"`, `"HUB"`, or `"HYGIENE"` |
-| `platforms` | array | Target platforms (e.g., `["linkedin", "x"]`) |
+| `platforms` | array | Target platform objects — `[{ "key": "linkedin", "name": "LinkedIn" }, ...]` (see below) |
 | `copy` | object | Copy content (see below) |
 | `visual` | object | Visual asset assignment (see below) |
-| `content_type` | string | Type: `"static"`, `"carousel"`, `"video"`, `"text-only"` |
+| `content_type` | string | Type: `"static"`, `"carousel"`, `"video"`, `"text_only"` |
 | `carousel_details` | object | Carousel-specific data (if applicable) |
 | `video_details` | object | Video-specific data (if applicable) |
 | `production` | object | Production metadata (see below) |
 | `boosting` | object | Paid promotion details (if applicable) |
 | `dependencies` | array | Post IDs this post depends on |
+
+## `platforms` Entry
+
+Each entry is an object. The scripts are canonical here: `match_assets.py` reads `platform["key"]` to look up crop feasibility, and `status_manager.py` reads `platform["name"]` when building the post folder name.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `key` | string | Machine key used for lookups (`"linkedin"`, `"instagram"`, `"x"`, `"facebook"`, `"youtube"`, `"tiktok"`, `"pinterest"`) |
+| `name` | string | Display name used in folder names and galleries (e.g., `"LinkedIn"`) |
+
+```json
+"platforms": [
+  { "key": "linkedin", "name": "LinkedIn" },
+  { "key": "x", "name": "X" }
+]
+```
+
+Plain string entries (`["linkedin", "x"]`) are tolerated throughout: `match_assets.py` treats the string as the key, and `status_manager.py` uses it directly in the folder name. Prefer the object form so galleries and folder names get a properly cased display label.
 
 ## `copy`
 
@@ -59,7 +83,7 @@ JSON schema for `calendar-data.json` — the monthly content calendar with all p
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `mode` | string | `"ASSET_ONLY"`, `"ANCHOR_COMPOSE"`, `"STYLE_REFERENCED"`, `"AI_ORIGINAL"` |
+| `mode` | string | Creative mode. Four generation modes: `"ANCHOR_COMPOSE"`, `"ENHANCE_EXTEND"`, `"STYLE_REFERENCED"`, `"PURE_CREATIVE"`. `match_assets.py` also emits `"CAROUSEL_TEMPLATE"` when `content_type` is `"carousel"` and `"TEXT_ONLY"` when it is `"text_only"`. |
 | `asset_id` | string | Reference to asset-index ID (if using existing asset) |
 | `prompt` | string | AI generation prompt (if generating) |
 | `style_reference_id` | string | Asset ID for style reference (if STYLE_REFERENCED) |
@@ -70,8 +94,8 @@ JSON schema for `calendar-data.json` — the monthly content calendar with all p
 | Field | Type | Description |
 |-------|------|-------------|
 | `slide_count` | number | Number of slides |
-| `template` | string | Template name (e.g., `"tips-listicle"`, `"data-story"`) |
-| `slides` | array | Array of `{ "headline": "...", "body": "...", "visual_note": "..." }` |
+| `template` | string | Template key (e.g., `"tips"`, `"data"`) — one of `generic`, `comparison`, `case-study`, `tips`, `playbook`, `recap`, `data`, `quote`. See `references/carousel-templates-guide.md`. |
+| `slides` | array | Array of per-slide objects; each key `k` fills the template's `{{slide_k}}` placeholder |
 
 ## `video_details`
 
@@ -106,7 +130,10 @@ JSON schema for `calendar-data.json` — the monthly content calendar with all p
   "post_id": "post-2026-04-07-lin-001",
   "date": "2026-04-07",
   "tier": "HUB",
-  "platforms": ["linkedin", "x"],
+  "platforms": [
+    { "key": "linkedin", "name": "LinkedIn" },
+    { "key": "x", "name": "X" }
+  ],
   "copy": {
     "hook": "We analyzed 10,000 SaaS onboarding flows. Here's what the top 1% do differently.",
     "body": "...",

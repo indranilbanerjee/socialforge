@@ -1,7 +1,7 @@
 ---
 name: assemble-document
-description: Assemble the final calendar delivery document (DOCX) with all posts, images, and copy.
-argument-hint: "[--brand <name>] [--format docx|pdf]"
+description: Assemble the final calendar delivery manifest (structured JSON) with all posts, copy, and metadata.
+argument-hint: "[--brand <name>] [--month <YYYY-MM>]"
 effort: high
 user-invocable: true
 disable-model-invocation: true
@@ -9,24 +9,27 @@ disable-model-invocation: true
 
 # /socialforge:assemble-document — Document Assembler
 
-Create the final delivery document containing the complete monthly calendar with images, copy, and metadata.
+Create the final delivery manifest — a structured JSON file describing the complete monthly calendar, its posts, copy, and metadata. The manifest is the deliverable this skill produces; a formatted DOCX is a manual/optional step downstream (see below).
 
-## Document Structure
-1. Cover page (brand name, month, prepared by)
-2. Table of contents
-3. Monthly overview (post count, platform breakdown, tier distribution)
-4. Weekly sections:
-   - For each post: date, platform, image preview, copy text, hashtags, CTA, creative mode used, quality score
-5. Appendix A: Publishing schedule (dates + times + platforms)
-6. Appendix B: Production notes (asset gaps, compliance flags, revision history)
-7. Appendix C: Cost report
+## Manifest Structure
+
+`assemble_docx.js` emits these sections into the JSON manifest:
+
+1. Title block (brand name, month, generation timestamp)
+2. Monthly overview (post count, platform breakdown, tier distribution, content-type distribution)
+3. Weekly sections:
+   - For each post: post id, date, title, tier, platforms, content type, copy option A, visual direction, creative mode, status
+4. Publishing schedule (date, day of week, post id, title, platforms)
 
 ## Process
-1. Load all approved posts from status-tracker.json
-2. Load images, copy, and metadata for each
-3. Build DOCX using document-template structure
-4. Embed images at appropriate resolution
-5. Save to `output/{brand}/{month}/FINAL/00-Calendar-Document/`
+1. Load calendar-data.json and status-tracker.json for the brand + month
+2. Group posts by week and merge in each post's tracked status and creative mode
+3. Build the manifest structure
+4. Save to `${CLAUDE_PLUGIN_DATA}/socialforge/output/{brand}/{month}/FINAL/00-Calendar-Document/{brand}-{month}-calendar.json` (falls back to `~/socialforge-workspace/output/...` when `${CLAUDE_PLUGIN_DATA}` is unset)
+
+## Producing a DOCX (manual/optional)
+
+No DOCX is generated automatically — the script reports `docx package not available` and emits JSON only. To produce a Word document, hand the manifest JSON to a document tool of your choice, or lay it out against `assets/document-template/`. Image previews are referenced by path in the manifest rather than embedded.
 
 ## Timeout & Fallback
-- Document assembly: 2-minute timeout for 30 posts. If images are too large, compress to 72 DPI.
+- Manifest assembly: 2-minute timeout for 30 posts.

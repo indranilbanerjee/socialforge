@@ -5,6 +5,7 @@ Shows how posts will look when published on each social platform.
 """
 
 import argparse
+import html as html_lib
 import json
 import os
 import sys
@@ -16,10 +17,12 @@ if _plugin_data and Path(_plugin_data).exists():
     WORKSPACE = Path(_plugin_data) / "socialforge"
 else:
     WORKSPACE = Path.home() / "socialforge-workspace"
+# Optional per-platform mockup overrides: assets/preview-templates/<platform>.html
+# with {{name}} / {{handle}} / {{platform}} / {{image_uri}} / {{copy}} placeholders.
 TEMPLATE_DIR = PLUGIN_ROOT / "assets" / "preview-templates"
 
 
-def render_preview(image_path, copy_text, platform, brand, output_path, width=1080, height=1080):
+def render_preview(image_path, copy_text, platform, brand, output_path):
     """Render a platform preview mockup."""
     try:
         from playwright.sync_api import sync_playwright
@@ -35,8 +38,42 @@ def render_preview(image_path, copy_text, platform, brand, output_path, width=10
         if platform in profiles:
             profile = profiles[platform]
 
-    # Build simple HTML preview (fallback when templates don't exist yet)
-    html = f"""<!DOCTYPE html>
+    # Every interpolated value is escaped — post copy and brand values are untrusted
+    # text and must not be able to inject markup into the preview reviewers approve.
+    name = html_lib.escape(str(profile.get("name", brand)))
+    handle = html_lib.escape(str(profile.get("handle", "@" + brand)))
+    platform_label = html_lib.escape(platform.upper())
+    copy_html = html_lib.escape(copy_text[:500])
+    image_uri = html_lib.escape(Path(image_path).resolve().as_uri())
+
+    # Per-platform template if one exists, otherwise the inline mockup below
+    template_path = TEMPLATE_DIR / f"{platform}.html"
+    if template_path.exists():
+        template = template_path.read_text(encoding="utf-8")
+        for placeholder, value in (("{{name}}", name), ("{{handle}}", handle),
+                                   ("{{platform}}", platform_label),
+                                   ("{{image_uri}}", image_uri), ("{{copy}}", copy_html)):
+            template = template.replace(placeholder, value)
+        html = template
+    else:
+        html = build_default_html(name, handle, platform_label, image_uri, copy_html)
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page(viewport={"width": 600, "height": 800})
+        page.set_content(html)
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(output_path), full_page=True)
+        browser.close()
+
+    return {"status": "success", "output": str(output_path), "platform": platform, "brand": brand}
+
+
+def build_default_html(name, handle, platform_label, image_uri, copy_html):
+    """Inline mockup used when no per-platform template is present."""
+    return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <style>
   body {{ margin: 0; background: #f5f5f5; font-family: -apple-system, sans-serif; }}
@@ -53,26 +90,14 @@ def render_preview(image_path, copy_text, platform, brand, output_path, width=10
 <div class="card">
   <div class="header">
     <div class="avatar"></div>
-    <div><div class="name">{profile.get('name', brand)}</div><div class="handle">{profile.get('handle', '@' + brand)}</div></div>
+    <div><div class="name">{name}</div><div class="handle">{handle}</div></div>
   </div>
   <div class="wrapper">
-    <img class="image" src="file:///{Path(image_path).resolve()}" />
-    <div class="platform-badge">{platform.upper()}</div>
+    <img class="image" src="{image_uri}" />
+    <div class="platform-badge">{platform_label}</div>
   </div>
-  <div class="copy">{copy_text[:500]}</div>
+  <div class="copy">{copy_html}</div>
 </div></body></html>"""
-
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page(viewport={"width": 600, "height": 800})
-        page.set_content(html)
-        page.wait_for_timeout(500)
-        page.screenshot(path=str(output_path), full_page=True)
-        browser.close()
-
-    return {"status": "success", "output": str(output_path), "platform": platform, "brand": brand}
 
 
 def main():

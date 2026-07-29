@@ -29,7 +29,7 @@ import os
 import sys
 import time
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add scripts dir to path for credential_manager + curator imports
@@ -43,7 +43,7 @@ except (ImportError, KeyError, ValueError):  # pragma: no cover
     _resolve_model = None
     _check_model = None
     DEFAULT_KLING_MODEL = "kwaivgi/kling-v3.0-pro/image-to-video"
-    DEFAULT_VEO_MODEL = "veo-3.1-generate-001"
+    DEFAULT_VEO_MODEL = "veo-3.1-generate-preview"
 
 
 def _negotiate_video_model(user_value, alias):
@@ -52,8 +52,8 @@ def _negotiate_video_model(user_value, alias):
         return user_value or alias
     if user_value:
         status, replacement = _check_model(user_value)
-        if status == "deprecated" and replacement:
-            print(f"WARNING: video model {user_value!r} is deprecated; using {replacement!r}", file=sys.stderr)
+        if status in ("deprecated", "retired") and replacement:
+            print(f"WARNING: video model {user_value!r} is {status}; using {replacement!r}", file=sys.stderr)
             return replacement
         if status == "unknown":
             print(f"WARNING: video model {user_value!r} not in curated registry", file=sys.stderr)
@@ -98,8 +98,8 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
                 import wavespeed
             else:
                 return {"status": "FAILED", "error": "wavespeed install failed. Run: pip install wavespeed"}
-        except (ImportError, Exception):
-            return {"status": "FAILED", "error": "wavespeed not installed. Run: pip install wavespeed"}
+        except Exception as exc:
+            return {"status": "FAILED", "error": f"wavespeed not installed ({exc}). Run: pip install wavespeed"}
 
     try:
         from credential_manager import get_wavespeed_key
@@ -230,8 +230,8 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                 from google.genai import types
             else:
                 return {"status": "FAILED", "error": "google-genai install failed. Run: pip install google-genai"}
-        except (ImportError, Exception):
-            return {"status": "FAILED", "error": "google-genai not installed. Run: pip install google-genai"}
+        except Exception as exc:
+            return {"status": "FAILED", "error": f"google-genai not installed ({exc}). Run: pip install google-genai"}
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -316,24 +316,31 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
 # Script and Storyboard generation
 # ---------------------------------------------------------------------------
 
+def _mmss(total_seconds):
+    """Format seconds as M:SS — rolls over past 59s so SRT conversion stays valid."""
+    total_seconds = max(0, int(total_seconds))
+    return f"{total_seconds // 60}:{total_seconds % 60:02d}"
+
+
 def generate_script(post_data, brand_config):
     """Generate a video script from post data."""
     title = post_data.get("title", "Untitled")
     brief = post_data.get("visual", {}).get("direction_a", "")
     video_type = post_data.get("video_details", {}).get("video_type", "short_reel")
     duration = post_data.get("video_details", {}).get("duration_seconds", 30)
+    main_end = max(8, duration - 5)
 
     return {
         "title": title,
         "video_type": video_type,
         "target_duration_seconds": duration,
         "brand": brand_config.get("brand_name", ""),
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "scenes": [
-            {"timestamp": "0:00-0:03", "visual": "Brand logo reveal with motion", "audio": "Brand sound / music start", "text_overlay": ""},
-            {"timestamp": "0:03-0:08", "visual": f"Hook visual: {brief[:100]}", "audio": "Narration: opening hook", "text_overlay": title[:50]},
-            {"timestamp": f"0:08-0:{duration-5}", "visual": "Main content sequence", "audio": "Narration continues", "text_overlay": "Key points"},
-            {"timestamp": f"0:{duration-5}-0:{duration}", "visual": "CTA + brand logo", "audio": "Closing statement", "text_overlay": "Call to action"},
+            {"timestamp": f"{_mmss(0)}-{_mmss(3)}", "visual": "Brand logo reveal with motion", "audio": "Brand sound / music start", "text_overlay": ""},
+            {"timestamp": f"{_mmss(3)}-{_mmss(8)}", "visual": f"Hook visual: {brief[:100]}", "audio": "Narration: opening hook", "text_overlay": title[:50]},
+            {"timestamp": f"{_mmss(8)}-{_mmss(main_end)}", "visual": "Main content sequence", "audio": "Narration continues", "text_overlay": "Key points"},
+            {"timestamp": f"{_mmss(main_end)}-{_mmss(duration)}", "visual": "CTA + brand logo", "audio": "Closing statement", "text_overlay": "Call to action"},
         ],
         "notes": f"Based on: {brief}",
     }
@@ -384,15 +391,22 @@ def generate_srt(script, output_path):
 
 def route_video_provider(duration_seconds, video_type):
     """Route to the appropriate video provider."""
-    fal_key = os.environ.get("WAVESPEED_API_KEY")
+    wavespeed_key = os.environ.get("WAVESPEED_API_KEY")
     gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     gemini_key = os.environ.get("GEMINI_API_KEY")
 
+    # Some video types are live-action by definition — no AI provider can produce them
+    production = VIDEO_TYPES.get(video_type, {}).get("production", "")
+    if "needs filming" in production:
+        return {
+            "provider": "none",
+            "error": f"Video type '{video_type}' requires filming ({production}).",
+            "fallback": "script_and_storyboard_only",
+        }
+
     if duration_seconds <= 8 and (gcp_project or gemini_key):
         return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
-    elif duration_seconds <= 10 and fal_key:
-        return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15}
-    elif fal_key:
+    elif wavespeed_key:
         return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15}
     elif gcp_project or gemini_key:
         return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}

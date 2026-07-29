@@ -1,6 +1,6 @@
-# Channel Changes — May 2026 Reference
+# Channel Changes — July 2026 Reference
 
-Platform-by-platform changes that affect SocialForge content as of May 2026. The existing `references/platform-specs.md` covers dimensions, character limits, and posting mechanics; this file covers the **policy, algorithm, and structural** changes that override or qualify those mechanics.
+Platform-by-platform changes that affect SocialForge content as of July 2026. The existing `references/platform-specs.md` covers dimensions, character limits, and posting mechanics; this file covers the **policy, algorithm, and structural** changes that override or qualify those mechanics.
 
 ## TikTok (post-USDS Joint Venture, Jan 22 2026)
 
@@ -31,7 +31,7 @@ Platform-by-platform changes that affect SocialForge content as of May 2026. The
 ## X (formerly Twitter)
 
 - **Algorithm transparency reports** now published quarterly. Posts with images get ~30% more engagement than text-only; posts with native video get ~80% more than image posts.
-- **AI-generated post labeling:** voluntary as of May 2026 but X reserves the right to auto-label.
+- **AI-generated post labeling:** voluntary as of July 2026 but X reserves the right to auto-label.
 
 ## Sora deprecation (cross-cutting)
 
@@ -55,4 +55,4 @@ Platform-by-platform changes that affect SocialForge content as of May 2026. The
 - `references/platform-specs.md` — dimensional + character-limit specs (still current)
 - `references/eu-ai-act-article50.md` — EU AI Act technical compliance
 - `skills/c2pa-sign/SKILL.md` — provenance signing
-- DMP `skills/context-engine/compliance-rules.md` Sections 1.1b (EU AI Act), 1.3 (CCPA ADMT), 1.11 (DPDP) — jurisdictional rules
+- `references/c2pa-production-cert.md` — production signing certificates and verification

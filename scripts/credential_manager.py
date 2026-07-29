@@ -9,9 +9,11 @@ Usage from other scripts:
     from credential_manager import get_gemini_client, get_wavespeed_key, get_status
 """
 
+import getpass
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
@@ -26,6 +28,15 @@ GCP_KEY_FILE = CRED_DIR / "gcp-credentials.json"
 
 def _ensure_dir():
     CRED_DIR.mkdir(parents=True, exist_ok=True)
+    _restrict(CRED_DIR, 0o700)
+
+
+def _restrict(path, mode):
+    """Tighten permissions on a secret file/dir. No-op where chmod isn't meaningful."""
+    try:
+        os.chmod(path, mode)
+    except (OSError, NotImplementedError):
+        pass
 
 
 def _load_creds():
@@ -40,6 +51,7 @@ def _load_creds():
 def _save_creds(data):
     _ensure_dir()
     CRED_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _restrict(CRED_FILE, 0o600)
 
 
 def setup_vertex_ai(json_path):
@@ -56,6 +68,7 @@ def setup_vertex_ai(json_path):
         return {"status": "FAILED", "error": "No project_id in JSON. Is this a service account key?"}
     _ensure_dir()
     shutil.copy2(str(json_path), str(GCP_KEY_FILE))
+    _restrict(GCP_KEY_FILE, 0o600)
     creds = _load_creds()
     creds["vertex_ai"] = {
         "credentials_file": str(GCP_KEY_FILE),
@@ -225,6 +238,25 @@ def get_status():
     }
 
 
+def _read_secret(value, env_var, label):
+    """Resolve a secret without requiring it on the command line.
+
+    Precedence: explicit flag > environment variable > stdin. Passing a secret as a
+    CLI argument leaks it into shell history and the process table, so the flag is
+    optional and the env-var / stdin forms are preferred.
+    """
+    if value:
+        return value
+    from_env = os.environ.get(env_var)
+    if from_env:
+        return from_env
+    if not sys.stdin.isatty():
+        piped = sys.stdin.readline().strip()
+        if piped:
+            return piped
+    return getpass.getpass(f"{label}: ").strip()
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="SocialForge Credential Manager")
@@ -232,19 +264,25 @@ def main():
     va_p = sub.add_parser("setup-vertex", help="Configure Vertex AI")
     va_p.add_argument("--json-path", required=True, help="Path to GCP service account JSON")
     ws_p = sub.add_parser("setup-wavespeed", help="Configure WaveSpeed")
-    ws_p.add_argument("--api-key", required=True, help="WaveSpeed API key")
+    ws_p.add_argument("--api-key", default=None,
+                      help="WaveSpeed API key (omit to read from WAVESPEED_API_KEY or stdin — avoids shell-history leaks)")
     hf_p = sub.add_parser("setup-higgsfield", help="Configure HiggsField")
-    hf_p.add_argument("--api-key", required=True, help="HiggsField API key")
-    hf_p.add_argument("--api-secret", required=True, help="HiggsField API secret")
+    hf_p.add_argument("--api-key", default=None,
+                      help="HiggsField API key (omit to read from HF_API_KEY or stdin)")
+    hf_p.add_argument("--api-secret", default=None,
+                      help="HiggsField API secret (omit to read from HF_API_SECRET or stdin)")
     sub.add_parser("status", help="Show credential status")
     sub.add_parser("validate", help="Validate all credentials")
     args = parser.parse_args()
     if args.action == "setup-vertex":
         result = setup_vertex_ai(args.json_path)
     elif args.action == "setup-wavespeed":
-        result = setup_wavespeed(args.api_key)
+        result = setup_wavespeed(_read_secret(args.api_key, "WAVESPEED_API_KEY", "WaveSpeed API key"))
     elif args.action == "setup-higgsfield":
-        result = setup_higgsfield(args.api_key, args.api_secret)
+        result = setup_higgsfield(
+            _read_secret(args.api_key, "HF_API_KEY", "HiggsField API key"),
+            _read_secret(args.api_secret, "HF_API_SECRET", "HiggsField API secret"),
+        )
     elif args.action == "status":
         result = get_status()
     elif args.action == "validate":

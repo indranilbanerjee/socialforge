@@ -30,13 +30,62 @@ def file_to_base64(file_path, mime_type=None):
         ext = path.suffix.lower().lstrip(".")
         mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
                     "gif": "image/gif", "mp4": "video/mp4", "webm": "video/webm"}
-        mime_type = mime_map.get(ext, f"application/octet-stream")
+        mime_type = mime_map.get(ext, "application/octet-stream")
     return f"data:{mime_type};base64,{data}"
 
 
 def image_to_base64(img_path):
     """Convert image to base64 data URI."""
     return file_to_base64(img_path)
+
+
+IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp")
+VIDEO_EXTS = (".mp4", ".webm", ".mov")
+
+
+def find_post_dir(month_dir, post):
+    """Locate the per-post production folder written by status_manager.init_post_folder.
+
+    Layout: production/week-{N}/{PostID}-{date}-{platforms}-{tier}-{ctype}/
+    """
+    try:
+        from status_manager import get_post_folder_name, get_week_number
+    except ImportError:
+        return None
+
+    week = get_week_number(post.get("date", ""))
+    candidate = month_dir / "production" / f"week-{week}" / get_post_folder_name(post)
+    if candidate.exists():
+        return candidate
+
+    # Folder-name fields (platforms/tier/content_type) may have changed since creation —
+    # fall back to a prefix match on the post id across every week.
+    pid = str(post.get("post_id", ""))
+    production = month_dir / "production"
+    if pid and production.exists():
+        for week_dir in sorted(production.glob("week-*")):
+            for d in sorted(week_dir.iterdir()):
+                if d.is_dir() and d.name.startswith(f"{pid}-"):
+                    return d
+    return None
+
+
+def first_media(dirs, exts):
+    """Return the first media file with one of `exts` across `dirs`, in order."""
+    for d in dirs:
+        if not d or not d.exists():
+            continue
+        for f in sorted(d.iterdir()):
+            if f.is_file() and f.suffix.lower() in exts:
+                return str(f)
+    return ""
+
+
+def platform_label(p):
+    """Platform entries are keyed by `key` in the calendar schema."""
+    if isinstance(p, dict):
+        return str(p.get("key") or p.get("name") or "")
+    return str(p)
 
 
 def build_gallery(brand, month):
@@ -57,49 +106,74 @@ def build_gallery(brand, month):
         pid = str(post.get("post_id", ""))
         status_info = tracker.get("posts", {}).get(pid, {})
 
-        # Find generated image
-        images_dir = month_dir / "production" / "images"
-        image_path = ""
-        for pattern in [f"post-{pid}-variant-a*.png", f"post-{pid}-*.png"]:
-            matches = list(images_dir.glob(pattern)) if images_dir.exists() else []
-            if matches:
-                image_path = str(matches[0])
-                break
+        # Per-post folder written by status_manager.init_post_folder
+        post_dir = find_post_dir(month_dir, post)
+        final_dir = post_dir / "final" if post_dir else None
+        versions_dir = post_dir / "versions" if post_dir else None
+        post_copy_dir = post_dir / "copy" if post_dir else None
+
+        # Find generated image — approved final first, then the latest version.
+        # Legacy flat production/images/ is still honoured as a fallback.
+        image_path = first_media([final_dir, versions_dir], IMAGE_EXTS)
+        if not image_path:
+            images_dir = month_dir / "production" / "images"
+            for pattern in [f"post-{pid}-variant-a*.png", f"post-{pid}-*.png"]:
+                matches = list(images_dir.glob(pattern)) if images_dir.exists() else []
+                if matches:
+                    image_path = str(matches[0])
+                    break
 
         # Find copy
-        copy_dir = month_dir / "production" / "copy"
         copy_text = ""
-        copy_file = copy_dir / f"post-{pid}-linkedin-copy.txt"
-        if not copy_file.exists():
-            for cf in (copy_dir.glob(f"post-{pid}-*-copy.txt") if copy_dir.exists() else []):
-                copy_file = cf
-                break
-        if copy_file.exists():
+        copy_file = None
+        if post_copy_dir and post_copy_dir.exists():
+            txts = sorted(f for f in post_copy_dir.iterdir() if f.is_file() and f.suffix.lower() == ".txt")
+            preferred = [f for f in txts if "linkedin" in f.name.lower()]
+            if preferred or txts:
+                copy_file = (preferred or txts)[0]
+        if copy_file is None:
+            copy_dir = month_dir / "production" / "copy"
+            candidate = copy_dir / f"post-{pid}-linkedin-copy.txt"
+            if candidate.exists():
+                copy_file = candidate
+            elif copy_dir.exists():
+                for cf in copy_dir.glob(f"post-{pid}-*-copy.txt"):
+                    copy_file = cf
+                    break
+        if copy_file is not None and copy_file.exists():
             copy_text = copy_file.read_text(encoding="utf-8")
 
         # Find video files
-        videos_dir = month_dir / "production" / "videos"
-        video_path = ""
-        for vp in [f"post-{pid}-video.mp4", f"post-{pid}-video.webm"]:
-            vf = videos_dir / vp if videos_dir.exists() else Path("")
-            if vf.exists():
-                video_path = str(vf)
-                break
+        video_path = first_media([final_dir, versions_dir], VIDEO_EXTS)
+        if not video_path:
+            videos_dir = month_dir / "production" / "videos"
+            if videos_dir.exists():
+                for vp in [f"post-{pid}-video.mp4", f"post-{pid}-video.webm"]:
+                    vf = videos_dir / vp
+                    if vf.exists():
+                        video_path = str(vf)
+                        break
 
         # Find video alternatives for comparison
         alt_video_path = ""
-        alt_dir = month_dir / "production" / "alternatives"
-        if alt_dir.exists():
-            for av in alt_dir.glob(f"post-{pid}-video-v*.mp4"):
-                alt_video_path = str(av)
-                break
+        if video_path and versions_dir and versions_dir.exists():
+            for av in sorted(versions_dir.iterdir()):
+                if av.is_file() and av.suffix.lower() in VIDEO_EXTS and str(av) != video_path:
+                    alt_video_path = str(av)
+                    break
+        if not alt_video_path:
+            alt_dir = month_dir / "production" / "alternatives"
+            if alt_dir.exists():
+                for av in alt_dir.glob(f"post-{pid}-video-v*.mp4"):
+                    alt_video_path = str(av)
+                    break
 
         posts_data.append({
             "id": pid,
             "title": post.get("title", f"Post {pid}"),
             "date": post.get("date", ""),
             "tier": post.get("tier", ""),
-            "platforms": [p.get("name", "") for p in post.get("platforms", [])],
+            "platforms": [platform_label(p) for p in post.get("platforms", [])],
             "content_type": post.get("content_type", "static"),
             "status": status_info.get("status", "QUEUED"),
             "creative_mode": status_info.get("creative_mode", ""),

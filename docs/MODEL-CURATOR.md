@@ -3,7 +3,7 @@
 `scripts/model_registry.json` is the single source of truth for every AI model id that the plugin's scripts hand to a provider SDK. The resolver `scripts/resolve_model.py` reads the registry and answers three questions for the rest of the plugin:
 
 1. "What's the current best model for X?" → `resolve("latest-fast-anthropic")` returns the concrete id.
-2. "Is this model id still good?" → `check("claude-sonnet-4-5-20250929")` returns `("deprecated", "claude-sonnet-4-6")`.
+2. "Is this model id still good?" → `check("claude-sonnet-4-5-20250929")` returns `("deprecated", "claude-sonnet-5")`.
 3. "What's available?" → `list_models(vendor="google", modality="image-gen")` returns the matching catalog.
 
 This means a single edit to `model_registry.json` propagates to every script the next time it runs — no grep-and-replace across the plugin when a model is deprecated.
@@ -26,31 +26,34 @@ Every script that calls a provider model accepts `--model` (or `--openai-model` 
 - **No `--model`** → resolve via the script's default alias (e.g. `latest-balanced-anthropic`).
 
 ```bash
-# Default — uses the registry's latest-balanced-anthropic alias (claude-sonnet-4-6 today)
-python scripts/ai-visibility-checker.py --brand acme --mode api
+# Default — generate_image.py resolves the latest-image-balanced-google alias
+python scripts/generate_image.py --prompt "product on marble" --output out.png
 
 # Override to a specific id
-python scripts/ai-visibility-checker.py --brand acme --mode api --anthropic-model claude-opus-4-7
+python scripts/generate_image.py --prompt "product on marble" --output out.png --model gemini-3-pro-image
 
-# Pass a deprecated id — script warns and substitutes claude-sonnet-4-6
-python scripts/ai-visibility-checker.py --brand acme --mode api --anthropic-model claude-sonnet-4-5-20250929
-# WARNING (anthropic): claude-sonnet-4-5-20250929 is deprecated, using claude-sonnet-4-6 instead
+# Pass a retired id — the resolver warns and substitutes the replacement
+python scripts/generate_image.py --prompt "product on marble" --output out.png --model gemini-3-pro-image-preview
+# WARNING (google): gemini-3-pro-image-preview is retired, using gemini-3-pro-image instead
 
 # See what's curated
-python scripts/ai-visibility-checker.py --list-models
-python scripts/resolve_model.py --list --vendor anthropic --status current
+python scripts/generate_image.py --list-models
+python scripts/resolve_model.py --alias latest-image-google
+python scripts/resolve_model.py --check gemini-3.1-flash-image
+python scripts/resolve_model.py --registry-age
+python scripts/resolve_model.py --list --vendor google --status current
 ```
 
 ---
 
 ## Aliases (the public API for "give me the latest X")
 
-| Alias | What it resolves to today (June 28, 2026) |
+| Alias | What it resolves to today (July 2026) |
 |---|---|
-| `latest-text-anthropic` | Claude Opus 4.8 (frontier — Anthropic's current recommendation) |
-| `latest-balanced-anthropic` | Claude Sonnet 4.6 |
+| `latest-text-anthropic` | Claude Opus 5 (frontier — Anthropic's current recommendation) |
+| `latest-balanced-anthropic` | Claude Sonnet 5 |
 | `latest-fast-anthropic` | Claude Haiku 4.5 |
-| `latest-text-openai` | GPT-5.5 (replaces GPT-5, deprecated June 11 / shutdown Dec 11 2026) |
+| `latest-text-openai` | GPT-5.6 (Sol) |
 | `latest-balanced-openai` | GPT-5.4 mini |
 | `latest-fast-openai` | GPT-5.4 nano |
 | `latest-image-openai` | GPT Image 2 |
@@ -66,7 +69,7 @@ python scripts/resolve_model.py --list --vendor anthropic --status current
 | `latest-video-wavespeed` | Kling v3.0 Pro |
 | `latest-image-character-higgsfield` | Higgsfield Soul v2 |
 
-Run `python scripts/resolve_model.py --aliases` to list the live mappings.
+This table is a dated snapshot. `python scripts/resolve_model.py --aliases` prints the live mappings straight out of the registry and is always authoritative.
 
 ---
 
@@ -76,7 +79,7 @@ Run `python scripts/resolve_model.py --aliases` to list the live mappings.
 
 If your script calls Opus 4.7+ via the SDK, **omit** these parameters entirely — let the system default apply. Use prompting to guide model behavior instead.
 
-Plugins call Opus 4.7+ via `resolve_model("latest-text-anthropic")` (now → Opus 4.8); the resolver's `--strict` mode warns when an active script also sets `temperature` / `top_p` / `top_k`. Run `python scripts/resolve_model.py --check-params script.py` to scan a file for unsafe param use before shipping.
+Plugins call Opus 4.7+ via `resolve_model("latest-text-anthropic")`. Run `python scripts/resolve_model.py --check-params script.py` to scan a file for unsafe param use before shipping — it exits 1 if any call passes `temperature` / `top_p` / `top_k` alongside an Opus 4.7+ target.
 
 Source: [Claude model deprecations — API parameter deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
 
@@ -89,7 +92,7 @@ Frontier model landscape shifts roughly every 6 weeks. Treat any entry older tha
 ```bash
 # Check how stale the registry is
 python scripts/resolve_model.py --registry-age
-# -> last_updated: 2026-05-25 (0 days ago). next_review_due: 2026-08-25
+# -> last_updated: <YYYY-MM-DD> (<N> days ago). next_review_due: <YYYY-MM-DD>
 
 # Poll the provider catalogs and report drift (no writes)
 ANTHROPIC_API_KEY=... OPENAI_API_KEY=... GEMINI_API_KEY=... python scripts/refresh_models.py
@@ -135,6 +138,6 @@ Change `status` to `"deprecated"` and add `replacement_id`. The resolver will au
   "id": "claude-sonnet-4-6",
   "vendor": "anthropic",
   "status": "deprecated",
-  "replacement_id": "claude-sonnet-4-7"
+  "replacement_id": "claude-sonnet-5"
 }
 ```

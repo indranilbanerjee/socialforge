@@ -28,5 +28,6 @@ Add --update to modify an existing brand:
 
 ## Switch Active Brand
 ```
-/socialforge:brand-setup --switch OtherBrand
+/socialforge:brand-setup OtherBrand --switch
 ```
+Or use the dedicated command: `/socialforge:switch-brand OtherBrand`

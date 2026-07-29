@@ -1,6 +1,6 @@
 ---
 description: Generate creative assets for all posts in the current month's calendar
-argument-hint: "[--brand <name>] [--week <N>]"
+argument-hint: "[--brand <name>] [--week <N>] [--tier HERO|HUB|HYGIENE] [--platform <name>]"
 ---
 
 # Generate All

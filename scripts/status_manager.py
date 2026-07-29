@@ -8,7 +8,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
@@ -18,6 +18,11 @@ if _plugin_data and Path(_plugin_data).exists():
     WORKSPACE = Path(_plugin_data) / "socialforge"
 else:
     WORKSPACE = Path.home() / "socialforge-workspace"
+
+
+def utc_now():
+    """Timezone-aware UTC timestamp in Zulu form."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
 
 
 def session_init():
@@ -69,8 +74,9 @@ def update_status(brand, month, post_id, new_status, actor="system", notes="", f
     old_status = tracker["posts"][post_key]["status"]
 
     # Validate transition
+    allowed = VALID_TRANSITIONS.get(old_status, [])
+    was_forced = force and new_status not in allowed and old_status != new_status
     if not force:
-        allowed = VALID_TRANSITIONS.get(old_status, [])
         if new_status not in allowed and old_status != new_status:
             print(json.dumps({
                 "error": "Invalid state transition",
@@ -81,20 +87,29 @@ def update_status(brand, month, post_id, new_status, actor="system", notes="", f
             }))
             sys.exit(1)
 
+    timestamp = utc_now()
     tracker["posts"][post_key]["status"] = new_status
-    tracker["last_updated"] = datetime.utcnow().isoformat() + "Z"
+    tracker["last_updated"] = timestamp
 
     # Log transition
-    tracker["posts"][post_key].setdefault("revision_history", []).append({
+    entry = {
         "from": old_status,
         "to": new_status,
         "actor": actor,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": timestamp,
         "notes": notes
-    })
+    }
+    if was_forced:
+        # Audit trail — a gate was bypassed to reach this state
+        entry["force_finalized"] = True
+        tracker["posts"][post_key]["force_finalized"] = True
+    tracker["posts"][post_key].setdefault("revision_history", []).append(entry)
 
     tracker_path.write_text(json.dumps(tracker, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(json.dumps({"post_id": post_key, "old_status": old_status, "new_status": new_status}))
+    result = {"post_id": post_key, "old_status": old_status, "new_status": new_status}
+    if was_forced:
+        result["force_finalized"] = True
+    print(json.dumps(result))
 
 
 def get_summary(brand, month):
@@ -125,7 +140,7 @@ def get_post_folder_name(post):
     """Generate descriptive folder name: P01-2026-04-07-linkedin-instagram-HERO-static"""
     pid = post.get("post_id", "P00")
     date = post.get("date", "unknown")
-    platforms = "-".join(p.get("name", p) if isinstance(p, dict) else str(p)
+    platforms = "-".join(str(p.get("key") or p.get("name") or "") if isinstance(p, dict) else str(p)
                          for p in post.get("platforms", []))
     tier = post.get("tier", "HUB")
     ctype = post.get("content_type", "static")
@@ -160,8 +175,12 @@ def init_post_folder(brand, month, post):
     return str(post_dir)
 
 
-def init_month(brand, month):
-    """Initialize a new month's tracking."""
+def init_month(brand, month, force=False):
+    """Initialize a new month's tracking.
+
+    Existing status-tracker.json / cost-log.json are preserved so a re-run cannot
+    destroy post state or cost history. Pass force=True to back them up and rebuild.
+    """
     month_dir = WORKSPACE / "output" / brand / month
     month_dir.mkdir(parents=True, exist_ok=True)
     (month_dir / "production").mkdir(parents=True, exist_ok=True)
@@ -175,11 +194,12 @@ def init_month(brand, month):
         for post in calendar.get("posts", []):
             init_post_folder(brand, month, post)
 
+    created_at = utc_now()
     tracker = {
         "brand": brand,
         "month": month,
-        "created_at": datetime.utcnow().isoformat() + "Z",
-        "last_updated": datetime.utcnow().isoformat() + "Z",
+        "created_at": created_at,
+        "last_updated": created_at,
         "pipeline_status": {
             "phase_0_parse": "not_started",
             "phase_1_asset_match": "not_started",
@@ -198,13 +218,28 @@ def init_month(brand, month):
         }
     }
 
-    tracker_path = month_dir / "status-tracker.json"
-    tracker_path.write_text(json.dumps(tracker, indent=2, ensure_ascii=False), encoding="utf-8")
-
     cost_log = {"brand": brand, "month": month, "entries": [], "total_cost_usd": 0.0}
-    (month_dir / "cost-log.json").write_text(json.dumps(cost_log, indent=2), encoding="utf-8")
 
-    print(json.dumps({"action": "init_month", "brand": brand, "month": month, "path": str(month_dir)}))
+    preserved = []
+    backed_up = []
+    for path, payload in ((month_dir / "status-tracker.json", tracker),
+                          (month_dir / "cost-log.json", cost_log)):
+        if path.exists():
+            if not force:
+                preserved.append(path.name)
+                continue
+            backup = path.with_name(f"{path.stem}.{created_at.replace(':', '-')}.bak{path.suffix}")
+            path.replace(backup)
+            backed_up.append(backup.name)
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    result = {"action": "init_month", "brand": brand, "month": month, "path": str(month_dir)}
+    if preserved:
+        result["preserved"] = preserved
+        result["hint"] = "Existing state kept. Use --force to back it up and start fresh."
+    if backed_up:
+        result["backed_up"] = backed_up
+    print(json.dumps(result))
 
 
 def main():
@@ -216,7 +251,8 @@ def main():
     parser.add_argument("--status", default=None)
     parser.add_argument("--actor", default="system")
     parser.add_argument("--notes", default="")
-    parser.add_argument("--force", action="store_true", help="Force state transition even if invalid")
+    parser.add_argument("--force", action="store_true",
+                        help="Force state transition even if invalid; for init-month, back up and rebuild existing tracker/cost log")
     args = parser.parse_args()
 
     if args.action == "session-init":
@@ -235,7 +271,7 @@ def main():
         if not all([args.brand, args.month]):
             print("Error: --brand and --month required", file=sys.stderr)
             sys.exit(1)
-        init_month(args.brand, args.month)
+        init_month(args.brand, args.month, args.force)
     elif args.action == "get-post-folder":
         if not all([args.brand, args.month, args.post_id]):
             print("Error: --brand, --month, --post-id required", file=sys.stderr)

@@ -46,6 +46,8 @@ def remove_background(input_path, output_path):
             return {"status": "success", "output": str(output_path), "method": "threshold_fallback", "has_alpha": True, "note": "Basic white-background removal. Install rembg for better results."}
         except ImportError:
             return {"error": "Neither rembg nor Pillow available. Run: pip install Pillow (minimum) or pip install rembg Pillow (recommended)"}
+        except Exception as exc:
+            return {"error": f"Threshold background removal failed: {type(exc).__name__}: {exc}"}
 
 
 def composite_layers(background_path, foreground_path, output_path, position="center", fg_scale=0.5):
@@ -274,6 +276,7 @@ def main():
         result = add_reflection(args.image, args.output, args.surface)
 
     print(json.dumps(result, indent=2))
+    sys.exit(1 if result.get("error") else 0)
 
 
 if __name__ == "__main__":

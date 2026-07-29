@@ -13,8 +13,7 @@ labels: bug
 - [ ] Script (which one?):
 - [ ] Skill/command (which one?):
 - [ ] Agent behavior
-- [ ] Hook (SessionStart / PreToolUse / SessionEnd)
-- [ ] MCP integration (which one?):
+- [ ] MCP connector you opted into from `.mcp.json.connectors-reference` (which one?):
 - [ ] Brand memory / persistent data
 - [ ] Other:
 
@@ -37,4 +36,4 @@ labels: bug
 - Target markets:
 
 **Python dependencies installed:**
-<!-- Run: pip list | grep -E "nltk|textstat|beautifulsoup4|requests" -->
+<!-- Run: pip list | grep -E "Pillow|playwright|google-genai|imageio-ffmpeg|rembg|c2pa" -->

@@ -24,7 +24,7 @@ If any posts are not FINAL: "3 posts still pending approval. Finalize anyway wit
 ```
 FINAL/
 ├── 00-Calendar-Document/
-│   └── {Brand}-{Month}-Calendar.docx
+│   └── {brand}-{month}-calendar.json   # delivery manifest; DOCX conversion is a manual step
 ├── 01-Ready-to-Publish/
 │   └── Week-{N}/
 │       └── {date}-Post{id}-{title}/

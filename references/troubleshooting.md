@@ -8,11 +8,11 @@ Common SocialForge errors with causes and fixes.
 
 **When:** Any command that requires brand context (most commands).
 
-**Cause:** No `brand-config.json` exists at `~/socialforge-workspace/brands/<brand-slug>/`, or the slug doesn't match.
+**Cause:** No `brand-config.json` exists at `${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand-slug>/` (or the fallback `~/socialforge-workspace/brands/<brand-slug>/`), or the slug doesn't match.
 
 **Fix:**
 1. Run `/socialforge:brand-setup` to create a new brand profile.
-2. If the brand exists, check the slug: `ls ~/socialforge-workspace/brands/` and verify the directory name matches exactly.
+2. If the brand exists, check the slug: `ls "$CLAUDE_PLUGIN_DATA/socialforge/brands/"` — or `ls ~/socialforge-workspace/brands/` when `CLAUDE_PLUGIN_DATA` is unset — and verify the directory name matches exactly.
 3. Ensure `brand-config.json` contains valid JSON with `brand_name` and `brand_slug` fields.
 
 ---
@@ -33,16 +33,16 @@ Common SocialForge errors with causes and fixes.
 
 ## "Image generation failed"
 
-**When:** Phase 4 (Visual Production) using STYLE_REFERENCED or AI_ORIGINAL modes.
+**When:** Phase 4 (Visual Production) using STYLE_REFERENCED or PURE_CREATIVE modes.
 
 **Cause:** API key missing, rate limit hit, or provider outage.
 
 **Fix:**
-1. Check `.env` for the relevant API key (`GEMINI_API_KEY`, `FAL_KEY`, `REPLICATE_API_TOKEN`).
+1. Re-run `/socialforge:setup` and confirm the image/video credentials are stored. Credentials live in plugin persistent data, not a project `.env`.
 2. Check provider status pages for outages.
 3. If rate-limited, wait and retry. The pipeline supports resuming from the failed post.
 4. Try switching providers: update the post's visual config or set a fallback provider in settings.
-5. As a workaround, switch the post to `ASSET_ONLY` or `ANCHOR_COMPOSE` mode using an existing asset.
+5. As a workaround, switch the post to `ANCHOR_COMPOSE` or `ENHANCE_EXTEND` mode using an existing asset.
 
 ---
 
@@ -64,18 +64,13 @@ Common SocialForge errors with causes and fixes.
 
 **When:** Any operation requiring an external service (image generation, MCP connectors).
 
-**Cause:** The required API key is not set in `.env`.
+**Cause:** The required credential was never stored, or the environment variable fallback isn't set.
 
 **Fix:**
 1. Identify which key is needed from the error message.
-2. Add it to `.env` in the project root:
-   ```
-   FAL_KEY=your-key-here
-   REPLICATE_API_TOKEN=your-token-here
-   GEMINI_API_KEY=your-key-here
-   ```
-3. Restart the session after updating `.env`.
-4. For MCP connectors (Slack, Notion, etc.), follow `/socialforge:connect <name>` for OAuth setup — these don't use `.env` keys.
+2. Run `/socialforge:setup` — it stores image (Vertex AI) and video (WaveSpeed) credentials in plugin persistent data. This is the supported path.
+3. As a documented fallback, export the key as an environment variable in the shell that launches the session, then restart the session.
+4. For MCP connectors (Slack, Notion, etc.): SocialForge ships **zero** active MCP servers — `.mcp.json` is empty by design. The 10 HTTP connectors are an opt-in catalog. Copy the server block you want from `.mcp.json.connectors-reference` into your own `.mcp.json`, supply its credentials, and restart the session.
 
 ---
 

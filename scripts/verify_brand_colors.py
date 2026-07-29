@@ -60,15 +60,21 @@ def verify_colors(image_path, brand, threshold=50, min_percentage=15):
 
     color_matches = {c["name"]: 0 for c in brand_colors}
 
-    # Sample every 10th pixel for performance
+    # Sample every 10th pixel for performance. Each sampled pixel counts toward at
+    # most one brand color (its nearest match) so the percentages can't exceed 100%.
     for i in range(0, total_pixels, 10):
         pixel = pixels[i]
+        best = None
+        best_distance = threshold
         for bc in brand_colors:
-            if color_distance(pixel, bc["rgb"]) < threshold:
-                color_matches[bc["name"]] += 1
+            distance = color_distance(pixel, bc["rgb"])
+            if distance < best_distance:
+                best = bc["name"]
+                best_distance = distance
+        if best is not None:
+            color_matches[best] += 1
 
-    # Scale back up (we sampled every 10th)
-    sampled_total = total_pixels // 10
+    sampled_total = len(range(0, total_pixels, 10))
     results = {}
     total_brand_percentage = 0
     for bc in brand_colors:

@@ -6,9 +6,9 @@ The latest minor release of SocialForge receives security fixes. Older minor ver
 
 | Version | Supported |
 |---------|-----------|
-| 1.8.x   | ✅ |
-| 1.7.x   | ⚠️ Security fixes only when trivially backportable |
-| < 1.7   | ❌ Please upgrade |
+| 1.13.x  | ✅ |
+| 1.12.x  | ⚠️ Security fixes only when trivially backportable |
+| < 1.12  | ❌ Please upgrade |
 
 ## Reporting a Vulnerability
 
@@ -24,7 +24,7 @@ If you cannot use Private Security Advisories, contact the maintainer via the em
 
 - A clear description of the vulnerability and its impact
 - Steps to reproduce (with example commands, payloads, or files if applicable)
-- Affected version(s) and surface (Claude Code CLI / Claude Code IDE extension / Anthropic Cowork)
+- Affected version(s) and surface (Claude Code CLI or IDE extension / Anthropic Cowork / OpenAI Codex / Cursor 2.5+ / GitHub Copilot CLI / Google Antigravity 2.0 / Hermes Agent / OpenClaw)
 - Suggested remediation if you have one
 - Whether you'd like credit in the security advisory (and how you'd like to be named)
 
@@ -68,7 +68,7 @@ We may move faster than this timeline for actively-exploited issues. We will not
 If you are running SF in a sensitive environment (multi-tenant agency setup, regulated industry brands):
 
 1. **Never commit `.mcp.json` with real API keys.** Use env vars or a secret manager — `.mcp.json.example` is the safe template.
-2. **Treat brand data at `~/.claude-marketing/<brand-slug>/` as sensitive.** It contains client strategy documents. Apply filesystem ACLs as you would any client PII.
-3. **Rotate Anthropic API keys quarterly.** Use `/usage` to monitor for anomalous consumption.
+2. **Treat brand data at `${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand-slug>/` as sensitive** (fallback `~/socialforge-workspace/brands/<brand-slug>/`). It contains client strategy documents, brand assets, and compliance rules. Apply filesystem ACLs as you would any client PII.
+3. **Rotate generation-provider API keys quarterly.** SocialForge consumes Gemini / Vertex AI keys for image generation and WaveSpeed keys for video — rotate those at the provider. Use `/socialforge:cost-report` to monitor for anomalous consumption.
 4. **Review SKILL.md edits in PRs.** Skills run with whatever permissions Claude Code has. Treat skill modifications like code review for production systems.
 5. **Pin the plugin version in agency environments.** Don't auto-update production agencies on the same day as release — let community testing happen first.

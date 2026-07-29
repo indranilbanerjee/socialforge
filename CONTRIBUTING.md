@@ -41,7 +41,7 @@ Thank you for your interest in contributing to SocialForge!
 git clone https://github.com/indranilbanerjee/socialforge.git
 cd socialforge
 pip install Pillow  # Minimum for image scripts
-# Optional: pip install rembg playwright google-generativeai
+# Optional: pip install rembg playwright google-genai imageio-ffmpeg
 ```
 
 ## Coding Standards
@@ -50,11 +50,11 @@ pip install Pillow  # Minimum for image scripts
 - Description under 130 characters
 - `effort` frontmatter on every skill (low/medium/high/max)
 - `argument-hint` showing usage pattern
-- `disable-model-invocation: true` on execution skills
+- `disable-model-invocation: true` on the destructive/irreversible execution skills only — currently `manage-reviews`, `create-previews`, `finalize-month`, `assemble-document`. Most skills omit it so they stay model-discoverable.
 - Timeout + fallback documented for every network operation
 
 ### Agents
-- Under 300 lines (current average: 42 lines)
+- Under 300 lines (current average: ~73 lines)
 - `maxTurns` on every agent
 - `name` + `description` in YAML frontmatter
 
@@ -64,7 +64,15 @@ pip install Pillow  # Minimum for image scripts
 - `argparse` for CLI arguments
 - JSON output via `print(json.dumps(...))`
 - Graceful import fallback for external packages (`try/except ImportError`)
-- No hardcoded paths — use `Path.home() / "socialforge-workspace"`
+- No hardcoded paths — resolve the workspace with the standard two-tier lookup: prefer `${CLAUDE_PLUGIN_DATA}/socialforge` when the env var is set and the directory exists, else fall back to `~/socialforge-workspace`
+
+  ```python
+  _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+  if _plugin_data and Path(_plugin_data).exists():
+      WORKSPACE = Path(_plugin_data) / "socialforge"
+  else:
+      WORKSPACE = Path.home() / "socialforge-workspace"
+  ```
 
 ### Commands
 - `description` + `argument-hint` in YAML frontmatter

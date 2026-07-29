@@ -27,7 +27,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
@@ -46,7 +46,7 @@ try:
 except (ImportError, KeyError, ValueError):  # pragma: no cover — fallback if curator missing
     _resolve_model = None
     _check_model = None
-    DEFAULT_MODEL = "gemini-2.5-flash-image"
+    DEFAULT_MODEL = "gemini-3.1-flash-image"
 
 
 def _negotiate_model(user_value: str | None, alias: str) -> str:
@@ -85,7 +85,7 @@ def create_client():
                     from google import genai
                 else:
                     return None, None, "google-genai install failed. Run: pip install google-genai"
-            except (ImportError, Exception):
+            except Exception:
                 return None, None, "google-genai not installed. Run: pip install google-genai"
 
         project = os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -180,7 +180,7 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
 
 
 def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_ratio="1:1"):
-    """Fallback: Generate image via WaveSpeed (Nano Banana models)."""
+    """Fallback: Generate image via WaveSpeed (Kling image v3)."""
     try:
         from credential_manager import get_wavespeed_key
         ws_key = get_wavespeed_key()
@@ -198,7 +198,7 @@ def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_
             import urllib.request
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(img_url, output_path)
-            return {"status": "success", "provider": "wavespeed-nanobanana", "output": str(output_path)}
+            return {"status": "success", "provider": "wavespeed-kling-image-v3", "output": str(output_path)}
     except Exception:
         pass
     return None
@@ -281,7 +281,7 @@ def generate_placeholder(prompt, output_path, width=1080, height=1080):
                 from PIL import Image, ImageDraw, ImageFont
             else:
                 return {"error": "Pillow install failed. Run: pip install Pillow"}
-        except (ImportError, Exception):
+        except Exception:
             return {"error": "Pillow not installed. Run: pip install Pillow"}
 
     img = Image.new("RGB", (width, height), (240, 240, 240))
@@ -329,8 +329,8 @@ def _maybe_c2pa_sign(result, args):
             prompt=args.prompt, platform=args.platform,
             signing_cert=args.c2pa_signing_cert, signing_key=args.c2pa_signing_key,
         )
-        out_path.unlink()
-        tmp_signed.rename(out_path)
+        # Atomic swap — never unlink the original before the signed copy is in place
+        os.replace(tmp_signed, out_path)
         result["c2pa_signed"] = True
         result["c2pa_active_manifest_id"] = sign_result.get("c2pa_active_manifest_id")
         result["c2pa_using_dev_cert"] = sign_result.get("using_dev_cert", False)
@@ -384,6 +384,9 @@ def main():
     if not args.prompt or not args.output:
         parser.error("--prompt and --output are required (unless --list-models is set)")
 
+    if args.c2pa_sign and not args.brand:
+        parser.error("--c2pa-sign requires --brand (used for the C2PA CreativeWork.author)")
+
     # Resolve --model via curator (auto-falls-forward if user passed a deprecated id)
     model_id = _negotiate_model(args.model, "latest-image-balanced-google")
 
@@ -410,7 +413,7 @@ def main():
     log_dir = WORKSPACE / "shared" / "prompt-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "prompt": args.prompt,
         "output": args.output,
         "provider": result.get("provider", "unknown"),
@@ -419,7 +422,7 @@ def main():
         "result": result.get("status", "unknown"),
         "c2pa_signed": result.get("c2pa_signed", False),
     }
-    log_file = log_dir / f"{datetime.utcnow().strftime('%Y-%m-%d')}-generation.jsonl"
+    log_file = log_dir / f"{datetime.now(timezone.utc).strftime('%Y-%m-%d')}-generation.jsonl"
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(log_entry) + "\n")
 

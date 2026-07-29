@@ -1,4 +1,4 @@
-# SocialForge v1.3 — Complete User Guide
+# SocialForge v1.13.1 — Complete User Guide
 
 **From zero to delivered calendar.** This guide walks you through every step of using SocialForge to produce a month's worth of social media content for a brand.
 
@@ -17,7 +17,7 @@ Before you start, make sure you have:
   pip install google-genai wavespeed Pillow imageio-ffmpeg
   ```
 
-Get both credentials from your admin. If you ARE the admin, see the [Admin Setup Guide](#19-admin-setup-guide) at the end of this document.
+Get both credentials from your admin. If you ARE the admin, see the [Admin Setup (One-Time) section of the README](../README.md#admin-setup-one-time).
 
 ---
 
@@ -26,7 +26,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 0. [Prerequisites](#prerequisites)
 1. [What You Need](#1-what-you-need)
 2. [Installation](#2-installation)
-3. [Setting Up API Credentials (/socialforge:setup)](#3-setting-up-api-credentials-sfsetup)
+3. [Setting Up API Credentials (/socialforge:setup)](#3-setting-up-api-credentials-socialforgesetup)
 4. [Your First Brand Setup](#4-your-first-brand-setup)
 5. [Indexing Brand Assets](#5-indexing-brand-assets)
 6. [Starting a New Month](#6-starting-a-new-month)
@@ -38,11 +38,11 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 12. [Working with Multiple Brands](#12-working-with-multiple-brands)
 13. [Where Your Data Lives](#13-where-your-data-lives)
 14. [All 25 Commands](#14-all-25-commands)
-15. [All 14 Skills](#15-all-14-skills)
+15. [All 16 Skills](#15-all-16-skills)
 16. [Connectors](#16-connectors)
 17. [Troubleshooting](#17-troubleshooting)
 18. [FAQ](#18-faq)
-19. [Admin Setup Guide](#19-admin-setup-guide)
+19. [Admin Setup Guide — see the README](../README.md#admin-setup-one-time)
 
 ---
 
@@ -80,7 +80,7 @@ Run this once after installing the plugin:
 Step 1 — Image generation (Google Cloud Vertex AI):
 - Your admin gives you a service account JSON file
 - When prompted, provide the file path
-- Models: Nano Banana 2 (gemini-2.5-flash-image), Nano Banana Pro (gemini-3-pro-image-preview)
+- Models: Nano Banana 2 (gemini-3.1-flash-image), Nano Banana Pro (gemini-3-pro-image)
 
 Step 2 — Video generation (WaveSpeed / Kling v3.0):
 - Your admin gives you a WaveSpeed API key
@@ -111,21 +111,13 @@ Check status anytime: `/socialforge:setup --status`
 
 ### Verify Installation
 
-After installing, you should see:
+SocialForge prints no welcome banner — the four global hooks that produced one were removed in v1.5.0. To confirm the install and see credential/storage state, run:
 
 ```
-SocialForge v1.3 loaded
-
-Quick Start:
-  1. /socialforge:brand-setup   — Configure a brand (do this first, 5-10 min)
-  2. /socialforge:index-assets  — Index brand photo library (Drive or local)
-  3. /socialforge:new-month     — Start monthly calendar production
-
-Already set up? /socialforge:status | /socialforge:switch-brand <name>
-
-Connectors: 10 HTTP (Notion, Canva, Figma, Slack, Gmail, Calendar, fal.ai, Replicate, Asana, Cloudinary)
-Storage: persistent via plugin data directory
+/socialforge:status
 ```
+
+It reports the active brand, the storage path in use, and whether the Vertex AI and WaveSpeed credentials are configured.
 
 ---
 
@@ -149,7 +141,8 @@ SocialForge Credential Setup
 
 Step 1 of 2: Google Cloud (Vertex AI -- Image Generation)
   Provide the path to your Google Cloud service account JSON file.
-  This enables Vertex AI image generation (Imagen 3, Gemini Vision).
+  This enables Vertex AI image generation (Gemini 3 Pro Image / Nano Banana Pro,
+  plus Gemini Vision for asset indexing).
 
   Path to JSON file: > /path/to/my-service-account.json
 
@@ -562,7 +555,47 @@ Creates a one-off post with the same quality pipeline (asset matching, creative 
 
 ---
 
-## 8. Reviewing and Approving
+## 9. Producing Content -- Video
+
+Video posts (Reels, Shorts, TikTok) run through the same calendar, but the creative step calls the video pipeline instead of the image pipeline.
+
+```
+/socialforge:generate-post P12 --video
+```
+
+`/socialforge:generate-all` picks up video posts automatically when the calendar row's format is Reel / Short / TikTok.
+
+### The Five Stages
+
+1. **Post context** — the calendar post's theme, copy, and visual direction seed the clip
+2. **Script + storyboard** — a short script with scene descriptions, which you approve
+3. **Keyframes** — Gemini (via Vertex AI) generates the first and last frame as images, which you approve
+4. **Video generation** — WaveSpeed sends the keyframes to **Kling v3.0 Pro** (`kwaivgi/kling-v3.0-pro/image-to-video`), which animates them into a 3-15 second clip
+5. **Delivery** — the clip is post-processed and enters the same review gallery as image posts
+
+Every stage is human-in-the-loop. Nothing renders to delivery without your sign-off.
+
+### Post-Processing
+
+After generation, `scripts/video_postprocess.py` applies:
+
+- **Brand logo watermark** overlay
+- **Platform-specific resizing** (9 platform dimension presets, no stretching)
+- **Optional subtitle burning** (you approve — SRT with brand fonts)
+- **Optional background music** (you approve — mixed at appropriate levels)
+
+Post-processing runs on ffmpeg, auto-installed via the `imageio-ffmpeg` Python package.
+
+### Requirements
+
+- WaveSpeed API key configured via `/socialforge:setup`
+- Vertex AI credentials configured via `/socialforge:setup` (for keyframes)
+- `pip install google-genai wavespeed Pillow imageio-ffmpeg`
+- Clip length: 3-15 seconds
+
+---
+
+## 10. Reviewing and Approving
 
 ### Open the Review Gallery
 
@@ -651,7 +684,7 @@ Nudges reviewers who have pending approvals past the configured deadline.
 
 ---
 
-## 9. Finalizing and Delivering
+## 11. Finalizing and Delivering
 
 Once all posts are approved:
 
@@ -729,7 +762,7 @@ Use sparingly — this bypasses the approval chain and logs that it was force-fi
 
 ---
 
-## 10. Working with Multiple Brands
+## 12. Working with Multiple Brands
 
 Agencies handle multiple clients. Switch between them instantly:
 
@@ -768,7 +801,7 @@ There is no limit on the number of brands. A typical agency runs 5-15 brands thr
 
 ---
 
-## 11. Where Your Data Lives
+## 13. Where Your Data Lives
 
 ### Persistent Storage (Survives Sessions)
 
@@ -813,7 +846,7 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 
 ---
 
-## 12. All 25 Commands
+## 14. All 25 Commands
 
 | Command | What It Does | Example |
 |---------|-------------|---------|
@@ -833,7 +866,6 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 | `/socialforge:review` | Open review gallery | `/socialforge:review --tier HERO` |
 | `/socialforge:revision` | Apply revision feedback | `/socialforge:revision P06 "fix background color"` |
 | `/socialforge:preview-batch` | Generate preview mockups for all posts | `/socialforge:preview-batch --brand GreenLeaf` |
-| `/socialforge:manage-reviews` | Bulk approve/revise posts | `/socialforge:manage-reviews --approve P01 P02 P03` |
 | `/socialforge:client-review` | Send to client for review | `/socialforge:client-review --tier HERO` |
 | `/socialforge:check-approvals` | Check pending approvals | `/socialforge:check-approvals --send-reminders` |
 | `/socialforge:assemble-document` | Create delivery DOCX | `/socialforge:assemble-document` |
@@ -844,14 +876,17 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 | `/socialforge:status` | Show production dashboard | `/socialforge:status` |
 | `/socialforge:cost-report` | API cost breakdown | `/socialforge:cost-report --brand GreenLeaf` |
 
+`/socialforge:manage-reviews` and `/socialforge:generate-video` appear elsewhere in this guide — they are skills, not commands, so they live in the skills table below rather than here. You invoke them the same way.
+
 ---
 
-## 13. All 14 Skills
+## 15. All 16 Skills
 
 Skills are the internal engines that commands invoke. You rarely call them directly, but understanding them helps when troubleshooting or customizing behavior.
 
 | Skill | Effort | What It Does |
 |-------|--------|-------------|
+| setup | medium | One-time credential setup for Vertex AI (image) and WaveSpeed (video) |
 | brand-manager | medium | Set up and manage brand profiles, visual identity, compliance rules |
 | index-assets | high | AI-powered brand photo library indexing via Gemini Vision |
 | parse-calendar | medium | Parse DOCX/XLSX/Notion/text calendars into structured post data |
@@ -865,6 +900,7 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 | manage-reviews | medium | Multi-tier approval workflow with escalation and reminders |
 | assemble-document | high | DOCX calendar delivery document with images, copy, and schedule |
 | finalize-month | high | Final packaging, compliance verification, and delivery folder creation |
+| c2pa-sign | medium | Embed C2PA provenance manifests into AI-generated images, video, and audio |
 | full-pipeline | max | End-to-end orchestration running all 7 production phases in sequence |
 
 ### Effort Levels
@@ -875,9 +911,9 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 
 ---
 
-## 14. Connectors
+## 16. Connectors
 
-10 HTTP connectors ship with SocialForge. All work in both Cowork and Claude Code — no local server installation required.
+SocialForge ships an **opt-in catalog of 10 HTTP connectors** — **zero are auto-connected**. The shipped `.mcp.json` is `{"mcpServers":{}}` by design; the table below is the catalog, and you copy the entries you want from `.mcp.json.connectors-reference` into `.mcp.json` to enable them. All 10 work in both Cowork and Claude Code — no local server installation required.
 
 | Connector | URL | What For | Required? |
 |-----------|-----|----------|-----------|
@@ -904,7 +940,7 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 
 ---
 
-## 15. Troubleshooting
+## 17. Troubleshooting
 
 ### "Brand not found"
 
@@ -958,10 +994,10 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 
 ---
 
-## 16. FAQ
+## 18. FAQ
 
 **Q: How much does it cost per month?**
-A: For a 28-post calendar: ~$2-4 in Gemini API calls. Carousels and previews are free (local rendering via Playwright). Video generation costs more (~$0.10-0.50 per clip via fal.ai/Replicate). Run `/socialforge:cost-report` for exact figures.
+A: For a 28-post calendar: ~$2-4 in Gemini API calls. Carousels and previews are free (local rendering via Playwright). Video generation costs more (~$0.40-1.12 per 5-10 second clip via WaveSpeed (Kling v3.0 Pro)). Run `/socialforge:cost-report` for exact figures.
 
 **Q: Can I use my own images instead of AI generation?**
 A: Yes. Upload your pre-made image and it bypasses all generation — just gets resized, overlaid with logo, and adapted per platform. Set the post's creative mode to ANCHOR_COMPOSE and provide the image directly.
@@ -1001,4 +1037,4 @@ A: Run `/socialforge:setup` to configure all credentials. They are stored secure
 
 ---
 
-*SocialForge v1.3 — Built for agencies who produce content at scale without compromising brand identity.*
+*SocialForge v1.13.1 — Built for agencies who produce content at scale without compromising brand identity.*

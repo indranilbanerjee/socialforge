@@ -12,7 +12,7 @@ Set up a new brand profile or update an existing one. Brand profiles control vis
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## Pre-Requisite: Image Generation API
 
@@ -53,7 +53,7 @@ After confirming the image API, users need these 5 things:
 
 That's it. Run `/socialforge:brand-setup [brand-name]` and answer these questions. SocialForge creates a working brand profile.
 
-**Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags via `/socialforge:brand-setup --update [brand]`
+**Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags via `/socialforge:brand-setup [brand] --update`
 
 ## Full Setup
 
@@ -210,14 +210,14 @@ Campaign hashtags (active campaigns only):
 
 Platform-specific hashtag rules:
   LinkedIn: max 3-5 hashtags, professional tone
-  Instagram: up to 15-20, mix of branded + discovery
+  Instagram: 20-30 in the first comment, mix of branded + discovery
   X: max 2-3, integrated into copy
   TikTok: trending + branded mix
 ```
 
 ## Output
 
-Creates these files in `~/socialforge-workspace/brands/{brand-slug}/`:
+Creates these files in `${CLAUDE_PLUGIN_DATA}/socialforge/brands/{brand-slug}/` (falling back to `~/socialforge-workspace/brands/{brand-slug}/` when `${CLAUDE_PLUGIN_DATA}` is unset):
 - `brand-config.json` — Core identity, colors, fonts, visual style, logo, hashtags
 - `platform-config.json` — Active platforms, posting times, content mix, cross-posting
 - `approval-chain.json` — Review tiers, escalation rules
@@ -240,12 +240,12 @@ Missing fields trigger a warning with options to continue or fix.
 
 - If user closes or interrupts during multi-step setup: save whatever was collected so far. On next `/socialforge:brand-setup [brand]`, detect the partial profile and ask: "Resume setup from Step {N}? Or start fresh?"
 - Each step saves incrementally — no data is lost on interruption.
-- If brand-config.json write fails: retry once, then save to `~/socialforge-workspace/brands/{slug}/brand-config.partial.json` and inform user.
+- If brand-config.json write fails: retry once, then save to `${CLAUDE_PLUGIN_DATA}/socialforge/brands/{slug}/brand-config.partial.json` (or the `~/socialforge-workspace/...` fallback) and inform user.
 
 ## Switching Brands
 
 ```
-/socialforge:brand-setup --switch [brand-name]
+/socialforge:brand-setup [brand-name] --switch
 ```
 
 Instantly reloads the brand context. All subsequent commands use the switched brand.

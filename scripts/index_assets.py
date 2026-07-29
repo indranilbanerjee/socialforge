@@ -13,7 +13,7 @@ import base64
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add scripts dir to path for credential_manager + curator imports
@@ -156,6 +156,27 @@ def build_basic_entry(image_path, source_root, asset_id):
     }
 
 
+def stored_source(brand):
+    """Recover the source path recorded by a previous index (`--refresh` without --source)."""
+    brand_dir = WORKSPACE / "brands" / brand
+    index_path = brand_dir / "asset-index.json"
+    if index_path.exists():
+        try:
+            prior = json.loads(index_path.read_text(encoding="utf-8"))
+            if prior.get("source_path"):
+                return prior["source_path"]
+        except (json.JSONDecodeError, OSError):
+            pass
+    source_file = brand_dir / "asset-source.json"
+    if source_file.exists():
+        try:
+            config = json.loads(source_file.read_text(encoding="utf-8"))
+            return config.get("path") or config.get("url") or None
+        except (json.JSONDecodeError, OSError):
+            pass
+    return None
+
+
 def index_all(brand, source_path, refresh=False, model=None):
     """Index all images for a brand."""
     brand_dir = WORKSPACE / "brands" / brand
@@ -226,7 +247,7 @@ def index_all(brand, source_path, refresh=False, model=None):
 
     index = {
         "brand": brand,
-        "indexed_at": datetime.utcnow().isoformat() + "Z",
+        "indexed_at": datetime.now(timezone.utc).isoformat(),
         "source": "local",
         "source_path": str(source_path),
         "total_assets": len(assets),
@@ -252,24 +273,29 @@ def index_all(brand, source_path, refresh=False, model=None):
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Asset Indexer")
     parser.add_argument("--brand", required=True)
-    parser.add_argument("--source", required=True, help="Path to image folder")
+    parser.add_argument("--source", default=None,
+                        help="Path to image folder (omit to reuse the source recorded by the previous index)")
     parser.add_argument("--refresh", action="store_true", help="Only index new/changed images")
     parser.add_argument("--model", default=None,
                         help=f"Vision model id (default: registry alias `latest-vision-google` -> {DEFAULT_VISION_MODEL}). "
                              f"Deprecated ids auto-fall-forward to their replacement.")
     args = parser.parse_args()
 
+    source = args.source or stored_source(args.brand)
+    if not source:
+        parser.error("--source is required (no previous index recorded a source path for this brand)")
+
     # Validate / resolve --model via curator
     chosen_model = args.model
     if _check_model is not None and chosen_model:
         status, replacement = _check_model(chosen_model)
-        if status == "deprecated" and replacement:
-            print(f"WARNING: model {chosen_model!r} is deprecated; using {replacement!r}", file=sys.stderr)
+        if status in ("deprecated", "retired") and replacement:
+            print(f"WARNING: model {chosen_model!r} is {status}; using {replacement!r}", file=sys.stderr)
             chosen_model = replacement
         elif status == "unknown":
             print(f"WARNING: model {chosen_model!r} not in curated registry", file=sys.stderr)
 
-    index_all(args.brand, args.source, args.refresh, model=chosen_model)
+    index_all(args.brand, source, args.refresh, model=chosen_model)
 
 
 if __name__ == "__main__":

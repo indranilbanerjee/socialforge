@@ -36,19 +36,22 @@ def inject_brand_vars(html_content, brand_config):
     colors = brand_config.get("colors", {})
     fonts = brand_config.get("fonts", {})
 
+    # Schema keys are `background` / `text` / `text_light`; the older
+    # `background_light` / `background_dark` / `text_primary` names are kept as fallbacks.
     replacements = {
         "{{brand_primary}}": colors.get("primary", "#0066CC"),
         "{{brand_secondary}}": colors.get("secondary", "#FF6600"),
         "{{brand_accent}}": colors.get("accent", "#00CC66"),
-        "{{brand_bg_light}}": colors.get("background_light", "#FFFFFF"),
-        "{{brand_bg_dark}}": colors.get("background_dark", "#1A1A1A"),
-        "{{brand_text}}": colors.get("text_primary", "#333333"),
+        "{{brand_bg_light}}": colors.get("background") or colors.get("background_light", "#FFFFFF"),
+        "{{brand_bg_dark}}": colors.get("social_overlay") or colors.get("background_dark", "#1A1A1A"),
+        "{{brand_text}}": colors.get("text") or colors.get("text_primary", "#333333"),
         "{{font_heading}}": fonts.get("heading", "Montserrat-Bold"),
         "{{font_body}}": fonts.get("body", "OpenSans-Regular"),
+        "{{brand_name}}": brand_config.get("brand_name") or brand_config.get("name", ""),
     }
 
     for placeholder, value in replacements.items():
-        html_content = html_content.replace(placeholder, value)
+        html_content = html_content.replace(placeholder, str(value))
 
     return html_content
 
@@ -134,11 +137,12 @@ def render_slides(template_type, slides_data, brand, output_dir, width=1080, hei
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Carousel Renderer")
-    parser.add_argument("--template", required=True, choices=list(TEMPLATE_MAP.keys()),
+    # These are required for a render but must stay optional so --list-templates works
+    parser.add_argument("--template", choices=list(TEMPLATE_MAP.keys()),
                         help="Carousel template type")
-    parser.add_argument("--slides", required=True, help="JSON file with slide content array")
-    parser.add_argument("--brand", required=True, help="Brand slug for theming")
-    parser.add_argument("--output-dir", required=True, help="Output directory for slide PNGs")
+    parser.add_argument("--slides", help="JSON file with slide content array")
+    parser.add_argument("--brand", help="Brand slug for theming")
+    parser.add_argument("--output-dir", help="Output directory for slide PNGs")
     parser.add_argument("--width", type=int, default=1080)
     parser.add_argument("--height", type=int, default=1080)
     parser.add_argument("--list-templates", action="store_true")
@@ -147,6 +151,12 @@ def main():
     if args.list_templates:
         print(json.dumps(TEMPLATE_MAP, indent=2))
         return
+
+    missing = [flag for flag, value in (("--template", args.template), ("--slides", args.slides),
+                                        ("--brand", args.brand), ("--output-dir", args.output_dir))
+               if not value]
+    if missing:
+        parser.error("the following arguments are required: " + ", ".join(missing))
 
     # Load slides data
     slides_path = Path(args.slides)

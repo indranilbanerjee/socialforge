@@ -1,7 +1,7 @@
 # SocialForge Testing Guide
 
-**Version:** 1.0.0
-**Last Updated:** 2026-03-31
+**Version:** 1.13.1
+**Last Updated:** July 2026
 **Format:** Checklist — work through each section top to bottom.
 
 ---
@@ -23,8 +23,8 @@
 ## 2. Installation Tests
 
 ### Marketplace Install
-- [ ] `claude plugin marketplace add github:indranilbanerjee/socialforge` succeeds | No errors
-- [ ] `claude plugin install socialforge@socialforge` succeeds | Plugin appears in installed list
+- [ ] `claude plugin marketplace add indranilbanerjee/neels-plugins` succeeds | No errors
+- [ ] `claude plugin install socialforge@neels-plugins` succeeds | Plugin appears in installed list
 
 ### GitHub Install
 - [ ] `claude plugin install github:indranilbanerjee/socialforge` succeeds | Plugin appears in installed list
@@ -33,37 +33,45 @@
 - [ ] `claude plugins add /path/to/socialforge` succeeds | Plugin appears in installed list
 
 ### Post-Install Verification
-- [ ] New session shows SocialForge welcome message | "SocialForge v1.0 loaded" with Quick Start
-- [ ] `/socialforge:status` returns valid response | Shows "No active brand" or brand status
-- [ ] All 25 commands appear in Customize panel | Count matches expected 18
-- [ ] All 15 skills appear in Skills section | Count matches expected 14
-- [ ] `.mcp.json` loaded (9 connectors) | No MCP initialization errors in logs
+- [ ] No welcome banner appears on session start | Correct — the 4 global hooks were removed in v1.5.0
+- [ ] `/socialforge:status` reports credential state on demand | Shows "No active brand" or brand status, plus Vertex AI / WaveSpeed credential state
+- [ ] Commands appear in Customize panel | Count matches expected 25
+- [ ] Skills appear in Skills section | Count matches expected 16
+- [ ] `.mcp.json` has zero active servers by design | `{"mcpServers":{}}`; no MCP initialization errors in logs. The 10-connector catalog lives in `.mcp.json.connectors-reference` and is opt-in.
 
 ---
 
 ## 3. Command Tests
 
+All 25 shipped commands:
+
 | # | Command | Test Action | Expected Result |
 |---|---------|------------|-----------------|
-| 1 | `/socialforge:brand-setup test-brand` | Run with test brand name | Interactive wizard starts, `brand-config.json` created |
-| 2 | `/socialforge:switch-brand test-brand` | Switch to existing brand | Active brand changes, confirmed in status |
-| 3 | `/socialforge:index-assets test-brand` | Index test asset folder | `asset-index.json` created with per-image metadata |
-| 4 | `/socialforge:new-month test-brand 2026-04` | Start April production | Calendar prompt or data initialized |
-| 5 | `/socialforge:sync-calendar --source test.xlsx` | Parse test calendar | `calendar-data.json` created with post entries |
-| 6 | `/socialforge:generate-all` | Run full production | All posts processed, images generated |
-| 7 | `/socialforge:generate-post <post-id>` | Generate single post | One post's creative produced |
-| 8 | `/socialforge:edit-post <post-id> --copy` | Edit post copy | Copy updated in calendar data |
-| 9 | `/socialforge:edit-image <post-id> "warmer tones"` | Edit generated image | Image regenerated with instruction |
-| 10 | `/socialforge:swap-asset <post-id> --browse` | Browse and swap asset | Asset replaced, image regenerated |
-| 11 | `/socialforge:preview-batch` | Generate previews | Platform mockups created for all posts |
-| 12 | `/socialforge:review` | Open review gallery | HTML gallery renders with all posts |
-| 13 | `/socialforge:revision <post-id> "feedback"` | Apply revision | Affected elements regenerated |
-| 14 | `/socialforge:check-approvals` | Check approval status | Pending approvals listed by tier |
-| 15 | `/socialforge:client-review --tier HERO` | Send for client review | Posts sent via Slack/email or export prepared |
-| 16 | `/socialforge:finalize` | Finalize month | Delivery folder created with all assets |
-| 17 | `/socialforge:reactive-post "trending topic"` | Create reactive post | New post created outside calendar |
-| 18 | `/socialforge:status` | Check status | Shows brand, month, post counts, pipeline phase |
-| 19 | `/socialforge:cost-report` | Check costs | API cost breakdown displayed |
+| 1 | `/socialforge:setup` | Run credential setup | Wizard prompts for Vertex AI JSON path + WaveSpeed key |
+| 2 | `/socialforge:brand-setup test-brand` | Run with test brand name | Interactive wizard starts, `brand-config.json` created |
+| 3 | `/socialforge:switch-brand test-brand` | Switch to existing brand | Active brand changes, confirmed in status |
+| 4 | `/socialforge:index-assets test-brand` | Index test asset folder | `asset-index.json` created with per-image metadata |
+| 5 | `/socialforge:new-month test-brand 2026-04` | Start April production | Calendar prompt or data initialized |
+| 6 | `/socialforge:parse-calendar test.xlsx` | Parse test calendar | `calendar-data.json` created with post entries |
+| 7 | `/socialforge:sync-calendar` | Re-read the calendar source | Existing approved posts preserved, new posts added |
+| 8 | `/socialforge:match-assets --brand test-brand` | Match assets to posts | Each post gets an asset + creative mode |
+| 9 | `/socialforge:generate-all` | Run full production | All posts processed, images generated |
+| 10 | `/socialforge:generate-post <post-id>` | Generate single post | One post's creative produced |
+| 11 | `/socialforge:adapt-copy --all` | Adapt copy per platform | Platform variants respect character limits |
+| 12 | `/socialforge:render-carousels --post <post-id>` | Render carousel slides | Slide PNGs + carousel.pdf produced |
+| 13 | `/socialforge:edit-post <post-id> --copy` | Edit post copy | Copy updated in calendar data |
+| 14 | `/socialforge:edit-image <post-id> "warmer tones"` | Edit generated image | Image regenerated with instruction |
+| 15 | `/socialforge:swap-asset <post-id> --browse` | Browse and swap asset | Asset replaced, image regenerated |
+| 16 | `/socialforge:preview-batch` | Generate previews | Platform mockups created for all posts |
+| 17 | `/socialforge:review` | Open review gallery | HTML gallery renders with all posts |
+| 18 | `/socialforge:revision <post-id> "feedback"` | Apply revision | Affected elements regenerated |
+| 19 | `/socialforge:check-approvals` | Check approval status | Pending approvals listed by tier |
+| 20 | `/socialforge:client-review --tier HERO` | Send for client review | Posts sent via Slack/email or export prepared |
+| 21 | `/socialforge:assemble-document` | Create delivery DOCX | Valid .docx with all posts, images, and schedule |
+| 22 | `/socialforge:finalize` | Finalize month | Delivery folder created with all assets |
+| 23 | `/socialforge:reactive-post "trending topic"` | Create reactive post | New post created outside calendar |
+| 24 | `/socialforge:status` | Check status | Shows brand, month, post counts, pipeline phase |
+| 25 | `/socialforge:cost-report` | Check costs | API cost breakdown displayed |
 
 ---
 
@@ -93,54 +101,44 @@
 
 ## 5. Script Tests
 
-Run each script from the command line to verify it executes without import errors.
+Run each script from the command line to verify it executes without import errors. The repo ships **22 Python scripts plus `assemble_docx.js`**.
 
 | # | Script | CLI Test | Expected Result |
 |---|--------|---------|-----------------|
 | 1 | `adapt_copy.py` | `python3 scripts/adapt_copy.py --help` | Usage info or no import errors |
 | 2 | `assemble_docx.js` | `node scripts/assemble_docx.js --help` | Usage info or no import errors |
 | 3 | `build_gallery.py` | `python3 scripts/build_gallery.py --help` | Usage info displayed |
-| 4 | `compliance_check.py` | `python3 scripts/compliance_check.py --help` | Usage info displayed |
-| 5 | `compose_image.py` | `python3 scripts/compose_image.py --help` | Usage info displayed |
-| 6 | `compose_text_overlay.py` | `python3 scripts/compose_text_overlay.py --help` | Usage info displayed |
-| 7 | `cost_tracker.py` | `python3 scripts/cost_tracker.py --help` | Usage info displayed |
-| 8 | `edit_image.py` | `python3 scripts/edit_image.py --help` | Usage info displayed |
-| 9 | `generate_image.py` | `python3 scripts/generate_image.py --help` | Usage info displayed |
-| 10 | `generate_video.py` | `python3 scripts/generate_video.py --help` | Usage info displayed |
-| 11 | `index_assets.py` | `python3 scripts/index_assets.py --help` | Usage info displayed |
-| 12 | `match_assets.py` | `python3 scripts/match_assets.py --help` | Usage info displayed |
-| 13 | `render_carousel.py` | `python3 scripts/render_carousel.py --help` | Usage info displayed |
-| 14 | `render_preview.py` | `python3 scripts/render_preview.py --help` | Usage info displayed |
-| 15 | `resize_image.py` | `python3 scripts/resize_image.py --help` | Usage info displayed |
-| 16 | `status_manager.py` | `python3 scripts/status_manager.py --action session-init` | Session init output, no errors |
-| 17 | `verify_brand_colors.py` | `python3 scripts/verify_brand_colors.py --help` | Usage info displayed |
+| 4 | `c2pa_sign.py` | `python3 scripts/c2pa_sign.py --help` | Usage info displayed |
+| 5 | `compliance_check.py` | `python3 scripts/compliance_check.py --help` | Usage info displayed |
+| 6 | `compose_image.py` | `python3 scripts/compose_image.py --help` | Usage info displayed |
+| 7 | `compose_text_overlay.py` | `python3 scripts/compose_text_overlay.py --help` | Usage info displayed |
+| 8 | `cost_tracker.py` | `python3 scripts/cost_tracker.py --help` | Usage info displayed |
+| 9 | `credential_manager.py` | `python3 scripts/credential_manager.py --help` | Usage info displayed |
+| 10 | `edit_image.py` | `python3 scripts/edit_image.py --help` | Usage info displayed |
+| 11 | `generate_image.py` | `python3 scripts/generate_image.py --help` | Usage info displayed |
+| 12 | `generate_video.py` | `python3 scripts/generate_video.py --help` | Usage info displayed |
+| 13 | `index_assets.py` | `python3 scripts/index_assets.py --help` | Usage info displayed |
+| 14 | `install_deps.py` | `python3 scripts/install_deps.py --help` | Usage info displayed |
+| 15 | `match_assets.py` | `python3 scripts/match_assets.py --help` | Usage info displayed |
+| 16 | `refresh_models.py` | `python3 scripts/refresh_models.py --help` | Usage info displayed |
+| 17 | `render_carousel.py` | `python3 scripts/render_carousel.py --help` | Usage info displayed |
+| 18 | `render_preview.py` | `python3 scripts/render_preview.py --help` | Usage info displayed |
+| 19 | `resize_image.py` | `python3 scripts/resize_image.py --help` | Usage info displayed |
+| 20 | `resolve_model.py` | `python3 scripts/resolve_model.py --aliases` | Alias table printed from the registry |
+| 21 | `status_manager.py` | `python3 scripts/status_manager.py --help` | Usage info displayed |
+| 22 | `verify_brand_colors.py` | `python3 scripts/verify_brand_colors.py --help` | Usage info displayed |
+| 23 | `video_postprocess.py` | `python3 scripts/video_postprocess.py --help` | Usage info displayed |
 
 ---
 
-## 6. Hook Tests
+## 6. Opt-in hook reference — not shipped active
 
-### SessionStart Hook
-- [ ] New session triggers status_manager.py session-init | Welcome message displayed
-- [ ] Session-init completes within 30-second timeout | No timeout error
-- [ ] Quick Start commands printed | 3-step quick start visible
+**There are no hook tests.** SocialForge ships **zero global hooks** — `hooks/hooks.json` is empty by design. The four hooks that existed before v1.5.0 (SessionStart credential banner, PreToolUse compliance check, SubagentStart brand-context injection, Stop image-approval verification) were removed because they fired on every Claude Code operation in every project.
 
-### PreToolUse Hook (Compliance)
-- [ ] Writing copy with a banned phrase triggers warning | Hook catches violation before write
-- [ ] Writing copy without violations passes cleanly | "SKIP" or no interference
-- [ ] Platform character limits flagged when exceeded | Warning for over-limit content
-- [ ] Brand hashtag requirements enforced | Missing required hashtags flagged
+The old configuration is archived at `hooks/hooks-reference.example.json` as an opt-in example only — nothing loads it. The only thing to verify here:
 
-### SubagentStart Hook (Brand Injection)
-- [ ] Subagent receives brand-config.json context | Brand colors/fonts available to agent
-- [ ] "Brand assets are sacred" principle enforced | AI does not modify brand photos
-- [ ] Creative mode respected by subagent | Correct mode applied per post config
-- [ ] Compliance rules loaded into subagent | Banned phrases checked in subagent scope
-
-### Stop Hook (Quality Gate)
-- [ ] Task completing with unapproved images triggers warning | List of unapproved items shown
-- [ ] Task completing with over-limit copy triggers warning | Platform violations listed
-- [ ] Task completing with all checks passing returns PASS | Clean completion
-- [ ] Compliance violations at stop trigger issue list | User asked how to proceed
+- [ ] `hooks/hooks.json` contains no active hook entries | Empty by design
+- [ ] No SocialForge hook fires in an unrelated project | Zero global side effects
 
 ---
 
@@ -288,7 +286,6 @@ Test each of the 8 templates renders correctly.
 - [ ] `.mcp.json` HTTP connectors load in Cowork | No npx/node dependency issues
 - [ ] File paths use forward slashes | No Windows backslash errors in Cowork (Linux VM)
 - [ ] Scripts execute without C-extension failures | rembg fallback works if compilation fails
-- [ ] Session-init hook completes in Cowork | 30-second timeout sufficient
 
 ---
 
@@ -296,8 +293,8 @@ Test each of the 8 templates renders correctly.
 
 Run after any code change to verify nothing broke.
 
-- [ ] All 19 scripts pass `--help` without import errors
-- [ ] Session-init hook displays welcome message
+- [ ] All 22 Python scripts (+ `assemble_docx.js`) pass `--help` without import errors
+- [ ] `python tests/run_all.py` passes | 55 tests
 - [ ] Brand setup creates valid brand-config.json
 - [ ] Asset indexing produces valid asset-index.json
 - [ ] Calendar parsing handles DOCX input
@@ -318,15 +315,14 @@ Run after any code change to verify nothing broke.
 
 ## 15. Version Consistency Check
 
-- [ ] `README.md` version matches actual release | Currently 1.0.0
-- [ ] `plugin.json` version matches README | Consistent across files
+- [ ] `README.md` version matches actual release | Currently 1.13.1
+- [ ] `plugin.json` version matches README | Consistent across all 7 platform manifests
 - [ ] `CHANGELOG.md` has entry for current version | Release notes present
-- [ ] `hooks.json` welcome message shows correct version | "SocialForge v1.0"
-- [ ] Skill count in README matches actual skill directories | 15 skills
+- [ ] Skill count in README matches actual skill directories | 16 skills
 - [ ] Command count in README matches actual command files | 25 commands
 - [ ] Agent count in README matches actual agent files | 5 agents
-- [ ] Script count in README matches actual script files | 19 scripts
-- [ ] Connector count in README matches `.mcp.json` entries | 9 connectors
+- [ ] Script count in README matches actual script files | 22 Python scripts (+ `assemble_docx.js`)
+- [ ] Connector count in README matches `.mcp.json.connectors-reference` | 10 opt-in connectors; `.mcp.json` itself is `{"mcpServers":{}}`
 - [ ] Carousel template count in README matches actual templates | 8 templates
 - [ ] All agents have valid YAML frontmatter (name + description) | No missing frontmatter
 - [ ] All skills have valid YAML frontmatter (name + description) | No missing frontmatter

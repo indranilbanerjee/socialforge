@@ -85,9 +85,9 @@ Before approving any AI-generated image:
 
 ### Provider Selection Logic
 
-1. **ASSET_ONLY / ANCHOR_COMPOSE** — No AI provider needed (compositing only).
+1. **ANCHOR_COMPOSE / ENHANCE_EXTEND** — The brand asset carries the frame; generation is confined to the scene around it or the periphery.
 2. **STYLE_REFERENCED** — Prefer fal.ai (IP-Adapter support) or Replicate (ControlNet).
-3. **AI_ORIGINAL** — Use Gemini for speed, Replicate for quality, fal.ai for balance.
+3. **PURE_CREATIVE** — Use Gemini for speed, Replicate for quality, fal.ai for balance.
 
 ## Batch Generation Tips
 

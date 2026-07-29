@@ -1,9 +1,19 @@
 # SOCIALFORGE — COMPLETE ENGINEERING SPECIFICATION
 
+> ## ⚠ HISTORICAL DOCUMENT — NOT THE SHIPPED ARCHITECTURE
+>
+> This is the **original v1.0.0 engineering design record**, retained for provenance. It describes what SocialForge was designed to be in March 2026, not what it is today.
+>
+> **The shipped v1.13.1 architecture is authoritative.** For anything you intend to rely on, read [`README.md`](README.md) and [`docs/OPERATIONS.md`](docs/OPERATIONS.md) instead.
+>
+> In particular, every **count** (skills / commands / scripts / connectors), every **model id**, the **hooks** section, and the **MCP** section below are historical and in several places wrong for the current release. Shipped today: **16 skills · 25 commands · 5 agents · 22 Python scripts (+ `assemble_docx.js`) · 0 global hooks · an opt-in catalog of 10 HTTP connectors, zero auto-connected**. Where a section below contradicts that, the shipped repo wins.
+>
+> Obvious traps have been corrected in place even under this banner (retired model ids, unimplemented scripts, nonexistent commands), but the document as a whole has not been rewritten to match v1.13.1.
+
 ## Plugin for Claude Code / Cowork
 ## Social Media Calendar Automation with Asset-First Compositing
 
-**Spec Version:** 1.0.0
+**Spec Version:** 1.0.0 (historical — shipped release is 1.13.1)
 **Target Runtime:** Claude Code (CLI + IDE extensions), Anthropic Cowork
 **Author:** Neel (Indranil Banerjee)
 **Date:** March 2026
@@ -17,13 +27,13 @@ PART 1:  VISION & ARCHITECTURE OVERVIEW
 PART 2:  PLUGIN MANIFEST & DIRECTORY STRUCTURE
 PART 3:  DATA SCHEMAS (ALL JSON SCHEMAS)
 PART 4:  CORE CONCEPT — ASSET-FIRST COMPOSITING
-PART 5:  SKILL SPECIFICATIONS (ALL 14 SKILLS)
-PART 6:  COMMAND SPECIFICATIONS (ALL 18 COMMANDS)
+PART 5:  SKILL SPECIFICATIONS (14 SKILLS — historical; 16 ship today)
+PART 6:  COMMAND SPECIFICATIONS (18 COMMANDS — historical; 25 ship today)
 PART 7:  AGENT SPECIFICATIONS (ALL 5 AGENTS)
 PART 8:  HOOKS CONFIGURATION (COMPLETE hooks.json)
 PART 9:  MCP CONNECTORS (.mcp.json)
 PART 10: SETTINGS (settings.json)
-PART 11: SCRIPT LOGIC (ALL 17 SCRIPTS)
+PART 11: SCRIPT LOGIC (17 SCRIPTS — historical; 22 ship today)
 PART 12: REFERENCE DOCUMENTS
 PART 13: TEMPLATE SPECIFICATIONS
 PART 14: PIPELINE ORCHESTRATION (DETERMINISTIC WORKFLOWS)
@@ -111,11 +121,11 @@ Each phase has defined inputs, outputs, gates (human approval points), and hooks
 | Component | Technology | Role |
 |---|---|---|
 | Orchestration | Claude Code / Cowork sub-agents | Pipeline management, creative reasoning |
-| Image Generation | Gemini API (Nano Banana 2: gemini-3.1-flash-image-preview) | AI image generation with reference image support (up to 14 refs) |
+| Image Generation | Gemini API (Nano Banana 2: gemini-3.1-flash-image) | AI image generation with reference image support (up to 14 refs) |
 | Image Editing | Gemini API (same model) | Iterative image editing, enhancement, extension |
-| Asset Indexing | Gemini API (gemini-3-flash for vision) | Understanding what's in each brand photo |
-| Video Generation | Gemini API (Veo 3.1: veo-3.1-generate-preview) | Short-form video clips, image-to-video animation |
-| Video (longer) | Kling API (optional, separate key) | Character-consistent longer videos (30s-3min) |
+| Asset Indexing | Gemini API (gemini-3.5-flash for vision) | Understanding what's in each brand photo |
+| Video Generation | WaveSpeed — Kling v3.0 Pro (`kwaivgi/kling-v3.0-pro/image-to-video`) | Short-form video clips, image-to-video animation (shipped default) |
+| Video (fallback) | Gemini API (Veo 3.1: veo-3.1-generate-preview) | Alternative provider via `--provider veo` |
 | Compositing | Python Pillow + rembg | Background removal, layering, text overlay, resize |
 | Carousel Rendering | Playwright (headless Chromium) | HTML/CSS templates → PNG screenshots |
 | Document Assembly | Node.js docx-js | Word document creation |
@@ -124,7 +134,7 @@ Each phase has defined inputs, outputs, gates (human approval points), and hooks
 
 ## 1.7 Key Capability: Nano Banana 2 Reference Images
 
-Nano Banana 2 (gemini-3.1-flash-image-preview) accepts up to 14 reference images per request. This is the technical foundation for style-referenced generation. When generating a new image, feeding the brand's real photography as references causes the AI to absorb the visual DNA — lighting style, color temperature, composition patterns, mood. The output is a new image that looks like it belongs in the same photo library.
+Nano Banana 2 (gemini-3.1-flash-image) accepts up to 14 reference images per request. This is the technical foundation for style-referenced generation. When generating a new image, feeding the brand's real photography as references causes the AI to absorb the visual DNA — lighting style, color temperature, composition patterns, mood. The output is a new image that looks like it belongs in the same photo library.
 
 This single capability transforms the plugin from "AI generates random images with brand colors" to "AI generates images that look like the brand's own photography."
 
@@ -134,14 +144,16 @@ This single capability transforms the plugin from "AI generates random images wi
 
 ## 2.1 plugin.json
 
+*Illustrative only — the `"version": "1.0.0"` below is the original design value. The shipped `.claude-plugin/plugin.json` is at 1.13.1, and its description differs.*
+
 ```json
 {
   "name": "socialforge",
   "description": "Agency-grade social media calendar automation with asset-first compositing. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, adapts copy per platform, produces review galleries and delivery documents. Supports multiple brands, async approval workflows, and scheduled automation. Use this plugin for any social media content production, calendar automation, brand asset management, post generation, carousel creation, or social media workflow task.",
   "version": "1.0.0",
   "author": {
-    "name": "INT TechShu Digital",
-    "url": "https://intglobal.com"
+    "name": "Indranil Banerjee",
+    "url": "https://github.com/indranilbanerjee"
   },
   "keywords": [
     "social-media", "content-calendar", "image-generation", "compositing",
@@ -261,25 +273,17 @@ socialforge/
 │   │   ├── recap-6slide.html
 │   │   ├── data-infographic-6slide.html
 │   │   └── quote-card-single.html
-│   ├── preview-templates/
-│   │   ├── linkedin-post.html
-│   │   ├── linkedin-carousel.html
-│   │   ├── instagram-feed.html
-│   │   ├── instagram-story.html
-│   │   ├── twitter-post.html
-│   │   ├── facebook-post.html
-│   │   └── youtube-thumbnail.html
+│   ├── preview-templates/          # NOT SHIPPED — directory is empty; the 7
+│   │                               # templates below were designed, never built.
+│   │                               # render_preview.py builds mockups in code.
 │   ├── gallery-template/
 │   │   ├── gallery.html
 │   │   ├── gallery.css
 │   │   └── gallery.js
 │   ├── document-template/
 │   │   └── calendar-doc-structure.json
-│   └── default-fonts/
-│       ├── Montserrat-Bold.ttf
-│       ├── Montserrat-SemiBold.ttf
-│       ├── OpenSans-Regular.ttf
-│       └── OpenSans-Light.ttf
+│   └── default-fonts/              # NOT SHIPPED — directory is empty; no fonts
+│                                   # are bundled (licensing). Brands supply their own.
 │
 ├── .mcp.json
 ├── settings.json
@@ -460,7 +464,7 @@ socialforge/
   },
   
   "brand_hashtags": {
-    "always_include": ["string array — hashtags added to every post, e.g., '#INTGlobal'"],
+    "always_include": ["string array — hashtags added to every post, e.g., '#AcmeCorp'"],
     "campaign_hashtags": {
       "{campaign_name}": ["string array — hashtags for this campaign"]
     }
@@ -1297,7 +1301,7 @@ description: >
   Trigger when user says: "add brand", "new brand", "register brand",
   "switch brand", "change client", "set up brand", "configure brand",
   "update brand config", "show brands", "list brands", "brand settings".
-  Also trigger when /socialforge:add-brand or /socialforge:switch-brand
+  Also trigger when /socialforge:brand-setup or /socialforge:switch-brand
   commands are invoked.
 ---
 ```
@@ -1338,7 +1342,7 @@ description: >
 **Responsibilities:**
 1. Connect to asset source: Accept a local folder path, Google Drive path (via Drive MCP), or URL. Store connection info in `brands/{slug}/asset-source.json`.
 2. Scan for images: Walk the folder tree, identify all image files (jpg, jpeg, png, webp, gif). Record file paths, dimensions, file sizes.
-3. Analyze each image: For each image, call Gemini Vision (gemini-3-flash or similar) with a structured prompt requesting:
+3. Analyze each image: For each image, call Gemini Vision (gemini-3.5-flash or similar) with a structured prompt requesting:
    - Natural language description of the image
    - Subject identification (person, product, office, event, abstract, etc.)
    - Detected colors (dominant hex codes)
@@ -1407,7 +1411,7 @@ description: >
 11. Present summary for confirmation: Show the parsed summary (total posts, platform distribution, tier breakdown, content type mix, detected dependencies) and wait for user confirmation before proceeding.
 
 **Parsing logic for DOCX calendars:**
-The INT. Global calendar format has a specific structure:
+A typical agency DOCX calendar has this structure:
 - Weekly calendar grids in tables (Day/Date, Post #, Content Bucket, Tier, Format, Channel, Post Hint)
 - Post-by-post creative briefs in sections (Section 1-7 per post)
 - Summary tables for remaining posts
@@ -1858,7 +1862,7 @@ description: >
    - Phase 6: Approval management (calls manage-reviews — ongoing/async)
    - Phase 7: Finalization (calls finalize-month — after all approvals received)
 3. For `--all-brands`: queue all brands, process with parallel sub-agents for local work, shared API queue for image generation. Show progress dashboard for all brands.
-4. Error recovery: if any phase fails, save state and allow resume with `/socialforge:resume-generation`. Don't lose completed work.
+4. Error recovery: if any phase fails, save state and allow resume by re-running `/socialforge:generate-all` (the pipeline picks up from the last completed phase). *(The originally planned `/socialforge:resume-generation` command was never built.)* Don't lose completed work.
 5. Progress reporting: show real-time progress with phase indicators, post counts, estimated time remaining.
 
 ---
@@ -1908,7 +1912,7 @@ Each command follows the same pattern — description, arguments, workflow steps
 
 **edit-image.md:** `--post {id} --variant {a/b/c} --instruction "edit instructions"`. Sends the existing generated image to Gemini edit API with the instructions. Creates a new variant. Preserves originals.
 
-**swap-asset.md:** `--post {id} --new-asset "path/to/asset"`. Indexes the new asset (if not already in library), re-runs the compositing pipeline for this post with the new asset. Same creative mode, new core image.
+**swap-asset.md:** shipped form is `/socialforge:swap-asset {post-id} --asset {asset-id}` (or `--browse` to pick interactively). Indexes the new asset (if not already in library), re-runs the compositing pipeline for this post with the new asset. Same creative mode, new core image.
 
 **review.md:** Builds and opens the review gallery. If the gallery already exists and is current, just opens it. Otherwise rebuilds.
 
@@ -2096,7 +2100,9 @@ Compliance report per post with:
 
 # PART 8: HOOKS CONFIGURATION
 
-## 8.1 Complete hooks.json
+> **NOT SHIPPED — opt-in reference example only.** SocialForge ships **zero global hooks**; `hooks/hooks.json` is empty by design (all four hooks were removed in v1.5.0 because they fired on every Claude Code operation in every project). The block below is the archived design, mirrored at `hooks/hooks-reference.example.json`. Nothing loads it. Credential status is reported on demand via `/socialforge:status`.
+
+## 8.1 hooks.json (opt-in reference example — not shipped)
 
 ```json
 {
@@ -2196,13 +2202,15 @@ Compliance report per post with:
 
 ## 8.2 Hook Script Logic
 
-**validate_brand_config.py (PreToolUse):**
+> **`validate_brand_config.py`, `guard_output_path.py`, and `notify_team.py` DO NOT EXIST in this repo.** They are unimplemented reference designs from the original spec and were never built. `cost_tracker.py`, `compliance_check.py`, and `status_manager.py` do exist in `scripts/`, but they are invoked by skills and commands — not by hooks, since no hooks ship.
+
+**validate_brand_config.py (unimplemented reference design — file does not exist):**
 - Check if `SOCIALFORGE_ACTIVE_BRAND` is set in the session
 - If not set, exit code 2 (BLOCK) with message: "No active brand loaded. Run /socialforge:switch-brand first."
 - If set, validate the brand-config.json exists and has required fields
 - Exit code 0 (allow) if valid
 
-**guard_output_path.py (PreToolUse for Write/Edit):**
+**guard_output_path.py (unimplemented reference design — file does not exist):**
 - Read the file path being written to from stdin (JSON input)
 - Check: is this path within `output/{active_brand_slug}/`?
 - If writing to a different brand's folder → exit 2 (BLOCK): "Cannot write to {other_brand}'s folder. Active brand is {active_brand}."
@@ -2230,7 +2238,7 @@ Compliance report per post with:
 - Update any post statuses that changed during the subagent's work
 - Exit 0
 
-**notify_team.py (Notification):**
+**notify_team.py (unimplemented reference design — file does not exist):**
 - Read the notification content from stdin
 - If Slack MCP connector is available: format and send to configured channel
 - If not available: log to a local notification-log.json
@@ -2240,7 +2248,9 @@ Compliance report per post with:
 
 # PART 9: MCP CONNECTORS
 
-## 9.1 .mcp.json
+> **NOT SHIPPED CONFIG — this is the opt-in catalog.** The shipped `.mcp.json` is `{"mcpServers":{}}`; **zero connectors auto-connect**. The catalog of 10 HTTP connectors lives in `.mcp.json.connectors-reference`, and you copy the entries you want into `.mcp.json` to enable them. The six-server block below is the original design sketch, not shipped configuration.
+
+## 9.1 .mcp.json (opt-in catalog — shipped file is empty)
 
 ```json
 {
@@ -2299,8 +2309,8 @@ Compliance report per post with:
   
   "image_generation": {
     "provider": "gemini",
-    "model": "gemini-3.1-flash-image-preview",
-    "fallback_model": "gemini-2.5-flash-image",
+    "model": "gemini-3.1-flash-image",
+    "fallback_model": "gemini-3-pro-image",
     "variants_per_post": 2,
     "max_variants": 3,
     "default_resolution": "1024",
@@ -2314,11 +2324,11 @@ Compliance report per post with:
   
   "image_editing": {
     "provider": "gemini",
-    "model": "gemini-3.1-flash-image-preview"
+    "model": "gemini-3.1-flash-image"
   },
   
   "asset_indexing": {
-    "vision_model": "gemini-3-flash-preview",
+    "vision_model": "gemini-3.5-flash",
     "batch_delay_ms": 1000,
     "min_image_dimension": 800,
     "auto_index_on_sync": true
@@ -2348,7 +2358,7 @@ Compliance report per post with:
     "provider": "gemini",
     "model_short": "veo-3.1-fast-generate-preview",
     "model_standard": "veo-3.1-generate-preview",
-    "model_long": "kling-2.6",
+    "model_long": "kwaivgi/kling-v3.0-pro/image-to-video",
     "short_threshold_seconds": 10,
     "standard_threshold_seconds": 30,
     "require_cost_confirmation": true
@@ -2944,7 +2954,7 @@ OUTPUT: .docx file
 |---|---|---|---|---|
 | LinkedIn | 10 min | 30-90 sec | 16:9 or 1:1 | 5 GB |
 | Instagram Feed | 60 min | 15-60 sec | 1:1 or 4:5 | 4 GB |
-| Instagram Reel | 90 sec | 15-30 sec | 9:16 | 4 GB |
+| Instagram Reel | 3 min | 15-30 sec | 9:16 | 4 GB |
 | Instagram Story | 60 sec | 15 sec | 9:16 | 4 GB |
 | YouTube | 12 hr | 7-15 min | 16:9 | 256 GB |
 | YouTube Short | 3 min | 15-60 sec | 9:16 | N/A |
@@ -3075,11 +3085,11 @@ These require judgment and may branch differently each time:
 
 | # | Scenario | What Happens | Resolution |
 |---|---|---|---|
-| 1 | Client changes brand colors mid-month | Some assets already generated with old colors | User updates brand-config.json. `/socialforge:regenerate --all-pending` regenerates unfinalised posts. FINAL posts are protected unless explicitly unlocked. |
+| 1 | Client changes brand colors mid-month | Some assets already generated with old colors | User updates brand-config.json. `/socialforge:generate-all` regenerates unfinalised posts. *(The originally planned `/socialforge:regenerate --all-pending` command was never built.)* FINAL posts are protected unless explicitly unlocked. |
 | 2 | Trending topic — inject reactive post | Need a new post not in original calendar | `/socialforge:reactive-post` creates a new entry, runs through asset match → generate → review → approve. |
 | 3 | Client rejects specific carousel slides | Slides 4, 7, 9 need changes, others are fine | `/socialforge:revision --post 12 --slides 4,7,9 --feedback "..."`. Only specified slides re-rendered. Carousel PDF reassembled. |
 | 4 | Founder photo unavailable, calendar requires it | Calendar brief specifies founder portrait | Asset gap detected at Phase 1. Two options: use the brief's alternate visual direction (if provided), or generate AI image with available style references. User decides. |
-| 5 | API rate limit hit mid-batch | Gemini returns 429 at image 45 of 94 | Hook detects error. Pauses generation for 60s. Retries. After 3 consecutive failures: stops, saves state, notifies user. `/socialforge:resume-generation` continues from where it stopped. |
+| 5 | API rate limit hit mid-batch | Gemini returns 429 at image 45 of 94 | Hook detects error. Pauses generation for 60s. Retries. After 3 consecutive failures: stops, saves state, notifies user. re-running `/socialforge:generate-all` continues from where it stopped. *(`/socialforge:resume-generation` was planned but never built.)* |
 | 6 | Same asset used too many times | Founder has 4 photos, 16 posts need founder imagery | Usage tracking penalizes reuse. After 2 uses in the same month, penalty kicks in. After same-week reuse, heavy penalty. System recommends alternatives and flags to user. |
 | 7 | Post goes to 4 platforms with different specs | One source, four different dimension/format/char requirements | Generate master image at highest resolution. Platform-specific crops + resizes. Copy adapted separately per platform. Previews generated per platform. |
 | 8 | Calendar updated in Drive after production started | Content strategist changes 5 posts | `/socialforge:sync-calendar --from-drive` detects changes, shows diff, asks user which posts to regenerate. Only changed posts are re-processed. |
@@ -3116,12 +3126,12 @@ echo 'GEMINI_API_KEY=AIzaSy-your-key-here' > .env
 **Models used:**
 | Purpose | Model ID | Pricing |
 |---|---|---|
-| Image generation | gemini-3.1-flash-image-preview | $0.039-0.151/image |
-| Image editing | gemini-3.1-flash-image-preview | Same |
-| Vision analysis | gemini-3-flash-preview | ~$0.001/request |
+| Image generation | gemini-3.1-flash-image | $0.039-0.151/image |
+| Image editing | gemini-3.1-flash-image | Same |
+| Vision analysis | gemini-3.5-flash | ~$0.001/request |
 | Video (fast) | veo-3.1-fast-generate-preview | ~$0.06/sec |
 | Video (standard) | veo-3.1-generate-preview | ~$0.40/sec |
-| Text (copy, analysis) | gemini-3-flash-preview | ~$0.001/request |
+| Text (copy, analysis) | gemini-3.5-flash | ~$0.001/request |
 
 **Free tier:** ~500 image gen requests/day, sufficient for most agency volumes.
 
@@ -3132,7 +3142,7 @@ client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
 
 # Image generation with references
 response = client.models.generate_content(
-    model='gemini-3.1-flash-image-preview',
+    model='gemini-3.1-flash-image',
     contents=[
         # Reference images (up to 14)
         {'inline_data': {'mime_type': 'image/jpeg', 'data': ref_b64}},
@@ -3154,19 +3164,17 @@ while not operation.done:
     operation = client.operations.get_videos_operation(operation)
 ```
 
-## 16.2 Kling API (Optional, for longer video)
+## 16.2 WaveSpeed — Kling v3.0 Pro (shipped video stack)
 
-**Separate API key required.** Enterprise-level pricing (~$4,200 for 30,000 units).
+**Separate API key required** (WaveSpeed). This is the default video path in the shipped release: model `kwaivgi/kling-v3.0-pro/image-to-video`, roughly $0.08-0.11 per second of video (~$0.40-0.56 for a 5-second clip, ~$0.84-1.12 for 10 seconds).
 
-Only used when video generation is explicitly enabled AND the video duration exceeds 30 seconds. For most social media content, Veo 3.1 is sufficient.
-
-**Integration:** REST API with polling pattern (similar to Veo). Script `generate_video.py` handles both Veo and Kling based on duration routing.
+**Integration:** REST API with polling pattern (similar to Veo). Script `generate_video.py` handles both Kling and Veo — `--provider {auto,kling,veo}`, with `auto` routing by duration and available keys.
 
 ## 16.3 Other potential API integrations (future)
 
 | API | Purpose | When to Add |
 |---|---|---|
-| ~~Sora 2 (OpenAI)~~ — **DEPRECATED** | OpenAI announced the consumer Sora app shuts down 26 Apr 2026 and the Sora API on 24 Sep 2026. Do NOT add as a new dependency. | — |
+| ~~Sora 2 (OpenAI)~~ — **DEPRECATED** | The consumer Sora app shut down on 26 Apr 2026; the Sora API shuts down 24 Sep 2026. Do NOT add as a new dependency. | — |
 | Runway Gen-4 / Gen-4.5 | Alternative video generation with reference-image control, character consistency, brand-friendly output | If both Veo 3.x and Kling v3.0 quality are insufficient for a specific use case |
 | Kling 3.0 Omni | Lip-sync video generation (5 languages) | When lip-sync quality dominates the requirement |
 | Flux (Replicate) | Alternative image generation | If Gemini has content policy issues with certain prompts |
@@ -3197,7 +3205,7 @@ in Cowork — UI-only.) Add to the project's CLAUDE.md / AGENTS.md:
 ```markdown
 ## SocialForge Plugin
 This project uses the SocialForge social media calendar automation plugin.
-Read the complete specification in `socialforge/SPEC.md` before building or modifying.
+Read the complete specification in `socialforge/SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md` before building or modifying.
 Skills are in `socialforge/skills/`.
 Scripts are in `socialforge/scripts/`.
 Templates are in `socialforge/assets/`.

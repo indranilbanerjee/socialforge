@@ -1,11 +1,11 @@
 # Anthropic Software Directory — Submission Packet
 
 **Plugin:** SocialForge
-**Version at submission:** 1.6.0
+**Version at submission:** 1.13.1
 **Submitter:** Indranil Banerjee — neel@neelverse.com
 **Repository:** https://github.com/indranilbanerjee/socialforge
 **Marketplace:** https://github.com/indranilbanerjee/neels-plugins
-**Last updated:** 2026-05-17
+**Last updated:** 2026-07-29
 
 This file is the submission packet for the Anthropic Software Directory. It is **not** the directory listing — that is submitted via https://platform.claude.com/plugins/submit. This packet pre-stages every input the form will ask for so submission takes ~5 minutes.
 
@@ -21,7 +21,7 @@ SocialForge is a social media calendar and creative production system for market
 
 Image generation defaults to Google Vertex AI (Gemini Nano Banana 2 / 3 Pro) with WaveSpeed and HiggsField fallbacks. Video generation defaults to WaveSpeed Kling v3.0 Pro with Vertex AI Veo and HiggsField fallbacks. All AI-generated visuals require explicit user approval before use — SocialForge is built around human-in-the-loop creative review, not autonomous publishing.
 
-25 commands, 16 skills, 5 agents, 20 Python scripts, 10 HTTP MCP connectors (Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary — all Cowork-compatible). Multi-plugin coexistence by design (zero global hooks).
+25 commands, 16 skills, 5 agents, 22 Python scripts, an opt-in catalog of 10 HTTP MCP connectors (Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary — all Cowork-compatible). Multi-plugin coexistence by design (zero global hooks).
 
 ## 3. Category
 
@@ -45,12 +45,12 @@ Image generation defaults to Google Vertex AI (Gemini Nano Banana 2 / 3 Pro) wit
 python3 scripts/generate_image.py \
     --prompt "minimalist product hero shot, soft natural lighting" \
     --output assets/acme/q3-hero.png \
-    --model gemini-3-pro-image-preview \
+    --model gemini-3-pro-image \
     --aspect-ratio 1:1 \
     --c2pa-sign --brand "Acme Corp" --platform instagram
 ```
 
-The script generates the image via Vertex AI, then post-processes through `c2pa_sign.py` which embeds a C2PA manifest (brand = Acme Corp organization, generator = "vertex_ai / gemini-3-pro-image-preview", target platform = Instagram, IPTC `TRAINED_ALGORITHMIC_MEDIA` digital-source-type). Resulting PNG verifies at contentcredentials.org/verify. Article 50 compliant.
+The script generates the image via Vertex AI, then post-processes through `c2pa_sign.py` which embeds a C2PA manifest (brand = Acme Corp organization, generator = "vertex_ai / gemini-3-pro-image", target platform = Instagram, IPTC `TRAINED_ALGORITHMIC_MEDIA` digital-source-type). Resulting PNG verifies at contentcredentials.org/verify. Article 50 compliant.
 
 **Empirically tested:** 75-byte test PNG → 42,996-byte signed PNG with `manifest_embedded_and_verified=true`, active manifest ID `urn:c2pa:...`.
 
@@ -58,22 +58,29 @@ The script generates the image via Vertex AI, then post-processes through `c2pa_
 
 ```
 python3 scripts/generate_video.py \
-    --prompt "30-second product launch teaser" \
-    --output campaigns/q3-launch.mp4 \
-    --model kling-v3-pro
+    --brand acme-corp \
+    --month 2026-06 \
+    --post-id P07 \
+    --output-dir campaigns/ \
+    --generate-video \
+    --provider kling \
+    --video-model kwaivgi/kling-v3.0-pro/image-to-video \
+    --image campaigns/q3-launch-keyframe.png \
+    --duration 10 \
+    --aspect-ratio 9:16
 
 python3 scripts/video_postprocess.py \
     --input campaigns/q3-launch.mp4 \
     --output-dir campaigns/processed/ \
     --brand acme-corp \
-    --platforms tiktok,instagram,linkedin,youtube \
+    --platforms tiktok,instagram_reel,linkedin,youtube \
     --burn-subs --srt campaigns/captions.srt \
     --c2pa-sign \
     --c2pa-generator "WaveSpeed Kling v3.0 Pro" \
     --c2pa-prompt "30-second product launch teaser"
 ```
 
-`video_postprocess.py` resizes for each platform (TikTok 1080×1920, Instagram 1080×1080, LinkedIn 1200×627, YouTube 1280×720), burns subtitles, watermarks with brand logo, then signs each per-platform output with its own C2PA manifest. The per-platform manifest records `platform: tiktok` / `platform: instagram` etc. — different distributions, separately verifiable.
+`video_postprocess.py` resizes for each platform (TikTok 1080×1920, Instagram Reel 1080×1920, LinkedIn 1920×1080, YouTube 1920×1080), burns subtitles, watermarks with brand logo, then signs each per-platform output with its own C2PA manifest. The per-platform manifest records `platform: tiktok` / `platform: instagram_reel` etc. — different distributions, separately verifiable.
 
 ### Use case 3 — Monthly content calendar with asset-first compositing
 
@@ -99,7 +106,7 @@ Renders multi-page LinkedIn carousels (PDF) with consistent brand application, o
 
 **Testing account:** Reviewers install from `indranilbanerjee/neels-plugins` and use `references/brand-config-schema.md` as the brand profile template. The plugin requires Google Cloud Vertex AI credentials and a WaveSpeed API key for the AI generation paths; `references/image-gen-guide.md` and the README's Admin Setup section walk through credential acquisition. For evaluation without API keys, the `--placeholder` mode in `generate_image.py` produces a Pillow-rendered placeholder demonstrating the workflow shape without making external API calls.
 
-**Sample worked output:** the `assets/` directory in the repo contains a small example brand asset library demonstrating the asset-first compositing pattern.
+**Sample worked output:** the repo ships no bundled brand photo library (brand assets are customer IP). To evaluate the compositing pattern without credentials or your own photos, run `generate_image.py --placeholder`, which renders a Pillow placeholder through the same pipeline shape. `assets/carousel-templates/` contains the 8 shipped carousel templates, which render end-to-end via Playwright with no API key at all.
 
 ## 7. Ownership verification
 
@@ -116,7 +123,7 @@ Renders multi-page LinkedIn carousels (PDF) with consistent brand application, o
 | No Usage Policy violation | ✓ Generates legitimate marketing creative. Brand guardrails mechanism + human-in-the-loop approval prevent autonomous publishing of non-approved content. |
 | Testing account + sample data + 3+ use cases | ✓ Sections 5, 6. |
 | Ownership of APIs/domains/UIs | ✓ Section 7. |
-| Maintenance commitment | ✓ v1.5.0 (May 2026) → v1.5.1 → v1.5.2 → v1.5.3 (May 9) → v1.6.0 (May 17). |
+| Maintenance commitment | ✓ v1.5.0 (May 2026) → v1.5.3 (May 9) → v1.6.0 (May 17) → v1.8.x → v1.9.0 (May 27) → v1.10.0 (May 27) → v1.11.0 (Jun 4) → v1.12.x (Jun 9) → v1.13.1 (Jun 28). |
 | Issue response timeframe | ✓ <72 hours acknowledgement, <7 days security/correctness patches. |
 | Software Directory Terms agreement | ☐ Agreed at submission time. |
 | Design guidelines | ✓ Canonical `/socialforge:<command>` namespace per v1.5.3 sweep; README onboarding-first per v1.6.0 restructure. |

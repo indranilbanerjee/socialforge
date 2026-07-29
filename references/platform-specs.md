@@ -9,7 +9,6 @@ Complete dimension, character limit, and format specs for all supported social m
 | LinkedIn | Feed post | 1200 | 627 | 1.91:1 | Recommended landscape |
 | LinkedIn | Square | 1080 | 1080 | 1:1 | Alternative feed format |
 | LinkedIn | Carousel/Doc | 1080 | 1080 | 1:1 | Per-slide dimension |
-| LinkedIn | Story | 1080 | 1920 | 9:16 | Full screen vertical |
 | Instagram | Feed square | 1080 | 1080 | 1:1 | Default feed format |
 | Instagram | Feed portrait | 1080 | 1350 | 4:5 | Preferred — more real estate |
 | Instagram | Story/Reel | 1080 | 1920 | 9:16 | Full screen vertical |
@@ -44,7 +43,7 @@ Complete dimension, character limit, and format specs for all supported social m
 | X/Twitter | 280 chars total | 1-2 | Inline |
 | Facebook | No limit | 1-3 | End of post |
 | YouTube | 15 | 3-5 | Description |
-| TikTok | No limit | 3-5 | End of caption |
+| TikTok | 10 (enforced by `adapt_copy.py`) | 3-5 | End of caption |
 | Pinterest | 20 | 5-10 | Description |
 
 ## Video Specs
@@ -52,19 +51,19 @@ Complete dimension, character limit, and format specs for all supported social m
 | Platform | Max Duration | Recommended | Min Resolution | Format |
 |----------|-------------|-------------|----------------|--------|
 | LinkedIn | 10 min | 30-90s | 720p | MP4 |
-| Instagram Reel | 90s | 15-30s | 720p | MP4 |
+| Instagram Reel | 3 min | 15-30s | 720p | MP4 |
 | Instagram Story | 60s | 15s | 720p | MP4 |
 | X/Twitter | 2:20 | 15-45s | 720p | MP4 |
 | Facebook | 240 min | 15-60s | 720p | MP4 |
 | YouTube | 12 hours | 8-15 min | 1080p | MP4 |
-| YouTube Short | 60s | 15-60s | 720p (9:16) | MP4 |
-| TikTok | 10 min | 15-60s | 720p (9:16) | MP4 |
+| YouTube Short | 3 min | 15-60s | 720p (9:16) | MP4 |
+| TikTok | 60 min | 15-60s | 720p (9:16) | MP4 |
 
 ## Supported Content Formats
 
 | Platform | Static | Carousel | Video | Story | Reel/Short | Text Only | Poll | Document |
 |----------|--------|----------|-------|-------|-----------|-----------|------|----------|
-| LinkedIn | ✓ | ✓ (PDF) | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| LinkedIn | ✓ | ✓ (PDF) | ✓ | — | — | ✓ | ✓ | ✓ |
 | Instagram | ✓ | ✓ | — | ✓ | ✓ | — | — | — |
 | X/Twitter | ✓ | ✓ (multi-image) | ✓ | — | — | ✓ | ✓ | — |
 | Facebook | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — |

@@ -2,7 +2,15 @@
 
 JSON schema for `compliance-rules.json` — enforces banned phrases, required disclaimers, and platform-specific content policies.
 
+`scripts/compliance_check.py` is the enforcing implementation and the source of truth for the shapes below.
+
 ## Location
+
+```
+${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand-slug>/compliance-rules.json
+```
+
+When `CLAUDE_PLUGIN_DATA` is unset, the script falls back to:
 
 ```
 ~/socialforge-workspace/brands/<brand-slug>/compliance-rules.json
@@ -14,8 +22,8 @@ JSON schema for `compliance-rules.json` — enforces banned phrases, required di
 |-------|------|----------|-------------|
 | `industry` | string | Yes | Industry vertical for default rule loading |
 | `banned_phrases` | array | No | Phrases that must not appear in content |
-| `required_disclaimers` | array | No | Disclaimers that must be included when triggered |
-| `image_compliance` | object | No | Rules for visual content |
+| `required_disclaimers` | object or array | No | Disclaimers that must be included when triggered |
+| `image_compliance` | array or object | No | Rules for visual content |
 | `data_claim_rules` | object | No | Rules for statistical or data claims |
 | `platform_specific_rules` | object | No | Per-platform overrides |
 
@@ -27,7 +35,9 @@ Each entry in the array:
 |-----------|------|-------------|
 | `phrase` | string | The banned text |
 | `match_type` | string | `"exact"`, `"contains"`, or `"regex"` |
-| `severity` | string | `"block"` (hard stop) or `"warn"` (flag for review) |
+| `severity` | string | `"block"` or `"critical"` (both hard stops) — anything else, including `"warn"` / `"warning"`, is advisory. Defaults to `"warning"`. |
+| `case_sensitive` | boolean | Match case-sensitively (default `false`) |
+| `reason` | string | Why the phrase is banned — surfaced in the violation record |
 | `suggestion` | string | Recommended replacement text |
 
 ```json
@@ -51,13 +61,37 @@ Each entry in the array:
 
 ## `required_disclaimers`
 
-Each entry:
+Two forms are accepted. `compliance_check.py` normalizes both to `(trigger, disclaimer text, platforms)`.
+
+**Mapping form (preferred)** — an object keyed by trigger:
 
 | Sub-field | Type | Description |
 |-----------|------|-------------|
-| `trigger` | string | Keyword or pattern that activates the disclaimer |
-| `disclaimer` | string | Text that must be included |
-| `placement` | string | `"footer"`, `"inline"`, or `"first_comment"` |
+| `disclaimer_text` | string | Text that must be included (`disclaimer` also accepted) |
+| `platforms` | array | Platforms where this applies (empty or absent = all) |
+
+```json
+{
+  "required_disclaimers": {
+    "financial": {
+      "disclaimer_text": "Not financial advice. Past performance does not guarantee future results.",
+      "platforms": ["linkedin", "x", "facebook"]
+    },
+    "affiliate": {
+      "disclaimer_text": "#ad #sponsored",
+      "platforms": []
+    }
+  }
+}
+```
+
+**Array form** — a list of objects, each carrying its trigger inline:
+
+| Sub-field | Type | Description |
+|-----------|------|-------------|
+| `trigger` | string | Keyword that activates the disclaimer (entries without one are skipped) |
+| `disclaimer` | string | Text that must be included (`disclaimer_text` also accepted) |
+| `placement` | string | `"footer"`, `"inline"`, or `"first_comment"` — advisory metadata; not enforced by the checker |
 | `platforms` | array | Platforms where this applies (empty = all) |
 
 ```json
@@ -68,24 +102,40 @@ Each entry:
       "disclaimer": "Not financial advice. Past performance does not guarantee future results.",
       "placement": "footer",
       "platforms": ["linkedin", "x", "facebook"]
-    },
-    {
-      "trigger": "affiliate",
-      "disclaimer": "#ad #sponsored",
-      "placement": "inline",
-      "platforms": []
     }
   ]
 }
 ```
 
+A missing disclaimer is raised as a **warning**, never a hard stop.
+
 ## `image_compliance`
+
+Text-based flagging only — the checker does not analyze image pixels. Two forms are accepted.
+
+**Array form** — a list of rule objects. Only rules with `check_method: "manual_flag"` are surfaced:
 
 | Sub-field | Type | Description |
 |-----------|------|-------------|
-| `no_real_people` | boolean | Block AI-generated images of identifiable real people |
-| `no_competitor_logos` | boolean | Block images containing competitor branding |
-| `require_alt_text` | boolean | Require alt text for accessibility |
+| `rule` | string | Human-readable description shown in the flag |
+| `check_method` | string | Must be `"manual_flag"` to be emitted |
+| `severity` | string | Defaults to `"warning"` |
+
+```json
+{
+  "image_compliance": [
+    { "rule": "Images must not depict identifiable real people", "check_method": "manual_flag", "severity": "warning" }
+  ]
+}
+```
+
+**Object form** — boolean/number switches, expanded into the same manual-review flags:
+
+| Sub-field | Type | Description |
+|-----------|------|-------------|
+| `no_real_people` | boolean | Flag images of identifiable real people |
+| `no_competitor_logos` | boolean | Flag images containing competitor branding |
+| `require_alt_text` | boolean | Flag missing alt text for accessibility |
 | `min_diversity_score` | number | 0-1 score for representation diversity across campaigns |
 | `banned_imagery` | array | Subjects to never depict (e.g., `["violence", "alcohol"]`) |
 
@@ -139,7 +189,9 @@ Per-platform overrides keyed by platform name:
 
 ## Enforcement Behavior
 
-- `"block"` severity halts the pipeline and requires human override.
-- `"warn"` severity flags the issue but allows progression with acknowledgment.
-- Compliance checking runs during Phase 5 (Review & Approval) and again at Phase 7 (Gallery Build).
-- Missing `compliance-rules.json` applies industry-standard defaults.
+- `"block"` and `"critical"` severities both halt the pipeline and require human override. The checker returns `status: "BLOCKED"` when any is triggered.
+- Any other severity (`"warn"`, `"warning"`) flags the issue but allows progression with acknowledgment. The checker returns `status: "WARNING"`.
+- Forbidden content types matched via `platform_specific_rules.<platform>.forbidden_content_types` are always critical.
+- Data-claim matches, hashtag-limit overruns, missing disclaimers, and image rules are always warnings.
+- With no violations and no warnings the checker returns `status: "PASSED"`.
+- A missing `compliance-rules.json` returns `status: "SKIPPED"` — no rules are applied and nothing is blocked.

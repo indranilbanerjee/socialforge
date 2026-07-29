@@ -12,16 +12,18 @@ Produce multi-slide carousel images from HTML/CSS templates using Playwright hea
 
 ## Supported Templates
 
-| Template | Slides | Best For |
-|----------|--------|----------|
-| generic-8slide | 8 | General purpose |
-| comparison-10slide | 10 | Feature comparisons |
-| case-study-10slide | 10 | Client success stories |
-| tips-5slide | 5 | Quick tips |
-| playbook-8slide | 8 | Step-by-step playbooks |
-| recap-6slide | 6 | Event/month recaps |
-| data-infographic-6slide | 6 | Data-driven infographics |
-| quote-card-single | 1 | Single quote cards |
+Pass the key to `render_carousel.py --template` (argparse rejects anything outside this list; `--list-templates` prints it).
+
+| Key | Slides | Best For | Template File |
+|-----|--------|----------|---------------|
+| generic | 8 | General purpose | generic-8slide.html |
+| comparison | 10 | Feature comparisons | comparison-10slide.html |
+| case-study | 10 | Client success stories | case-study-10slide.html |
+| tips | 5 | Quick tips | tips-5slide.html |
+| playbook | 8 | Step-by-step playbooks | playbook-8slide.html |
+| recap | 6 | Event/month recaps | recap-6slide.html |
+| data | 6 | Data-driven infographics | data-infographic-6slide.html |
+| quote | 1 | Single quote cards | quote-card-single.html |
 
 ## Process
 

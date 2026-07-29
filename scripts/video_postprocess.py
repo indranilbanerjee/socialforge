@@ -21,7 +21,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add scripts dir to path for credential_manager/install_deps import
@@ -42,7 +42,7 @@ PLATFORM_SPECS = {
     "instagram_story": {"width": 1080, "height": 1920, "ratio": "9:16"},
     "instagram_feed":  {"width": 1080, "height": 1080, "ratio": "1:1"},
     "x_twitter":       {"width": 1600, "height": 900,  "ratio": "16:9"},
-    "facebook":        {"width": 1200, "height": 630,  "ratio": "~16:9"},
+    "facebook":        {"width": 1080, "height": 1080, "ratio": "1:1"},
     "youtube":         {"width": 1920, "height": 1080, "ratio": "16:9"},
     "youtube_short":   {"width": 1080, "height": 1920, "ratio": "9:16"},
     "tiktok":          {"width": 1080, "height": 1920, "ratio": "9:16"},
@@ -99,7 +99,10 @@ def add_watermark(input_path, logo_path, output_path, position="bottom-right",
     Returns:
         dict with status, output path, and details.
     """
-    ffmpeg = get_ffmpeg()
+    try:
+        ffmpeg = get_ffmpeg()
+    except RuntimeError as exc:
+        return {"status": "FAILED", "error": str(exc), "action_required": True}
 
     if not Path(input_path).exists():
         return {"status": "FAILED", "error": f"Input video not found: {input_path}"}
@@ -167,7 +170,10 @@ def resize_for_platform(input_path, output_path, platform):
     Returns:
         dict with status, output path, platform, and dimensions.
     """
-    ffmpeg = get_ffmpeg()
+    try:
+        ffmpeg = get_ffmpeg()
+    except RuntimeError as exc:
+        return {"status": "FAILED", "error": str(exc), "action_required": True}
 
     if not Path(input_path).exists():
         return {"status": "FAILED", "error": f"Input video not found: {input_path}"}
@@ -235,7 +241,10 @@ def burn_subtitles(input_path, srt_path, output_path, font="Montserrat",
     Returns:
         dict with status, output path, and subtitle details.
     """
-    ffmpeg = get_ffmpeg()
+    try:
+        ffmpeg = get_ffmpeg()
+    except RuntimeError as exc:
+        return {"status": "FAILED", "error": str(exc), "action_required": True}
 
     if not Path(input_path).exists():
         return {"status": "FAILED", "error": f"Input video not found: {input_path}"}
@@ -322,7 +331,10 @@ def add_background_music(input_path, audio_path, output_path, music_volume=0.2):
     Returns:
         dict with status, output path, and music details.
     """
-    ffmpeg = get_ffmpeg()
+    try:
+        ffmpeg = get_ffmpeg()
+    except RuntimeError as exc:
+        return {"status": "FAILED", "error": str(exc), "action_required": True}
 
     if not Path(input_path).exists():
         return {"status": "FAILED", "error": f"Input video not found: {input_path}"}
@@ -406,7 +418,7 @@ def postprocess_video(input_path, output_dir, brand_config, platforms,
 
     log_dir = WORKSPACE / "shared" / "video-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / f"postprocess-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.json"
+    log_file = log_dir / f"postprocess-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json"
 
     log_entries = []
     files_created = []
@@ -414,7 +426,7 @@ def postprocess_video(input_path, output_dir, brand_config, platforms,
 
     def log(operation, result):
         entry = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "operation": operation,
             "status": result.get("status", "unknown"),
         }
@@ -500,7 +512,7 @@ def postprocess_video(input_path, output_dir, brand_config, platforms,
         "input": str(input_path),
         "output_dir": str(output_dir),
         "started_at": log_entries[0]["timestamp"] if log_entries else None,
-        "completed_at": datetime.utcnow().isoformat() + "Z",
+        "completed_at": datetime.now(timezone.utc).isoformat(),
         "operations": log_entries,
     }
     try:

@@ -5,6 +5,12 @@ JSON schema for `approval-chain.json` — defines who reviews content and when p
 ## Location
 
 ```
+${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand-slug>/approval-chain.json
+```
+
+When `CLAUDE_PLUGIN_DATA` is unset, the scripts fall back to:
+
+```
 ~/socialforge-workspace/brands/<brand-slug>/approval-chain.json
 ```
 
@@ -101,7 +107,7 @@ Each contains the same fields as a tier entry. Example:
 | Sub-field | Type | Description |
 |-----------|------|-------------|
 | `enabled` | boolean | Whether auto-publish is allowed |
-| `allowed_tiers` | array | Which tiers can auto-publish (e.g., `["HYGIENE"]`) |
+| `allowed_tiers` | array | Which tiers may auto-publish (e.g., `["HYGIENE"]`). `HERO` is hard-excluded — listing it here has no effect. |
 | `after_hours` | number | Hours of no response before auto-publishing |
 | `require_min_reviewers` | boolean | Still require minimum reviewers even for auto-publish |
 
@@ -146,5 +152,5 @@ Each contains the same fields as a tier entry. Example:
 
 - Special rules merge with (not replace) the tier defaults.
 - If `min_reviewers` exceeds the number of `reviewers`, all reviewers must approve.
-- Auto-publish never applies to HERO tier regardless of configuration.
+- Auto-publish never applies to HERO tier. The exclusion is hard-coded, not derived from `allowed_tiers` — adding `"HERO"` to `allowed_tiers` does not enable it, and setting `enabled: true` does not override it. HERO always requires explicit sign-off.
 - Missing `approval-chain.json` defaults to single-reviewer approval on all tiers.

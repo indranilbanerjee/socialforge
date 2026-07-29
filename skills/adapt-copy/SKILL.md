@@ -12,7 +12,7 @@ Transform a single caption brief into platform-optimized copy for each target pl
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## Process (Per Post x Per Platform)
 
@@ -28,6 +28,9 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 | X/Twitter | Punchy, concise | 280 chars | 1-2 | Direct URL |
 | Facebook | Casual | 500 chars optimal | 1-3 | Direct URL |
 | YouTube | Description format | 5,000 chars | 3-5 | Direct URLs |
+| TikTok | Casual, trend-aware | 2,200 chars | 3-5 (trending + branded) | Link in bio |
+| Threads | Conversational | 500 chars | 1-3 | Direct URL |
+| Bluesky | Concise, community-first | 300 chars | 1-2 (via tag facets) | Direct URL |
 
 5. Apply brand hashtags (always_include + campaign-specific)
 6. Run compliance check — flag banned phrases, add disclaimers

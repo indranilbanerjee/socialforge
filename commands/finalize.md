@@ -13,4 +13,4 @@ Package all approved content into the delivery folder structure. Runs /socialfor
 - All compliance checks passed
 
 ## Output
-Organized FINAL/ folder uploaded to Google Drive (if connected).
+Organized FINAL/ folder on disk; optional Drive upload only if a Drive MCP has been opted into.

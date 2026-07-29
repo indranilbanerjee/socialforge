@@ -26,7 +26,7 @@ try:
 except (ImportError, KeyError, ValueError):  # pragma: no cover
     _resolve_model = None
     _check_model = None
-    DEFAULT_MODEL = "gemini-3-pro-image-preview"
+    DEFAULT_MODEL = "gemini-3-pro-image"
 
 
 def _negotiate_model(user_value):
@@ -34,8 +34,8 @@ def _negotiate_model(user_value):
         return user_value or DEFAULT_MODEL
     if user_value:
         status, replacement = _check_model(user_value)
-        if status == "deprecated" and replacement:
-            print(f"WARNING: model {user_value!r} is deprecated; using {replacement!r}", file=sys.stderr)
+        if status in ("deprecated", "retired") and replacement:
+            print(f"WARNING: model {user_value!r} is {status}; using {replacement!r}", file=sys.stderr)
             return replacement
         if status == "unknown":
             print(f"WARNING: model {user_value!r} not in curated registry", file=sys.stderr)

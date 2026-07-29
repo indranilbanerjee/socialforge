@@ -12,13 +12,13 @@ One-time setup that stores credentials persistently. Run once, works forever acr
 
 ## Context efficiency
 
-Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/<brand>/assets/index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
+Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand>/asset-index.json`) — never list the asset directory. Reference generated images / videos by path, not by loading metadata. Brand profile loads once per session.
 
 ## What This Does
 
 Configures two services that SocialForge needs for creative production:
 
-1. **Google Cloud Vertex AI** (required for images) — Gemini Nano Banana 2 + Pro
+1. **Google Cloud Vertex AI** (required for images) — Nano Banana 2 (Gemini 3.1 Flash Image) + Nano Banana Pro (Gemini 3 Pro Image)
 2. **WaveSpeed** (required for video) — Kling v3.0 Pro for image-to-video
 
 ## Prerequisites
@@ -76,7 +76,7 @@ Show the result. If success:
 Image generation configured.
   Project: <project_id>
   Service Account: <email>
-  Models available: gemini-2.5-flash-image (Nano Banana 2), gemini-3-pro-image-preview (Nano Banana Pro)
+  Models available: gemini-3.1-flash-image (Nano Banana 2), gemini-3-pro-image (Nano Banana Pro)
 ```
 
 ### Step 2: Video Generation (WaveSpeed)
@@ -126,7 +126,7 @@ SocialForge API Setup Complete
   Image Generation: [configured / not configured]
     Provider: Google Cloud Vertex AI
     Project: <project_id>
-    Models: Nano Banana 2, Nano Banana Pro
+    Models: Nano Banana 2 (Gemini 3.1 Flash Image), Nano Banana Pro (Gemini 3 Pro Image)
 
   Video Generation: [configured / not configured]
     Provider: WaveSpeed (Kling v3.0 Pro)

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.1] - 2026-07-30
+
+### Fixed - Functional testing pass
+
+Every script was executed end-to-end against a brand built from the plugin's own documented schema, which surfaced two defects the 56-test suite could not see:
+
+- **`adapt_copy.py` crashed on every invocation for schema-conformant brands.** `references/brand-config-schema.md` documents `brand_hashtags` as an array; the script read it as an object (`.get("always_include")`) and raised `AttributeError: 'list' object has no attribute 'get'` on every platform. Copy adaptation is the core of the plugin, so any brand created from the documented schema could not adapt a single post. Both shapes - the documented array and the legacy object - are now accepted, and a malformed value is ignored instead of fatal.
+- **Video watermarking silently never ran.** `video_postprocess.py` read a flat `logo` object, but the documented schema splits those fields across `logo_files` (which variant) and `logo_overlay` (position/opacity). For any schema-conformant brand the logo path resolved to `None` and the watermark was skipped with no error. Both layouts are now read, documented keys first.
+- `verify_brand_colors.py` no longer calls `Image.getdata()`, removed in Pillow 14 (October 2027); it uses `get_flattened_data()` where available.
+- Tests 56 -> **63**: new `test_brand_config_shapes.py` asserts both brand-config shapes work across all six platforms and that scripts only read keys the schema actually documents.
+
 ## [1.14.0] - 2026-07-29
 
 ### Changed - The Line-by-Line Audit

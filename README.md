@@ -6,18 +6,18 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **16 skills · 25 commands · 5 agents · 22 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, and **OpenClaw** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.14.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.14.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-56%2F56%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1140)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1140)
+[![Tests](https://img.shields.io/badge/tests-63%2F63%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1141)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1141)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
-> 🆕 **Just shipped — v1.14.0 (July 29, 2026): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
+> 🆕 **Just shipped — v1.14.1 (July 29, 2026): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code:
@@ -63,7 +63,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.14.0)
+## Supported surfaces (v1.14.1)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -87,7 +87,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **22 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 10 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1140) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1141) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -368,7 +368,7 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.14.0)
+## Current Release (v1.14.1)
 
 **June 2026 market-refresh sync — June 28, 2026.** Refreshes SocialForge's model registry against the June 2026 vendor catalogs. Resolver-routed — zero hardcoded ID changes needed on the SF side because `scripts/generate_video.py` and `scripts/compose_creative.py` already call through the resolver.
 
@@ -378,7 +378,7 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 - **Model registry rebuilt to 47 entries** verified against vendor primary docs.
 - **`docs/MODEL-CURATOR.md` refresh** — aliases table refreshed; new § "Parameter compatibility — Claude Opus 4.7 and later" explains the HTTP 400 risk.
 
-56/56 tests passing. Zero pipeline behavior change beyond the resolver-routed alias updates.
+63/63 tests passing. Zero pipeline behavior change beyond the resolver-routed alias updates.
 
 ### Earlier (v1.12.1 — release-consistency test suite, 2026-06-09 PM)
 

@@ -55,7 +55,10 @@ def verify_colors(image_path, brand, threshold=50, min_percentage=15):
         sys.exit(1)
 
     img = Image.open(image_path).convert("RGB")
-    pixels = list(img.getdata())
+    # Image.getdata() is deprecated and goes away in Pillow 14 (Oct 2027);
+    # get_flattened_data() is its replacement and only exists on newer Pillow.
+    pixels = list(img.get_flattened_data() if hasattr(img, "get_flattened_data")
+                  else img.getdata())
     total_pixels = len(pixels)
 
     color_matches = {c["name"]: 0 for c in brand_colors}

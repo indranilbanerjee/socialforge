@@ -436,10 +436,24 @@ def postprocess_video(input_path, output_dir, brand_config, platforms,
             entry["error"] = result["error"]
         log_entries.append(entry)
 
-    logo_config = brand_config.get("logo", {})
-    logo_relative = logo_config.get("primary", "")
-    logo_position = logo_config.get("position", "bottom-right")
-    logo_opacity = logo_config.get("opacity", 0.7)
+    # brand-config.json splits these across `logo_files` (which variant) and
+    # `logo_overlay` (how to place it) per references/brand-config-schema.md.
+    # A flat `logo` object is the pre-v1.14 shape; keep reading it so existing
+    # brands keep their watermark. Reading only `logo` silently disabled the
+    # watermark for every schema-conformant brand.
+    legacy = brand_config.get("logo", {})
+    if not isinstance(legacy, dict):
+        legacy = {}
+    logo_files = brand_config.get("logo_files", {})
+    if not isinstance(logo_files, dict):
+        logo_files = {}
+    overlay = brand_config.get("logo_overlay", {})
+    if not isinstance(overlay, dict):
+        overlay = {}
+
+    logo_relative = logo_files.get("primary") or legacy.get("primary", "")
+    logo_position = overlay.get("position") or legacy.get("position", "bottom-right")
+    logo_opacity = overlay.get("opacity", legacy.get("opacity", 0.7))
 
     brand_dir = brand_config.get("_brand_dir", "")
     if logo_relative and brand_dir:

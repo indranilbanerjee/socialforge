@@ -45,6 +45,22 @@ def truncate_smart(text, limit):
     return truncated[:limit - 3] + "..."
 
 
+def _always_include_hashtags(value):
+    """Pull the always-include hashtags out of either documented shape.
+
+    references/brand-config-schema.md documents `brand_hashtags` as a plain
+    array (["#AcmeCorp", "#BuildBetter"]); the engineering spec documents an
+    object ({"always_include": [...], "campaign_hashtags": {...}}). Brands
+    written from the reference schema previously crashed this script with
+    AttributeError, so accept both and ignore anything else.
+    """
+    if isinstance(value, list):
+        return [h for h in value if isinstance(h, str)]
+    if isinstance(value, dict):
+        return [h for h in value.get("always_include", []) if isinstance(h, str)]
+    return []
+
+
 def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
     """Adapt copy for a specific platform."""
     specs = PLATFORM_LIMITS.get(platform)
@@ -143,7 +159,7 @@ def main():
         config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
         if config_path.exists():
             config = json.loads(config_path.read_text(encoding="utf-8"))
-            brand_hashtags = config.get("brand_hashtags", {}).get("always_include", [])
+            brand_hashtags = _always_include_hashtags(config.get("brand_hashtags"))
 
     if args.campaign_hashtags:
         brand_hashtags.extend(args.campaign_hashtags)

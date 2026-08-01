@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.2] - 2026-07-30
+
+### Fixed
+
+- **Model registry reconciled with current truth**: `latest-fast-openai` -> `gpt-5.6-luna`, `latest-balanced-openai` -> `gpt-5.6-terra`, `latest-balanced-anthropic` -> `claude-sonnet-5`; the GPT-5.5/5.4 family moved `current` -> `supported` with `replacement_id`s targeting GPT-5.6 (GA 2026-07-09). SocialForge had no cross-registry drift test, so this staleness was silent — the alias re-points flow to every script that resolves `latest-balanced-*`/`latest-fast-*`.
+- **Source-anonymity guard test added** (`tests/test_source_anonymity.py`) — the rule violated by the engineering spec found in the July-29 audit is now machine-enforced on every run (forbidden strings assembled at runtime; verified to fire on a planted needle). Tests 63 -> **64**.
 ## [1.14.1] - 2026-07-30
 
 ### Fixed - Functional testing pass

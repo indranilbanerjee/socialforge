@@ -12,10 +12,11 @@ Open-source agency-grade social media production engine — **16 skills · 25 co
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-64%2F64%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-66%2F66%20passing-brightgreen.svg)](tests/)
 [![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1142)
 [![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1142)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
 > 🆕 **Just shipped — v1.14.2 (July 30, 2026): registry re-points + the anonymity guard.** Balanced/fast model aliases moved to the current generation (claude-sonnet-5, gpt-5.6-terra, gpt-5.6-luna; GPT-5.5/5.4 marked superseded with replacement routing), and a new machine-enforced source-anonymity guard scans every file on every test run. 64 tests passing. Previously — **v1.14.1 (July 29): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
 
@@ -487,6 +488,20 @@ claude plugin install digital-marketing-pro@neels-plugins
 claude plugin install contentforge@neels-plugins
 claude plugin install socialforge@neels-plugins
 ```
+
+## Sponsor this project
+
+This plugin is MIT-licensed, free to use commercially, and collects no telemetry. What
+sponsorship pays for is the unglamorous half of keeping it accurate: platform-API updates
+when a vendor ships a breaking version, model-registry refreshes when a model is retired,
+compliance passes when regulatory guidance moves, and issue triage.
+
+If it saves your team time, you can [sponsor the work](https://github.com/sponsors/indranilbanerjee).
+Sponsors from $25/mo are listed in [SPONSORS.md](SPONSORS.md).
+
+[![Sponsor](https://img.shields.io/badge/sponsor%20on%20GitHub-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
+
+---
 
 ## License
 

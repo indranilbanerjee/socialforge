@@ -449,7 +449,7 @@ v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Wr
 
 ## About the maintainer
 
-SocialForge is built and maintained by **[Indranil Banerjee](https://indranil.in)** — a digital marketing practitioner shipping social-creative automation as code. The asset-first compositing principle ("brand assets are sacred, AI is the creative layer around them") and the four creative modes come from real agency work producing monthly content calendars at scale.
+SocialForge is built and maintained by **[Indranil “Neel” Banerjee](https://indranil.in)** — a builder and systems thinker with roots in information security and a second act across growth marketing, enterprise digital operations, and AI transformation. This repository is one public implementation of a broader focus on trustworthy AI execution: preserve context, make evidence inspectable, and keep people at consequential decision points.
 
 - 🌐 **Website:** [indranil.in](https://indranil.in)
 - 💼 **LinkedIn:** [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow)
@@ -460,7 +460,7 @@ SocialForge is built and maintained by **[Indranil Banerjee](https://indranil.in
 - 🐛 **Bug reports:** [GitHub Issues](https://github.com/indranilbanerjee/socialforge/issues)
 - 🔒 **Security:** [Private Security Advisory](https://github.com/indranilbanerjee/socialforge/security/advisories/new) (see [SECURITY.md](SECURITY.md))
 
-If SocialForge saves your team time, [⭐ star the repo](https://github.com/indranilbanerjee/socialforge/stargazers). Sharing on **LinkedIn** ([linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow)) or **X** ([@askneelnow](https://x.com/askneelnow)) helps too — tag me, I'll re-share.
+If SocialForge saves your team time, [⭐ star the repo](https://github.com/indranilbanerjee/socialforge/stargazers). Sharing it on **LinkedIn** or **X** helps people discover the work too.
 
 ---
 

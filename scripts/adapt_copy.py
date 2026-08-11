@@ -7,6 +7,7 @@ Handles character limits, hashtag optimization, and CTA formatting.
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -61,33 +62,71 @@ def _always_include_hashtags(value):
     return []
 
 
-def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
+_URL_RE = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
+
+
+def render_cta(cta, specs, cta_keyword=None):
+    """Turn the intended call-to-action into the platform's actual mechanism.
+
+    A CTA is not a string you append — it is a mechanism that differs per
+    platform. On link platforms the CTA (URL and all) works as written. On
+    bio-link platforms (Instagram, TikTok) a pasted URL is dead weight: the
+    link lives in the profile, and the caption's job is to name the offer and
+    route the reader there — or, when the brand runs a comment-keyword
+    automation, to ask for the keyword.
+
+    This function used to be the bug: on bio platforms it appended a bare
+    "Link in bio" and threw the actual CTA away, so the offer the caption was
+    supposed to sell never appeared on the two platforms where captions matter
+    most.
+    """
+    if not cta:
+        return None
+    if specs.get("link") != "bio":
+        return cta
+
+    keyword = (cta_keyword or "").strip()
+    if keyword:
+        # Brand runs a comment-keyword automation: the keyword IS the mechanism.
+        return f'Comment "{keyword}" and we\'ll send you the link.'
+
+    offer = _URL_RE.sub("", cta).strip(" \t-–—:,.")
+    if offer:
+        return f"{offer} — link in bio."
+    # The CTA was only a URL; nothing to name, so route to the bio plainly.
+    return "Link in bio."
+
+
+def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None, cta_keyword=None):
     """Adapt copy for a specific platform."""
     specs = PLATFORM_LIMITS.get(platform)
     if not specs:
         return {"error": f"Unknown platform: {platform}"}
+
+    # Render the CTA first: the room it needs must be reserved BEFORE
+    # truncation. It used to be appended after, so a limit-length post plus its
+    # CTA overflowed the platform limit and the script shipped copy it had
+    # itself just measured as too long.
+    rendered_cta = render_cta(cta, specs, cta_keyword)
+    cta_block = f"\n\n{rendered_cta}" if rendered_cta else ""
 
     adapted = copy_text
 
     # Truncate to fold point (for preview visibility) or optimal limit
     fold_at = specs.get("fold_at")
     limit = specs.get("optimal_limit", specs["char_limit"])
+    body_limit = max(1, limit - len(cta_block))
 
     if fold_at and len(copy_text) > fold_at:
         # For platforms with "see more" fold: ensure hook is in first N chars
         # Full copy still saved, but first fold_at chars must be compelling
         adapted = copy_text  # Keep full copy
-        if len(adapted) > limit:
-            adapted = truncate_smart(adapted, limit)
+        if len(adapted) > body_limit:
+            adapted = truncate_smart(adapted, body_limit)
     else:
-        adapted = truncate_smart(adapted, limit)
+        adapted = truncate_smart(adapted, body_limit)
 
-    # Add CTA
-    if cta:
-        if specs.get("link") == "bio":
-            adapted += f"\n\nLink in bio"
-        elif specs.get("link") == "direct":
-            adapted += f"\n\n{cta}"
+    adapted += cta_block
 
     # Prepare hashtags
     all_hashtags = list(brand_hashtags or [])
@@ -107,6 +146,10 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None):
         "char_count": len(adapted),
         "char_limit": specs["char_limit"],
         "within_limit": len(adapted) <= specs["char_limit"],
+        "cta_mechanism": ("comment-keyword" if (cta and cta_keyword and specs.get("link") == "bio")
+                          else "bio-link" if (cta and specs.get("link") == "bio")
+                          else "direct-link" if cta else None),
+        "cta_rendered": rendered_cta,
         "fold_at": fold_at_val,
         "hook_visible": adapted[:fold_at_val] if fold_at_val else adapted[:100],
         "hashtags": hashtag_text,
@@ -140,6 +183,10 @@ def main():
     parser.add_argument("--platform", help="Target platform")
     parser.add_argument("--brand", default=None, help="Brand slug for hashtags")
     parser.add_argument("--cta", default=None, help="Call-to-action text or URL")
+    parser.add_argument("--cta-keyword", default=None,
+                        help="Comment-keyword for bio-link platforms when the brand runs a "
+                             "comment automation (e.g. GUIDE). Falls back to brand config "
+                             "cta_keyword; without one, the CTA names the offer + 'link in bio'.")
     parser.add_argument("--secondary-lang", default=None, help="Secondary language for bilingual posts")
     parser.add_argument("--bilingual-mode", default="separate_posts", choices=["separate_posts", "bilingual_single_post", "language_per_platform"])
     parser.add_argument("--campaign-hashtags", nargs="*", default=None, help="Campaign-specific hashtags")
@@ -155,16 +202,21 @@ def main():
         parser.error("the following arguments are required: " + ", ".join(missing))
 
     brand_hashtags = []
+    cta_keyword = args.cta_keyword
     if args.brand:
         config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
         if config_path.exists():
             config = json.loads(config_path.read_text(encoding="utf-8"))
             brand_hashtags = _always_include_hashtags(config.get("brand_hashtags"))
+            if not cta_keyword:
+                value = config.get("cta_keyword")
+                cta_keyword = value if isinstance(value, str) else None
 
     if args.campaign_hashtags:
         brand_hashtags.extend(args.campaign_hashtags)
 
-    result = adapt_for_platform(args.text, args.platform, brand_hashtags, args.cta)
+    result = adapt_for_platform(args.text, args.platform, brand_hashtags, args.cta,
+                                cta_keyword=cta_keyword)
 
     # Bilingual variants when a secondary language is requested
     if args.secondary_lang and "error" not in result:

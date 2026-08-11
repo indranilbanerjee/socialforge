@@ -1,6 +1,6 @@
 ---
 name: match-assets
-description: "Match brand assets to calendar posts and assign creative modes. Use when: after calendar parsing or asset re-matching."
+description: "Match indexed brand assets to calendar posts and assign each post its creative mode (anchor-compose, enhance-extend, style-referenced, pure-creative). Triggers on \"/match-assets\", \"match assets\", \"which photos for which posts\", \"assign creative modes\", \"pair assets to the calendar\", or right after parse-calendar and before compose-creative. Reads the asset index; posts with no suitable asset are flagged rather than force-matched."
 argument-hint: "--brand <name> --month <YYYY-MM>"
 effort: high
 user-invocable: true

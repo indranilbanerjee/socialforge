@@ -43,7 +43,7 @@ Google Drive (asset images) → /socialforge:index-assets (AI analysis) → asse
 Cloudinary (optional DAM) ────────────────────────────────→ CDN delivery + transformations
 ```
 
-**All 18 skills, 5 agents, 22 scripts, and 25 commands work immediately** without any connectors. Connectors add live data and execution capabilities:
+**All 19 skills, 5 agents, 22 scripts, and 25 commands work immediately** without any connectors. Connectors add live data and execution capabilities:
 
 - Without Notion: Parse calendars from DOCX/XLSX/text (no Notion database sync)
 - Without fal.ai/Replicate: Use Gemini API directly for image generation (requires GEMINI_API_KEY)

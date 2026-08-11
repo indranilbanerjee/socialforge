@@ -1,6 +1,6 @@
 ---
 name: compose-creative
-description: Core creative engine. Generates images and video using 4 modes with brand assets, AI compositing, and platform resizing.
+description: "Core creative engine — turns a calendar post into finished images or video using 4 modes (anchor-compose, enhance-extend, style-referenced, pure-creative) with brand assets, AI generation, and human approval before credits are spent. Triggers on \"/compose-creative\", \"generate the creative\", \"make the image for P07\", \"produce this post\", \"create the visual\", \"compose this\", or any time a calendar post needs its creative produced. Overlay text follows the pairing rule — it never echoes the caption."
 argument-hint: "[--post <id>] [--all] [--variant b]"
 effort: max
 user-invocable: true
@@ -65,6 +65,13 @@ Present 2-3 creative direction options to the user. Each option includes:
 - Mood, color palette, and composition approach
 - How the brand asset will be used (per the assigned creative mode)
 - Rough reference to style/tone
+- **Overlay text, written against the pairing rule**: the overlay and the
+  caption do different jobs and never echo each other. The overlay stops the
+  scroll — a promise, a number, a tension in a few words. The caption (written
+  later by adapt-copy) pays it off with context and the CTA. If the proposed
+  overlay reads like the caption's first line, it is the wrong overlay — the
+  quality reviewer flags this pairing as a Copy Quality failure downstream, so
+  catch it here before credits are spent.
 
 No image generation happens here. The user picks a direction before any credits are spent.
 

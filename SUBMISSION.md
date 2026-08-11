@@ -21,7 +21,7 @@ SocialForge is a social media calendar and creative production system for market
 
 Image generation defaults to Google Vertex AI (Gemini Nano Banana 2 / 3 Pro) with WaveSpeed and HiggsField fallbacks. Video generation defaults to WaveSpeed Kling v3.0 Pro with Vertex AI Veo and HiggsField fallbacks. All AI-generated visuals require explicit user approval before use — SocialForge is built around human-in-the-loop creative review, not autonomous publishing.
 
-25 commands, 18 skills, 5 agents, 22 Python scripts, an opt-in catalog of 10 HTTP MCP connectors (Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary — all Cowork-compatible). Multi-plugin coexistence by design (zero global hooks).
+25 commands, 19 skills, 5 agents, 22 Python scripts, an opt-in catalog of 10 HTTP MCP connectors (Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary — all Cowork-compatible). Multi-plugin coexistence by design (zero global hooks).
 
 ## 3. Category
 

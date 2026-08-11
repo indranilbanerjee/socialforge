@@ -1,6 +1,6 @@
 ---
 name: full-pipeline
-description: Run the complete end-to-end production pipeline — parse, match, compose, copy, preview, review, finalize.
+description: "Run the complete production pipeline end to end — parse the calendar, match assets, compose creative, adapt copy, build previews, run reviews, finalize delivery — with checkpoints between phases. Triggers on \"/full-pipeline\", \"run the whole month\", \"produce the month\", \"end to end\", \"do everything\", \"full production run\", or when a parsed calendar exists and the whole month should be produced in one supervised pass. Quote costs first via price-check."
 argument-hint: "[brand] [YYYY-MM] [calendar-source]"
 effort: max
 user-invocable: true

@@ -1,6 +1,6 @@
 ---
 name: price-check
-description: "Look up what a generation actually costs right now, from the provider's live pricing page, and quote a run before spending anything. Use before any paid image or video generation."
+description: "Look up what a generation actually costs right now from the provider live pricing page, record it with its source, and quote a run before spending anything. Triggers on \"/price-check\", \"what will this cost\", \"quote the month\", \"price this video\", \"compare providers\", \"is sound extra\", \"cost estimate\", or before generate-all and any paid generation. Prices expire after 24h; quotes refuse rather than guess, and a quote is never an approval."
 argument-hint: "[--model <id>] [--provider <name>] [--compare] [--batch] [--staleness]"
 effort: low
 user-invocable: true

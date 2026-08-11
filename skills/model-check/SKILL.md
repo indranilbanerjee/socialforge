@@ -1,6 +1,6 @@
 ---
 name: model-check
-description: "Find the model that is currently best for a capability by reading the provider's live catalogue, and record it. Run before a production month, and whenever a model id looks stale."
+description: "Find the model that is currently best for a capability by reading the provider live catalogue, and record it with its source — the code asks for kinds, never hardcoded ids. Triggers on \"/model-check\", \"which model should we use\", \"best video model right now\", \"is this model still current\", \"model staleness\", \"update the models\", or before any production month and whenever a resolve comes back stale. Pairs with price-check — newest is not automatically best or cheapest."
 argument-hint: "[--kind <capability>] [--provider <name>] [--staleness]"
 effort: low
 user-invocable: true

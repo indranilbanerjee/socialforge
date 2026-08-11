@@ -1,6 +1,6 @@
 ---
 name: brand-manager
-description: "Set up and manage brand profiles. Use when: configuring a new brand, updating brand config, or switching brands."
+description: "Set up and manage brand profiles — colors, fonts, logo, voice, pillars, platforms, hashtags, compliance rules, cta_keyword. Triggers on \"/brand-manager\", \"new brand\", \"set up a brand\", \"update the brand config\", \"switch brand\", \"change brand colors\", \"add a platform to the brand\", or any time brand configuration is created or edited. Every other skill reads this profile — run it before any production."
 argument-hint: "[brand-name] [--update] [--switch]"
 effort: medium
 user-invocable: true

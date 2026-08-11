@@ -1,6 +1,6 @@
 ---
 name: create-previews
-description: Generate platform mockup previews showing how posts will look on each social platform.
+description: "Generate platform-accurate mockup previews — the post as it will actually render on LinkedIn, Instagram, X, TikTok — before anything is published. Triggers on \"/create-previews\", \"preview this post\", \"how will it look\", \"platform mockup\", \"show it on Instagram\", \"preview batch\", or after creative and copy exist and stakeholders need to see the assembled post in context before approval."
 argument-hint: "[--post <id>] [--all] [--platform <name>]"
 effort: medium
 user-invocable: true

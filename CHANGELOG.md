@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.17.0] — 2026-08-12
+
+Patterns extracted from a study of 17 third-party creator skills — taken as
+reference, reimplemented fresh, nothing copied. The study also exposed two
+shipped defects in the copy adapter.
+
+### Fixed
+
+- **The CTA was silently discarded on Instagram and TikTok.** On bio-link
+  platforms `adapt_copy.py` appended a bare "Link in bio" and threw the actual
+  call-to-action away — the offer the caption was supposed to sell never
+  appeared on the two platforms where captions matter most. The CTA is now a
+  per-platform *mechanism*: direct link where links work; on bio platforms the
+  URL is stripped and the offer is named ("Grab the free audit template — link
+  in bio."), or, when the brand runs a comment automation, the new
+  `cta_keyword` (brand config or `--cta-keyword`) renders the comment-keyword
+  ask instead. The result reports `cta_mechanism` and `cta_rendered`.
+- **The CTA could overflow the platform limit.** Truncation ran before the CTA
+  was appended, so a limit-length post plus its CTA shipped over the limit —
+  the script measured its own output as too long (`within_limit: false`) and
+  shipped it anyway. CTA space is now reserved before truncation.
+
+### Added
+
+- **`/socialforge:ideate-month`** (19th skill) — the month before the calendar
+  exists. The pipeline previously started at `parse-calendar`, meaning someone
+  else had already decided what to post; this skill answers "what should this
+  month be about" — the question clients actually pay for. It reads the brand
+  profile for pillars, mines pasted signals into on-pillar angles (dropping
+  and listing what does not map), compounds last month's validated wins with
+  follow-ups rather than reposts, designs at least one multi-part series with
+  an arc, and outputs a **calendar-data.json-compatible draft** so an approved
+  plan feeds `parse-calendar` with zero re-typing. Every post must trace to a
+  pillar, a win, or a signal — untraceable posts are cut, not padded.
+- **The pairing rule** in `compose-creative` (Stage 1) and the quality-reviewer
+  agent: overlay text and caption do different jobs and never echo each other —
+  the overlay stops the scroll, the caption pays it off. Echo is now a Copy
+  Quality flag at review and a stated check before credits are spent.
+- **Trigger-dense descriptions across all 19 skills.** The frontmatter
+  description is the entire routing layer for model-invoked skills, and the
+  median here was 105 characters; it is now ~445, each carrying the slash
+  alias plus the natural phrases a user would actually type.
+  `tests/test_description_density.py` (4) enforces ≥250 chars, a "Triggers on"
+  clause, ≥4 quoted trigger phrases, and the quoted slash alias — so the
+  routing layer cannot quietly thin out again.
+- **`tests/test_cta_mechanism.py`** (11) — the CTA can never be dropped on any
+  platform, bio platforms strip URLs but keep the offer, the comment-keyword
+  mechanism renders only where it exists, and a limit-length post plus CTA
+  stays within the platform limit.
+
+Tests 147 → **162**.
+
+---
+
 ## [1.16.0] — 2026-08-11
 
 No model id is written into the execution path any more. The code asks for a

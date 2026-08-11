@@ -4,7 +4,7 @@ This file is auto-loaded by OpenAI Codex, Google Antigravity, GitHub Copilot CLI
 
 ## What this plugin is
 
-SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **18 skills · 25 commands · 5 agents · 22 scripts · 10 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
+SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **19 skills · 25 commands · 5 agents · 22 scripts · 10 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
 
 **Supported surfaces (v1.13.1):** Claude Code (CLI + IDE extensions), Anthropic Cowork, OpenAI Codex (CLI + IDE + App), Cursor 2.5+, GitHub Copilot CLI, Google Antigravity 2.0 (CLI + IDE), Hermes Agent, OpenClaw.
 
@@ -23,7 +23,7 @@ SocialForge is an open-source agency-grade social media production engine — ca
 
 ## How to use it as an agent
 
-1. **Discover skills by description.** 18 skills auto-discover via SKILL.md frontmatter.
+1. **Discover skills by description.** 19 skills auto-discover via SKILL.md frontmatter.
 2. **Skill bodies reference Python scripts at `scripts/<name>.py`** — invoke via Bash. Key: `generate_image.py`, `edit_image.py`, `index_assets.py`, `match_assets.py`, `c2pa_sign.py`.
 3. **Image/video APIs require credentials.** Vertex AI for Nano Banana Pro (image); WaveSpeed for Kling v3.0 Pro (video). Run `setup` skill once to store credentials in plugin persistent data.
 4. **C2PA signing happens automatically before delivery** when `--c2pa-sign` flag is on (recommended for EU campaigns).

@@ -1,6 +1,6 @@
 ---
 name: index-assets
-description: "Index brand photo library using AI vision. Use when: setting up assets, adding new photos, or refreshing the index."
+description: "Index the brand photo and asset library with AI vision — each asset described, tagged, and made searchable so match-assets can pair them with calendar posts. Triggers on \"/index-assets\", \"index the assets\", \"scan the photo library\", \"new brand photos\", \"refresh the asset index\", \"what assets do we have\", or after any batch of brand imagery lands. Run once per brand, re-run on new uploads."
 argument-hint: "<brand-name> [--source <path>] [--refresh]"
 effort: high
 user-invocable: true

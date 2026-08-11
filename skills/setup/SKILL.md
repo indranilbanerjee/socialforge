@@ -1,6 +1,6 @@
 ---
 name: setup
-description: "One-time setup for image and video generation APIs. Run this before any creative production."
+description: "One-time setup for image and video generation APIs — Vertex AI, WaveSpeed, and Higgsfield credentials stored persistently and verified before use. Triggers on \"/setup\", \"set up socialforge\", \"configure the APIs\", \"add credentials\", \"connect vertex\", \"credential status\", or before any creative production on a new machine. Keys live outside the repo; nothing is committed to git."
 argument-hint: "[--image | --video | --fallback | --status | --reset]"
 effort: low
 user-invocable: true

@@ -1,6 +1,6 @@
 ---
 name: parse-calendar
-description: Parse monthly content calendars from DOCX, XLSX, Notion, or text into structured calendar-data.json.
+description: "Parse a monthly content calendar from DOCX, XLSX, Notion, or pasted text into structured calendar-data.json — the source of truth every downstream skill reads. Triggers on \"/parse-calendar\", \"parse the calendar\", \"import this calendar\", \"here is the month\", \"load the content plan\", \"calendar to JSON\", or whenever a client calendar arrives in any format. No calendar yet? /socialforge:ideate-month drafts one in this exact shape."
 argument-hint: "[file-path or Notion URL]"
 effort: medium
 user-invocable: true

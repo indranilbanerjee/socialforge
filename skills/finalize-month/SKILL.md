@@ -1,6 +1,6 @@
 ---
 name: finalize-month
-description: Package all approved content into the final delivery folder structure for handoff.
+description: "Package all approved content into the final delivery folder — files renamed per convention, per-platform copy files, manifest included — ready for client handoff. Triggers on \"/finalize-month\", \"finalize the month\", \"package everything\", \"prepare the delivery\", \"close out the month\", \"handoff folder\", or when every post has cleared its approval queue and the month ships to the client."
 argument-hint: "[--brand <name>] [--force]"
 effort: high
 user-invocable: true

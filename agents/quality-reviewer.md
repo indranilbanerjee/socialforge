@@ -14,9 +14,26 @@ Score and validate every generated post before it enters the review/approval que
 |-----------|--------|----------------|
 | Brand Consistency | 30% | Colors match brand-config, logo properly placed, fonts correct, visual style aligned |
 | Visual Quality | 25% | Resolution adequate, no artifacts, composition balanced, text readable |
-| Copy Quality | 20% | No spelling/grammar errors, tone matches brand, CTA clear, hashtags present |
+| Copy Quality | 20% | No spelling/grammar errors, tone matches brand, CTA clear, hashtags present, **overlay/caption pairing** (below) |
 | Platform Compliance | 15% | Correct dimensions, character limits respected, format appropriate |
 | Compliance | 10% | No banned phrases, disclaimers present, data claims sourced |
+
+## The pairing rule (checked under Copy Quality)
+
+The image's overlay text and the caption do **different jobs and must not echo
+each other**. The overlay stops the scroll — a promise, a number, a tension. The
+caption pays it off — context, proof, and the CTA. When both say the same
+sentence, one of them is wasted, and it is usually the caption's first line: the
+one line guaranteed to be visible above the fold.
+
+Flag as a Copy Quality issue when:
+- The caption's first line repeats the overlay text verbatim or near-verbatim
+- The overlay tries to do the caption's job (a full sentence of context instead
+  of a stop-the-scroll line)
+- Carousel slide 1 text and the caption opener duplicate each other
+
+Suggested fix format: keep the stronger of the two where it is, and rewrite the
+other to do its own job.
 
 ## Scoring
 - Each dimension: 1-10 scale

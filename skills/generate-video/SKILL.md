@@ -1,6 +1,6 @@
 ---
 name: generate-video
-description: "Generate short-form video clips via a 5-stage human-in-the-loop pipeline: concept, first frame, last frame, video generation, and delivery."
+description: "Generate short-form video via a 5-stage human-in-the-loop pipeline — concept, first frame, last frame, motion, final render — with approval at every stage before credits are spent. Triggers on \"/generate-video\", \"make a video\", \"video for P12\", \"animate this image\", \"reel from this\", \"image to video\", \"video post\", or any calendar post whose content_type is video, reel, or story. Models and prices are resolved live, never hardcoded; sound costs extra — quote it first."
 argument-hint: "[--post <id>] [--script-only] [--thumbnail]"
 effort: high
 user-invocable: true

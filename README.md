@@ -6,19 +6,19 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **19 skills · 25 commands · 5 agents · 22 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, and **OpenClaw** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.17.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.17.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-162%2F162%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1170)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1170)
+[![Tests](https://img.shields.io/badge/tests-166%2F166%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1171)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1171)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.17.0 (July 30, 2026): registry re-points + the anonymity guard.** Balanced/fast model aliases moved to the current generation (claude-sonnet-5, gpt-5.6-terra, gpt-5.6-luna; GPT-5.5/5.4 marked superseded with replacement routing), and a new machine-enforced source-anonymity guard scans every file on every test run. 64 tests passing. Previously — **v1.14.1 (July 29): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
+> 🆕 **Just shipped — v1.17.1 (July 30, 2026): registry re-points + the anonymity guard.** Balanced/fast model aliases moved to the current generation (claude-sonnet-5, gpt-5.6-terra, gpt-5.6-luna; GPT-5.5/5.4 marked superseded with replacement routing), and a new machine-enforced source-anonymity guard scans every file on every test run. 64 tests passing. Previously — **v1.14.1 (July 29): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code:
@@ -64,7 +64,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.17.0)
+## Supported surfaces (v1.17.1)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -88,7 +88,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **22 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 10 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1170) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1171) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -369,7 +369,7 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.17.0)
+## Current Release (v1.17.1)
 
 **June 2026 market-refresh sync — June 28, 2026.** Refreshes SocialForge's model registry against the June 2026 vendor catalogs. Resolver-routed — zero hardcoded ID changes needed on the SF side because `scripts/generate_video.py` and `scripts/compose_creative.py` already call through the resolver.
 
@@ -437,7 +437,7 @@ v1.5.0 removed all 4 global hooks (SessionStart credential banner, PreToolUse Wr
 - **[Technical Operations](docs/OPERATIONS.md)** — Pipeline logic, scoring algorithms, AI models, folder structures, cost tracking
 - **[Connectors](CONNECTORS.md)** — All 10 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
-- **[X/Twitter Research Intake](references/x-twitter-research-intake.md)** - Optional TweetClaw source workflow for reactive posts and X copy evidence
+- **[X/Twitter Research Intake](references/x-twitter-research-intake.md)** - Optional, vendor-neutral evidence workflow for reactive posts and X copy — uses the harness's own web tools, any research tool the user has connected, or pasted threads
 - **[Contributing](CONTRIBUTING.md)** — How to contribute to SocialForge
 - **[Troubleshooting](references/troubleshooting.md)** — Common issues and fixes
 - **[Changelog](CHANGELOG.md)** — Release history

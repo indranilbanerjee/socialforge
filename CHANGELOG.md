@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.15.1] — 2026-08-11
+
+Closes what 1.15.0 left open: the last hardcoded price table, and the five wired
+models that still had no recipe. Research against the providers' own model pages
+turned up a surcharge nothing was pricing.
+
+### Fixed
+
+- **`sound=true` was billed but never quoted.** Kling v3.0 Pro charges **1.5× the
+  base per-second rate** when synchronised audio is enabled, and
+  `generate_video.py` passes `sound` straight through to the API. Nothing
+  anywhere accounted for it — a 10-second clip was understated by roughly half a
+  dollar, a 28-post month by about fifteen. `quote()` and `quote_batch()` now
+  take a `multiplier` with a stated reason, and report base, multiplier and total
+  separately so the option's cost is visible rather than absorbed.
+- **The hardcoded cost table is gone.** `COST_ESTIMATES` keyed dollar figures by
+  *operation*, so clip length never entered the calculation and video was assumed
+  at $0.40/sec while a wired provider sold at a fraction of it. `log_cost()` now
+  takes an invoiced amount, or prices from the live price book when given
+  model/provider/units, or records the entry as **`unpriced`** — never as $0.00.
+  A month total that could not price everything now says so
+  (`total_is_complete: false`) instead of quietly reading as the full cost.
+
+### Added
+
+- **Recipes for every wired model** (was 2 of 6). Verified against each
+  provider's current model page on 2026-08-11: `gemini-flash-image` (the only
+  **sync** path in the whole plugin), `kling-v3.0-pro-video`,
+  `higgsfield-soul-v2`, `higgsfield-kling-v2.1`, alongside the existing
+  `kling-image-v3` and `veo-3.1`. Each carries the real request fields, the
+  polling contract, and a `Verified` date.
+- **`tests/test_cost_integrity.py`** (19) — the cost table cannot come back, no
+  rate-like literal can hide in `cost_tracker.py`, unpriced never becomes $0.00,
+  totals declare their own completeness, every wired model has a recipe, every
+  recipe states sync-or-async and carries a verification date, and no recipe
+  carries a price.
+
+### Noted, not changed
+
+- **The Higgsfield video fallback is pinned to Kling v2.1**, two generations
+  behind — the 3.0 family shipped in February 2026. It only fires when both
+  WaveSpeed and Vertex are unavailable. Bumping it means confirming Higgsfield's
+  current path, and the new id would bill differently, so it is documented with
+  the check to run rather than guessed at. See
+  `references/models/higgsfield-kling-v2.1.md`.
+- WaveSpeed also carries `kling-v3.0-std`, `kling-v3.0-4k` and a distinct
+  `kling-video-o3-pro` line aimed at reference-heavy work. Recorded in the recipe
+  as alternatives to compare, not adopted blind.
+
+Tests 108 → **127**.
+
+---
+
 ## [1.15.0] — 2026-08-11
 
 Prices are looked up, not remembered. Three platforms stopped being half-supported.

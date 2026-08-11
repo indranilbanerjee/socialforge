@@ -234,13 +234,30 @@ def lookup(model: str, provider: str, max_age_hours: float = DEFAULT_MAX_AGE_HOU
 
 
 def quote(model: str, provider: str, units: float,
-          max_age_hours: float = DEFAULT_MAX_AGE_HOURS) -> dict:
-    """Cost for `units` of work. Never returns a number it had to invent."""
+          max_age_hours: float = DEFAULT_MAX_AGE_HOURS,
+          multiplier: float = 1.0, multiplier_reason: str | None = None) -> dict:
+    """Cost for `units` of work. Never returns a number it had to invent.
+
+    `multiplier` covers per-option surcharges that a base rate does not include.
+    These are real and easy to miss: on at least one wired video model, asking
+    for synchronised audio bills at 1.5x the base per-second rate. SocialForge
+    passes `sound=True` straight through to that API, so a quote without the
+    multiplier understates the bill by half.
+
+    The multiplier is supplied by the caller, not stored here, for the same
+    reason prices are not stored here — it is a provider fact that moves, and a
+    number baked into this file would eventually be a confident lie. Pass
+    `multiplier_reason` so the quote can say why it is not the base rate.
+    """
     found = lookup(model, provider, max_age_hours)
     if found["status"] != "ok":
         return {**found, "quotable": False, "units": units}
-    total = round(found["price_usd"] * float(units), 4)
-    return {
+    if multiplier <= 0:
+        raise ValueError("multiplier must be positive")
+
+    base = found["price_usd"] * float(units)
+    total = round(base * float(multiplier), 4)
+    out = {
         "quotable": True,
         "status": "ok",
         "model": found["model"],
@@ -253,6 +270,11 @@ def quote(model: str, provider: str, units: float,
         "priced_at": found["fetched_at"],
         "age_hours": found["age_hours"],
     }
+    if multiplier != 1.0:
+        out["base_usd"] = round(base, 4)
+        out["multiplier"] = float(multiplier)
+        out["multiplier_reason"] = multiplier_reason or "unspecified option surcharge"
+    return out
 
 
 def compare(model: str, max_age_hours: float = DEFAULT_MAX_AGE_HOURS) -> dict:
@@ -306,13 +328,16 @@ def quote_batch(items: list[dict], max_age_hours: float = DEFAULT_MAX_AGE_HOURS)
     silently omits the three clips nobody could price is worse than no total,
     because it reads as complete.
 
-    Each item: {"model": str, "provider": str, "units": float, "label": str?}
+    Each item: {"model": str, "provider": str, "units": float, "label": str?,
+                "multiplier": float?, "multiplier_reason": str?}
     """
     priced, blocked = [], []
     total = 0.0
     for i, item in enumerate(items):
         label = item.get("label") or f"item-{i + 1}"
-        result = quote(item["model"], item["provider"], item["units"], max_age_hours)
+        result = quote(item["model"], item["provider"], item["units"], max_age_hours,
+                       multiplier=item.get("multiplier", 1.0),
+                       multiplier_reason=item.get("multiplier_reason"))
         if result.get("quotable"):
             total += result["total_usd"]
             priced.append({"label": label, **result})
@@ -386,6 +411,11 @@ def main() -> int:
     p.add_argument("--source", help="URL the price was read from (required to record)")
     p.add_argument("--note")
     p.add_argument("--units", type=float, help="How many units to quote for")
+    p.add_argument("--multiplier", type=float, default=1.0,
+                   help="Option surcharge on the base rate, e.g. 1.5 when synchronised "
+                        "audio is enabled. Look it up on the model's page — this is a "
+                        "provider fact, not something this tool knows.")
+    p.add_argument("--multiplier-reason", help='Why, e.g. "sound=true"')
     p.add_argument("--max-age-hours", type=float, default=DEFAULT_MAX_AGE_HOURS)
     args = p.parse_args()
 
@@ -407,7 +437,9 @@ def main() -> int:
             print(json.dumps(lookup(args.model, args.provider, args.max_age_hours), indent=2))
         elif args.action == "quote":
             need("model", "provider", "units")
-            result = quote(args.model, args.provider, args.units, args.max_age_hours)
+            result = quote(args.model, args.provider, args.units, args.max_age_hours,
+                           multiplier=args.multiplier,
+                           multiplier_reason=args.multiplier_reason)
             print(json.dumps(result, indent=2))
             if not result.get("quotable"):
                 return 3  # non-zero so a caller cannot mistake it for a priced run

@@ -82,6 +82,29 @@ a refusal for a costed run.
 **One unpriced item blocks the whole batch.** A total that quietly omits the three
 clips nobody could price is worse than no total, because it reads as complete.
 
+## Options that change the price
+
+A base rate is not always the whole bill. On at least one wired video model,
+asking for synchronised audio bills at **1.5× the base per-second rate** — and
+SocialForge passes `sound` straight through to that API, so a quote taken without
+it understates a 10-second clip by about half a dollar and a 28-post month by
+roughly fifteen.
+
+Look the surcharge up on the model's page, then pass it:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
+  --model "kling-v3.0-pro" --provider wavespeed --units 10 \
+  --multiplier 1.5 --multiplier-reason "sound=true"
+```
+
+In a batch, put it on the item: `{"model": …, "units": 10, "multiplier": 1.5,
+"multiplier_reason": "sound=true"}`.
+
+The quote then shows base, multiplier and reason separately, so the user can see
+what the option cost them. Multipliers are provider facts and move — look them
+up, do not carry them in your head.
+
 ## Then stop
 
 A quote is not consent. `approved_to_run` is always `false`, even for a clean

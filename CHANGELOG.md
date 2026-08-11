@@ -7,6 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.15.0] — 2026-08-11
+
+Prices are looked up, not remembered. Three platforms stopped being half-supported.
+And the EU transparency obligation that went live on 2 August is now in the manifest.
+
+### Added
+
+- **`price_book.py` + `/socialforge:price-check` — live pricing with provenance.**
+  The plugin no longer carries a price table. A price enters only via a recorded
+  lookup that includes the URL it was read from, expires after 24 hours, and is
+  keyed by **model × provider** because the same model genuinely costs different
+  amounts in different places — one video model was found at $0.10/s on one
+  provider and $0.24/s on another. `--action compare` makes that spread visible;
+  `--action quote` refuses rather than guessing, and exits non-zero so a caller
+  cannot mistake a refusal for a costed run. Names are normalised across provider
+  spellings (`gemini-3.1-flash-image`, `fal-ai/nano-banana` and "Nano Banana 2"
+  are one key). Kie AI is flagged unfetchable — it returns HTTP 403 to automated
+  reads, and that must not be reported as "no price exists".
+- **Pre-flight cost gate on `/generate-all`.** The most expensive command in the
+  product previously fired with no number shown at all. It now quotes the whole
+  planned run first. One unpriced item blocks the batch: a total that silently
+  omits what could not be priced reads as complete and is worse than no total.
+  A clean quote still returns `approved_to_run: false` — a quote is not consent,
+  and one approval covers one run.
+- **`c2pa.ai-disclosure` assertion, on by default** (`c2pa_sign.py`). EU AI Act
+  Article 50 became enforceable on 2026-08-02; an obligation that is already live
+  is the wrong thing to make callers opt into. Carries the generating model id —
+  "Vertex AI" is a service, not provenance.
+- **Human-oversight record in the manifest.** Article 50(4) provides an
+  editorial-control exemption for AI content a human reviews before publication.
+  SocialForge already gates every asset behind an approval queue, but that
+  approval lived only in a status file. `--reviewed-by` now writes it into the
+  signed manifest as a `c2pa.edited` action, a schema.org `editor`, and a
+  `human_oversight` field. An unreviewed asset records `none-recorded` rather
+  than staying silent — silence must not read as oversight.
+- **`references/models/` recipes** — per-model markdown holding endpoint, auth
+  shape, request/response shape and, most importantly, **sync vs async**. Getting
+  that backwards is the most common reason a first call appears to hang. Two
+  worked examples ship (one of each pattern) plus a template. Adding a model is
+  now a markdown file rather than a Python change and a release.
+- **`tests/test_platform_parity.py`** (4) — every platform with copy rules must
+  have image dimensions, and every spec's width/height must match its stated
+  ratio. Caught a mislabelled 4:5 that was actually 1:1.91 and would have
+  letterboxed every image through it.
+- **`tests/test_price_book.py`** (22) and **`tests/test_c2pa_disclosure.py`** (16).
+
+### Fixed
+
+- **TikTok, Threads and Bluesky were half-supported.** `adapt_copy.py` carried
+  char limits, hashtag rules and link behaviour for all three; `resize_image.py`
+  had no dimensions for any of them, so those posts got adapted copy and then
+  died at resize with "Unknown platform". Nothing caught it because the two
+  tables live in different files and no test compared them. Added specs for all
+  three (plus `linkedin_portrait`) and a parity test so it cannot recur.
+- **Stale counts across 13 files** — "16 skills" (now 17) and "7-platform copy
+  adaptation" (it has been 9 since Threads and Bluesky landed) in every manifest,
+  README, AGENTS.md, CONNECTORS.md, SUBMISSION.md and TESTING-GUIDE.md.
+
+### Notes
+
+`model_registry.json` keeps its lifecycle metadata — status, deprecation and
+replacement ids — which changes slowly and is worth pinning. It carries no
+prices, and should not: on 2026-07-31 a major video model shipped one day after
+the registry's last review, and a baked-in figure would have been wrong from the
+moment it was written.
+
+Tests 66 → **108**.
+
+---
+
 ## [1.14.2] - 2026-07-30
 
 ### Fixed

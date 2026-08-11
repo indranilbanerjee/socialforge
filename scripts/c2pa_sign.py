@@ -98,7 +98,25 @@ def _plugin_version() -> str:
         return "unknown"
 
 
-def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_format):
+def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_format,
+                   ai_disclosure=True, reviewed_by=None, reviewed_at=None, model_id=None):
+    """Build the C2PA manifest for a generated asset.
+
+    `ai_disclosure` adds the C2PA 2.4 `c2pa.ai-disclosure` assertion — the
+    explicit, machine-readable AI-generation disclosure that EU AI Act Article 50
+    tooling reads. Article 50 has been enforceable since 2 August 2026, so this
+    defaults to ON — an obligation that is already live is the wrong thing to
+    make callers opt into.
+
+    `reviewed_by` / `reviewed_at` record that a named human approved the asset
+    before publication. That matters beyond good manners: Article 50(4) provides
+    an editorial-control exemption for AI-assisted content that a human reviews
+    and takes responsibility for prior to publication. SocialForge already gates
+    every asset behind an approval queue, so it can attest that review — but only
+    if the approval is actually carried into the manifest, which is what these
+    arguments do. Passing them does not by itself establish the exemption; it
+    records the evidence a reviewer would need.
+    """
     actions = [
         {
             "action": "c2pa.created",
@@ -131,7 +149,18 @@ def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_
     if platform:
         creative_work["publishingPrinciples"] = f"Distributed via SocialForge to {platform}"
 
-    return {
+    if reviewed_by:
+        # Human sign-off is itself a C2PA action, not just metadata.
+        actions.append({
+            "action": "c2pa.edited",
+            "when": reviewed_at or created,
+            "parameters": {
+                "description": f"Reviewed and approved for publication by {reviewed_by}",
+            },
+        })
+        creative_work["editor"] = {"@type": "Person", "name": reviewed_by}
+
+    manifest = {
         "claim_generator_info": [{
             "name": "SocialForge",
             "version": _plugin_version(),
@@ -143,6 +172,31 @@ def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_
             {"label": "stds.schema-org.CreativeWork", "data": creative_work},
         ],
     }
+
+    if ai_disclosure:
+        data = {
+            "disclosure": True,
+            "digital_source_type": AI_CLAIM_TO_C2PA_TYPE.get(
+                ai_claim, "TRAINED_ALGORITHMIC_MEDIA"),
+            "generator": generator,
+            "statement": (
+                "This content was generated or substantially modified using "
+                "generative AI and is disclosed as such."
+            ),
+            "regulation": "EU AI Act Article 50",
+        }
+        if model_id:
+            # Which model actually produced it — "Vertex AI" is a service, not
+            # provenance. A reviewer asking "what made this" needs the model id.
+            data["model"] = model_id
+        # Degree of human oversight, in the vocabulary a reviewer reads.
+        data["human_oversight"] = "reviewed-before-publication" if reviewed_by else "none-recorded"
+        if reviewed_by:
+            data["reviewed_by"] = reviewed_by
+            data["reviewed_at"] = reviewed_at or created
+        manifest["assertions"].append({"label": "c2pa.ai-disclosure", "data": data})
+
+    return manifest
 
 
 def generate_self_signed_cert(tmp_dir):
@@ -201,7 +255,8 @@ def generate_self_signed_cert(tmp_dir):
 
 
 def sign_asset(in_path, out_path, brand, generator, ai_claim, prompt=None, platform=None,
-               signing_cert=None, signing_key=None, created=None):
+               signing_cert=None, signing_key=None, created=None,
+               ai_disclosure=True, reviewed_by=None, reviewed_at=None, model_id=None):
     """Programmatic entry point for SocialForge pipeline integration.
     Returns the result dict (or raises on failure)."""
     in_path = Path(in_path)
@@ -213,7 +268,9 @@ def sign_asset(in_path, out_path, brand, generator, ai_claim, prompt=None, platf
         raise ValueError(f"unsupported format {ext}; supported: {sorted(SUPPORTED_FORMATS)}")
 
     created = created or datetime.now(timezone.utc).isoformat()
-    manifest = build_manifest(brand, generator, ai_claim, created, prompt, platform, ext)
+    manifest = build_manifest(brand, generator, ai_claim, created, prompt, platform, ext,
+                              ai_disclosure=ai_disclosure, reviewed_by=reviewed_by,
+                              reviewed_at=reviewed_at, model_id=model_id)
     c2pa = ensure_c2pa()
 
     using_dev_cert = False
@@ -262,6 +319,10 @@ def sign_asset(in_path, out_path, brand, generator, ai_claim, prompt=None, platf
         "generator": generator,
         "ai_claim": ai_claim,
         "c2pa_digital_source_type": ds_type_name,
+        "ai_disclosure": ai_disclosure,
+        "human_oversight": "reviewed-before-publication" if reviewed_by else "none-recorded",
+        "reviewed_by": reviewed_by,
+        "model_id": model_id,
         "platform": platform,
         "created": created,
         "manifest_embedded_and_verified": manifest_present,
@@ -283,6 +344,18 @@ def main():
     parser.add_argument("--platform", help="Target social platform (tiktok / instagram / linkedin / meta / youtube / x / threads)")
     parser.add_argument("--signing-cert", help="PEM cert (omit for dev self-signed)")
     parser.add_argument("--signing-key", help="PEM key (must accompany --signing-cert)")
+    parser.add_argument("--no-ai-disclosure", action="store_true",
+                        help="Omit the C2PA 2.4 c2pa.ai-disclosure assertion. Off by default: "
+                             "EU AI Act Article 50 has been enforceable since 2026-08-02 and the "
+                             "assertion is the machine-readable marking it expects.")
+    parser.add_argument("--reviewed-by",
+                        help="Name of the human who approved this asset for publication. Recorded "
+                             "as a c2pa.edited action and in the disclosure's human_oversight field "
+                             "(evidence for the Article 50(4) editorial-control exemption).")
+    parser.add_argument("--reviewed-at", help="ISO-8601 approval timestamp (default: --created)")
+    parser.add_argument("--model-id",
+                        help='Exact generating model id, e.g. "kwaivgi/kling-v3.0-pro". The '
+                             '--generator service name alone is not provenance.')
     args = parser.parse_args()
 
     try:
@@ -292,6 +365,9 @@ def main():
             ai_claim=args.ai_claim, prompt=args.prompt, platform=args.platform,
             signing_cert=args.signing_cert, signing_key=args.signing_key,
             created=args.created,
+            ai_disclosure=not args.no_ai_disclosure,
+            reviewed_by=args.reviewed_by, reviewed_at=args.reviewed_at,
+            model_id=args.model_id,
         )
     except FileNotFoundError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

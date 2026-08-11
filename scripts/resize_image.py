@@ -9,10 +9,18 @@ import json
 import sys
 from pathlib import Path
 
-# Platform dimension specs
+# Platform dimension specs.
+#
+# Every platform adapt_copy.py can write copy for must have at least one entry
+# here, or a post gets adapted text and then dies at resize with "Unknown
+# platform". tests/test_platform_parity.py enforces that pairing, and also
+# checks each width/height actually matches its stated ratio.
+#
+# Verified against platform guidance, August 2026.
 PLATFORM_SPECS = {
     "linkedin_feed": {"width": 1200, "height": 627, "ratio": "1.91:1"},
     "linkedin_square": {"width": 1080, "height": 1080, "ratio": "1:1"},
+    "linkedin_portrait": {"width": 1080, "height": 1350, "ratio": "4:5"},
     "linkedin_carousel": {"width": 1080, "height": 1080, "ratio": "1:1"},
     "instagram_feed": {"width": 1080, "height": 1080, "ratio": "1:1"},
     "instagram_portrait": {"width": 1080, "height": 1350, "ratio": "4:5"},
@@ -25,6 +33,20 @@ PLATFORM_SPECS = {
     "facebook_story": {"width": 1080, "height": 1920, "ratio": "9:16"},
     "youtube_thumbnail": {"width": 1280, "height": 720, "ratio": "16:9"},
     "pinterest_pin": {"width": 1000, "height": 1500, "ratio": "2:3"},
+    # TikTok — vertical is the native surface; 4:5 also renders well in feed.
+    "tiktok_post": {"width": 1080, "height": 1920, "ratio": "9:16"},
+    "tiktok_portrait": {"width": 1080, "height": 1350, "ratio": "4:5"},
+    # Threads — mirrors Instagram's geometry; 4:5 is the feed default.
+    "threads_post": {"width": 1080, "height": 1350, "ratio": "4:5"},
+    "threads_square": {"width": 1080, "height": 1080, "ratio": "1:1"},
+    "threads_landscape": {"width": 1080, "height": 566, "ratio": "1.91:1"},
+    # Bluesky — compresses anything much past ~1000px on the long side, so these
+    # stay small deliberately rather than being upscaled and then re-crushed.
+    # Portrait is a true 4:5 (800x1000); the widely-copied "627x1200 = 4:5" is
+    # a mislabelled 1:1.91 and would letterbox every image fed through it.
+    "bluesky_post": {"width": 1200, "height": 627, "ratio": "1.91:1"},
+    "bluesky_square": {"width": 1000, "height": 1000, "ratio": "1:1"},
+    "bluesky_portrait": {"width": 800, "height": 1000, "ratio": "4:5"},
 }
 
 

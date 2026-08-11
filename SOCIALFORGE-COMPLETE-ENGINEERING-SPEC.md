@@ -6,7 +6,7 @@
 >
 > **The shipped v1.13.1 architecture is authoritative.** For anything you intend to rely on, read [`README.md`](README.md) and [`docs/OPERATIONS.md`](docs/OPERATIONS.md) instead.
 >
-> In particular, every **count** (skills / commands / scripts / connectors), every **model id**, the **hooks** section, and the **MCP** section below are historical and in several places wrong for the current release. Shipped today: **17 skills · 25 commands · 5 agents · 22 Python scripts (+ `assemble_docx.js`) · 0 global hooks · an opt-in catalog of 10 HTTP connectors, zero auto-connected**. Where a section below contradicts that, the shipped repo wins.
+> In particular, every **count** (skills / commands / scripts / connectors), every **model id**, the **hooks** section, and the **MCP** section below are historical and in several places wrong for the current release. Shipped today: **18 skills · 25 commands · 5 agents · 22 Python scripts (+ `assemble_docx.js`) · 0 global hooks · an opt-in catalog of 10 HTTP connectors, zero auto-connected**. Where a section below contradicts that, the shipped repo wins.
 >
 > Obvious traps have been corrected in place even under this banner (retired model ids, unimplemented scripts, nonexistent commands), but the document as a whole has not been rewritten to match v1.13.1.
 

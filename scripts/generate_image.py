@@ -46,7 +46,28 @@ try:
 except (ImportError, KeyError, ValueError):  # pragma: no cover — fallback if curator missing
     _resolve_model = None
     _check_model = None
-    DEFAULT_MODEL = "gemini-3.1-flash-image"
+    # Deliberately no hardcoded id — see model_book.resolve_for_execution. A
+    # string here would always answer, and one day the answer is a retired model.
+    DEFAULT_MODEL = None
+
+
+def _resolve_execution_model(kind, provider, registry_alias=None):
+    """Model id for a capability, discovered live where possible.
+
+    Returns None rather than a guess when nothing can be resolved, so the caller
+    falls through to the next provider instead of calling a model that may have
+    been retired.
+    """
+    try:
+        from model_book import resolve_for_execution
+    except ImportError:
+        return None
+    result = resolve_for_execution(kind, provider, registry_alias)
+    if result.get("warning"):
+        print(f"NOTE: {result['warning']}", file=sys.stderr)
+    elif result.get("action_required"):
+        print(f"NOTE: {result['action_required']}", file=sys.stderr)
+    return result.get("model_id")
 
 
 def _negotiate_model(user_value: str | None, alias: str) -> str:
@@ -192,7 +213,14 @@ def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_
         from wavespeed import Client as WsClient
         client = WsClient(api_key=ws_key)
         payload = {"prompt": prompt, "aspect_ratio": aspect_ratio}
-        output = client.run("kwaivgi/kling-image-v3/text-to-image", payload, timeout=120.0, poll_interval=3.0)
+        # Ask for the KIND, not a product. This line used to name a specific
+        # model version inline with no resolution at all, so it could only ever
+        # be as current as the last release of this file.
+        model_id = _resolve_execution_model("image.text-to-image", "wavespeed",
+                                            "latest-image-wavespeed")
+        if not model_id:
+            return None  # unresolved — caller falls through to the next provider
+        output = client.run(model_id, payload, timeout=120.0, poll_interval=3.0)
         img_url = output.get("outputs", [None])[0]
         if img_url:
             import urllib.request
@@ -217,7 +245,13 @@ def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1"):
         import requests as req
         import time as _time
         headers = {"Authorization": f"Key {api_key}:{api_secret}", "Content-Type": "application/json"}
-        resp = req.post("https://platform.higgsfield.ai/higgsfield/soul-v2/text-to-image",
+        # The model is a URL path segment on this provider, so a hardcoded path
+        # is a hardcoded model. Resolve the kind instead.
+        hf_path = _resolve_execution_model("image.text-to-image", "higgsfield",
+                                           "latest-image-higgsfield")
+        if not hf_path:
+            return None
+        resp = req.post(f"https://platform.higgsfield.ai/{hf_path}",
                        headers=headers, json={"prompt": prompt, "aspect_ratio": aspect_ratio}, timeout=30)
         if resp.status_code != 200:
             return None

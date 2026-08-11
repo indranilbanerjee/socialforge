@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.16.0] — 2026-08-11
+
+No model id is written into the execution path any more. The code asks for a
+**kind** of model; the agent finds out what currently satisfies it.
+
+### Why
+
+A model id in source is a claim about the day it was written, shipped to someone
+running it much later. Six sat on the execution path. One video fallback stayed
+pinned to a superseded generation for roughly six months and nothing in the
+system could say so — and a retired id does not degrade gracefully. It fails at
+the exact moment the two providers ahead of it have already failed and the
+fallback is all that is left. Two of the six sat inline with no resolution layer
+at all, so they could only ever be as current as the last release of their file.
+
+### Added
+
+- **`model_book.py`** — the model equivalent of the price book, and deliberately
+  the same shape. A model enters only via `record()`, which requires a source
+  URL. `resolve()` returns a status, never a bare id, and expires after **7 days**
+  (catalogues move in releases; prices move without announcement, which is why
+  that book uses 24 hours). Discovery is the agent's job — this is a plugin, with
+  no crawler and no server, so the answer is as fresh as the last look rather
+  than as old as the last release.
+- **Capability kinds, not products**: `image.text-to-image`,
+  `image.reference-guided`, `image.edit`, `image.character-consistency`,
+  `video.text-to-video`, `video.image-to-video`. A kind outlives every model that
+  has ever satisfied it. A test rejects any kind that names a vendor or version.
+- **`/socialforge:model-check`** (18th skill) — how to read a provider's
+  catalogue, judge the best model *for the kind* rather than the newest one, and
+  record it. Carries the two provider quirks that cost the most time: Higgsfield
+  puts the model in the URL path, so a hardcoded path is a hardcoded model; and
+  Kie AI blocks automated fetches (HTTP 403, measured), which must not be
+  reported as "no model exists".
+- **`tests/test_model_book.py`** (20), including a guard that scans every
+  execution script for model-shaped literals — `kwaivgi/…`, `higgsfield/…`,
+  `gemini-N…`, `veo-N…`, `kling-video/vN…`. Plant-check verified: reintroducing
+  one fails the suite and names it.
+
+### Changed
+
+- **The resolution ladder** (`model_book.resolve_for_execution`): a live
+  discovery, then the shipped registry alias **always with a warning carrying its
+  age**, then refusal. The rung that used to exist — a literal in the source —
+  is gone. It was the worst rung precisely because it always answered.
+- `generate_image.py`, `generate_video.py` and `edit_image.py` now resolve by
+  kind. When nothing resolves they return `None` and the caller falls through to
+  the next provider, rather than calling an id that may have been retired.
+- The shipped `model_registry.json` is now explicitly a **fallback with a release
+  date**, not a source of truth. It still holds the lifecycle metadata —
+  deprecation dates, replacement ids — which is the part worth shipping.
+
+Tests 127 → **147**.
+
+---
+
 ## [1.15.1] — 2026-08-11
 
 Closes what 1.15.0 left open: the last hardcoded price table, and the five wired

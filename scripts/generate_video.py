@@ -42,8 +42,31 @@ try:
 except (ImportError, KeyError, ValueError):  # pragma: no cover
     _resolve_model = None
     _check_model = None
-    DEFAULT_KLING_MODEL = "kwaivgi/kling-v3.0-pro/image-to-video"
-    DEFAULT_VEO_MODEL = "veo-3.1-generate-preview"
+    # No hardcoded ids here. A model string written into source is a claim about
+    # the day it was written, and this plugin runs long after that day — one
+    # fallback sat pinned to a superseded generation for about six months and
+    # nothing could say so. When the registry is unavailable the model must be
+    # discovered; see model_book.resolve_for_execution.
+    DEFAULT_KLING_MODEL = None
+    DEFAULT_VEO_MODEL = None
+
+
+def _resolve_execution_model(kind, provider, registry_alias=None):
+    """Model id for a capability, discovered live where possible.
+
+    Returns None rather than a guess when nothing resolves, so the caller falls
+    through to the next provider instead of calling a model that may be retired.
+    """
+    try:
+        from model_book import resolve_for_execution
+    except ImportError:
+        return None
+    result = resolve_for_execution(kind, provider, registry_alias)
+    if result.get("warning"):
+        print(f"NOTE: {result['warning']}", file=sys.stderr)
+    elif result.get("action_required"):
+        print(f"NOTE: {result['action_required']}", file=sys.stderr)
+    return result.get("model_id")
 
 
 def _negotiate_video_model(user_value, alias):
@@ -186,7 +209,14 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
         import time as _time
         headers = {"Authorization": f"Key {api_key}:{api_secret}", "Content-Type": "application/json"}
         payload = {"prompt": prompt, "duration": min(max(duration, 3), 15)}
-        model_path = "kling-video/v2.1/pro/image-to-video" if image_path else "kling-video/v2.1/pro/text-to-video"
+        # This line is why the fallback sat two generations behind for months:
+        # the version was written into the path and nothing ever re-checked it.
+        # Ask for the kind; whichever model currently satisfies it gets used.
+        kind = "video.image-to-video" if image_path else "video.text-to-video"
+        model_path = _resolve_execution_model(kind, "higgsfield",
+                                              "latest-video-higgsfield")
+        if not model_path:
+            return None  # unresolved — the caller reports all providers failed
         if image_path and Path(image_path).exists():
             import base64 as b64
             img_data = b64.b64encode(Path(image_path).read_bytes()).decode()

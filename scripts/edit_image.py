@@ -26,7 +26,8 @@ try:
 except (ImportError, KeyError, ValueError):  # pragma: no cover
     _resolve_model = None
     _check_model = None
-    DEFAULT_MODEL = "gemini-3-pro-image"
+    # No hardcoded id — see model_book.resolve_for_execution.
+    DEFAULT_MODEL = None
 
 
 def _negotiate_model(user_value):

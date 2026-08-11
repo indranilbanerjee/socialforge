@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.18.0] — 2026-08-12
+
+The script layer gets the same quality machinery as everything else. SocialForge
+had a 5-stage approval flow for a video's *visuals* and a static template for
+its *script* — every video, regardless of type, length or content, opened with
+three seconds of brand logo and carried the same four placeholder scenes.
+
+### Changed
+
+- **`generate_script()` rebuilt.** Hook-first, always: the open spends the only
+  guaranteed seconds on the single most arresting thing the brief supports; the
+  logo lives as the corner watermark and in the end card, never the open. Every
+  scene carries a `payoff` field — what the viewer has gained by the time it
+  ends, because a beat that only sets up the next beat is where viewers leave.
+  Beat count scales with duration (a 10s story is not a 90s hero video with the
+  same four scenes). The scaffold is built FROM the post's brief and carries its
+  four rules with it (`script_rules`), so the discipline reaches the agent that
+  fills it in.
+- **Stage 1 of `/socialforge:generate-video` now owns the script pass**: the
+  chosen concept fills the scaffold in brand voice, no `[FILL]` survives, the
+  hook overlay is checked against the post's adapted caption (the pairing
+  rule), and the filled script's narration and overlays run through
+  `compliance_check.py` **before Stage 2** — a banned phrase caught in a script
+  costs nothing; caught in a rendered video it costs the whole generation
+  chain. The user approves the filled script before any credits are spent.
+
+### Added
+
+- **`tests/test_video_script_craft.py`** (11) — the video never opens with the
+  logo at any duration, the hook stays ≤3s, every scene carries a payoff, beat
+  count scales with duration, timestamps are continuous and fill the target,
+  the brief reaches the hook scene, the rules travel with the script, and the
+  storyboard + SRT builders still work from the new shape.
+
+Tests 166 → **177**.
+
+---
+
 ## [1.17.1] — 2026-08-12
 
 The X/Twitter research intake is now vendor-neutral, and a guard keeps the

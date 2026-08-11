@@ -353,12 +353,63 @@ def _mmss(total_seconds):
 
 
 def generate_script(post_data, brand_config):
-    """Generate a video script from post data."""
+    """Scaffold a video script from post data — structure the agent then fills.
+
+    Two rules are load-bearing and tested:
+
+    1. **The hook opens the video. Never the logo.** The old scaffold spent
+       seconds 0-3 on "brand logo reveal" — on a social feed those are the only
+       seconds most viewers give, and a logo is the one thing guaranteed not to
+       earn the next three. The brand mark lives as a corner watermark
+       throughout (video_postprocess adds it) and in the end card.
+    2. **Every scene carries a payoff** — what the viewer has gained by the time
+       the scene ends. A scene whose payoff is "sets up the next scene" is where
+       viewers leave; the field forces the question scene by scene.
+
+    This function stays deterministic scaffolding: the agent running
+    /socialforge:generate-video replaces every [FILL] with content from the
+    post's actual brief in the brand's voice, and the skill's rules govern that
+    pass (pairing with the caption, compliance before credits are spent).
+    """
     title = post_data.get("title", "Untitled")
     brief = post_data.get("visual", {}).get("direction_a", "")
     video_type = post_data.get("video_details", {}).get("video_type", "short_reel")
     duration = post_data.get("video_details", {}).get("duration_seconds", 30)
-    main_end = max(8, duration - 5)
+
+    hook_end = min(3, max(1, duration // 10))
+    cta_start = max(hook_end + 2, duration - max(3, duration // 6))
+    # Split the middle into 1-3 beats depending on how much room exists.
+    middle = cta_start - hook_end
+    beat_count = 1 if middle <= 8 else 2 if middle <= 18 else 3
+    beat_len = middle / beat_count
+
+    scenes = [{
+        "timestamp": f"{_mmss(0)}-{_mmss(hook_end)}",
+        "role": "hook",
+        "visual": f"[FILL: the single most arresting image this brief supports — {brief[:80]}]",
+        "audio": "[FILL: the hook line — lead with the most interesting thing, not a greeting]",
+        "text_overlay": "[FILL: 1-5 words of tension — must NOT repeat the caption's first line]",
+        "payoff": "Viewer knows exactly why the next seconds are worth staying for",
+    }]
+    for i in range(beat_count):
+        start = hook_end + round(i * beat_len)
+        end = hook_end + round((i + 1) * beat_len) if i < beat_count - 1 else cta_start
+        scenes.append({
+            "timestamp": f"{_mmss(start)}-{_mmss(end)}",
+            "role": f"beat-{i + 1}",
+            "visual": f"[FILL: what is shown for beat {i + 1}]",
+            "audio": f"[FILL: the point beat {i + 1} delivers — a point, not a promise of one]",
+            "text_overlay": "[FILL or empty]",
+            "payoff": f"[FILL: what the viewer has gained by {_mmss(end)} — no beat ends on setup]",
+        })
+    scenes.append({
+        "timestamp": f"{_mmss(cta_start)}-{_mmss(duration)}",
+        "role": "cta-endcard",
+        "visual": "[FILL: CTA visual] + brand end card (logo lives HERE, not in the open)",
+        "audio": "[FILL: one specific ask — match the platform's CTA mechanism from adapt-copy]",
+        "text_overlay": "[FILL: the CTA, 2-6 words]",
+        "payoff": "Viewer knows the single next action",
+    })
 
     return {
         "title": title,
@@ -366,11 +417,12 @@ def generate_script(post_data, brand_config):
         "target_duration_seconds": duration,
         "brand": brand_config.get("brand_name", ""),
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "scenes": [
-            {"timestamp": f"{_mmss(0)}-{_mmss(3)}", "visual": "Brand logo reveal with motion", "audio": "Brand sound / music start", "text_overlay": ""},
-            {"timestamp": f"{_mmss(3)}-{_mmss(8)}", "visual": f"Hook visual: {brief[:100]}", "audio": "Narration: opening hook", "text_overlay": title[:50]},
-            {"timestamp": f"{_mmss(8)}-{_mmss(main_end)}", "visual": "Main content sequence", "audio": "Narration continues", "text_overlay": "Key points"},
-            {"timestamp": f"{_mmss(main_end)}-{_mmss(duration)}", "visual": "CTA + brand logo", "audio": "Closing statement", "text_overlay": "Call to action"},
+        "scenes": scenes,
+        "script_rules": [
+            "hook-first: the open earns attention; the logo never opens (corner watermark + end card only)",
+            "payoff-per-scene: no scene ends on setup",
+            "pairing: overlay text and the post caption do different jobs and never echo",
+            "compliance: the filled script passes compliance_check before any generation credits are spent",
         ],
         "notes": f"Based on: {brief}",
     }

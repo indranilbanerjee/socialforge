@@ -24,7 +24,7 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 
 ## The 5-Stage Pipeline
 
-### Stage 1: Video Concept (no API call)
+### Stage 1: Video Concept + Script (no API call)
 
 Claude generates **2-3 video concept ideas** based on the post brief, brand voice, and platform requirements. Each concept includes:
 - Working title and hook
@@ -32,7 +32,29 @@ Claude generates **2-3 video concept ideas** based on the post brief, brand voic
 - Suggested duration and pacing
 - Tone and style direction
 
-The user picks one concept (or requests refinements) before proceeding.
+The user picks one concept (or requests refinements). Then **fill the script
+scaffold** (`generate_script` in generate_video.py) from the chosen concept and
+the post's actual brief, in the brand's voice — every `[FILL]` replaced, no
+placeholder survives into Stage 2. The scaffold enforces the structure; this
+pass supplies the craft, under four rules the scaffold carries with it:
+
+1. **Hook first, never the logo.** The open earns attention with the single
+   most arresting thing the brief supports; the brand mark lives as the corner
+   watermark and in the end card. Three seconds of logo reveal is the classic
+   retention killer this pipeline used to scaffold by default.
+2. **Payoff per scene.** Every scene's `payoff` field states what the viewer
+   has gained by the time it ends. A beat that only sets up the next beat is
+   where viewers leave — give it a payoff or fold it.
+3. **The pairing rule.** The hook's text overlay and the post's caption
+   (written by adapt-copy) do different jobs and never echo. Check against the
+   adapted copy if it already exists for this post.
+4. **Compliance before credits.** Run the filled script's narration and
+   overlay text through `compliance_check.py` BEFORE Stage 2 — a banned phrase
+   caught in a script costs nothing; caught in a rendered video it costs the
+   whole generation chain. Claims in narration follow the same rules as claims
+   in copy: sourced or absent.
+
+The user approves the filled script before any generation spend.
 
 ### Stage 2: First Frame Generation (Vertex AI / Nano Banana Pro)
 

@@ -146,7 +146,11 @@ def _load() -> dict:
         return {"schema_version": 1, "entries": {}}
     try:
         return json.loads(PRICE_BOOK.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError) as e:
+        # A corrupt book must not silently read as "no prices on record" —
+        # that advice ("record it") would overwrite the damaged file.
+        print(f"WARNING: price-book.json is unreadable ({type(e).__name__}) — treating as "
+              f"empty; the file at {PRICE_BOOK} may be recoverable", file=sys.stderr)
         return {"schema_version": 1, "entries": {}}
 
 

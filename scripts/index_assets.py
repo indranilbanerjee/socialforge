@@ -25,7 +25,10 @@ try:
 except (ImportError, KeyError, ValueError):  # pragma: no cover
     _resolve_model = None
     _check_model = None
-    DEFAULT_VISION_MODEL = "gemini-3.5-flash"
+    # Deliberately no hardcoded id — a literal here would always answer, and
+    # one day the answer is a retired model. When the curator is missing the
+    # analysis rung records `unresolved-model` and the index stays honest.
+    DEFAULT_VISION_MODEL = None
 
 # Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
 # fall back to ~/socialforge-workspace (legacy/local)
@@ -83,22 +86,33 @@ def scan_images(source_path):
 
 
 def analyze_image_gemini(image_path, model=None):
-    """Analyze a single image with Gemini Vision."""
+    """Analyze a single image with Gemini Vision.
+
+    Returns (result_dict, None) on success or (None, reason) on failure —
+    the reason string names what stopped the analysis so the index summary
+    can report WHY images fell back to metadata-only instead of a bare count.
+    """
     try:
         from credential_manager import get_gemini_client
         client, backend = get_gemini_client()
         if not client:
-            return None
+            # backend carries the credential manager's error message here
+            return None, f"no-credentials: {backend}"
     except ImportError:
         # Fallback if credential_manager not available
         try:
             from google import genai
         except ImportError:
-            return None
+            return None, "dependency-missing: google-genai not importable"
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
-            return None
+            return None, "no-credentials: GEMINI_API_KEY not set"
         client = genai.Client(api_key=api_key)
+
+    use_model = model or DEFAULT_VISION_MODEL
+    if not use_model:
+        return None, ("unresolved-model: no vision model id could be resolved "
+                      "(model curator unavailable and no --model given)")
 
     from google.genai import types
 
@@ -107,7 +121,7 @@ def analyze_image_gemini(image_path, model=None):
 
     try:
         response = client.models.generate_content(
-            model=model or DEFAULT_VISION_MODEL,
+            model=use_model,
             contents=[
                 types.Part.from_bytes(data=img_data, mime_type=mime),
                 VISION_PROMPT,
@@ -117,9 +131,9 @@ def analyze_image_gemini(image_path, model=None):
         resp_text = response.text.strip()
         if resp_text.startswith("```"):
             resp_text = resp_text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-        return json.loads(resp_text)
-    except Exception:
-        return None
+        return json.loads(resp_text), None
+    except Exception as e:
+        return None, f"request-error: {type(e).__name__}: {str(e)[:150]}"
 
 
 def build_basic_entry(image_path, source_root, asset_id):
@@ -131,12 +145,18 @@ def build_basic_entry(image_path, source_root, asset_id):
     except Exception:
         w, h = 0, 0
 
-    return {
+    try:
+        rel_path = str(image_path.relative_to(source_root))
+        folder = str(image_path.parent.relative_to(source_root))
+    except ValueError:  # reached via a symlink outside the source tree
+        rel_path = image_path.name
+        folder = ""
+    entry = {
         "id": asset_id,
         "filename": image_path.name,
         "path": str(image_path),
-        "relative_path": str(image_path.relative_to(source_root)),
-        "folder": str(image_path.parent.relative_to(source_root)),
+        "relative_path": rel_path,
+        "folder": folder,
         "dimensions": {"width": w, "height": h},
         "file_size_mb": round(image_path.stat().st_size / (1024 * 1024), 2),
         "format": image_path.suffix.lstrip(".").lower(),
@@ -154,6 +174,11 @@ def build_basic_entry(image_path, source_root, asset_id):
         "usage_history": [],
         "platforms_compatible": {}
     }
+    if (w, h) == (0, 0):
+        # 0x0 feeds match_assets crop-feasibility scoring — flag it so a
+        # PIL failure is visible instead of masquerading as a real dimension.
+        entry["dimensions_unreadable"] = True
+    return entry
 
 
 def stored_source(brand):
@@ -212,20 +237,38 @@ def index_all(brand, source_path, refresh=False, model=None):
     assets = []
     analyzed = 0
     skipped = 0
+    ai_failures = []
+
+    # New ids are minted ABOVE the highest id a preserved entry already holds.
+    # Positional ids (`asset_{i+1}`) collided on --refresh: one new file that
+    # sorts first re-minted asset_001 while the preserved entry kept it too,
+    # and every downstream lookup by id then resolved to the wrong image.
+    import re as _re
+    next_num = 1
+    if existing:
+        nums = []
+        for a in existing.values():
+            m = _re.match(r"asset_(\d+)$", str(a.get("id", "")))
+            if m:
+                nums.append(int(m.group(1)))
+        next_num = max(nums, default=0) + 1
 
     for i, img_path in enumerate(images):
-        asset_id = f"asset_{i+1:03d}"
-
-        # Skip already-indexed in refresh mode
+        # Skip already-indexed in refresh mode (they keep their original id)
         if refresh and str(img_path) in existing:
             assets.append(existing[str(img_path)])
             skipped += 1
             continue
 
+        asset_id = f"asset_{next_num:03d}"
+        next_num += 1
+
         entry = build_basic_entry(img_path, Path(source_path), asset_id)
 
         # Try AI analysis
-        ai_result = analyze_image_gemini(img_path, model=model)
+        ai_result, ai_fail_reason = analyze_image_gemini(img_path, model=model)
+        if ai_fail_reason:
+            ai_failures.append({"id": asset_id, "file": img_path.name, "reason": ai_fail_reason})
         if ai_result:
             entry["ai_description"] = ai_result.get("description", "")
             entry["tags"] = ai_result.get("tags", [])
@@ -259,7 +302,14 @@ def index_all(brand, source_path, refresh=False, model=None):
 
     style_refs = [a["id"] for a in assets if a.get("is_style_reference")]
 
-    print(json.dumps({
+    # Aggregate failure reasons so the summary says WHY analysis fell back,
+    # not just how many times.
+    failure_counts = {}
+    for f in ai_failures:
+        key = f["reason"].split(":", 1)[0]
+        failure_counts[key] = failure_counts.get(key, 0) + 1
+
+    summary = {
         "brand": brand,
         "total_images": len(images),
         "ai_analyzed": analyzed,
@@ -267,7 +317,20 @@ def index_all(brand, source_path, refresh=False, model=None):
         "metadata_only": len(images) - analyzed - skipped,
         "style_reference_candidates": len(style_refs),
         "output": str(index_path)
-    }, indent=2))
+    }
+    if ai_failures:
+        summary["ai_failure_reasons"] = failure_counts
+        summary["first_failure_detail"] = ai_failures[0]["reason"]
+    attempted = len(images) - skipped
+    total_ai_failure = attempted > 0 and analyzed == 0
+    if total_ai_failure:
+        summary["ai_analysis"] = ("FAILED — 0 of "
+                                  f"{attempted} images were AI-analyzed; the index is metadata-only "
+                                  "(empty tags degrade every downstream asset match)")
+        summary["action_required"] = True
+    print(json.dumps(summary, indent=2))
+    if total_ai_failure:
+        sys.exit(3)  # index written, but the AI-analysis contract was not met
 
 
 def main():

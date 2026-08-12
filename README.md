@@ -4,21 +4,21 @@
 
 Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:review`. Asset-first compositing keeps brand photos pixel-faithful while AI generates the scene around them. Per-platform copy adaptation handles Instagram + TikTok + LinkedIn + Threads + X + Facebook + YouTube Shorts in one pass. C2PA signing happens before review. No more "AI enhanced our logo into something else" disasters.
 
-Open-source agency-grade social media production engine — **19 skills · 25 commands · 5 agents · 22 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, and **OpenClaw** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
+Open-source agency-grade social media production engine — **20 skills · 25 commands · 5 agents · 24 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, and **OpenClaw** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.18.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.19.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-177%2F177%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1180)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1180)
+[![Tests](https://img.shields.io/badge/tests-214%2F214%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-8%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1190)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1190)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.18.0 (July 30, 2026): registry re-points + the anonymity guard.** Balanced/fast model aliases moved to the current generation (claude-sonnet-5, gpt-5.6-terra, gpt-5.6-luna; GPT-5.5/5.4 marked superseded with replacement routing), and a new machine-enforced source-anonymity guard scans every file on every test run. 64 tests passing. Previously — **v1.14.1 (July 29): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
+> 🆕 **Just shipped — v1.19.0 (August 13, 2026): nothing fails silently anymore.** The provider layer's fallback chains now record every abandoned attempt — who was tried, at which stage it stopped, and what to do about it — instead of collapsing a missing key, a retired model, and a content-policy rejection into one bare failure. Video generation became a real three-rung chain (a Veo failure finally falls back; routing reads stored credentials, not just env vars; a live SDK bug that broke every Veo call was caught by the chain's own attempt records on first execution). An adversarial sweep of the untested surface fixed six defects proven live: the compliance gate failed OPEN on unknown severity words and crashed on one bad regex (now fail-closed with rule_errors), the approval ledger minted ghost posts and accepted `"FINAL "` as a new frozen status (now calendar-validated vocabulary + atomic writes), asset re-indexing minted duplicate ids, a corrupt credentials.json silently destroyed stored keys on the next setup, alias resolution handed retired model ids to SDKs, and the review gallery rendered client-supplied titles unescaped. Plus: `/socialforge:ingest-performance` — platform analytics exports become per-post records with sample floors and margin rules, so `/socialforge:ideate-month` compounds measured wins (and says "no clear wins" about a flat month) instead of remembered ones. 20 skills, 214 tests. Previously — **v1.15.0–v1.18.0 (August 11–12): live pricing + Article 50 + the creator-craft wave.** `price_book.py` (no stored prices, source-URL-required, 24h TTL) + `model_book.py` (capability kinds, live-discovery ladder), C2PA `ai-disclosure` default-on, TikTok/Threads/Bluesky image specs, `/ideate-month`, mechanism-aware CTAs, vendor-neutral research intake + guard, and video scripts rebuilt hook-first with compliance-before-credits. And — **v1.14.2 (July 30): registry re-points + the anonymity guard.** Previously — **v1.14.1 (July 29): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code:
@@ -34,7 +34,7 @@ openclaw plugins install git:github.com/indranilbanerjee/socialforge
 
 > If SocialForge saves your team time, [give it a star ⭐](https://github.com/indranilbanerjee/socialforge/stargazers) — it's the single thing that helps other agencies find it.
 
-**Status:** Production Ready · 19 skills · 25 commands · 5 agents · 22 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks
+**Status:** Production Ready · 20 skills · 25 commands · 5 agents · 24 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks
 
 Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery.
 
@@ -64,7 +64,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.18.0)
+## Supported surfaces (v1.19.0)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -74,7 +74,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | **Cursor 2.5+** | In any Cursor Agent chat: `/add-plugin socialforge@https://github.com/indranilbanerjee/socialforge` | `.cursor-plugin/plugin.json` (verified Cursor 2.5+ JSON Schema) | Full skills + agents + commands support |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add indranilbanerjee/neels-plugins` then `copilot plugin install socialforge@neels-plugins` | `.github/plugin/plugin.json` (Copilot also recognizes `.claude-plugin/plugin.json` as fallback) | Full skills + MCP support |
 | **Google Antigravity 2.0** CLI + IDE | `agy plugin install https://github.com/indranilbanerjee/socialforge` | `gemini-extension.json` (at repo root, per Google's reference pattern) | Full skills + hooks support |
-| **Hermes Agent** (Nous Research) — Desktop + CLI on macOS / Windows / Linux | `hermes plugins install indranilbanerjee/socialforge` | `plugin.yaml` + `__init__.py` at repo root (Hermes native spec) | Native plugin — adapter walks `skills/` at register time and exposes all 19 skills via `ctx.register_skill()`. Targets Hermes Desktop v0.15.2+ (public preview June 2 2026). |
+| **Hermes Agent** (Nous Research) — Desktop + CLI on macOS / Windows / Linux | `hermes plugins install indranilbanerjee/socialforge` | `plugin.yaml` + `__init__.py` at repo root (Hermes native spec) | Native plugin — adapter walks `skills/` at register time and exposes all 20 skills via `ctx.register_skill()`. Targets Hermes Desktop v0.15.2+ (public preview June 2 2026). |
 | **OpenClaw** (formerly Clawdbot / Moltbot) | `openclaw plugins install git:github.com/indranilbanerjee/socialforge` | `openclaw.plugin.json` at repo root (also auto-detects `.claude-plugin/plugin.json` as Claude-compatible bundle) | Native plugin via `openclaw.plugin.json`; `skills` field points at `./skills`. |
 
 **Why this works:** Agent Skills became an open standard in December 2025 (35+ agent products by June 2026). All 16 SKILL.md files in SocialForge are platform-portable as written.
@@ -83,12 +83,12 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 
 ## Architecture
 
-- **19 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
+- **20 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
 - **25 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **22 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
+- **24 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 10 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1180) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1190) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -369,21 +369,25 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.18.0)
+## Current Release (v1.19.0)
 
-**June 2026 market-refresh sync — June 28, 2026.** Refreshes SocialForge's model registry against the June 2026 vendor catalogs. Resolver-routed — zero hardcoded ID changes needed on the SF side because `scripts/generate_video.py` and `scripts/compose_creative.py` already call through the resolver.
+**Nothing fails silently anymore — August 13, 2026.** The reliability release: structured failure records across the provider layer, an adversarial execution sweep of the previously untested scripts, and a measured path for ideation's "compound the wins" rung.
 
-- **Image + video aliases re-pointed automatically.** `latest-video-google` now → `veo-3.1-generate-preview` (Veo 2.0 / 3.0 / 3.0-Fast all retire 2026-06-30, replaced by Veo 3.1). `latest-image-google` → `gemini-3-pro-image` (was retired preview ID gemini-3-pro-image-preview, shutdown 2026-06-25). `latest-image-balanced-google` → `gemini-3.1-flash-image` (Nano Banana 2 GA, supersedes gemini-2.5-flash-image). `latest-image-photoreal-google` → `gemini-3-pro-image` (Imagen 4 was deprecated path).
-- **Resolver hardened.** `scripts/resolve_model.py` now unconditionally rewrites `retired` model IDs to their `replacement_id` (was previously only `deprecated` status). Means any cached config still passing dead model IDs (Gemini 2.0 family, Veo 2/3 family, Gemini 3 preview image variants) gets routed to a working replacement instead of HTTP 404. New test `test_retired_falls_forward_unconditionally` covers this.
-- **`--check-params` scanner.** `python scripts/resolve_model.py --check-params <file>` flags any Python file passing `temperature` / `top_p` / `top_k` near Claude Opus 4.7+ targets (those return HTTP 400). Pre-flight scan of `socialforge/scripts/*.py` was clean.
-- **Model registry rebuilt to 47 entries** verified against vendor primary docs.
-- **`docs/MODEL-CURATOR.md` refresh** — aliases table refreshed; new § "Parameter compatibility — Claude Opus 4.7 and later" explains the HTTP 400 risk.
+- **Structured failure records** (`scripts/provider_failures.py`): every fallback rung in image and video generation records provider / stage / reason / detail when it cannot run. A fully-failed chain returns `attempts` + deduplicated `next_steps` — a missing API key, an unresolved model, an HTTP 401, and a content-policy rejection are four different problems with four different fixes, and the error now says which one you have.
+- **Video generation is a real chain.** Previously the fallbacks lived inside one provider's exception handler: a Veo-routed failure never fell back, a missing WaveSpeed key aborted the whole run, HiggsField was unreachable on the common path, and a failed video printed under a top-level `"status": "success"`. Now: `generate_video_chain()` tries every configured provider, routing consults the stored credential profile (not just env vars), the top-level status reflects the worst nested result, and exit 4 means "requested video failed". The chain's first execution caught a live SDK bug — `prompt` passed inside `GenerateVideosConfig`, which the SDK rejects — that had broken every Veo call.
+- **Adversarial sweep, six defects proven by execution then fixed**: compliance gate fails CLOSED (unknown severity words block; malformed rules become blocking `rule_errors` instead of crashing the gate; typo'd brands FAIL instead of skipping; word-boundary matching so "ad" cannot match "advice"); status ledger rejects ghost post ids and unknown statuses, writes atomically, and sanitizes calendar-supplied folder names (path-traversal proof); asset re-index never mints duplicate ids; a corrupt `credentials.json` refuses setup overwrite ("your keys are damaged, not gone") and `get_gemini_client` reports every path tried; alias resolution sends retired models through the same fall-forward ladder as direct ids; the review gallery escapes every calendar string and names posts without media.
+- **`/socialforge:ingest-performance`** (20th skill): platform analytics exports (CSV, header aliases normalized) become per-post `performance.json` records; `--action wins` ranks with a sample floor (default ≥100 impressions) and a margin rule (≥1.5× month-median engagement rate), reports `unranked` posts with reasons, and calls a flat month `no_clear_wins`. `/socialforge:ideate-month` reads the measured path first and labels every win `measured` vs `anecdotal`; unmeasured is never zero.
+- Also: `refresh_models.py` names per-vendor failure reasons and refuses `--bump-timestamp` when zero vendors were actually checked; `index_assets.py` reports why AI analysis fell back (exit 3 on total failure) and drops its last hardcoded model id; `install_deps` progress goes to stderr so JSON contracts stay parseable.
 
-64/64 tests passing. Zero pipeline behavior change beyond the resolver-routed alias updates.
+**Tests 177 → 214** (all offline, execution-based). 20 skills · 25 commands · 5 agents · 24 scripts.
+
+### Earlier (v1.13.1 — June 2026 market-refresh sync, 2026-06-28)
+
+Model registry refreshed against the June 2026 vendor catalogs — image + video aliases re-pointed (Veo 3.1, Nano Banana 2 GA), the resolver hardened to unconditionally rewrite `retired` ids to replacements, the `--check-params` scanner added, registry rebuilt to 47 verified entries. Resolver-routed: zero hardcoded ID changes needed on the SF side.
 
 ### Earlier (v1.12.1 — release-consistency test suite, 2026-06-09 PM)
 
-Adds a release-consistency test layer to SF. New `tests/test_release_consistency.py` (+31 tests; SF total 23 → 54 passing) catches: 7-manifest version drift, README badge / hero callout / Supported-surfaces heading / Current Release heading staleness, CHANGELOG out-of-sync, byte-identical descriptions across 5 Claude-family manifests, skill-count claims that don't match `skills/` dir, 7 native-platform install commands present, 12 critical README sections present, every internal anchor link resolves. Plugin descriptions across all 5 Claude-family manifests now lead with "19 skills" — improves marketplace search relevance + the test enforces the count.
+Adds a release-consistency test layer to SF. New `tests/test_release_consistency.py` (+31 tests; SF total 23 → 54 passing) catches: 7-manifest version drift, README badge / hero callout / Supported-surfaces heading / Current Release heading staleness, CHANGELOG out-of-sync, byte-identical descriptions across 5 Claude-family manifests, skill-count claims that don't match `skills/` dir, 7 native-platform install commands present, 12 critical README sections present, every internal anchor link resolves. Plugin descriptions across all 5 Claude-family manifests now lead with "20 skills" — improves marketplace search relevance + the test enforces the count.
 
 ### Earlier (v1.12.0 — Multi-harness expansion: native Hermes Agent + native OpenClaw + 23-test stdlib suite, 2026-06-09)
 
@@ -403,11 +407,11 @@ Trimmed install-UI descriptions to ~150 chars across all 5 platform manifests. R
 
 ### Earlier (v1.8.1)
 
-**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→19 skills, 19→22 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
+**Polish + discoverability + community-standards pass.** Adds Star History, community-standards files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, PR + Issue templates), rewrites the README hero with social-proof badges + maintainer block ([indranil.in](https://indranil.in) + [linkedin.com/in/askneelnow](https://www.linkedin.com/in/askneelnow) + [@askneelnow](https://x.com/askneelnow)), fixes stale asset counts (15→20 skills, 19→22 scripts) across README, and expands `plugin.json` keywords from 17 → 47 for marketplace search.
 
 ### Earlier (v1.9.0 — real native manifests for 5 surfaces, 2026-05-27)
 
-Ships verified-real native manifests for OpenAI Codex (`.codex-plugin/plugin.json` per the published OpenAI schema), Google Antigravity 2.0 (`gemini-extension.json` at repo root per Google's `gemini-cli-extensions/data-agent-kit-starter-pack` reference pattern), Cursor 2.5+ (`.cursor-plugin/plugin.json` per the verified Cursor JSON Schema), and GitHub Copilot CLI (`.github/plugin/plugin.json` per the verified GitHub schema). Adds `AGENTS.md` at root (auto-loaded by Codex + Antigravity + Copilot + Cursor agent context chains). All 19 skills share via the Agent Skills open standard — no duplication.
+Ships verified-real native manifests for OpenAI Codex (`.codex-plugin/plugin.json` per the published OpenAI schema), Google Antigravity 2.0 (`gemini-extension.json` at repo root per Google's `gemini-cli-extensions/data-agent-kit-starter-pack` reference pattern), Cursor 2.5+ (`.cursor-plugin/plugin.json` per the verified Cursor JSON Schema), and GitHub Copilot CLI (`.github/plugin/plugin.json` per the verified GitHub schema). Adds `AGENTS.md` at root (auto-loaded by Codex + Antigravity + Copilot + Cursor agent context chains). All 20 skills share via the Agent Skills open standard — no duplication.
 
 ### Earlier (v1.8.0 + v1.7.0 — superseded by v1.8.5 honesty cleanup, then properly rebuilt in v1.9.0)
 

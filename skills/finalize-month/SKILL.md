@@ -47,3 +47,6 @@ FINAL/
 4. Generate production checklist (remaining manual tasks)
 5. Upload to Google Drive (if connected)
 6. Send completion notification via Slack/email
+7. Remind the user: once the month has run, ingest its analytics export with
+   `/socialforge:ingest-performance` — that is what lets next month's
+   `/socialforge:ideate-month` compound measured wins instead of memory

@@ -7,6 +7,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.19.0] — 2026-08-13
+
+Nothing fails silently anymore. The provider layer's fall-through chains
+collapsed every failure cause into a bare `return None` — a missing key, a
+retired model, an HTTP 401, and a content-policy rejection all looked the
+same, and the terminal error was one truncated string. This release gives
+every abandoned attempt a structured record, battle-tests the previously
+untested state-writing scripts by adversarial execution, and feeds ideation's
+"compound the wins" rung from measured numbers.
+
+### Added
+
+- **`scripts/provider_failures.py`** — shared failure-record contract:
+  `record(attempts, provider, stage, reason, detail)` + `failure_payload()`.
+  Stages (credentials / dependencies / model-resolution / request / response /
+  content-policy), stable kebab-case reasons, and a NEXT_STEPS map so the
+  terminal error carries its own fix. Every recorded reason is test-pinned to
+  have a next step.
+- **`generate_video_chain()`** — video generation is a real three-rung chain
+  (preferred provider first, all configured providers as fallbacks). The old
+  shape hid the fallbacks inside WaveSpeed's exception handler: a Veo-routed
+  failure never fell back at all, a missing WaveSpeed key aborted the whole
+  run, and HiggsField was unreachable on the common path.
+- **`scripts/ingest_performance.py` + `skills/ingest-performance/`** (20th
+  skill) — platform analytics exports (CSV, header aliases normalized) become
+  per-post `performance.json` records; `--action wins` ranks with a sample
+  floor (≥100 impressions default) and a margin rule (≥1.5× month-median
+  engagement rate), lists `unranked` posts with reasons, names unmatched CSV
+  rows, and calls a flat month `no_clear_wins`. Unmeasured is never zero.
+  `ideate-month` reads the measured path first and labels wins `measured` vs
+  `anecdotal`; `finalize-month` hands off to ingestion at month close.
+- **`tests/test_provider_failures.py`, `tests/test_execution_gates.py`,
+  `tests/test_performance_ingestion.py`** — 37 new offline execution tests,
+  each replaying a probe that found a real defect. **Tests 177 → 214.**
+
+### Fixed (every defect below was proven live by an adversarial probe first)
+
+- **compliance_check.py failed OPEN**: a severity word outside the known set
+  ("high", "error", "blocker") silently downgraded a banned phrase to a
+  warning — now unknown severities BLOCK (fail closed, with a note); one
+  malformed regex crashed the entire gate with a traceback — now every
+  unevaluable rule becomes a blocking `rule_error`; a typo'd `--brand` passed
+  as SKIPPED exit 0 — now unknown brands FAIL (exit 2) listing known brands;
+  empty `forbidden_content_types` entries matched ALL content and short ones
+  matched substrings ("ad" hit "advice") — now word-boundary matched and
+  empty entries are rule_errors; `match_type: "exact"` compared the phrase to
+  the whole caption (dead code) — now whole-word matching. BLOCKED exits 1.
+- **status_manager.py**: updating a nonexistent post id silently CREATED it
+  (ghost posts polluting every summary) — now first transitions are validated
+  against calendar-data.json; `"FINAL "` / any unknown status froze posts in
+  unreachable buckets — now vocabulary-checked (strip + reject, --force
+  overrides transition rules, never spelling); the approval ledger was
+  written non-atomically — now temp-file + `os.replace`; calendar-supplied
+  folder-name fields could traverse out of the month tree via `../` — now
+  sanitized to `[A-Za-z0-9_-]`.
+- **index_assets.py**: `--refresh` minted positional ids that collided with
+  preserved entries (two assets sharing `asset_001`, downstream lookups
+  resolving the wrong image) — new ids now mint above the existing max; the
+  hardcoded `gemini-3.5-flash` fallback (escaping the model-book guard)
+  removed — unresolved models are recorded, not guessed; AI-analysis failures
+  now carry reasons (`ai_failure_reasons` in the summary; the exact error
+  from the credential manager is no longer discarded) and a 0%-analyzed run
+  exits 3 instead of narrating success; symlink-escaped paths no longer
+  crash; unreadable dimensions are flagged instead of silently written 0x0.
+- **credential_manager.py**: a corrupt credentials.json read as "nothing
+  configured", so the advised re-setup overwrote it — destroying every other
+  provider's stored keys. Now: corrupt files refuse setup ("your keys are
+  damaged, not gone"), status/validate name the corruption, and
+  `get_gemini_client` accumulates every path tried ("configured but broken"
+  is no longer reported as "not configured"). `_read_secret` never falls
+  into getpass without a tty.
+- **resolve_model.py**: an alias whose target had since retired returned the
+  dead id unchanged (direct id lookups fell forward correctly) — alias
+  targets now go through the same status ladder; unparseable `last_updated`
+  no longer reports "no last_updated in registry".
+- **generate_video.py**: top-level `"status": "success"` no longer masks a
+  nested failed video (worst-result wins; exit 4 when a requested video
+  failed); `route_video_provider` consults the stored credential profile —
+  `/socialforge:setup` users were told "No video API configured" while fully
+  configured; **live SDK bug**: `prompt` was passed inside
+  `GenerateVideosConfig`, which the SDK rejects with a validation error —
+  every Veo call had been failing; it is a direct `generate_videos` argument
+  (regression-pinned). Kling checks credentials before auto-installing its
+  SDK; progress prints go to stderr.
+- **generate_image.py**: missing Gemini credentials no longer abort the chain
+  (a WaveSpeed-only user could not generate at all); a no-image Gemini
+  response now falls through to the fallbacks; `_negotiate_model` no longer
+  hands the alias STRING to the SDK when the curator is unavailable.
+- **build_gallery.py**: every calendar/tracker string is HTML-escaped (the
+  review gallery is the artifact humans approve from; a client-supplied
+  title could previously inject markup into the reviewer's browser); the
+  fabricated "Video not embeddable (too large)" reason now truthfully says
+  "file missing or unreadable"; posts without media are named in the output;
+  a failed status_manager import is surfaced as a run-level warning.
+- **refresh_models.py**: six distinct failure causes printed one conflated
+  "skipped (no API key or fetch failed)" — now per-vendor reasons (no-key /
+  http-NNN / network / malformed-json), a `vendors_checked` count, and
+  `--bump-timestamp` REFUSES (exit 2) to stamp a review that checked nothing
+  unless `--force-bump`.
+- **install_deps.ensure_package** printed "Auto-installing..." to stdout,
+  corrupting the JSON contract of every calling script — now stderr.
+- **price_book.py / model_book.py**: a corrupt book file now warns on stderr
+  instead of silently reading as "nothing recorded" (whose advice would
+  overwrite the recoverable file). **match_assets.py**: lowercase tiers no
+  longer suppress the HERO/HUB gap flag.
+
+### Verified
+
+- Self-containment reverse-audit re-run: guard green, fresh grep zero sibling
+  references across skills/agents/commands/hooks, allowlist legitimately
+  scoped. 20 skills · 25 commands · 5 agents · 24 scripts.
+
 ## [1.18.0] — 2026-08-12
 
 The script layer gets the same quality machinery as everything else. SocialForge

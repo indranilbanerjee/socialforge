@@ -74,7 +74,9 @@ def _negotiate_model(user_value: str | None, alias: str) -> str:
     """If --model was supplied, validate via curator and warn on deprecation.
     Otherwise return the alias-resolved id."""
     if _resolve_model is None or _check_model is None:
-        return user_value or alias  # curator unavailable, trust caller
+        # Curator unavailable: honour an explicit user id, but never hand the
+        # alias string itself to the SDK as a model id.
+        return user_value or None
     if user_value:
         status, replacement = _check_model(user_value)
         if status == "deprecated" and replacement:
@@ -128,50 +130,62 @@ def create_client():
 
 
 def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1", model=DEFAULT_MODEL):
-    """Generate an image using Gemini via Vertex AI or AI Studio."""
-    from google.genai import types
+    """Generate an image via the provider chain: Gemini -> WaveSpeed -> HiggsField.
+
+    Every rung that cannot run records WHY into `attempts` — a fully-failed
+    chain reports what was tried and what to do next, never a bare failure.
+    A missing Gemini credential no longer aborts the chain: a user with only
+    a fallback provider's key still generates.
+    """
+    from provider_failures import record, failure_payload
+    attempts = []
 
     client, backend, error = create_client()
     if error:
-        return {"status": "FAILED", "error": error, "action_required": True}
+        record(attempts, "gemini", "credentials", "no-credentials", error)
+    elif model is None:
+        record(attempts, "gemini", "model-resolution", "unresolved-model",
+               "no image model id could be resolved (curator missing and no --model given)")
+    else:
+        try:
+            from google.genai import types
 
-    # Build content parts
-    contents = []
+            # Build content parts (+ reference images for style-guided generation)
+            contents = []
+            if reference_images:
+                for ref_path in reference_images[:14]:
+                    ref_file = Path(ref_path)
+                    if not ref_file.exists():
+                        continue
+                    img_bytes = ref_file.read_bytes()
+                    mime = "image/jpeg" if ref_file.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+                    contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime))
+            contents.append(prompt)
 
-    # Add reference images for style-guided generation
-    if reference_images:
-        for ref_path in reference_images[:14]:
-            ref_file = Path(ref_path)
-            if not ref_file.exists():
-                continue
-            img_bytes = ref_file.read_bytes()
-            mime = "image/jpeg" if ref_file.suffix.lower() in (".jpg", ".jpeg") else "image/png"
-            contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime))
+            config = types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
+                image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+            )
+            response = client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config,
+            )
 
-    contents.append(prompt)
-
-    config = types.GenerateContentConfig(
-        response_modalities=["IMAGE"],
-        image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
-    )
-
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents=contents,
-            config=config,
-        )
-
-        for part in response.parts:
-            if part.inline_data is not None:
-                Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    image = part.as_image()
-                    image.save(output_path)
-                except (AttributeError, TypeError):
-                    import base64
-                    img_bytes = base64.b64decode(part.inline_data.data) if isinstance(part.inline_data.data, str) else part.inline_data.data
-                    Path(output_path).write_bytes(img_bytes)
+            image_saved = False
+            for part in response.parts:
+                if part.inline_data is not None:
+                    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        image = part.as_image()
+                        image.save(output_path)
+                    except (AttributeError, TypeError):
+                        import base64
+                        img_bytes = base64.b64decode(part.inline_data.data) if isinstance(part.inline_data.data, str) else part.inline_data.data
+                        Path(output_path).write_bytes(img_bytes)
+                    image_saved = True
+                    break
+            if image_saved:
                 return {
                     "status": "success",
                     "provider": f"gemini-{backend}",
@@ -181,36 +195,50 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
                     "references_used": len(reference_images) if reference_images else 0,
                 }
 
-        text_resp = ""
-        for part in response.parts:
-            if part.text:
-                text_resp += part.text
-        return {"status": "FAILED", "error": "No image in response", "text_response": text_resp}
+            text_resp = "".join(part.text for part in response.parts if part.text)
+            record(attempts, f"gemini-{backend}", "response", "bad-response",
+                   f"no image in response; text: {text_resp[:200]}" if text_resp else "no image in response")
+        except ImportError as e:
+            record(attempts, "gemini", "dependencies", "dependency-missing",
+                   f"google-genai not importable: {e}")
+        except Exception as e:
+            record(attempts, f"gemini-{backend}", "request", "request-error", str(e))
 
-    except Exception as e:
-        primary_error = str(e)
-        ws_result = generate_image_wavespeed(prompt, output_path, reference_images, aspect_ratio)
-        if ws_result:
-            ws_result["fallback_from"] = "vertex-ai"
-            return ws_result
-        hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio)
-        if hf_result:
-            hf_result["fallback_from"] = "vertex-ai+wavespeed"
-            return hf_result
-        return {"status": "FAILED", "error": f"All providers failed. Primary: {primary_error[:100]}", "action_required": True}
+    ws_result = generate_image_wavespeed(prompt, output_path, reference_images, aspect_ratio,
+                                         attempts=attempts)
+    if ws_result:
+        ws_result["fallback_from"] = "vertex-ai"
+        ws_result["earlier_attempts"] = attempts
+        return ws_result
+    hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio, attempts=attempts)
+    if hf_result:
+        hf_result["fallback_from"] = "vertex-ai+wavespeed"
+        hf_result["earlier_attempts"] = attempts
+        return hf_result
+    return failure_payload(attempts, context="image generation")
 
 
-def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_ratio="1:1"):
-    """Fallback: Generate image via WaveSpeed (Kling image v3)."""
+def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_ratio="1:1",
+                             attempts=None):
+    """Fallback: Generate image via WaveSpeed. Records every abandoned attempt
+    into `attempts` — a rung that cannot run says why, never a bare None."""
+    from provider_failures import record
     try:
         from credential_manager import get_wavespeed_key
         ws_key = get_wavespeed_key()
     except ImportError:
         ws_key = os.environ.get("WAVESPEED_API_KEY")
     if not ws_key:
+        record(attempts, "wavespeed", "credentials", "no-credentials",
+               "WAVESPEED_API_KEY not set and no key in the credential profile")
         return None
     try:
         from wavespeed import Client as WsClient
+    except ImportError as e:
+        record(attempts, "wavespeed", "dependencies", "dependency-missing",
+               f"wavespeed SDK not importable: {e}")
+        return None
+    try:
         client = WsClient(api_key=ws_key)
         payload = {"prompt": prompt, "aspect_ratio": aspect_ratio}
         # Ask for the KIND, not a product. This line used to name a specific
@@ -219,6 +247,8 @@ def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_
         model_id = _resolve_execution_model("image.text-to-image", "wavespeed",
                                             "latest-image-wavespeed")
         if not model_id:
+            record(attempts, "wavespeed", "model-resolution", "unresolved-model",
+                   "no current model id for kind image.text-to-image on wavespeed")
             return None  # unresolved — caller falls through to the next provider
         output = client.run(model_id, payload, timeout=120.0, poll_interval=3.0)
         img_url = output.get("outputs", [None])[0]
@@ -227,19 +257,25 @@ def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(img_url, output_path)
             return {"status": "success", "provider": "wavespeed-kling-image-v3", "output": str(output_path)}
-    except Exception:
-        pass
+        record(attempts, "wavespeed", "response", "bad-response",
+               "provider returned no output URL")
+    except Exception as e:
+        record(attempts, "wavespeed", "request", "request-error", str(e))
     return None
 
 
-def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1"):
-    """Fallback: Generate image via HiggsField (Soul / Nano Banana Pro)."""
+def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1", attempts=None):
+    """Fallback: Generate image via HiggsField. Records every abandoned attempt
+    into `attempts` — a rung that cannot run says why, never a bare None."""
+    from provider_failures import record
     try:
         from credential_manager import get_higgsfield_auth
         api_key, api_secret = get_higgsfield_auth()
     except ImportError:
         api_key, api_secret = os.environ.get("HF_API_KEY"), os.environ.get("HF_API_SECRET")
     if not api_key or not api_secret:
+        record(attempts, "higgsfield", "credentials", "no-credentials",
+               "HF_API_KEY/HF_API_SECRET not set and no auth in the credential profile")
         return None
     try:
         import requests as req
@@ -250,10 +286,14 @@ def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1"):
         hf_path = _resolve_execution_model("image.text-to-image", "higgsfield",
                                            "latest-image-higgsfield")
         if not hf_path:
+            record(attempts, "higgsfield", "model-resolution", "unresolved-model",
+                   "no current model path for kind image.text-to-image on higgsfield")
             return None
         resp = req.post(f"https://platform.higgsfield.ai/{hf_path}",
                        headers=headers, json={"prompt": prompt, "aspect_ratio": aspect_ratio}, timeout=30)
         if resp.status_code != 200:
+            record(attempts, "higgsfield", "request", "request-error",
+                   f"HTTP {resp.status_code} from generation endpoint")
             return None
         request_id = resp.json().get("request_id")
         for _ in range(60):
@@ -266,10 +306,21 @@ def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1"):
                     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
                     urllib.request.urlretrieve(img_url, output_path)
                     return {"status": "success", "provider": "higgsfield-soul", "output": str(output_path)}
-            elif st.get("status") in ("failed", "nsfw"):
+                record(attempts, "higgsfield", "response", "bad-response",
+                       "job completed but no image URL in status payload")
                 return None
-    except Exception:
-        pass
+            elif st.get("status") == "nsfw":
+                record(attempts, "higgsfield", "content-policy", "content-rejected",
+                       "provider flagged the prompt/content (nsfw)")
+                return None
+            elif st.get("status") == "failed":
+                record(attempts, "higgsfield", "response", "bad-response",
+                       "provider reported the generation job failed")
+                return None
+        record(attempts, "higgsfield", "request", "timeout",
+               "job did not complete within 180s of polling")
+    except Exception as e:
+        record(attempts, "higgsfield", "request", "request-error", str(e))
     return None
 
 

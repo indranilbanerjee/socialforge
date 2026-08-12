@@ -105,9 +105,15 @@ def resolve(alias_or_id: str, *, allow_deprecated: bool = False) -> str:
     """
     reg = get_registry()
     aliases = reg.get("aliases", {})
-    if alias_or_id in aliases:
-        return aliases[alias_or_id]
     idx = _model_index()
+    if alias_or_id in aliases:
+        # The alias TARGET goes through the same status ladder as a direct
+        # id: an alias whose target has since retired must fall forward to
+        # the replacement, not hand a guaranteed-404 id to the SDK.
+        target = aliases[alias_or_id]
+        if target in idx:
+            return resolve(target, allow_deprecated=allow_deprecated)
+        return target  # alias points outside the model list — trust the registry author
     if alias_or_id in idx:
         m = idx[alias_or_id]
         status = m.get("status", "current")
@@ -172,6 +178,11 @@ def registry_age_days() -> int | None:
     try:
         d = datetime.strptime(s, "%Y-%m-%d").date()
     except ValueError:
+        # Present but unparseable is a different problem than absent — say so,
+        # or the caller reports "no last_updated in registry" about a registry
+        # that has one.
+        print(f"WARNING: registry last_updated {s!r} is not YYYY-MM-DD — treating age as unknown",
+              file=sys.stderr)
         return None
     return (date.today() - d).days
 

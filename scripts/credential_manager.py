@@ -39,19 +39,45 @@ def _restrict(path, mode):
         pass
 
 
-def _load_creds():
+def _load_creds_checked():
+    """Load credentials, distinguishing 'no file' from 'unreadable file'.
+
+    Returns (data, load_error). A corrupt credentials.json must never read as
+    'nothing configured': that misdiagnosis told users to re-run setup, and
+    the re-run then overwrote the file — silently destroying every other
+    provider's stored keys.
+    """
     if CRED_FILE.exists():
         try:
-            return json.loads(CRED_FILE.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return {}
-    return {}
+            return json.loads(CRED_FILE.read_text(encoding="utf-8")), None
+        except (json.JSONDecodeError, OSError) as e:
+            return {}, f"credentials.json is unreadable ({type(e).__name__}: {e}) at {CRED_FILE}"
+    return {}, None
+
+
+def _load_creds():
+    return _load_creds_checked()[0]
 
 
 def _save_creds(data):
     _ensure_dir()
     CRED_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
     _restrict(CRED_FILE, 0o600)
+
+
+def _refuse_if_corrupt():
+    """Setup guard: if the credentials file exists but is unreadable, refuse to
+    write over it — the stored keys are damaged, not gone. Returns the FAILED
+    payload to hand back, or None when writing is safe."""
+    _, load_error = _load_creds_checked()
+    if load_error:
+        return {
+            "status": "FAILED",
+            "error": (f"{load_error} — refusing to overwrite it: other providers' keys "
+                      "may still be recoverable from the damaged file. Fix the JSON "
+                      "or delete the file deliberately, then re-run setup."),
+        }
+    return None
 
 
 def setup_vertex_ai(json_path):
@@ -66,6 +92,9 @@ def setup_vertex_ai(json_path):
     project_id = sa_data.get("project_id")
     if not project_id:
         return {"status": "FAILED", "error": "No project_id in JSON. Is this a service account key?"}
+    refused = _refuse_if_corrupt()
+    if refused:
+        return refused
     _ensure_dir()
     shutil.copy2(str(json_path), str(GCP_KEY_FILE))
     _restrict(GCP_KEY_FILE, 0o600)
@@ -87,15 +116,17 @@ def setup_vertex_ai(json_path):
 
 def validate_vertex_ai():
     """Check if Vertex AI credentials are configured."""
-    creds = _load_creds()
+    creds, load_error = _load_creds_checked()
+    if load_error:
+        return {"configured": False, "error": f"{load_error} — stored keys are damaged, not gone; fix the file rather than re-running setup"}
     va = creds.get("vertex_ai")
     if not va:
         return {"configured": False, "error": "Not configured. Run /socialforge:setup"}
-    if not Path(va["credentials_file"]).exists():
+    if not Path(va.get("credentials_file", "")).exists():
         return {"configured": False, "error": "Credentials file missing. Run /socialforge:setup again"}
     return {
         "configured": True,
-        "project_id": va["project_id"],
+        "project_id": va.get("project_id", "unknown"),
         "location": va.get("location", "us-central1"),
         "service_account": va.get("service_account", ""),
     }
@@ -103,24 +134,35 @@ def validate_vertex_ai():
 
 def get_gemini_client():
     """Return a configured google-genai Client for Vertex AI image generation.
-    Returns: (client, backend_name) or (None, error_message)
+    Returns: (client, backend_name) or (None, error_message).
+
+    Every rung that fails is remembered: "configured but broken" must never
+    read as "not configured". The terminal message names each path tried and
+    why it failed — this was the 'I ran /socialforge:setup and it still says
+    no credentials' bug.
     """
     try:
         from google import genai
     except ImportError:
         return None, "google-genai not installed. Run: pip install google-genai"
 
+    tried = []
+
     # Priority 1: Plugin data credentials (Vertex AI)
-    creds = _load_creds()
+    creds, load_error = _load_creds_checked()
+    if load_error:
+        tried.append(f"stored-credentials: {load_error}")
     va = creds.get("vertex_ai")
     if va and Path(va.get("credentials_file", "")).exists():
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = va["credentials_file"]
         try:
-            client = genai.Client(vertexai=True, project=va["project_id"],
+            client = genai.Client(vertexai=True, project=va.get("project_id"),
                                   location=va.get("location", "us-central1"))
             return client, "vertex-ai"
-        except Exception:
-            pass
+        except Exception as e:
+            tried.append(f"vertex-ai (stored service account): {type(e).__name__}: {str(e)[:120]}")
+    elif va:
+        tried.append(f"vertex-ai (stored): credentials_file missing at {va.get('credentials_file')}")
 
     # Priority 2: Env var GOOGLE_CLOUD_PROJECT + ADC
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -129,8 +171,8 @@ def get_gemini_client():
             client = genai.Client(vertexai=True, project=project,
                                   location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1"))
             return client, "vertex-ai-env"
-        except Exception:
-            pass
+        except Exception as e:
+            tried.append(f"vertex-ai-env (GOOGLE_CLOUD_PROJECT): {type(e).__name__}: {str(e)[:120]}")
 
     # Priority 3: AI Studio API key (fallback)
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -139,8 +181,11 @@ def get_gemini_client():
             client = genai.Client(api_key=api_key)
             return client, "ai-studio-fallback"
         except Exception as e:
-            return None, f"AI Studio init failed: {e}"
+            tried.append(f"ai-studio (GEMINI_API_KEY): {type(e).__name__}: {str(e)[:120]}")
 
+    if tried:
+        return None, ("Credentials were found but no path produced a working client — "
+                      + "; ".join(tried))
     return None, "No image generation credentials. Run /socialforge:setup or set GOOGLE_CLOUD_PROJECT."
 
 
@@ -148,6 +193,9 @@ def setup_wavespeed(api_key):
     """Save WaveSpeed API key to plugin data."""
     if not api_key or len(api_key) < 20:
         return {"status": "FAILED", "error": "Invalid API key"}
+    refused = _refuse_if_corrupt()
+    if refused:
+        return refused
     creds = _load_creds()
     creds["wavespeed"] = {"api_key": api_key}
     _save_creds(creds)
@@ -178,6 +226,9 @@ def setup_higgsfield(api_key, api_secret):
     """Save HiggsField API key + secret to plugin data."""
     if not api_key or not api_secret:
         return {"status": "FAILED", "error": "Both API key and secret are required"}
+    refused = _refuse_if_corrupt()
+    if refused:
+        return refused
     creds = _load_creds()
     creds["higgsfield"] = {"api_key": api_key, "api_secret": api_secret}
     _save_creds(creds)
@@ -251,9 +302,10 @@ def _read_secret(value, env_var, label):
     if from_env:
         return from_env
     if not sys.stdin.isatty():
-        piped = sys.stdin.readline().strip()
-        if piped:
-            return piped
+        # Non-interactive (agent/CI harness): never fall through to getpass —
+        # it would block on a closed stdin. An empty pipe means no secret,
+        # and the setup function will report the invalid/missing key.
+        return sys.stdin.readline().strip() or None
     return getpass.getpass(f"{label}: ").strip()
 
 

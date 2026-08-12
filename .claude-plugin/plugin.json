@@ -1,7 +1,7 @@
 {
   "name": "socialforge",
-  "version": "1.18.0",
-  "description": "Open-source social media engine — 19 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
+  "version": "1.19.0",
+  "description": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
   "author": {
     "name": "Indranil Banerjee",
     "url": "https://github.com/indranilbanerjee"

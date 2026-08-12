@@ -221,7 +221,7 @@ def match_all(brand, month):
             "primary_asset": top[0] if top else None,
             "alternatives": top[1:],
             "style_references": style_refs,
-            "gap_flag": best_score < 0.3 and post.get("tier") in ["HERO", "HUB"]
+            "gap_flag": best_score < 0.3 and str(post.get("tier", "")).upper() in ["HERO", "HUB"]
         })
 
     output = {"brand": brand, "month": month, "matches": results, "mode_distribution": mode_counts}

@@ -6,6 +6,7 @@ Creates a self-contained HTML file with all post previews, scores, and copy.
 
 import argparse
 import base64
+import html as html_lib
 import json
 import os
 import sys
@@ -43,14 +44,24 @@ IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp")
 VIDEO_EXTS = (".mp4", ".webm", ".mov")
 
 
+# status_manager provides the canonical per-post folder naming. If it cannot
+# be imported the WHOLE gallery degrades to the legacy flat layout — that is a
+# run-level event and is surfaced once in the output, not silently swallowed
+# per post.
+try:
+    from status_manager import get_post_folder_name, get_week_number
+    _SM_IMPORT_ERROR = None
+except ImportError as _e:  # pragma: no cover
+    get_post_folder_name = get_week_number = None
+    _SM_IMPORT_ERROR = str(_e)
+
+
 def find_post_dir(month_dir, post):
     """Locate the per-post production folder written by status_manager.init_post_folder.
 
     Layout: production/week-{N}/{PostID}-{date}-{platforms}-{tier}-{ctype}/
     """
-    try:
-        from status_manager import get_post_folder_name, get_week_number
-    except ImportError:
+    if get_post_folder_name is None:
         return None
 
     week = get_week_number(post.get("date", ""))
@@ -184,7 +195,11 @@ def build_gallery(brand, month):
             "quality_score": None
         })
 
-    # Build HTML
+    # Build HTML. Every calendar/tracker-supplied string is escaped: this
+    # gallery is the artifact humans approve from, and calendar data comes
+    # from client documents — a '<' in a title must not break the card, and
+    # markup in any field must never execute in the reviewer's browser.
+    esc = html_lib.escape
     cards_html = ""
     for p in posts_data:
         # Build visual: video takes priority over image
@@ -196,7 +211,10 @@ def build_gallery(brand, month):
                 if alt_b64:
                     img_tag += f'<div style="margin-top:8px;font-size:11px;color:#666;">Alternative:</div><video src="{alt_b64}" controls style="width:100%;border-radius:4px;" preload="metadata"></video>'
             if not img_tag:
-                img_tag = '<div style="width:100%;height:200px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;">Video not embeddable (too large)</div>'
+                # file_to_base64 returns "" only when the file is missing or
+                # unreadable — say that, never invent a different reason.
+                img_tag = ('<div style="width:100%;height:200px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;">'
+                           f'Video file missing or unreadable: {esc(Path(p["video_path"]).name)}</div>')
         elif p["image_b64"]:
             img_tag = f'<img src="{p["image_b64"]}" style="width:100%;border-radius:4px;" />'
         else:
@@ -204,22 +222,22 @@ def build_gallery(brand, month):
         tier_color = {"HERO": "#e74c3c", "HUB": "#3498db", "HYGIENE": "#2ecc71"}.get(p["tier"], "#999")
 
         cards_html += f"""
-        <div class="card" data-tier="{p['tier']}" data-status="{p['status']}">
+        <div class="card" data-tier="{esc(p['tier'])}" data-status="{esc(p['status'])}">
           <div class="card-header">
-            <span class="post-id">P{p['id']}</span>
-            <span class="tier" style="background:{tier_color}">{p['tier']}</span>
-            <span class="status">{p['status']}</span>
+            <span class="post-id">P{esc(p['id'])}</span>
+            <span class="tier" style="background:{tier_color}">{esc(p['tier'])}</span>
+            <span class="status">{esc(p['status'])}</span>
           </div>
           {img_tag}
           <div class="card-body">
-            <strong>{p['title']}</strong>
-            <div class="meta">{p['date']} | {', '.join(p['platforms'])} | {p['content_type']}</div>
-            <div class="copy-preview">{p['copy'][:200]}...</div>
+            <strong>{esc(p['title'])}</strong>
+            <div class="meta">{esc(p['date'])} | {esc(', '.join(p['platforms']))} | {esc(p['content_type'])}</div>
+            <div class="copy-preview">{esc(p['copy'][:200])}...</div>
           </div>
         </div>"""
 
     html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>SocialForge Review — {brand} / {month}</title>
+<html><head><meta charset="utf-8"><title>SocialForge Review — {esc(brand)} / {esc(month)}</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; padding: 20px; }}
@@ -238,7 +256,7 @@ def build_gallery(brand, month):
   .stat-num {{ font-size: 28px; font-weight: 700; }}
   .stat-label {{ font-size: 12px; color: #666; }}
 </style></head><body>
-<h1>SocialForge Review — {brand} / {month}</h1>
+<h1>SocialForge Review — {esc(brand)} / {esc(month)}</h1>
 <div class="summary">
   <div class="stat"><div class="stat-num">{len(posts_data)}</div><div class="stat-label">Total Posts</div></div>
   <div class="stat"><div class="stat-num">{sum(1 for p in posts_data if p['image_b64'])}</div><div class="stat-label">Images</div></div>
@@ -254,14 +272,23 @@ def build_gallery(brand, month):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
 
-    print(json.dumps({
+    summary = {
         "status": "success",
         "output": str(output_path),
         "posts": len(posts_data),
         "images_embedded": sum(1 for p in posts_data if p["image_b64"]),
         "brand": brand,
         "month": month
-    }, indent=2))
+    }
+    # Name the posts that rendered with no media at all — a bare embed count
+    # reads as "covered everything" when it didn't.
+    no_media = [p["id"] for p in posts_data if not p["image_b64"] and not p.get("video_path")]
+    if no_media:
+        summary["posts_without_media"] = no_media
+    if _SM_IMPORT_ERROR:
+        summary["warning"] = (f"status_manager not importable ({_SM_IMPORT_ERROR}) — "
+                              "per-post production folders were not searched; legacy flat layout only")
+    print(json.dumps(summary, indent=2))
 
 
 def main():

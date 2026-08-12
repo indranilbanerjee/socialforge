@@ -58,6 +58,11 @@ VALID_TRANSITIONS = {
 }
 
 
+# Every status that may ever be written. All statuses appear as keys of
+# VALID_TRANSITIONS, so the key set IS the vocabulary.
+KNOWN_STATUSES = set(VALID_TRANSITIONS)
+
+
 def update_status(brand, month, post_id, new_status, actor="system", notes="", force=False):
     """Transition a post's status in the tracker with validation."""
     tracker_path = WORKSPACE / "output" / brand / month / "status-tracker.json"
@@ -65,10 +70,40 @@ def update_status(brand, month, post_id, new_status, actor="system", notes="", f
         print(json.dumps({"error": f"Status tracker not found: {tracker_path}"}))
         sys.exit(1)
 
+    # Vocabulary check comes before everything — --force overrides transition
+    # RULES, never spelling. A status like "FINAL " (trailing space) or
+    # "final" would freeze the post in a bucket no transition table knows.
+    new_status = str(new_status).strip()
+    if new_status not in KNOWN_STATUSES:
+        print(json.dumps({
+            "error": f"Unknown status '{new_status}'",
+            "known_statuses": sorted(KNOWN_STATUSES),
+            "hint": "--force overrides transition rules, not the status vocabulary",
+        }))
+        sys.exit(1)
+
     tracker = json.loads(tracker_path.read_text(encoding="utf-8"))
     post_key = str(post_id)
 
     if post_key not in tracker.get("posts", {}):
+        # First transition for this post: legitimate only if the calendar
+        # knows the id. Unconditional creation minted ghost posts — a typo'd
+        # --post-id silently became a tracked post and polluted every summary.
+        calendar_path = WORKSPACE / "output" / brand / month / "calendar-data.json"
+        calendar_ids = set()
+        if calendar_path.exists():
+            try:
+                calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+                calendar_ids = {str(p.get("post_id")) for p in calendar.get("posts", [])}
+            except (json.JSONDecodeError, OSError):
+                pass
+        if post_key not in calendar_ids:
+            print(json.dumps({
+                "error": f"Unknown post id '{post_key}' — not in the tracker and not in calendar-data.json",
+                "known_post_ids": sorted(tracker.get("posts", {})) or sorted(calendar_ids),
+                "hint": "Check the id; posts are created from the calendar, never from a status update",
+            }))
+            sys.exit(1)
         tracker.setdefault("posts", {})[post_key] = {"status": "QUEUED", "revision_history": [], "flags": []}
 
     old_status = tracker["posts"][post_key]["status"]
@@ -105,7 +140,11 @@ def update_status(brand, month, post_id, new_status, actor="system", notes="", f
         tracker["posts"][post_key]["force_finalized"] = True
     tracker["posts"][post_key].setdefault("revision_history", []).append(entry)
 
-    tracker_path.write_text(json.dumps(tracker, indent=2, ensure_ascii=False), encoding="utf-8")
+    # Atomic write — this file is the approval/audit ledger; a crash mid-write
+    # must never truncate the record of who approved what.
+    tmp_path = tracker_path.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(tracker, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp_path, tracker_path)
     result = {"post_id": post_key, "old_status": old_status, "new_status": new_status}
     if was_forced:
         result["force_finalized"] = True
@@ -136,14 +175,27 @@ def get_summary(brand, month):
     }, indent=2))
 
 
+def _fs_component(value, fallback="unknown"):
+    """Reduce a calendar-supplied value to filesystem-safe characters.
+
+    Calendar data is parsed from client DOCX/XLSX/Notion — attacker-adjacent
+    input. Anything outside [A-Za-z0-9_-] (including '.', '/', '\\') becomes
+    '_' so no field can ever traverse out of the month tree.
+    """
+    import re as _re
+    cleaned = _re.sub(r"[^A-Za-z0-9_-]", "_", str(value))
+    return cleaned or fallback
+
+
 def get_post_folder_name(post):
     """Generate descriptive folder name: P01-2026-04-07-linkedin-instagram-HERO-static"""
-    pid = post.get("post_id", "P00")
-    date = post.get("date", "unknown")
-    platforms = "-".join(str(p.get("key") or p.get("name") or "") if isinstance(p, dict) else str(p)
+    pid = _fs_component(post.get("post_id", "P00"))
+    date = _fs_component(post.get("date", "unknown"))
+    platforms = "-".join(_fs_component(p.get("key") or p.get("name") or "") if isinstance(p, dict)
+                         else _fs_component(p)
                          for p in post.get("platforms", []))
-    tier = post.get("tier", "HUB")
-    ctype = post.get("content_type", "static")
+    tier = _fs_component(post.get("tier", "HUB"))
+    ctype = _fs_component(post.get("content_type", "static"))
     return f"{pid}-{date}-{platforms}-{tier}-{ctype}"
 
 

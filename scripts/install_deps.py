@@ -85,8 +85,12 @@ def check_and_install(groups=None):
 
 
 def ensure_package(package_name):
+    """Library entry point used by generation scripts mid-run. Progress goes
+    to STDERR: the calling script's stdout is a JSON contract, and a stray
+    'Auto-installing...' line on stdout corrupts every consumer's parse."""
     if not check_package(package_name):
-        print(f"  Auto-installing {package_name}...")
+        import sys as _sys
+        print(f"  Auto-installing {package_name}...", file=_sys.stderr)
         return install_package(package_name)
     return True
 

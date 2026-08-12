@@ -318,7 +318,7 @@ Run after any code change to verify nothing broke.
 - [ ] `README.md` version matches actual release | Currently 1.13.1
 - [ ] `plugin.json` version matches README | Consistent across all 7 platform manifests
 - [ ] `CHANGELOG.md` has entry for current version | Release notes present
-- [ ] Skill count in README matches actual skill directories | 19 skills
+- [ ] Skill count in README matches actual skill directories | 20 skills
 - [ ] Command count in README matches actual command files | 25 commands
 - [ ] Agent count in README matches actual agent files | 5 agents
 - [ ] Script count in README matches actual script files | 22 Python scripts (+ `assemble_docx.js`)

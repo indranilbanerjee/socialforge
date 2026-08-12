@@ -72,7 +72,10 @@ def _resolve_execution_model(kind, provider, registry_alias=None):
 def _negotiate_video_model(user_value, alias):
     """Resolve user-supplied --video-model or fall back to alias."""
     if _check_model is None or _resolve_model is None:
-        return user_value or alias
+        # Curator unavailable: honour an explicit user id, but never hand the
+        # ALIAS STRING to an SDK as if it were a model id — that produced an
+        # opaque provider error instead of a clear "unresolved model" record.
+        return user_value or None
     if user_value:
         status, replacement = _check_model(user_value)
         if status in ("deprecated", "retired") and replacement:
@@ -106,44 +109,60 @@ VIDEO_TYPES = {
 # ---------------------------------------------------------------------------
 
 def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=None,
-                         duration=5, model=None, sound=False):
+                         duration=5, model=None, sound=False, attempts=None):
     """Generate video using Kling via WaveSpeed API.
     Model id defaults to the curator's `latest-video-wavespeed` alias.
     Takes first frame (required) and optionally last frame as keyframes.
-    Kling animates between them guided by the motion prompt."""
-    model = model or DEFAULT_KLING_MODEL
-    try:
-        import wavespeed
-    except ImportError:
-        try:
-            from install_deps import ensure_package
-            if ensure_package("wavespeed"):
-                import wavespeed
-            else:
-                return {"status": "FAILED", "error": "wavespeed install failed. Run: pip install wavespeed"}
-        except Exception as exc:
-            return {"status": "FAILED", "error": f"wavespeed not installed ({exc}). Run: pip install wavespeed"}
+    Kling animates between them guided by the motion prompt.
 
+    One rung of the provider chain (see generate_video_chain): returns the
+    success dict, or None with the reason recorded into `attempts`. A rung
+    that cannot run never aborts the chain and never fails silently.
+    """
+    from provider_failures import record
+    model = model or DEFAULT_KLING_MODEL
+    if not model:
+        record(attempts, "wavespeed-kling", "model-resolution", "unresolved-model",
+               "no current model id for the wavespeed video alias")
+        return None
+    # Credentials before dependencies: never auto-install an SDK the caller
+    # has no key for (and a keyless rung stays fully offline).
     try:
         from credential_manager import get_wavespeed_key
         ws_key = get_wavespeed_key()
     except ImportError:
         ws_key = os.environ.get("WAVESPEED_API_KEY")
     if not ws_key:
-        return {
-            "status": "FAILED",
-            "error": "WAVESPEED_API_KEY not set. Get at https://wavespeed.ai/accesskey",
-            "action_required": True,
-        }
+        record(attempts, "wavespeed-kling", "credentials", "no-credentials",
+               "WAVESPEED_API_KEY not set and no key in the credential profile")
+        return None
+
+    try:
+        import wavespeed  # noqa: F401
+    except ImportError:
+        try:
+            from install_deps import ensure_package
+            if ensure_package("wavespeed"):
+                import wavespeed  # noqa: F401
+            else:
+                record(attempts, "wavespeed-kling", "dependencies", "dependency-missing",
+                       "wavespeed install failed. Run: pip install wavespeed")
+                return None
+        except Exception as exc:
+            record(attempts, "wavespeed-kling", "dependencies", "dependency-missing",
+                   f"wavespeed not installed ({exc}). Run: pip install wavespeed")
+            return None
     os.environ["WAVESPEED_API_KEY"] = ws_key
     from wavespeed import Client as WsClient
     _ws_client = WsClient(api_key=ws_key)
 
-    if not Path(first_frame_path).exists():
-        return {"status": "FAILED", "error": f"First frame not found: {first_frame_path}"}
+    if not first_frame_path or not Path(first_frame_path).exists():
+        record(attempts, "wavespeed-kling", "request", "bad-input",
+               f"first-frame image required for image-to-video but not found: {first_frame_path}")
+        return None
 
     try:
-        print(f"  Uploading first frame...")
+        print("  Uploading first frame...", file=sys.stderr)
         image_url = _ws_client.upload(first_frame_path)
         payload = {
             "image": image_url,
@@ -155,10 +174,10 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
         }
 
         if last_frame_path and Path(last_frame_path).exists():
-            print(f"  Uploading last frame...")
+            print("  Uploading last frame...", file=sys.stderr)
             payload["end_image"] = _ws_client.upload(last_frame_path)
 
-        print(f"  Generating video via {model}...")
+        print(f"  Generating video via {model}...", file=sys.stderr)
         output = _ws_client.run(model, payload, timeout=300.0, poll_interval=3.0)
 
         video_url = output.get("outputs", [None])[0]
@@ -176,26 +195,23 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
                 "duration": duration,
                 "sound": sound,
             }
-        else:
-            return {"status": "FAILED", "error": "No video URL in WaveSpeed response", "raw": str(output)[:500]}
-
+        record(attempts, "wavespeed-kling", "response", "bad-response",
+               f"no video URL in WaveSpeed response: {str(output)[:150]}")
     except Exception as e:
-        ws_error = str(e)
-        # Fallback 1: Vertex AI Veo
-        veo_result = generate_video_veo(prompt, output_path, first_frame_path, duration)
-        if veo_result and veo_result.get("status") == "success":
-            veo_result["fallback_from"] = "wavespeed"
-            return veo_result
-        # Fallback 2: HiggsField Kling
-        hf_result = generate_video_higgsfield(prompt, output_path, first_frame_path, duration, sound)
-        if hf_result and hf_result.get("status") == "success":
-            hf_result["fallback_from"] = "wavespeed+veo"
-            return hf_result
-        return {"status": "FAILED", "error": f"All video providers failed. WaveSpeed: {ws_error[:80]}"}
+        record(attempts, "wavespeed-kling", "request", "request-error", str(e))
+    return None
 
 
-def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, sound=False):
-    """Fallback: Generate video via HiggsField (Kling or DoP)."""
+def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, sound=False,
+                              attempts=None):
+    """Fallback: Generate video via HiggsField (Kling or DoP).
+
+    One rung of the provider chain: success dict, or None with the reason
+    recorded into `attempts`. A content-policy rejection, a missing key, and
+    an HTTP error are three different problems with three different fixes —
+    they are never collapsed into one silent None anymore.
+    """
+    from provider_failures import record
     try:
         from credential_manager import get_higgsfield_auth
         api_key, api_secret = get_higgsfield_auth()
@@ -203,9 +219,16 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
         api_key = os.environ.get("HF_API_KEY")
         api_secret = os.environ.get("HF_API_SECRET")
     if not api_key or not api_secret:
+        record(attempts, "higgsfield", "credentials", "no-credentials",
+               "HF_API_KEY/HF_API_SECRET not set and no auth in the credential profile")
         return None
     try:
         import requests as req
+    except ImportError as e:
+        record(attempts, "higgsfield", "dependencies", "dependency-missing",
+               f"requests not importable: {e}")
+        return None
+    try:
         import time as _time
         headers = {"Authorization": f"Key {api_key}:{api_secret}", "Content-Type": "application/json"}
         payload = {"prompt": prompt, "duration": min(max(duration, 3), 15)}
@@ -216,13 +239,17 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
         model_path = _resolve_execution_model(kind, "higgsfield",
                                               "latest-video-higgsfield")
         if not model_path:
-            return None  # unresolved — the caller reports all providers failed
+            record(attempts, "higgsfield", "model-resolution", "unresolved-model",
+                   f"no current model path for kind {kind} on higgsfield")
+            return None
         if image_path and Path(image_path).exists():
             import base64 as b64
             img_data = b64.b64encode(Path(image_path).read_bytes()).decode()
             payload["image_url"] = f"data:image/png;base64,{img_data}"
         resp = req.post(f"https://platform.higgsfield.ai/{model_path}", headers=headers, json=payload, timeout=30)
         if resp.status_code != 200:
+            record(attempts, "higgsfield", "request", "request-error",
+                   f"HTTP {resp.status_code} from generation endpoint")
             return None
         request_id = resp.json().get("request_id")
         for _ in range(100):
@@ -234,10 +261,21 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
                     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
                     urllib.request.urlretrieve(vid_url, output_path)
                     return {"status": "success", "provider": "higgsfield-kling", "output": str(output_path)}
-            elif st.get("status") in ("failed", "nsfw"):
+                record(attempts, "higgsfield", "response", "bad-response",
+                       "job completed but no video URL in status payload")
                 return None
-    except Exception:
-        pass
+            elif st.get("status") == "nsfw":
+                record(attempts, "higgsfield", "content-policy", "content-rejected",
+                       "provider flagged the prompt/content (nsfw)")
+                return None
+            elif st.get("status") == "failed":
+                record(attempts, "higgsfield", "response", "bad-response",
+                       "provider reported the generation job failed")
+                return None
+        record(attempts, "higgsfield", "request", "timeout",
+               "job did not complete within 300s of polling")
+    except Exception as e:
+        record(attempts, "higgsfield", "request", "request-error", str(e))
     return None
 
 
@@ -245,10 +283,19 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
 # Video Generation — Veo via Vertex AI
 # ---------------------------------------------------------------------------
 
-def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9", model=None):
+def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_ratio="16:9",
+                       model=None, attempts=None):
     """Generate video using Google Veo via Vertex AI.
-    Model id defaults to the curator's `latest-video-google` alias (Veo 3.1)."""
+    Model id defaults to the curator's `latest-video-google` alias.
+
+    One rung of the provider chain: success dict, or None with the reason
+    recorded into `attempts`."""
+    from provider_failures import record
     model = model or DEFAULT_VEO_MODEL
+    if not model:
+        record(attempts, "veo", "model-resolution", "unresolved-model",
+               "no current model id for the google video alias")
+        return None
     try:
         from google import genai
         from google.genai import types
@@ -259,9 +306,13 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                 from google import genai
                 from google.genai import types
             else:
-                return {"status": "FAILED", "error": "google-genai install failed. Run: pip install google-genai"}
+                record(attempts, "veo", "dependencies", "dependency-missing",
+                       "google-genai install failed. Run: pip install google-genai")
+                return None
         except Exception as exc:
-            return {"status": "FAILED", "error": f"google-genai not installed ({exc}). Run: pip install google-genai"}
+            record(attempts, "veo", "dependencies", "dependency-missing",
+                   f"google-genai not installed ({exc}). Run: pip install google-genai")
+            return None
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -270,26 +321,30 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
         # Try AI Studio fallback
         api_key = os.environ.get("GEMINI_API_KEY")
         if api_key:
-            client = genai.Client(api_key=api_key)
-            backend = "aistudio"
+            try:
+                client = genai.Client(api_key=api_key)
+                backend = "aistudio"
+            except Exception as e:
+                record(attempts, "veo", "request", "request-error",
+                       f"AI Studio init failed: {e}")
+                return None
         else:
-            return {
-                "status": "FAILED",
-                "error": "GOOGLE_CLOUD_PROJECT not set for Vertex AI Veo. "
-                         "Run: export GOOGLE_CLOUD_PROJECT=your-project-id",
-                "action_required": True,
-            }
+            record(attempts, "veo", "credentials", "no-credentials",
+                   "GOOGLE_CLOUD_PROJECT not set and no GEMINI_API_KEY for the AI Studio fallback")
+            return None
     else:
         try:
             client = genai.Client(vertexai=True, project=project, location=location)
             backend = "vertex"
         except Exception as e:
-            return {"status": "FAILED", "error": f"Vertex AI init failed: {e}"}
+            record(attempts, "veo", "request", "request-error", f"Vertex AI init failed: {e}")
+            return None
 
     try:
-        # Build generation config
+        # Build generation config. NOTE: `prompt` is a direct argument of
+        # generate_videos, NOT a config field — the SDK rejects it there with
+        # a validation error (caught live by the chain's attempt records).
         gen_config = types.GenerateVideosConfig(
-            prompt=prompt,
             number_of_videos=1,
             duration_seconds=min(duration, 8),  # Veo max 8s
             aspect_ratio=aspect_ratio,
@@ -302,12 +357,14 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
             image = types.Image(image_bytes=img_bytes, mime_type=mime)
             operation = client.models.generate_videos(
                 model=model,
+                prompt=prompt,
                 image=image,
                 config=gen_config,
             )
         else:
             operation = client.models.generate_videos(
                 model=model,
+                prompt=prompt,
                 config=gen_config,
             )
 
@@ -319,7 +376,9 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
             operation = client.operations.get(operation)
 
         if not operation.done:
-            return {"status": "FAILED", "error": "Veo generation timed out after 5 minutes"}
+            record(attempts, "veo", "request", "timeout",
+                   "Veo generation timed out after 5 minutes")
+            return None
 
         if operation.result and operation.result.generated_videos:
             video = operation.result.generated_videos[0]
@@ -335,11 +394,50 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                 "duration": min(duration, 8),
                 "mode": "image-to-video" if image_path else "text-to-video",
             }
-        else:
-            return {"status": "FAILED", "error": "Veo returned no video (may have been filtered)"}
+        record(attempts, "veo", "response", "bad-response",
+               "Veo returned no video (possibly safety-filtered)")
+        return None
 
     except Exception as e:
-        return {"status": "FAILED", "error": f"Veo generation failed: {str(e)}"}
+        record(attempts, "veo", "request", "request-error", f"Veo generation failed: {str(e)[:200]}")
+        return None
+
+
+def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio="16:9",
+                         kling_model=None, veo_model=None, sound=False, preferred=None):
+    """Try every configured video provider in order, recording every failed
+    attempt. The preferred provider (from routing or --provider) goes first;
+    the others remain as fallbacks.
+
+    Before this chain existed, the fallbacks lived inside one provider's
+    exception handler: a Veo-routed failure never fell back at all, a missing
+    WaveSpeed key aborted the whole run, and the terminal error was one
+    80-character string. Now the terminal FAILED payload lists who was tried,
+    at which stage each stopped, and what to do about it.
+    """
+    from provider_failures import failure_payload
+    attempts = []
+    order = ["kling", "veo", "higgsfield"]
+    if preferred in order:
+        order.remove(preferred)
+        order.insert(0, preferred)
+    for prov in order:
+        if prov == "kling":
+            result = generate_video_kling(prompt, output_path, image_path, None,
+                                          duration, model=kling_model, sound=sound,
+                                          attempts=attempts)
+        elif prov == "veo":
+            result = generate_video_veo(prompt, output_path, image_path, duration,
+                                        aspect_ratio, model=veo_model, attempts=attempts)
+        else:
+            result = generate_video_higgsfield(prompt, output_path, image_path,
+                                               duration, sound, attempts=attempts)
+        if result and result.get("status") == "success":
+            if attempts:
+                result["fallback_from"] = ", ".join(dict.fromkeys(a["provider"] for a in attempts))
+                result["earlier_attempts"] = attempts
+            return result
+    return failure_payload(attempts, context="video generation")
 
 
 # ---------------------------------------------------------------------------
@@ -471,12 +569,32 @@ def generate_srt(script, output_path):
     return {"status": "success", "output": str(output_path), "subtitle_count": len(script.get("scenes", []))}
 
 
+def _provider_availability():
+    """Which video providers have credentials — checking the STORED profile
+    first, then env vars. Routing used to read env vars only, so a user who
+    ran /socialforge:setup (keys in credentials.json, no env vars) was told
+    'No video API configured' while being fully configured."""
+    ws_key = hf_key = hf_secret = None
+    google_stored = False
+    try:
+        from credential_manager import get_wavespeed_key, get_higgsfield_auth, validate_vertex_ai
+        ws_key = get_wavespeed_key()
+        hf_key, hf_secret = get_higgsfield_auth()
+        google_stored = bool(validate_vertex_ai().get("configured"))
+    except ImportError:
+        ws_key = os.environ.get("WAVESPEED_API_KEY")
+        hf_key = os.environ.get("HF_API_KEY")
+        hf_secret = os.environ.get("HF_API_SECRET")
+    return {
+        "wavespeed": bool(ws_key),
+        "google": bool(google_stored or os.environ.get("GOOGLE_CLOUD_PROJECT")
+                       or os.environ.get("GEMINI_API_KEY")),
+        "higgsfield": bool(hf_key and hf_secret),
+    }
+
+
 def route_video_provider(duration_seconds, video_type):
     """Route to the appropriate video provider."""
-    wavespeed_key = os.environ.get("WAVESPEED_API_KEY")
-    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-
     # Some video types are live-action by definition — no AI provider can produce them
     production = VIDEO_TYPES.get(video_type, {}).get("production", "")
     if "needs filming" in production:
@@ -486,16 +604,25 @@ def route_video_provider(duration_seconds, video_type):
             "fallback": "script_and_storyboard_only",
         }
 
-    if duration_seconds <= 8 and (gcp_project or gemini_key):
-        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
-    elif wavespeed_key:
-        return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15}
-    elif gcp_project or gemini_key:
-        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
+    avail = _provider_availability()
+    if duration_seconds <= 8 and avail["google"]:
+        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8,
+                "credentials_found": avail}
+    elif avail["wavespeed"]:
+        return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15,
+                "credentials_found": avail}
+    elif avail["google"]:
+        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8,
+                "credentials_found": avail}
+    elif avail["higgsfield"]:
+        return {"provider": "higgsfield", "max_duration": 15, "credentials_found": avail}
     else:
         return {
             "provider": "none",
-            "error": "No video API configured. Set WAVESPEED_API_KEY for Kling or GOOGLE_CLOUD_PROJECT for Veo.",
+            "error": ("No video provider credentials found — checked the stored credential "
+                      "profile and env vars for WaveSpeed, Google (Vertex/AI Studio), and HiggsField. "
+                      "Run /socialforge:setup --video or set WAVESPEED_API_KEY / GOOGLE_CLOUD_PROJECT."),
+            "credentials_found": avail,
             "fallback": "script_and_storyboard_only",
         }
 
@@ -512,8 +639,9 @@ def main():
     parser.add_argument("--output-dir", required=False, default="")
     parser.add_argument("--generate-video", action="store_true", help="Generate AI video")
     parser.add_argument("--image", default=None, help="Input image for image-to-video")
-    parser.add_argument("--provider", default="auto", choices=["auto", "kling", "veo"],
-                        help="Video provider (auto routes by duration and available keys)")
+    parser.add_argument("--provider", default="auto", choices=["auto", "kling", "veo", "higgsfield"],
+                        help="Preferred video provider (auto routes by duration and available "
+                             "credentials; the others stay as fallbacks in the chain)")
     parser.add_argument("--duration", type=int, default=None, help="Override video duration (seconds)")
     parser.add_argument("--aspect-ratio", default="16:9", help="Video aspect ratio")
     parser.add_argument("--srt", action="store_true", help="Generate SRT subtitle file")
@@ -589,21 +717,22 @@ def main():
         srt_path = output_dir / f"post-{args.post_id}-subtitles.srt"
         srt_result = generate_srt(script, str(srt_path))
 
-    # Generate video
+    # Generate video — through the full provider chain. The preferred provider
+    # (explicit --provider, else routing's pick) goes first; every other
+    # configured provider remains a fallback, and every failed rung is
+    # recorded in the result's attempts list.
     video_result = None
     if args.generate_video and routing["provider"] != "none":
         video_path = output_dir / f"post-{args.post_id}-video.mp4"
         prompt = post.get("visual", {}).get("direction_a", post.get("title", ""))
-        provider = args.provider if args.provider != "auto" else routing["provider"]
-
-        if provider == "kling":
-            video_result = generate_video_kling(prompt, str(video_path), args.image, None,
-                                                 duration, model=chosen_kling)
-        elif provider == "veo":
-            video_result = generate_video_veo(prompt, str(video_path), args.image, duration,
-                                              args.aspect_ratio, model=chosen_veo)
+        preferred = args.provider if args.provider != "auto" else routing["provider"]
+        video_result = generate_video_chain(prompt, str(video_path), args.image, duration,
+                                            args.aspect_ratio, kling_model=chosen_kling,
+                                            veo_model=chosen_veo, preferred=preferred)
     elif args.generate_video and routing["provider"] == "none":
-        video_result = {"status": "FAILED", "error": routing["error"], "action_required": True}
+        video_result = {"status": "FAILED", "error": routing["error"],
+                        "credentials_found": routing.get("credentials_found"),
+                        "action_required": True}
 
     # Post-process video if requested
     postprocess_result = None
@@ -645,8 +774,17 @@ def main():
         except Exception as e:
             postprocess_result = {"status": "FAILED", "error": str(e)}
 
+    # Top-level status reflects the worst nested result. It used to say
+    # "success" unconditionally, so a caller grepping the top level sailed
+    # past a fully-failed video generation.
+    overall = "success"
+    if video_result and video_result.get("status") == "FAILED":
+        overall = "FAILED"
+    elif postprocess_result and postprocess_result.get("status") == "FAILED":
+        overall = "partial"
+
     print(json.dumps({
-        "status": "success",
+        "status": overall,
         "post_id": args.post_id,
         "video_type": video_type,
         "duration": duration,
@@ -658,6 +796,8 @@ def main():
         "video": video_result or {"status": "not_requested", "note": "Use --generate-video to create AI video"},
         "postprocess": postprocess_result,
     }, indent=2))
+    if overall == "FAILED":
+        sys.exit(4)  # script/storyboard artifacts exist, but the requested video does not
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 ---
 name: ideate-month
-description: "Plan next month's content calendar from a theme, raw signals, and last month's results — before any calendar exists. Triggers on \"/ideate-month\", \"/plan-month\", \"what should we post next month\", \"plan the calendar\", \"ideas for next month\", \"month theme\", \"content ideas for [brand]\", \"build a calendar from scratch\", or any time a brand needs a month planned and no client calendar has arrived. Outputs a calendar-data.json-compatible draft — series arcs, one-off posts, tiers, platforms — that feeds straight into /socialforge:parse-calendar and the production pipeline. Reads the brand profile for pillars and voice; mines pasted news/trends/notes into on-pillar angles; compounds whatever performed last month instead of starting from zero."
+description: "Plan next month's content calendar from a theme, raw signals, and last month's results — before any calendar exists. Triggers on \"/ideate-month\", \"/plan-month\", \"what should we post next month\", \"plan the calendar\", \"ideas for next month\", \"month theme\", \"content ideas for [brand]\", \"build a calendar from scratch\", or any time a brand needs a month planned and no client calendar has arrived. Outputs a calendar-data.json-compatible draft — series arcs, one-off posts, tiers, platforms — that feeds straight into /socialforge:parse-calendar and the production pipeline. Reads the brand profile for pillars and voice; mines pasted news/trends/notes into on-pillar angles; compounds last month's measured wins (fed by /socialforge:ingest-performance, with anecdotal reports labeled as such) instead of starting from zero."
 argument-hint: "[--brand <name>] [--month <YYYY-MM>] [--theme <text>] [--signals <pasted material>]"
 effort: high
 user-invocable: true
@@ -27,16 +27,29 @@ so an approved plan flows into production with zero re-typing.
    moves, sales-call notes, community questions. Mine them; never use them as
    filler. Every signal either maps to a pillar and a concrete angle, or it is
    dropped and listed as dropped, with the reason.
-4. **Last month's results** (optional) — the review gallery, status tracker, or
-   anything the client reports as having worked. A win is validated audience
-   demand: plan its compounding follow-ups rather than starting from zero.
+4. **Last month's results** (optional) — measured first, anecdote second:
+   - **Measured**: run
+     `python ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py --action wins --brand {brand} --month {last-month}`.
+     If a `performance.json` exists (built by `/socialforge:ingest-performance`
+     from the platform's own analytics export), this returns winners ranked
+     with a sample floor and a margin over the month's median engagement rate —
+     plus an honest `no_clear_wins` when the month was flat. A win here is
+     validated audience demand: plan its compounding follow-ups.
+   - **Anecdotal**: the review gallery, status tracker, or anything the client
+     reports as having worked. Usable, but labeled — see the output rules.
+   - If the measured path has no data, say so and offer to ingest an export
+     first; a two-minute CSV ingest upgrades the whole plan's foundation.
 
 ## Process
 
 1. Read the brand profile. List pillars, platforms, posting cadence.
-2. If last month's performance is available: identify the 1–3 clear wins and
-   design **follow-ups that compound them** — the deeper dive, the objection it
+2. Check the measured path first (`ingest_performance.py --action wins`), then
+   fold in anecdotal reports. Identify the 1–3 clear wins and design
+   **follow-ups that compound them** — the deeper dive, the objection it
    raised, the adjacent question it opened. Not a repost of the same idea.
+   Honesty rules: a `no_clear_wins` verdict is itself a finding — plan from
+   pillars and signals and say the wins rung had nothing; never promote an
+   `unranked` post (below the sample floor) to a win because it felt good.
 3. Mine any signals into angles, each tagged with its pillar. Drop what does
    not map — and say so.
 4. Design 1–2 **series** — connected multi-part sequences with an arc (setup →
@@ -63,7 +76,8 @@ Arc: [what part 1 sets up, how it develops, where it pays off]
 Parts: [P03, P07, P11] — see calendar below
 
 ## What last month validated (if performance was provided)
-- [win] → [the compounding follow-up now on the calendar, with post id]
+- [win — measured: 4.1% ER, 2.3x month median] → [the compounding follow-up now on the calendar, with post id]
+- [win — anecdotal: client-reported] → [follow-up, labeled so the client knows the basis differs]
 
 ## Signals used / dropped (if signals were provided)
 - USED: [signal] → [P05: the angle]
@@ -117,6 +131,7 @@ Parts: [P03, P07, P11] — see calendar below
 
 ## Pairs with
 
+- `/socialforge:ingest-performance` — feeds the wins rung from the platform's own numbers; run it on last month before planning this one
 - `/socialforge:parse-calendar` — ingests the approved draft verbatim
 - `/socialforge:reactive-post` — mid-month trend response; this skill plans, that one reacts
 - `/socialforge:price-check` — quote the month's video load before the client approves it

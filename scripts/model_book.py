@@ -107,7 +107,11 @@ def _load() -> dict:
         return {"schema_version": 1, "entries": {}}
     try:
         return json.loads(MODEL_BOOK.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError) as e:
+        # A corrupt book must not silently read as "nothing recorded" — the
+        # stored discoveries may be recoverable from the damaged file.
+        print(f"WARNING: model-book.json is unreadable ({type(e).__name__}) — treating as "
+              f"empty; the file at {MODEL_BOOK} may be recoverable", file=sys.stderr)
         return {"schema_version": 1, "entries": {}}
 
 

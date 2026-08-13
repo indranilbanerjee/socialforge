@@ -55,6 +55,8 @@ That's it. Run `/socialforge:brand-setup [brand-name]` and answer these question
 
 **Add more later:** Logo files, fonts, visual style, compliance rules, approval chain, posting times, hashtags via `/socialforge:brand-setup [brand] --update`
 
+**AI-assistance disclosure (`ai_disclosure` in brand-config.json):** defaults to `{"mode": "claude-surfaces", "text": null}`. This governs the AI-assistance note in the monthly delivery manifest (see `/socialforge:assemble-document`) — NOT the post captions themselves: caption-level AI labels belong to each platform's native disclosure toggle (Instagram/TikTok/YouTube ship their own "AI-generated" switches; flag them at publish handoff instead of burning caption characters). Modes: `claude-surfaces` (default — the note attaches when production ran on a Claude surface or the surface is uncertain; skipped only when a non-Claude harness is affirmatively detected), `always`, `off` (the brand owns that choice). Custom `text` replaces the default verbatim; the default is vendor-neutral. Generated IMAGES/VIDEO carry C2PA `ai-disclosure` metadata independently of this setting (see `/socialforge:c2pa-sign`).
+
 ## Full Setup
 
 ### Step 1: Core Identity

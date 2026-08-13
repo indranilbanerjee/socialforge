@@ -4,7 +4,7 @@ This file is auto-loaded by OpenAI Codex, Google Antigravity, GitHub Copilot CLI
 
 ## What this plugin is
 
-SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **20 skills · 25 commands · 5 agents · 24 scripts · 10 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
+SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **20 skills · 25 commands · 5 agents · 25 scripts · 10 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
 
 **Supported surfaces (v1.13.1):** Claude Code (CLI + IDE extensions), Anthropic Cowork, OpenAI Codex (CLI + IDE + App), Cursor 2.5+, GitHub Copilot CLI, Google Antigravity 2.0 (CLI + IDE), Hermes Agent, OpenClaw.
 

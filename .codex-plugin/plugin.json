@@ -1,6 +1,6 @@
 {
   "name": "socialforge",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
   "author": {
     "name": "Indranil Banerjee",
@@ -25,7 +25,7 @@
   "interface": {
     "displayName": "SocialForge",
     "shortDescription": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
-    "longDescription": "20 skills + 25 commands + 5 agents + 24 scripts + 10 HTTP MCP connectors. Asset-first compositing (brand assets are sacred, AI is the creative layer around them). AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), 9-platform copy adaptation (Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts), human-in-the-loop review galleries, C2PA content provenance signing for EU AI Act Article 50. Portable across Claude Code, Codex, Cursor, and Antigravity via the Agent Skills open standard.",
+    "longDescription": "20 skills + 25 commands + 5 agents + 25 scripts + 10 HTTP MCP connectors. Asset-first compositing (brand assets are sacred, AI is the creative layer around them). AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), 9-platform copy adaptation (Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts), human-in-the-loop review galleries, C2PA content provenance signing for EU AI Act Article 50. Portable across Claude Code, Codex, Cursor, and Antigravity via the Agent Skills open standard.",
     "developerName": "Indranil Banerjee",
     "category": "Productivity",
     "capabilities": [

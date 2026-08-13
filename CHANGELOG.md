@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.20.0] — 2026-08-13
+
+The delivery manifest discloses honestly — the suite's provenance layer
+(CF v3.22.0 / DMP v3.25.0), right-sized for social media production.
+
+### Added
+
+- **`scripts/detect_surface.py`** — classifies the running harness
+  (claude / non-claude / uncertain) from affirmative env fingerprints, with
+  the test-pinned fail-safe: uncertain ⇒ disclose; skipping requires an
+  AFFIRMATIVE non-Claude fingerprint.
+- **`ai_disclosure` in brand-config.json** (brand-manager): modes
+  `claude-surfaces` (default) / `always` / `off`, optional custom text.
+- **AI-assistance note in the delivery manifest** (assemble-document):
+  vendor-neutral default ("Creative produced with AI assistance under human
+  review and brand approval gates" — guard-tested for vendor names), applied
+  per the detect_surface decision, recorded in the manifest either way, with
+  a publish-handoff reminder that per-post disclosure belongs to each
+  platform's NATIVE AI-content label toggle.
+- `tests/test_disclosure_note.py` (7 tests). **Tests 214 → 221.**
+
+### Deliberately not mirrored (right-sizing, documented)
+
+- The suite's long-form structural-tell scan: caption-length copy has no
+  document structure (H2 sections, paragraph rhythm) to measure.
+- Caption-level disclosure text: platform-native AI labels are the correct
+  per-post mechanism; burning caption characters would serve nobody.
+- C2PA `ai-disclosure` media metadata is unchanged and independent of the
+  new text note.
+
 ## [1.19.0] — 2026-08-13
 
 Nothing fails silently anymore. The provider layer's fall-through chains

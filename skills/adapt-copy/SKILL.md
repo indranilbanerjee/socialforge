@@ -38,6 +38,10 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 8. Handle bilingual posts if configured
 9. Save to `production/copy/post-{id}-{platform}-copy.txt`
 
+**No significance markers.** Never write a line whose only job is to announce that the next line matters: "here's the thing", "the thing is,", "here's the kicker", "here's where it gets interesting", "that's the part that got me", "let that sink in", "read that again". They read as machine-written, and on a 280-character platform they spend budget the point needs. Lead with the specific instead — "Approvals went from 14 days to 31" beats "Here's the thing about approval timelines". Same for stacked soft adverbs (honestly / genuinely / truly / literally / actually / basically): at most one per caption, never two in a sentence.
+
+This is a writing rule enforced by the copy-adapter agent, not a scan. SocialForge ships no AI-tell scanner on purpose — caption-length copy has no document structure to measure, and per-1000-word metrics are noise at 280 characters.
+
 ## Compliance Check (Mandatory)
 
 Before saving any copy:

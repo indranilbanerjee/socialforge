@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.21.0] - 2026-08-14
+
+**Significance markers stay out of captions — and the missing scanner is a decision, not a gap.**
+
+### Added — the no-significance-markers rule
+
+The copy-adapter agent and `/socialforge:adapt-copy` now forbid any line whose only job is to announce that another line matters: "here's the thing", "the thing is,", "here's the kicker", "here's where it gets interesting", "that's the part that got me", "which is exactly the problem", "let that sink in", "read that again".
+
+- They read as machine-written to anyone who has scrolled a feed this year, and on a 280-character platform they spend the budget the point needs.
+- **The fix is to delete the label and lead with the specific it pointed at** — "Approvals went from 14 days to 31" beats "Here's the thing about approval timelines". Emphasis is earned with a number, a name, or a quote; it is never announced.
+- Soft-adverb feeling tags (honestly / genuinely / truly / literally / actually / basically) are capped at one per caption and never two in a sentence.
+
+### Notes — why SocialForge ships no AI-tell scanner
+
+The suite's long-form plugins gained deterministic tell scans in the same wave. SocialForge deliberately did not, and both surfaces now state why: **caption-length copy has no document structure to measure, and per-1000-word metrics are noise at 280 characters.** The judgment belongs at the point the caption is written, so it lives as a writing rule on the agent rather than as a script that would fire meaningless numbers.
+
+`tests/test_caption_craft.py` pins this in three directions: the rule exists on both surfaces, the marker phrases appear only inside a prohibition (so a future edit cannot quietly turn the ban list into a style tip), and no scanner script has appeared — with an explicit instruction to update the test and the stated reasoning together if that decision is ever revisited.
+
+### Notes
+
+- **No watermark detection or removal exists anywhere in SocialForge, and none will be added.** Guard-tested on the caption surfaces.
+- 221 → **228 tests**. New: `tests/test_caption_craft.py` (7).
+
 ## [1.20.0] — 2026-08-13
 
 The delivery manifest discloses honestly — the suite's provenance layer

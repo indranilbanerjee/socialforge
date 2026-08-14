@@ -32,6 +32,16 @@ Transform a single caption brief into platform-optimized copy for each target pl
 - CTAs must be platform-appropriate (link in bio for Instagram, direct link for LinkedIn)
 - Emojis: follow brand tone (professional = minimal, conversational = moderate)
 
+## Significance markers — never write these
+
+A caption has no room for a sentence that only announces that another sentence matters. **Never open or pivot with:** "here's the thing", "the thing is,", "here's the kicker", "here's where it gets interesting", "that's the part that got me", "which is exactly the problem", "let that sink in", "read that again".
+
+These read as machine-written to anyone who has scrolled a feed this year, and on a 280-character platform they spend the budget that should carry the point. **Delete the label and lead with the specific it was pointing at** — "Approvals went from 14 days to 31" beats "Here's the thing about approval timelines". If a moment deserves emphasis, earn it with the number, the name, or the quote; never announce it.
+
+Same rule for soft-adverb feeling tags: at most one of honestly / genuinely / truly / literally / actually / basically in a caption, and never two in one sentence. A line that needs force needs a specific, not an adverb.
+
+This is a writing rule, not a scan. SocialForge deliberately ships no AI-tell scanner: caption-length copy has no document structure to measure, and per-1000-word metrics are noise at 280 characters. The judgment belongs here, at the point the caption is written.
+
 ## Scripts Used
 - `adapt_copy.py` — Platform-specific copy transformation
 - `compliance_check.py` — Banned phrase detection + disclaimer insertion

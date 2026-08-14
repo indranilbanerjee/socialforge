@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.22.0] - 2026-08-15
+
+"Nothing fails silently" held where the plugin thought about it, and broke at the seams.
+A full-pipeline run with no image or video credentials found all of this.
+
+### Fixed — `render_preview.py` reported success for an image that did not exist
+
+Given a path to a nonexistent image it returned `{"status": "success"}`, exit 0, and wrote a
+real 600x800 PNG that was blank white — the missing path became a `file://` URI and the
+browser rendered a broken image as nothing. A reviewer approving that gallery was approving
+an empty rectangle. This is the exact failure mode the plugin claims is impossible. It now
+refuses with a structured record and writes no file. A copy-layout preview is still available
+via `--allow-missing-image`, which returns `status: placeholder` and a warning — never `success`.
+
+### Fixed — `generate_image.py` exited 0 after every provider failed
+
+The structured failure record was correct and complete; the exit code said success. Any `&&`
+chain, CI step or batch loop read total failure as a pass — while `price_book.py` exits 3 and
+`compliance_check.py` exits 1 in the same situation, so the contract was inconsistent inside
+one plugin. Now: 0 image produced, 4 placeholder only, 1 nothing produced. The generation log
+also stopped recording `provider: "unknown"` and a model id on runs where no model was ever
+called; failures now carry `providers_tried`, `attempts` and the error.
+
+### Fixed — the failure record was never written to disk
+
+`provider_failures.py` built an excellent record and handed it to the caller to print. Once
+stdout scrolled past, it was gone — so the promise held only for whoever was watching the
+terminal. Records now append to `shared/failure-log.jsonl`. Logging is best-effort by design:
+a logging failure must never mask the provider failure the caller actually needs.
+
+### Fixed — the cost report crashed in exactly the situation it was needed for
+
+`--action report` summed `cost_usd` with no `None` guard, so it raised `TypeError` as soon as
+any entry was unpriced — and unpriced entries are what a run without credentials produces.
+Unpriced calls are now counted separately and surfaced as `unpriced_calls` /
+`totals_complete`, with every total labelled a LOWER BOUND when any price is missing.
+Unpriced is not free.
+
+### Fixed — the setup skill quoted six prices from memory
+
+The plugin's own rule is "never state a cost you did not look up", and `price_book.py`
+enforces it by refusing to quote an unrecorded price. `skills/setup/SKILL.md` was quoting a
+per-image cost, a per-second video rate, two worked video examples and two promotional credit
+amounts anyway. All removed and routed to `price_book.py`. A guard test now fails on any
+dollar figure in that skill.
+
+### Fixed — price and model lookups used a different workspace than costs
+
+`price_book.py` and `model_book.py` read `CLAUDE_PLUGIN_DATA_DIR` while every other script
+reads `CLAUDE_PLUGIN_DATA`, so a price the user recorded could be invisible to the tracker
+that needed it. Both names are now accepted, canonical first.
+
+Suite: 228 -> 237.
+
+---
+
 ## [1.21.0] - 2026-08-14
 
 **Significance markers stay out of captions — and the missing scanner is a decision, not a gap.**

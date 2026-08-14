@@ -77,7 +77,7 @@ def failure_payload(attempts, context=""):
     error = f"All providers failed — {summary}"
     if context:
         error = f"{context}: {error}"
-    return {
+    payload = {
         "status": "FAILED",
         "error": error,
         "attempts": attempts,
@@ -85,3 +85,44 @@ def failure_payload(attempts, context=""):
         "next_steps": next_steps,
         "action_required": True,
     }
+    persist(payload)
+    return payload
+
+
+def _failure_log_path():
+    """Where durable failure records live.
+
+    Reads CLAUDE_PLUGIN_DATA, falling back to CLAUDE_PLUGIN_DATA_DIR because two
+    scripts in this plugin historically read the second name — a split that sent
+    price lookups to a different workspace than the one costs were written to.
+    Accept both here rather than lose a record to an env-var spelling.
+    """
+    import os
+    from pathlib import Path
+    base = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA_DIR")
+    root = Path(base) if base else Path.home() / "socialforge-workspace"
+    return root / "socialforge" / "shared" / "failure-log.jsonl"
+
+
+def persist(payload) -> None:
+    """Write the failure record to disk.
+
+    This module produced an excellent structured record and then handed it to
+    the caller to print. Once stdout scrolled away the record was gone, so the
+    plugin's "nothing fails silently" promise held only for whoever was watching
+    the terminal at the time. A record nobody can read afterwards is not a record.
+
+    Best-effort by design: a logging failure must never mask the original
+    provider failure, which is the thing the caller actually needs to see.
+    """
+    import json
+    from datetime import datetime, timezone
+    try:
+        path = _failure_log_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        entry = dict(payload)
+        entry["logged_at"] = datetime.now(timezone.utc).isoformat()
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry) + "\n")
+    except Exception:  # noqa: BLE001 - see docstring
+        pass

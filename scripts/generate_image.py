@@ -497,21 +497,39 @@ def main():
     # Log
     log_dir = WORKSPACE / "shared" / "prompt-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
+    failed = str(result.get("status", "")).upper() == "FAILED"
     log_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "prompt": args.prompt,
         "output": args.output,
-        "provider": result.get("provider", "unknown"),
-        "model": result.get("model", model_id),
+        # On failure the in-memory record knows exactly which providers were
+        # tried and why. Writing "unknown" here threw that away and left the
+        # only durable trace less informative than the one that scrolled past.
+        "provider": result.get("provider") or ("none-succeeded" if failed else "unknown"),
+        # Do not record a model id on a run where no model was ever called —
+        # a log that names a model implies it ran.
+        "model": None if failed else result.get("model", model_id),
+        "model_requested": model_id,
         "references": args.references,
         "result": result.get("status", "unknown"),
         "c2pa_signed": result.get("c2pa_signed", False),
     }
+    if failed:
+        log_entry["providers_tried"] = result.get("providers_tried", [])
+        log_entry["attempts"] = result.get("attempts", [])
+        log_entry["error"] = result.get("error")
     log_file = log_dir / f"{datetime.now(timezone.utc).strftime('%Y-%m-%d')}-generation.jsonl"
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(log_entry) + "\n")
 
     print(json.dumps(result, indent=2))
+
+    # Exit codes are a contract. This returned 0 after every provider failed,
+    # so any `&&` chain, CI step or batch loop read total failure as success —
+    # while price_book.py exits 3 and compliance_check.py exits 1 in the same
+    # situation. 0 = image produced, 4 = placeholder only, 1 = nothing produced.
+    status = str(result.get("status", "")).lower()
+    sys.exit(0 if status == "success" else (4 if status == "placeholder" else 1))
 
 
 if __name__ == "__main__":

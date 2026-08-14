@@ -138,11 +138,23 @@ def get_report(brand, month):
     # Aggregate by operation
     by_operation = {}
     by_post = {}
+    # An unpriced entry carries cost_usd: None on purpose — the plugin refuses
+    # to invent a price it did not look up. Summing that raised TypeError, so
+    # `--action report` crashed in precisely the situation that produces
+    # unpriced entries: no credentials, or a model with no recorded price.
+    # Count them separately; unpriced is not zero, and must never read as zero.
+    unpriced = 0
     for entry in cost_log["entries"]:
         op = entry["operation"]
-        by_operation[op] = by_operation.get(op, 0.0) + entry["cost_usd"]
+        cost = entry.get("cost_usd")
         pid = entry.get("post_id", "unknown")
-        by_post[pid] = by_post.get(pid, 0.0) + entry["cost_usd"]
+        if cost is None:
+            unpriced += 1
+            by_operation.setdefault(op, 0.0)
+            by_post.setdefault(pid, 0.0)
+            continue
+        by_operation[op] = by_operation.get(op, 0.0) + cost
+        by_post[pid] = by_post.get(pid, 0.0) + cost
 
     print(json.dumps({
         "brand": brand,
@@ -151,6 +163,13 @@ def get_report(brand, month):
         "total_api_calls": len(cost_log["entries"]),
         "by_operation": {k: round(v, 4) for k, v in sorted(by_operation.items(), key=lambda x: -x[1])},
         "by_post": {k: round(v, 4) for k, v in sorted(by_post.items(), key=lambda x: -x[1])[:10]},
+        # Surfaced so a total can never be mistaken for a complete total.
+        "unpriced_calls": unpriced,
+        "totals_complete": unpriced == 0,
+        "note": (None if unpriced == 0 else
+                 f"{unpriced} call(s) have no recorded price, so every total above is a "
+                 f"LOWER BOUND. Record the missing prices with price_book.py --action record. "
+                 f"Unpriced is not the same as free."),
     }, indent=2))
 
 

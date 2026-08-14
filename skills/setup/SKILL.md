@@ -171,7 +171,7 @@ If you are setting up the cloud accounts for your team, follow these detailed gu
 2. Click "LINK A BILLING ACCOUNT"
 3. If you don't have a billing account, click "CREATE BILLING ACCOUNT"
 4. Add a payment method (credit card)
-5. New accounts get $300 free credits for 90 days
+5. New accounts may come with promotional credits — the console states the current offer and its expiry. This skill does not quote it, because a number stated from memory is wrong the moment the vendor changes it.
 
 #### Step 3: Enable Vertex AI API
 1. Go to https://console.cloud.google.com/apis/library
@@ -207,7 +207,7 @@ Share the downloaded JSON file with your team via:
 
 NEVER commit this file to Git. NEVER share it publicly.
 
-**Cost:** Image generation costs approximately $0.01-0.04 per image depending on resolution and model. All costs go to the admin's billing account.
+**Cost:** this skill does not state a price. Per-image cost depends on model and resolution and changes without notice, so quoting one here would be a number nobody looked up. Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py --action check --model <model> --provider <provider>`; it returns a recorded price or refuses with the vendor's own pricing URL. All costs go to the admin's billing account.
 
 ### WaveSpeed (Kling v3.0 — Video Generation)
 
@@ -220,9 +220,7 @@ NEVER commit this file to Git. NEVER share it publicly.
 1. After logging in, go to your dashboard
 2. Click "Top Up" or navigate to billing
 3. Add credits (minimum top-up required to activate API access)
-4. Pricing: approximately $0.08-0.11 per second of video
-   - A 5-second video costs roughly $0.40-0.56
-   - A 10-second video costs roughly $0.84-1.12
+4. Pricing: read the current per-second rate from the vendor's billing page. This skill deliberately does not quote it — see `price_book.py`, which refuses to quote a price it has not looked up rather than repeating a stale one.
 
 #### Step 3: Create an API Key
 1. Go to https://wavespeed.ai/accesskey
@@ -247,7 +245,7 @@ HiggsField provides additional resilience. If both Vertex AI and WaveSpeed are d
 #### Step 1: Create a HiggsField Account
 1. Open https://higgsfield.ai
 2. Click "Sign Up" and create an account
-3. New accounts get 150 free credits
+3. Any promotional credit for new accounts is shown at signup; this skill does not quote an amount.
 
 #### Step 2: Get API Credentials
 1. Log in at https://cloud.higgsfield.ai and open the API / Developer section of your dashboard

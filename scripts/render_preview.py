@@ -22,7 +22,8 @@ else:
 TEMPLATE_DIR = PLUGIN_ROOT / "assets" / "preview-templates"
 
 
-def render_preview(image_path, copy_text, platform, brand, output_path):
+def render_preview(image_path, copy_text, platform, brand, output_path,
+                   allow_missing_image=False):
     """Render a platform preview mockup."""
     try:
         from playwright.sync_api import sync_playwright
@@ -44,7 +45,30 @@ def render_preview(image_path, copy_text, platform, brand, output_path):
     handle = html_lib.escape(str(profile.get("handle", "@" + brand)))
     platform_label = html_lib.escape(platform.upper())
     copy_html = html_lib.escape(copy_text[:500])
-    image_uri = html_lib.escape(Path(image_path).resolve().as_uri())
+
+    # A missing image used to sail straight through: the path became a file://
+    # URI, the browser rendered a broken image as blank white, and this function
+    # returned {"status": "success"} for a preview containing nothing. A reviewer
+    # approving that gallery would be approving an empty rectangle. Refuse
+    # instead — this is the exact failure mode the plugin claims is impossible.
+    resolved = Path(image_path).resolve()
+    missing = not resolved.is_file()
+    if missing and not allow_missing_image:
+        return {
+            "status": "FAILED",
+            "error": f"image not found: {resolved}",
+            "stage": "input",
+            "reason": "missing-image",
+            "detail": ("render_preview was given a path that does not exist. Rendering it "
+                       "would produce a blank preview that looks like a successful render."),
+            "next_steps": [
+                "Generate or match the image first (/socialforge:compose-creative or /socialforge:match-assets).",
+                "To preview copy layout without artwork, pass --allow-missing-image "
+                "— the preview is then explicitly marked as having no artwork.",
+            ],
+            "platform": platform, "brand": brand, "action_required": True,
+        }
+    image_uri = "" if missing else html_lib.escape(resolved.as_uri())
 
     # Per-platform template if one exists, otherwise the inline mockup below
     template_path = TEMPLATE_DIR / f"{platform}.html"
@@ -68,6 +92,15 @@ def render_preview(image_path, copy_text, platform, brand, output_path):
         page.screenshot(path=str(output_path), full_page=True)
         browser.close()
 
+    if missing:
+        # Explicitly opted into rendering without artwork. This is never
+        # "success" — a reviewer must be able to tell a finished preview from a
+        # copy-layout mockup by reading one field.
+        return {"status": "placeholder", "output": str(output_path),
+                "platform": platform, "brand": brand,
+                "warning": ("Copy-layout preview only — no artwork was rendered. "
+                            "Do not treat this as an approved creative."),
+                "action_required": True}
     return {"status": "success", "output": str(output_path), "platform": platform, "brand": brand}
 
 
@@ -107,10 +140,17 @@ def main():
     parser.add_argument("--platform", required=True)
     parser.add_argument("--brand", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--allow-missing-image", action="store_true",
+                        help="Render a copy-layout preview with no artwork. The result is "
+                             "marked status=placeholder, never success.")
     args = parser.parse_args()
 
-    result = render_preview(args.image, args.copy, args.platform, args.brand, args.output)
+    result = render_preview(args.image, args.copy, args.platform, args.brand, args.output,
+                            allow_missing_image=args.allow_missing_image)
     print(json.dumps(result, indent=2))
+    # Exit codes are a contract: a caller in an && chain must not read a failed
+    # render as a successful one. 0 clean, 1 refused.
+    sys.exit(0 if result.get("status") in ("success", "placeholder") else 1)
 
 
 if __name__ == "__main__":

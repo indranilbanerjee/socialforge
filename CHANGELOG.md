@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.23.0] - 2026-08-16
+
+### Added — Agent Plugins 1.0 packaging
+
+- Root `plugin.json` on the closed AP1.0 schema (OpenAI standard, 2026-08-06;
+  ChatGPT, Codex, Cursor, GitHub Copilot, VS Code, Kiro), version-synced with
+  the Claude manifest and guarded by `tests/test_agent_plugins_manifest.py`.
+- `${PLUGIN_DATA}` (the standard's data-dir name) accepted as the final
+  fallback in all 20 scripts that resolve persistent storage — a compliant
+  non-Claude host previously resolved no data directory at all.
+
 ## [1.22.0] - 2026-08-15
 
 "Nothing fails silently" held where the plugin thought about it, and broke at the seams.

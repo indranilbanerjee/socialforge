@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
-_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("PLUGIN_DATA") or ""
 if _plugin_data and Path(_plugin_data).exists():
     WORKSPACE = Path(_plugin_data) / "socialforge"
 else:

@@ -99,7 +99,7 @@ def _failure_log_path():
     """
     import os
     from pathlib import Path
-    base = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA_DIR")
+    base = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA_DIR") or os.environ.get("PLUGIN_DATA")
     root = Path(base) if base else Path.home() / "socialforge-workspace"
     return root / "socialforge" / "shared" / "failure-log.jsonl"
 

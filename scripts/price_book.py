@@ -65,7 +65,7 @@ from pathlib import Path
 # resolved to a DIFFERENT workspace than the one costs were written to — so a
 # price recorded by the user was invisible to the tracker that needed it. Accept
 # the canonical name first and keep the old one as a fallback.
-_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA_DIR")
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA_DIR") or os.environ.get("PLUGIN_DATA")
 if _plugin_data:
     WORKSPACE = Path(_plugin_data) / "socialforge"
 else:

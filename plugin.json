@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "socialforge",
+  "version": "1.23.0",
+  "description": "Social media creative pipeline \u2014 20 skills and 5 agents for platform-ready posts, carousels, image/video assets, and compliance-gated delivery.",
+  "author": {
+    "name": "Indranil Banerjee",
+    "url": "https://github.com/indranilbanerjee"
+  }
+}

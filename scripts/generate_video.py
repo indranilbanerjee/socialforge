@@ -89,7 +89,7 @@ def _negotiate_video_model(user_value, alias):
     except (KeyError, ValueError):
         return None
 
-_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA", "")
+_plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("PLUGIN_DATA") or ""
 if _plugin_data and Path(_plugin_data).exists():
     WORKSPACE = Path(_plugin_data) / "socialforge"
 else:

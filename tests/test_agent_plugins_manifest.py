@@ -29,7 +29,7 @@ class TestRootManifest(unittest.TestCase):
         self.assertEqual(self.m["version"], claude["version"])
 
     def test_closed_schema(self):
-        allowed = {"$schema", "name", "version", "description", "author", "extensions"}
+        allowed = {"$schema", "name", "version", "description", "author", "homepage", "repository", "license", "keywords", "extensions"}
         self.assertLessEqual(set(self.m), allowed, set(self.m) - allowed)
 
     def test_name_rules(self):

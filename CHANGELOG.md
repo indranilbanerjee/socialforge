@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.24.1] - 2026-08-16
+
+### Changed — richer Agent Plugins 1.0 listing metadata + submission bundle
+
+The root `plugin.json` now carries the official schema's full optional set —
+`homepage`, `repository`, `license`, `keywords` — verified against the
+published schema at agent-plugins.org (closed schema, 10 permitted fields).
+Schema guards widened to the official field list. Added
+`docs/distribution/submission-bundle.md`: listing metadata, starter prompts,
+and the 5-positive + 3-negative test cases both official directories require —
+ready for the owner to submit.
+
 ## [1.24.0] - 2026-08-16
 
 ### Added — the month-delivery audit

@@ -1,6 +1,6 @@
 {
   "name": "socialforge",
-  "version": "1.24.0",
+  "version": "1.24.1",
   "description": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
   "contextFileName": "AGENTS.md",
   "excludeTools": []

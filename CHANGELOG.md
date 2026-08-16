@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.24.0] - 2026-08-16
+
+### Added — the month-delivery audit
+
+`scripts/delivery_audit.py` re-derives a month's delivery claims from the
+approval ledger and the files on disk, as Step 0 of /finalize-month: every
+status in the vocabulary, revision history arithmetic landing on the recorded
+status, no ghost posts the calendar never knew, every force_finalized post
+surfaced as a violation rather than a buried flag, every FINAL post's
+referenced file existing and non-empty, failure-log lines loadable, and cost
+totals honest about incompleteness. Missing inputs are reported-N/A, never
+silent-pass. 10 new tests with plants for every guard.
+
 ## [1.23.0] - 2026-08-16
 
 ### Added — Agent Plugins 1.0 packaging

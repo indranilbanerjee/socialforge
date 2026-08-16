@@ -1,5 +1,10 @@
 # Anthropic Software Directory — Submission Packet
 
+> **HISTORICAL DOCUMENT** — this packet targeted the May-2026 submission process at
+> platform.claude.com and is preserved as written. The current, canonical submission
+> material for both official directories (Anthropic plugin directory + OpenAI universal
+> Plugins Directory) lives in `docs/distribution/submission-bundle.md`.
+
 **Plugin:** SocialForge
 **Version at submission:** 1.13.1
 **Submitter:** Indranil Banerjee — neel@neelverse.com

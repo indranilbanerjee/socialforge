@@ -70,8 +70,9 @@ Prepared 2026-08-16. Items marked **[owner action]** need the account holder.
 
 ## Release notes
 
-v1.24.0 — see CHANGELOG.md. OpenAI snapshots require re-scan, re-review,
-re-publish per release.
+Submit the version in `.claude-plugin/plugin.json` (always the CHANGELOG.md top
+entry) — never restate the number here, where it can go stale. OpenAI snapshots
+require re-scan, re-review, re-publish per release.
 
 ## Caveats to disclose
 

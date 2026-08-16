@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.24.2] - 2026-08-16
+
+### Fixed — the documentation truth pass
+
+A from-zero audit of every live document found the doc-count guard pattern-blind: it
+required a number directly before one of three nouns, and every stale count in the
+repo was phrased some other way.
+
+- **README** said "25 scripts" in three live places, "22 Python scripts" in one, and
+  "All 16 SKILL.md files" / "all 16 SocialForge skills" — the repo ships 28 scripts
+  and 20 skills. The Agent Skills adoption figure was also two revisions behind the
+  suite's shared claim (35+ → 41+ agent products).
+- **AGENTS.md** — the file every non-Claude runtime auto-loads — pinned "Supported
+  surfaces (v1.13.1)", eleven releases stale, and said "25 scripts". Both fixed.
+- **CONNECTORS.md** said "25 scripts"; **TESTING-GUIDE.md** said "22 Python scripts"
+  in three places — all now 28.
+- **SUBMISSION.md** is now banner-marked HISTORICAL DOCUMENT: the May-2026 packet is
+  superseded by `docs/distribution/submission-bundle.md`, whose release-notes section
+  is also now version-agnostic so it cannot rot.
+
+### Changed — the guard can now see what rotted
+
+`tests/test_doc_counts.py` grew the patterns the audit proved necessary: script counts
+(including "N Python scripts"), "N SKILL.md files", "N SocialForge skills", and
+AGENTS.md currency (version = manifest, all 8 surfaces named). Release-narrative
+sections keep their ship-time numbers via heading-aware exemptions, and each new
+pattern is plant-checked against the exact phrasing that previously escaped.
+Tests 253 → 256.
+
 ## [1.24.1] - 2026-08-16
 
 ### Changed — richer Agent Plugins 1.0 listing metadata + submission bundle

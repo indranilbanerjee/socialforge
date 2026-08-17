@@ -56,6 +56,10 @@
     "google-antigravity",
     "gemini-extension",
     "mcp",
-    "neelverse"
-  ]
+    "neelverse",
+    "grok",
+    "xai-grok",
+    "grok-plugin"
+  ],
+  "skills": "./skills/"
 }

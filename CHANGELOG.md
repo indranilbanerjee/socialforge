@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.25.0] - 2026-08-17
+
+### Added — Grok (xAI Build CLI) native support
+
+- New `.grok-plugin/plugin.json` (mirrors the Claude manifest + the
+  `"skills": "./skills/"` pointer Grok's loader uses) and
+  `.grok-plugin/marketplace.json` (single-plugin marketplace source), so
+  `grok plugin install indranilbanerjee/socialforge` works directly. Grok also
+  reads the Claude Code manifests for compatibility
+  ([Grok Build docs](https://docs.x.ai/build/features/skills-plugins-marketplaces));
+  the native pair is the first-class lane.
+- Both files version-locked in `tests/test_release_consistency.py`
+  (`PLATFORM_MANIFESTS_JSON` grows to 8; a dedicated test pins the marketplace
+  entry's version and source URL). Grok added to the install-command guard,
+  the README platform-name guard, and the AGENTS.md surfaces guard.
+- README: platforms badge 8→9 native, Grok row in Supported surfaces, install
+  command in the hero block, Current Release entry; AGENTS.md surfaces line
+  updated.
+
+Tests: 256 → 258.
+
+---
+
 ## [1.24.2] - 2026-08-16
 
 ### Fixed — the documentation truth pass

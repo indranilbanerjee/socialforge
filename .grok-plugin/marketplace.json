@@ -1,0 +1,29 @@
+{
+  "name": "socialforge",
+  "owner": {
+    "name": "Indranil Banerjee",
+    "url": "https://github.com/indranilbanerjee"
+  },
+  "description": "Marketplace source for the SocialForge social media engine plugin",
+  "plugins": [
+    {
+      "name": "socialforge",
+      "description": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
+      "version": "1.25.0",
+      "category": "marketing",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/indranilbanerjee/socialforge.git"
+      },
+      "homepage": "https://github.com/indranilbanerjee/socialforge",
+      "keywords": [
+        "social-media",
+        "content-calendar",
+        "carousel",
+        "ai-image",
+        "ai-video",
+        "socialforge"
+      ]
+    }
+  ]
+}

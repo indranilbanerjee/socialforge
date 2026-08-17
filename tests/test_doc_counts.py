@@ -141,11 +141,11 @@ class TestAgentsContextCurrent(unittest.TestCase):
                          "AGENTS.md surfaces line pins v%s but the plugin is v%s"
                          % (m.group(1), self.version))
 
-    def test_supported_surfaces_lists_all_eight(self):
+    def test_supported_surfaces_lists_all_native_surfaces(self):
         m = re.search(r"^.*Supported surfaces.*$", self.text, re.M)
         line = m.group(0) if m else ""
         for name in ("Claude Code", "Cowork", "Codex", "Cursor", "Copilot",
-                     "Antigravity", "Hermes", "OpenClaw"):
+                     "Antigravity", "Hermes", "OpenClaw", "Grok"):
             self.assertIn(name, line, "AGENTS.md surfaces line is missing %s" % name)
 
 

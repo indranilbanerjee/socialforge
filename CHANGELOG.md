@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.25.1] - 2026-08-17
+
+### Fixed — schema-clean hooks manifest (suite-wide fix from digital-marketing-pro#9)
+
+- `hooks/hooks.json` carried a `_readme` rationale field that Cowork's plugin
+  validation rejects as an unknown top-level key — the same defect shipped in
+  all three suite plugins. The rationale text moved verbatim to
+  `hooks/README.md`; `hooks.json` is now exactly `{"hooks": {}}`.
+- New `TestHooksManifestSchemaClean` guard: hooks.json must contain the
+  `hooks` key and nothing else, and the rationale doc must exist.
+- Tests: 258 → 260.
+
+---
+
 ## [1.25.0] - 2026-08-17
 
 ### Added — Grok (xAI Build CLI) native support

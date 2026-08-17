@@ -1,0 +1,5 @@
+# Why this plugin ships zero active hooks
+
+`hooks.json` deliberately contains only `{"hooks": {}}`. This file carries the rationale that used to live in a `_readme` field inside `hooks.json` itself — moved here because Cowork's plugin validation rejects unknown top-level fields in `hooks.json` ([issue #9](https://github.com/indranilbanerjee/digital-marketing-pro/issues/9)).
+
+SocialForge ships NO active hooks as of v1.5.0. Earlier versions registered SessionStart, PreToolUse Write/Edit, SubagentStart, and Stop hooks that fired on EVERY Claude Code operation in EVERY project — not just SocialForge work — because Claude Code plugin hooks have no per-directory or per-project scoping. Their work (banner + credential status report, brand-compliance prompt injection, image-approval verification) already lives at the right architectural layer: per-agent instructions for compliance and approval rules, /socialforge:status command for on-demand credential reporting. Prior config is preserved at hooks/hooks-reference.example.json with rationale notes per hook. To re-enable a specific hook, copy its entry into the 'hooks' object below.

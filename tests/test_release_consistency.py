@@ -277,6 +277,23 @@ class TestCriticalReadmeSections(unittest.TestCase):
                           f"README missing '{platform}' coverage")
 
 
+class TestHooksManifestSchemaClean(unittest.TestCase):
+    """Cowork's plugin validation rejects unknown top-level fields in
+    hooks.json (found via digital-marketing-pro issue #9 — all three suite
+    plugins shipped the same `_readme` field). The rationale lives in
+    hooks/README.md; hooks.json must contain the `hooks` key and nothing else."""
+
+    def test_hooks_json_has_only_the_hooks_key(self):
+        doc = json.loads((PLUGIN_ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(doc.keys()), {"hooks"},
+                         f"hooks.json carries extra top-level fields: "
+                         f"{sorted(set(doc.keys()) - {'hooks'})}")
+
+    def test_rationale_still_documented(self):
+        self.assertTrue((PLUGIN_ROOT / "hooks" / "README.md").exists(),
+                        "the zero-hooks rationale must stay documented in hooks/README.md")
+
+
 class TestReadmeAnchorIntegrity(unittest.TestCase):
     """Every internal anchor link in the README must resolve to a heading."""
 

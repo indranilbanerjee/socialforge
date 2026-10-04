@@ -111,7 +111,7 @@ No script: this is reading. Work down; stop at the first rung that yields ads.
    has one. Ad libraries can require a real browser or a login: a failed or empty
    fetch means "I could not read it", never "they run no ads".
 2. **A research tool the user already connected** — use it through its own
-   interface. The rules above do not change. Do not tell the user to buy or
+   interface. The rules above do not change. Never advise the user to buy or
    install any product.
 3. **Ask the user for screenshots** of the library pages, one competitor at a
    time.

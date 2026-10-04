@@ -12,7 +12,7 @@
 #   hermes plugins install indranilbanerjee/socialforge
 
 name: socialforge
-version: 1.27.1
+version: 1.27.2
 description: >-
   Open-source agency-grade social media production plugin. 21 skills, 18
   commands, asset-first compositing + AI image + AI video + C2PA signing

@@ -85,7 +85,7 @@ Parts: [P03, P07, P11] — see calendar below
 - DROPPED: [signal] — [why it does not serve this brand's pillars]
 
 ## Draft calendar (calendar-data.json compatible)
-​```json
+```json
 {
   "month": "YYYY-MM",
   "brand": "{brand}",
@@ -104,7 +104,7 @@ Parts: [P03, P07, P11] — see calendar below
     }
   ]
 }
-​```
+```
 
 ## What I did not have
 [Which optional inputs were missing and what they would have improved]

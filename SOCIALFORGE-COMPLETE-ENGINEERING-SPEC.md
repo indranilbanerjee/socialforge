@@ -3119,7 +3119,7 @@ These require judgment and may branch differently each time:
 **Setup:**
 ```bash
 # Environment variable
-export GEMINI_API_KEY="AIzaSy-your-key-here"
+export GEMINI_API_KEY="<your Gemini API key>"
 
 # Or .env file
 echo 'GEMINI_API_KEY=AIzaSy-your-key-here' > .env

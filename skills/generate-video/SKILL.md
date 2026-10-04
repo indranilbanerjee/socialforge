@@ -94,7 +94,7 @@ Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video ve
 
 ## Keyframe and reference inputs — what `generate_video.py` implements
 
-Read from `scripts/generate_video.py`. Do not tell the user the video does more than this.
+Read from `scripts/generate_video.py`. Never describe the video as doing more than this.
 
 | Input | Flag | What is true today |
 |---|---|---|

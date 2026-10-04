@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.27.2] - 2026-10-04
+
+### Fixed — Hermes refused to install the plugin
+
+- **Hermes Agent's install-time security scan rated the plugin "dangerous"**
+  (`hermes plugins install` refuses that verdict). Two findings were real
+  defects: `ideate-month` had zero-width spaces in front of two code fences
+  (which also broke their rendering), and the archived hook in
+  `hooks/hooks-reference.example.json` was a one-line shell banner that piped
+  echo output into inline Python; it is now a single script call. The rest
+  were harmless lines written like attacks — two instructions phrased as
+  withholding something from the user, a recursive-delete one-liner aimed at the home folder in the
+  README, an "upload this file to a URL" step, and a realistic-looking example
+  key — all reworded. Hermes's own validator (main branch) now passes with a
+  "safe" scan.
+- New `tests/test_host_scanner_compat.py` applies the scanner's patterns to
+  every shipped text file (planted against the pre-fix tree).
+
 ## [1.27.1] - 2026-10-04
 
 ### Fixed

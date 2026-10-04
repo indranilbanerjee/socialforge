@@ -23,7 +23,7 @@ It re-derives the month's claims from the ledger and the disk: every status in t
 
 Then:
 - All posts must be FINAL status (or --force to skip unapproved)
-  **WARNING:** `--force` bypasses ALL approval gates. Use only in emergencies. All force-finalized posts are logged with `force_finalized: true` in status-tracker.json for audit trail — and the delivery audit reports every one of them as a violation the client-facing record must acknowledge.
+  **WARNING:** `--force` bypasses ALL approval gates. Use only in emergencies, and **only when the user has typed `--force` (or explicitly said to force-finalize) in this conversation** — never add it on your own initiative, including when this skill was invoked without the user typing its command (hosts such as Codex ignore `disable-model-invocation`). All force-finalized posts are logged with `force_finalized: true` in status-tracker.json for audit trail — and the delivery audit reports every one of them as a violation the client-facing record must acknowledge.
 - All compliance checks passed
 - All required approvals obtained per approval-chain.json
 - Calendar document assembled

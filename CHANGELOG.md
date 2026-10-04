@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.26.0] - 2026-10-04
+
+### The seven-week freshness pass
+
+- **Removed the plugin-root `settings.json`** (socialforge#3: SocialForge
+  missing from Cowork's marketplace view while the other two suite plugins
+  appeared). A plugin-root `settings.json` is reserved by Claude Code — only
+  `agent` (the NAME of one of the plugin's agents, made the main-thread agent)
+  and `subagentStatusLine` take effect. Ours, a v0.1.0 leftover, held
+  `{"agent": {"model": "inherit"}}` — an object where a name belongs, and
+  the only structural difference from the plugins Cowork listed (frontmatter
+  keys, file counts, sizes and description lengths all compared). New guard
+  `TestRootSettingsJsonIsWellFormed`.
+- **Codex install repaired** (neels-plugins 3.52.0: Codex silently dropped the
+  `github` source shorthand and listed zero plugins). README command corrected
+  to `codex plugin add socialforge@neels-plugins`; guard asserts the
+  non-existent `codex plugin install` is absent.
+- **Model registry** synced from the canonical copy re-verified 2026-10-04:
+  `gemini-2.5-flash-image` retired (shut 2026-10-02), `imagen-4` retired (shut
+  2026-08-17), `veo-3.1-generate-preview` deprecated (shutdown 2026-10-22);
+  `latest-video-google` → `veo-3.1-generate-001` (GA-format id; Vertex listing
+  unverified — the video chain records a 404 and falls forward to the next
+  rung); `gemini-omni-1.1-flash` registered but not wired (different call
+  shape from `generate_videos()`). Current Claude / GPT / Gemini generation
+  added; sampling-param rules synced.
+- **EU AI Act Article 50** (`references/eu-ai-act-article50.md`): the
+  Commission's three icons mapped to SocialForge's creative modes; label at
+  first exposure and burned into deepfake-class assets so it survives
+  resharing and download.
+- `finalize-month`: an agent may never add `--force` on its own initiative
+  (hosts such as Codex ignore `disable-model-invocation`).
+- New guard `TestClaudeManifestHasOnlyDocumentedFields`.
+
+Tests: 260 → 262.
+
+---
+
 ## [1.25.1] - 2026-08-17
 
 ### Fixed — schema-clean hooks manifest (suite-wide fix from digital-marketing-pro#9)

@@ -15,7 +15,7 @@ Prepared 2026-08-16. Items marked **[owner action]** need the account holder.
 
 - **Display name:** SocialForge
 - **Category:** Social media / Creative
-- **Short description:** Social media creative pipeline — 20 skills and 5
+- **Short description:** Social media creative pipeline — 21 skills and 5
   agents for platform-ready posts, carousels, image/video assets, and
   compliance-gated delivery.
 - **Long description:** A month of social content as a governed pipeline:

@@ -5,3 +5,6 @@ node_modules/
 .env
 *.log
 .mcp.json
+
+# claude plugin eval output
+evals/results/

@@ -14,7 +14,7 @@ came from, and expire after 24 hours.
 That is not caution for its own sake. On 2026-07-31 a major video model shipped
 one day after this plugin's model registry was last reviewed, and the registry
 never knew. In the same week, a provider already wired into SocialForge was
-selling video at **$0.01/second** while the old cost table assumed **$0.40**. Any
+selling video at a small fraction of what the old cost table assumed. Any
 price baked into a plugin is wrong on a timetable nobody controls.
 
 ## The rule
@@ -49,8 +49,8 @@ tell you that save time:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action record \
-  --model "kling-3.0-std" --provider wavespeed \
-  --unit second --price 0.084 --source https://wavespeed.ai/pricing
+  --model "<model id>" --provider wavespeed \
+  --unit second --price <the rate you read> --source <the pricing URL you read it from>
 ```
 
 A record without a source URL is rejected. That is deliberate — a price with no
@@ -62,7 +62,7 @@ Single item:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
-  --model "kling-3.0-std" --provider wavespeed --units 55
+  --model "<model id>" --provider wavespeed --units <seconds of video>
 ```
 
 A whole planned run — **required before `/socialforge:generate-all`**, which fans
@@ -71,8 +71,8 @@ product:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[
-  {"model":"kling-3.0-std","provider":"wavespeed","units":5,"label":"post-01"},
-  {"model":"seedance-2.0-fast","provider":"wavespeed","units":6,"label":"post-02"}
+  {"model":"<model id>","provider":"wavespeed","units":5,"label":"post-01"},
+  {"model":"<another model id>","provider":"wavespeed","units":6,"label":"post-02"}
 ]'
 ```
 
@@ -87,14 +87,13 @@ clips nobody could price is worse than no total, because it reads as complete.
 A base rate is not always the whole bill. On at least one wired video model,
 asking for synchronised audio bills at **1.5× the base per-second rate** — and
 SocialForge passes `sound` straight through to that API, so a quote taken without
-it understates a 10-second clip by about half a dollar and a 28-post month by
-roughly fifteen.
+it understates the cost of every clip by a third.
 
 Look the surcharge up on the model's page, then pass it:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
-  --model "kling-v3.0-pro" --provider wavespeed --units 10 \
+  --model "<model id>" --provider wavespeed --units 10 \
   --multiplier 1.5 --multiplier-reason "sound=true"
 ```
 
@@ -115,12 +114,12 @@ the calendar, re-quote and ask again.
 
 ## Comparing providers before you route
 
-The same model genuinely costs different amounts in different places — Seedance
-2.0 Fast has been seen at $0.10/s on one provider and $0.24/s on another. That is
-a 2.4× difference for identical output.
+The same model genuinely costs different amounts in different places — one
+video model has been seen at more than double the per-second rate on one
+provider than on another, for identical output.
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action compare --model "seedance-2.0-fast"
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action compare --model "<model id>"
 ```
 
 Cheapest first, grouped by unit — a per-image price is never "cheaper" than a

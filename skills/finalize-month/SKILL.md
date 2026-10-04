@@ -60,3 +60,16 @@ FINAL/
 7. Remind the user: once the month has run, ingest its analytics export with
    `/socialforge:ingest-performance` — that is what lets next month's
    `/socialforge:ideate-month` compound measured wins instead of memory
+8. Only if the user asks: the optional scheduler hand-off below
+
+## Optional: hand off to a scheduler (opt-in)
+
+Finalizing is complete without this. Offer it only when the user asks and a scheduler connector (`~~scheduler`) is already connected; the catalog entry is `postiz` in `.mcp.json.connectors-reference`, and nothing connects by default. SocialForge never schedules or publishes on its own initiative.
+
+1. **Preconditions.** The Step 0 delivery audit passed and every post to be handed off is FINAL. A post that was force-finalized is handed off only after the user re-confirms that post by id.
+2. **Show the exact batch before any scheduler call**: per post, the id, the channel/account, the date and time, the copy exactly as it will post, the media file, and which posts used AI generation so the platform-native AI-content label is set where it applies (`references/content-credentials-by-platform.md`).
+3. **Explicit approval for exactly that batch.** The approval names the posts and the times. Changing any post, channel or time is a new approval, and "the folder looks good" is not approval to schedule.
+4. **Say which action you are asking for.** The Postiz MCP's scheduling tool can schedule, save a draft, or publish immediately ([docs.postiz.com/mcp/introduction](https://docs.postiz.com/mcp/introduction), checked 2026-10-04). Default to a draft or a scheduled post; publish immediately only for a post the user named and said to publish now.
+5. **Record what the scheduler returned** (post ids, channel, time) next to `06-Publishing-Schedule/`. If a call fails, report the failure; never retry blind and never say "scheduled" for a post whose call did not return success.
+
+Connector facts, checked 2026-10-04: Postiz is open source and self-hostable (AGPL-3.0, [github.com/gitroomhq/postiz-app](https://github.com/gitroomhq/postiz-app)), connects to Claude through OAuth at the URL in the catalog entry ([postiz.com/claude](https://postiz.com/claude)), and is listed in Anthropic's plugin directory ([claude.com/plugins/postiz](https://claude.com/plugins/postiz)). Postiz's directory connector leaves out its media-generation tools, per Postiz's own page; SocialForge does not use them.

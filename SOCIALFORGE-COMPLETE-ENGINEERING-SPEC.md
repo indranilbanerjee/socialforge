@@ -2928,6 +2928,8 @@ OUTPUT: .docx file
 
 ### Text Limits
 
+> Design-time table. The limits `adapt_copy.py` enforces now live in `scripts/platform_limits.json`, each with a source URL, a check date and a status (`python scripts/adapt_copy.py --sources`). Where this table differs from that file (Instagram's hashtag cap is now 5, Pinterest's description limit is 800, TikTok's 4,000 is unconfirmed and the script keeps 2,200), the data file is current. X is counted by weight (every URL 23, emoji and CJK 2).
+
 | Platform | Max Characters | Truncation Point | Hashtag Best Practice | Link Behavior |
 |---|---|---|---|---|
 | LinkedIn | 3,000 | ~140 chars before "see more" fold | 3-5 | Clickable. Algorithm deprioritizes posts with links in body; better in first comment |

@@ -11,8 +11,8 @@ Produce final composed images and videos for social media posts. Every creative 
 ## Core Principle
 
 **Claude handles all thinking** (strategy, ideas, prompts, decisions). External APIs handle only rendering:
-- **Gemini (Vertex AI)** renders images from prompts (Nano Banana 2 / Pro)
-- **WaveSpeed (Kling v3.0)** animates keyframes into video
+- **The image provider (Vertex AI)** renders images from prompts (registry aliases `latest-image-balanced-google` / `latest-image-google`)
+- **WaveSpeed** (registry alias `latest-video-wavespeed`) animates keyframes into video
 - **Pillow** handles compositing, logo overlay, resizing (local, no API)
 
 ## File Structure
@@ -59,7 +59,7 @@ After user picks a direction, confirm all details:
 - Which brand asset(s)
 - Logo placement + sizing
 - Platform dimensions
-- Gemini model to use
+- Image model to use (registry alias)
 
 **WAIT for approval.** Only proceed when user says yes.
 
@@ -99,7 +99,7 @@ Present **2-3 video concept ideas** based on post context. For each show:
 
 **WAIT for user to approve a concept.**
 
-### STAGE 2: First Frame (Gemini generates 2 options)
+### STAGE 2: First Frame (image provider generates 2 options)
 
 Generate **2 opening frame** images based on approved concept:
 1. Craft first-frame prompt
@@ -107,18 +107,18 @@ Generate **2 opening frame** images based on approved concept:
 3. **Read each image** -- both appear INLINE in chat
 4. **WAIT for user to pick one**
 
-### STAGE 3: Last Frame (Gemini generates 2 options)
+### STAGE 3: Last Frame (image provider generates 2 options)
 
 Same approach for closing frame:
 1. Generate 2 options
 2. Show inline
 3. **WAIT for user to pick one**
 
-### STAGE 4: Video Generation (WaveSpeed/Kling, 2 versions)
+### STAGE 4: Video Generation (WaveSpeed, 2 versions)
 
 Using approved first + last frames:
-1. Upload frames to WaveSpeed
-2. Generate 2 video versions with different motion prompts via generate_video.py
+1. Pass the frames to generate_video.py: `--image <first-frame> --last-image <last-frame>` (the last frame reaches the video model only on the `kling` rung — add `--provider kling` when the clip must end on it)
+2. Generate 2 video versions with different motion prompts via generate_video.py, and read `video.last_frame_used` in each result — `false` means the clip was not steered to the approved last frame, so say so rather than presenting it as landing on it
 3. Show first + last frame thumbnails INLINE as preview
 4. Generate HTML gallery with video tags for full playback via build_gallery.py
 5. Open gallery in browser
@@ -138,7 +138,7 @@ After user picks the final video:
    - If no: skip. SRT file is still saved separately for platform upload.
 
 3. **Background music:** Ask the user: "The video has no audio. Would you like to add background music? (yes/no)"
-   - Only ask if the video was generated without sound (sound=False in Kling config)
+   - Only ask if the video was generated without sound (sound=False in the clip request)
    - If yes: ask for music file path or use brand default music if configured
    - Add --music flag with the file path
 
@@ -191,8 +191,8 @@ When generating all posts (28+), individual approval per post is impractical:
 ## Scripts Used
 
 - credential_manager.py -- Load API credentials from plugin data
-- generate_image.py -- AI image generation (Gemini via Vertex AI)
-- generate_video.py -- Video pipeline (Gemini keyframes + WaveSpeed/Kling)
+- generate_image.py -- AI image generation (image provider, Vertex AI)
+- generate_video.py -- Video pipeline (keyframes from the image provider + WaveSpeed)
 - compose_image.py -- Pillow compositing (layering, shadows, reflections)
 - edit_image.py -- AI image editing (enhance, extend periphery)
 - resize_image.py -- Platform-specific resizing with smart cropping

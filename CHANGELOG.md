@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.27.0] - 2026-10-04
+
+### Research in, scheduler out, and nothing fails silently
+
+**Added**
+
+- **`/socialforge:research-month`** (new skill + stdlib
+  `scripts/research_month.py`): outlier posts against the account's own
+  median (with a sample floor and a margin), recurring customer language from
+  comment exports (redacted excerpts) — both scripted — plus competitor-ad
+  themes the model reads from ad-library screenshots or pasted ad text. All
+  from material you supply; nothing is scraped and no vendor is named.
+  `ideate-month` reads its `research-brief.md`.
+- **Optional scheduler hand-off after `finalize-month`** to Postiz, only when
+  you ask and the connector is connected: the exact batch is shown first and
+  needs your explicit approval; drafts or scheduled posts by default, publish
+  now only for posts you name. Postiz and WhatsApp Business Tools (Meta beta,
+  for development and testing) join the opt-in connector catalog (10 → 12);
+  neither is in the copy-me example file.
+- **`references/content-credentials-by-platform.md`** (who reads, displays or
+  strips C2PA; YouTube's label for fully generative content) and
+  **`references/conversational-commerce.md`** (Meta Business Agent, WhatsApp
+  opt-in and the 24-hour window), primary-sourced with a graded source ledger.
+- **Publishable review gallery**: `build_gallery.py` reports its size and a
+  `publishable_as_page` flag (15 MiB cap); `--no-inline-video` links videos
+  instead of inlining them. The skill offers to publish the gallery as a
+  private page only when the session can and only on your yes.
+- **Workflow `/socialforge:month-copy-preview`**, **`docs/ALWAYS-ON-RECIPES.md`**
+  (monthly gallery build and weekly ingest for six schedulers, each with its
+  approval boundary), **`evals/`** (8 trigger cases plus a stay-quiet case),
+  directory listing fields, `PRIVACY.md` (every network endpoint and the
+  credential it needs) and `assets/icon.png`; root `plugin.json` gains
+  `extensions["com.openai"].interface`.
+
+**Fixed — claims the code did not keep**
+
+- **The approved last video frame never reached the video model.** The docs
+  said it did; the chain always passed `None`. `generate_video.py
+  --last-image` now sends it to the WaveSpeed rung as `end_image` (WaveSpeed's
+  documented end-frame input), `--provider auto` tries that rung first when a
+  last frame is supplied, and a clip made by any other rung says
+  `last_frame_used: false`. A missing `--last-image` or `--image` path is an
+  error; a missing first frame used to fall through to text-to-video silently.
+- **Image references were dropped silently.** Fallback providers never
+  received them, missing paths were skipped, references past the cap of 14
+  vanished, and `references_used` echoed the paths passed. Results now report
+  what was read and sent, `references_missing`, `references_over_limit`, and
+  `references_dropped` with a note when a fallback made the image.
+- **Re-ingesting an analytics export double-counted every row.** Each source
+  now records a sha256 (identical bytes are a no-op, `already_ingested`), rows
+  carry their source label, and `--replace` swaps a cumulative export's
+  snapshot under one constant label.
+- **Platform limits had no sources.** They now live in
+  `scripts/platform_limits.json` with a source, a check date and a status per
+  platform (`adapt_copy.py --sources`). Pinterest descriptions 500 → 800 and
+  Threads hashtags 3 → 1 per the platforms' own pages; Instagram hashtags
+  30 → 5 per Instagram's official @creators announcement (December 2025);
+  Instagram's caption, Facebook and TikTok limits stay marked unsourced.
+- **X was measured with `len()`.** It now uses X's weighted count (URLs 23,
+  CJK and emoji 2, after NFC, per twitter-text v3).
+- **Hashtags past a platform's cap were dropped silently**: every result now
+  lists `hashtags_dropped`.
+- A reference doc said the adapter inserts AI-disclosure labels and the agent
+  said `compliance_check.py` inserts disclaimers; neither code does. Both now
+  say what actually happens.
+- **Vendor neutrality**: model names and dollar figures were in nine skill,
+  agent and command files the guard never scanned (it matched install
+  commands only). The guard now scans all of `skills/`, `agents/` and
+  `commands/`; every leak is rewritten to capability aliases and live quotes.
+  Manifests no longer name models, and a new guard checks every count in
+  every manifest (`plugin.yaml` had said "16 skills" for several releases).
+
+**Changed — context cost**
+
+- **7 commands folded into their same-named skills** (`adapt-copy`,
+  `assemble-document`, `index-assets`, `match-assets`, `parse-calendar`,
+  `render-carousels`, `setup`); command-only instructions moved into
+  supplement files and every slash name works as before.
+
 ## [1.26.0] - 2026-10-04
 
 ### The seven-week freshness pass

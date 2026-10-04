@@ -1,0 +1,162 @@
+{
+  "_about": "Per-platform copy limits for scripts/adapt_copy.py. Each platform's `limits` object is what the script reads, key for key; everything else here is provenance for people. Edit a number in `limits` and the script uses it on the next run. `python scripts/adapt_copy.py --sources` prints the provenance.",
+  "_data_origin": "The limits were SocialForge's own working values, hard-coded in adapt_copy.py with no source or check date. On 2026-10-04 each was compared against the platform's own documentation where a readable page could be found; the values that a readable primary page contradicted were changed to the page's number (Pinterest description, Instagram hashtags, Threads topic tags) and everything else was kept and labelled.",
+  "_checked_means": "`checked` is the date the entry was last compared against `source`. When `source` is \"SocialForge data, unsourced\", it is the date a check was attempted and no readable primary page was found. It does not mean the numbers were confirmed.",
+  "_fields": {
+    "limits.char_limit": "Hard limit for the post text. Measured with Python len() (code points) unless `count_method` says otherwise; see references/platform-specs.md for where platforms count differently.",
+    "limits.count_method": "How the length is counted when it is not plain len(). `x_weighted` is X's weighted count (twitter-text v3: most characters 1, emoji and CJK 2, every URL 23), from the `counting.x_weighted` block below.",
+    "limits.fold_at": "Characters assumed visible before a 'see more' fold. Only used to fill `hook_visible` in the output.",
+    "limits.optimal_limit": "If present, the script cuts copy to this instead of char_limit. A working preference, not a platform rule. Delete the key to cut at char_limit.",
+    "limits.hashtag_limit": "How many of the hashtags you pass are kept. The rest are not silently lost: they come back in `hashtags_dropped`. Treat it as a working cap unless an entry's `confirmed` list names it.",
+    "limits.hashtag_placement": "Where hashtags go: `first_comment` (Instagram), `tag_facets` (Bluesky), otherwise inline at the end of the post.",
+    "limits.link": "`direct` = a pasted URL is a working link. `bio` = captions do not carry a clickable link, so the CTA routes to the profile link or a comment keyword.",
+    "confirmed": "limits keys whose value matches what a primary page says (`source`, or the `also_read` entry carrying that key).",
+    "differs": "limits keys where the primary page says something else. The value is kept and the difference is explained in `notes`.",
+    "unsourced": "limits keys with no readable primary source. They are SocialForge's working values.",
+    "also_read": "Further primary pages that were read for this platform: `url`, `checked`, what the page `says`, and optionally the limits `key` it bears on.",
+    "counting": "The recorded counting rules the script applies for `count_method` values, with the field names of the primary configuration so a diff against it is easy."
+  },
+  "counting": {
+    "x_weighted": {
+      "source": "https://raw.githubusercontent.com/twitter/twitter-text/master/config/v3.json",
+      "checked": "2026-10-04",
+      "config": {
+        "version": 3,
+        "maxWeightedTweetLength": 280,
+        "scale": 100,
+        "defaultWeight": 200,
+        "emojiParsingEnabled": true,
+        "transformedURLLength": 23,
+        "ranges": [
+          {"start": 0, "end": 4351, "weight": 100},
+          {"start": 8192, "end": 8205, "weight": 100},
+          {"start": 8208, "end": 8223, "weight": 100},
+          {"start": 8242, "end": 8247, "weight": 100}
+        ]
+      },
+      "how_this_script_applies_it": "A code point inside any range weighs range.weight/scale (1), every other code point weighs defaultWeight/scale (2); every URL that starts with http://, https:// or www. weighs transformedURLLength (23) however long it is. The text is normalised to NFC first, as X's docs say X does. Not done, on purpose: emoji parsing (an emoji sequence such as a ZWJ family is weighed code point by code point, so it counts MORE than X's 2, the safe direction). Domains written without http://, https:// or www. are counted as plain text although X turns them into links, so a long bare domain counts LOW here."
+    }
+  },
+  "platforms": {
+    "linkedin": {
+      "limits": {"char_limit": 3000, "fold_at": 140, "hashtag_limit": 5, "link": "direct"},
+      "source": "https://www.linkedin.com/help/linkedin/answer/a528176",
+      "checked": "2026-10-04",
+      "confirmed": ["char_limit"],
+      "differs": [],
+      "unsourced": ["fold_at", "hashtag_limit", "link"],
+      "also_read": [],
+      "notes": "The help page says: \"The character limit for a post is 3,000 characters.\" It says nothing about hashtags or a 'see more' cut-off. fold_at 140 and hashtag_limit 5 are SocialForge working values with no source."
+    },
+    "instagram": {
+      "limits": {"char_limit": 2200, "hashtag_limit": 5, "hashtag_placement": "first_comment", "link": "bio"},
+      "source": "SocialForge data, unsourced",
+      "checked": "2026-10-04",
+      "confirmed": ["hashtag_limit"],
+      "differs": [],
+      "unsourced": ["char_limit", "hashtag_placement", "link"],
+      "also_read": [
+        {
+          "url": "https://www.threads.com/@creators/post/DSalXGPCWM4",
+          "checked": "2026-10-04",
+          "key": "hashtag_limit",
+          "says": "Post by Instagram's verified @creators account on Threads, dated 2025-12-18: \"New hashtag guidance: Starting today, Instagram will allow up to 5 hashtags in a reel or post.\" It is an announcement post, not a Help Center page."
+        }
+      ],
+      "notes": "hashtag_limit was 30 in SocialForge's data and is now 5, the number in the @creators post above. Instagram's Help Center page (help.instagram.com/351460621611097) could not be read on 2026-10-04 (it rendered blank, then timed out), and a search-engine excerpt of it still says 30; that may be stale, so the newer, readable statement wins and 5 is also the safe floor. Third-party articles say the rollout is gradual. Instagram's Content Publishing API page (developers.facebook.com/docs/instagram-platform/content-publishing/) states no caption or hashtag limit, so the 2,200 caption limit has no readable primary source. hashtag_placement and link are SocialForge design choices."
+    },
+    "x": {
+      "limits": {"char_limit": 280, "count_method": "x_weighted", "hashtag_limit": 2, "link": "direct"},
+      "source": "https://docs.x.com/fundamentals/counting-characters",
+      "checked": "2026-10-04",
+      "confirmed": ["char_limit", "count_method"],
+      "differs": [],
+      "unsourced": ["hashtag_limit", "link"],
+      "also_read": [
+        {
+          "url": "https://raw.githubusercontent.com/twitter/twitter-text/master/config/v3.json",
+          "checked": "2026-10-04",
+          "key": "count_method",
+          "says": "maxWeightedTweetLength 280, scale 100, defaultWeight 200, transformedURLLength 23, emojiParsingEnabled true, and four weight-100 ranges: 0-4351, 8192-8205, 8208-8223, 8242-8247. Everything outside those ranges weighs 200, i.e. 2."
+        },
+        {
+          "url": "https://raw.githubusercontent.com/twitter/twitter-text/master/js/src/parseTweet.js",
+          "checked": "2026-10-04",
+          "says": "The reference counter: normalises to NFC, adds transformedURLLength*scale for each extracted URL and skips it, adds defaultWeight for each parsed emoji, weighs every other character by range, then divides by scale."
+        },
+        {
+          "url": "https://raw.githubusercontent.com/twitter/twitter-text/master/js/src/extractUrlsWithIndices.js",
+          "checked": "2026-10-04",
+          "says": "extractUrlsWithoutProtocol is on by default, so a bare domain with a valid ASCII domain is extracted as a URL too; URLs with a protocol are always extracted."
+        }
+      ],
+      "notes": "The docs say posts can contain up to 280 characters, that all URLs count as 23 characters whatever their length, that all emojis count as 2, that Latin and punctuation count 1 while CJK and other Unicode count 2, and that length is calculated after NFC normalisation. The script applies the twitter-text v3 weights recorded in `counting.x_weighted` (see how_this_script_applies_it for the one deliberate simplification and the bare-domain gap). The docs' weight table lists \"Other Unicode\" at 2 (default), but the twitter-text config the script applies gives weight 1 to every code point up to U+10FF (Cyrillic, Greek, Hebrew, Arabic, Devanagari and Thai are all inside that) and 2 above it outside the listed punctuation ranges. The script follows the config, which is the code X's own libraries run; if X's server weighs a script between U+0100 and U+10FF differently, this undercounts it. hashtag_limit 2 is a working cap, not an X rule."
+    },
+    "facebook": {
+      "limits": {"char_limit": 63206, "optimal_limit": 500, "hashtag_limit": 3, "link": "direct"},
+      "source": "SocialForge data, unsourced",
+      "checked": "2026-10-04",
+      "confirmed": [],
+      "differs": [],
+      "unsourced": ["char_limit", "optimal_limit", "hashtag_limit", "link"],
+      "also_read": [],
+      "notes": "63206 is widely quoted but no Meta page stating it was found (a search of Meta's developer and help domains on 2026-10-04 returned none). optimal_limit 500 is SocialForge's own truncation target, so the script cuts Facebook copy at 500 even though char_limit is far higher. Delete optimal_limit to cut at char_limit instead."
+    },
+    "youtube": {
+      "limits": {"char_limit": 5000, "hashtag_limit": 5, "link": "direct"},
+      "source": "https://support.google.com/youtube/answer/57407",
+      "checked": "2026-10-04",
+      "confirmed": ["char_limit"],
+      "differs": [],
+      "unsourced": ["hashtag_limit", "link"],
+      "also_read": [
+        {
+          "url": "https://support.google.com/youtube/answer/6390658",
+          "checked": "2026-10-04",
+          "says": "\"up to three hashtags that are considered most engaging will appear by your video title.\" and \"If a video or playlist has more than 60 hashtags, we'll ignore each hashtag on that content.\""
+        }
+      ],
+      "notes": "The help page says: \"Video descriptions have a character limit of 5,000 characters and cannot include invalid characters.\" hashtag_limit 5 is a working cap well under YouTube's own ceiling: the hashtag page says more than 60 hashtags get all of them ignored (SocialForge's earlier docs said 15, which no page supports)."
+    },
+    "tiktok": {
+      "limits": {"char_limit": 2200, "hashtag_limit": 10, "link": "bio"},
+      "source": "SocialForge data, unsourced",
+      "checked": "2026-10-04",
+      "confirmed": [],
+      "differs": [],
+      "unsourced": ["char_limit", "hashtag_limit", "link"],
+      "also_read": [],
+      "notes": "No TikTok primary page could be read on 2026-10-04: tiktok.com/discover/tiktok-caption-limit returned an unrelated notice, and the Content Posting API reference pages on developers.tiktok.com returned HTTP 503 on two tries. Third-party pages found by search report 2,200 and, more recently, 4,000 characters; that is unconfirmed here. 2,200 is kept as the conservative working cap, because copy that fits it fits under either number. hashtag_limit 10 is SocialForge's own cap, not a TikTok rule."
+    },
+    "pinterest": {
+      "limits": {"char_limit": 800, "hashtag_limit": 20, "link": "direct"},
+      "source": "https://help.pinterest.com/en/article/review-pin-specs",
+      "checked": "2026-10-04",
+      "confirmed": ["char_limit"],
+      "differs": [],
+      "unsourced": ["hashtag_limit", "link"],
+      "also_read": [],
+      "notes": "char_limit was 500 in SocialForge's data and is now 800: the page's Image Pins and Video Pins sections both say \"Enter up to 800 characters.\" for the description (and \"100 characters max\" for the title). The page does not mention hashtags, so hashtag_limit 20 is a working cap."
+    },
+    "threads": {
+      "limits": {"char_limit": 500, "hashtag_limit": 1, "link": "direct"},
+      "source": "https://developers.facebook.com/docs/threads/posts/",
+      "checked": "2026-10-04",
+      "confirmed": ["char_limit", "hashtag_limit"],
+      "differs": [],
+      "unsourced": ["link"],
+      "also_read": [],
+      "notes": "The Threads API page says: \"Text posts are limited to 500 characters.\" and \"Emojis are counted as the number of UTF-8 bytes.\" (the script counts an emoji as 1, so it undercounts emoji on Threads; not yet implemented). hashtag_limit was 3 and is now 1: the page's topic-tag section says \"Only one topic tag is allowed per post, so the first valid tag included in a post of any type ... via the API is treated as the tag for that post.\" Threads calls them topic tags (1 to 50 characters). The page also limits a post to 5 links. These were read on 2026-10-04 through a page-text extractor, not raw HTML."
+    },
+    "bluesky": {
+      "limits": {"char_limit": 300, "hashtag_limit": 2, "hashtag_placement": "tag_facets", "link": "direct"},
+      "source": "https://raw.githubusercontent.com/bluesky-social/atproto/main/lexicons/app/bsky/feed/post.json",
+      "checked": "2026-10-04",
+      "confirmed": ["char_limit"],
+      "differs": [],
+      "unsourced": ["hashtag_limit", "hashtag_placement", "link"],
+      "also_read": [],
+      "notes": "The post record's text field has maxLength 3000 and maxGraphemes 300, so 300 graphemes is the real limit. The script counts code points, which can overcount an emoji sequence or combining marks (the safe direction). The record's tags array allows at most 8 items; hashtag_limit 2 is a working cap."
+    }
+  }
+}

@@ -18,8 +18,8 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 
 Configures two services that SocialForge needs for creative production:
 
-1. **Google Cloud Vertex AI** (required for images) — Nano Banana 2 (Gemini 3.1 Flash Image) + Nano Banana Pro (Gemini 3 Pro Image)
-2. **WaveSpeed** (required for video) — Kling v3.0 Pro for image-to-video
+1. **Google Cloud Vertex AI** (required for images) — the image models, resolved at run time from the registry aliases `latest-image-balanced-google` and `latest-image-google`
+2. **WaveSpeed** (required for video) — image-to-video, resolved from the registry alias `latest-video-wavespeed`
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ Run this first — installs all required Python packages:
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py"
 ```
 
-This auto-installs: google-genai (Vertex AI), wavespeed (Kling video), Pillow (compositing), imageio-ffmpeg (video post-processing), playwright (carousels).
+This auto-installs: google-genai (Vertex AI), wavespeed (video), Pillow (compositing), imageio-ffmpeg (video post-processing), playwright (carousels).
 
 If any package fails, show the manual install command and continue.
 
@@ -76,13 +76,13 @@ Show the result. If success:
 Image generation configured.
   Project: <project_id>
   Service Account: <email>
-  Models available: gemini-3.1-flash-image (Nano Banana 2), gemini-3-pro-image (Nano Banana Pro)
+  Models: resolved at run time from the registry (aliases latest-image-balanced-google, latest-image-google)
 ```
 
 ### Step 2: Video Generation (WaveSpeed)
 
 ```
-Video Generation Setup (WaveSpeed / Kling v3.0)
+Video Generation Setup (WaveSpeed)
 
 Do you have a WaveSpeed API key?
   Paste the key here
@@ -98,7 +98,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed --
 Show the result. If success:
 ```
 Video generation configured.
-  Provider: WaveSpeed (Kling v3.0 Pro)
+  Provider: WaveSpeed (alias latest-video-wavespeed)
   Models: image-to-video, text-to-video (3-15 seconds)
 ```
 
@@ -126,14 +126,14 @@ SocialForge API Setup Complete
   Image Generation: [configured / not configured]
     Provider: Google Cloud Vertex AI
     Project: <project_id>
-    Models: Nano Banana 2 (Gemini 3.1 Flash Image), Nano Banana Pro (Gemini 3 Pro Image)
+    Models: registry aliases latest-image-balanced-google, latest-image-google
 
   Video Generation: [configured / not configured]
-    Provider: WaveSpeed (Kling v3.0 Pro)
+    Provider: WaveSpeed (alias latest-video-wavespeed)
     Modes: image-to-video, text-to-video
 
   HiggsField: [configured / skipped]
-    Provider: HiggsField (Soul v2 + Kling v2.1, fallback)
+    Provider: HiggsField (fallback)
 
   Credentials stored persistently. No further setup needed.
 
@@ -207,9 +207,9 @@ Share the downloaded JSON file with your team via:
 
 NEVER commit this file to Git. NEVER share it publicly.
 
-**Cost:** this skill does not state a price. Per-image cost depends on model and resolution and changes without notice, so quoting one here would be a number nobody looked up. Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py --action check --model <model> --provider <provider>`; it returns a recorded price or refuses with the vendor's own pricing URL. All costs go to the admin's billing account.
+**Cost:** this skill does not state a price. Per-image cost depends on model and resolution and changes without notice, so quoting one here would be a number nobody looked up. Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py --action lookup --model <model> --provider <provider>`; it returns a recorded price or refuses with the vendor's own pricing URL. All costs go to the admin's billing account.
 
-### WaveSpeed (Kling v3.0 — Video Generation)
+### WaveSpeed (Video Generation)
 
 #### Step 1: Create a WaveSpeed Account
 1. Open https://wavespeed.ai

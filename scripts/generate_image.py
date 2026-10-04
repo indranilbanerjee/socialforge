@@ -129,6 +129,28 @@ def create_client():
         return None, None, "No credentials. Run /socialforge:setup or set GOOGLE_CLOUD_PROJECT."
 
 
+MAX_REFERENCES = 14  # the primary provider's per-request reference limit
+
+
+def _flag_dropped_references(result, reference_images):
+    """A fallback rung received the prompt only. Say so on the result.
+
+    The WaveSpeed and HiggsField rungs have no reference-image input, so when
+    one of them produced the image, the references the caller supplied never
+    reached any model. Returning that image bare let a reference-less picture
+    pass as a style-referenced one.
+    """
+    if reference_images:
+        result["references_used"] = 0
+        result["references_dropped"] = len(reference_images)
+        result["references_note"] = (
+            "the fallback provider received the prompt only, so the supplied "
+            "reference images were not used — this is not a style-referenced "
+            "image. Fix the primary provider's credentials and regenerate if "
+            "the references matter.")
+    return result
+
+
 def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1", model=DEFAULT_MODEL):
     """Generate an image via the provider chain: Gemini -> WaveSpeed -> HiggsField.
 
@@ -136,6 +158,11 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
     chain reports what was tried and what to do next, never a bare failure.
     A missing Gemini credential no longer aborts the chain: a user with only
     a fallback provider's key still generates.
+
+    References are never dropped quietly. `references_used` counts the files
+    actually read and sent; paths that do not exist are listed in
+    `references_missing`; and an image made by a fallback rung (which takes no
+    references) says `references_used: 0` plus `references_dropped` and a note.
     """
     from provider_failures import record, failure_payload
     attempts = []
@@ -152,14 +179,18 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
 
             # Build content parts (+ reference images for style-guided generation)
             contents = []
+            refs_sent = 0
+            refs_missing = []
             if reference_images:
-                for ref_path in reference_images[:14]:
+                for ref_path in reference_images[:MAX_REFERENCES]:
                     ref_file = Path(ref_path)
                     if not ref_file.exists():
+                        refs_missing.append(str(ref_path))
                         continue
                     img_bytes = ref_file.read_bytes()
                     mime = "image/jpeg" if ref_file.suffix.lower() in (".jpg", ".jpeg") else "image/png"
                     contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime))
+                    refs_sent += 1
             contents.append(prompt)
 
             config = types.GenerateContentConfig(
@@ -186,14 +217,20 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
                     image_saved = True
                     break
             if image_saved:
-                return {
+                result = {
                     "status": "success",
                     "provider": f"gemini-{backend}",
                     "model": model,
                     "output": str(output_path),
                     "aspect_ratio": aspect_ratio,
-                    "references_used": len(reference_images) if reference_images else 0,
+                    # Files actually read and sent — not how many paths were passed.
+                    "references_used": refs_sent,
                 }
+                if refs_missing:
+                    result["references_missing"] = refs_missing
+                if reference_images and len(reference_images) > MAX_REFERENCES:
+                    result["references_over_limit"] = len(reference_images) - MAX_REFERENCES
+                return result
 
             text_resp = "".join(part.text for part in response.parts if part.text)
             record(attempts, f"gemini-{backend}", "response", "bad-response",
@@ -209,12 +246,12 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
     if ws_result:
         ws_result["fallback_from"] = "vertex-ai"
         ws_result["earlier_attempts"] = attempts
-        return ws_result
+        return _flag_dropped_references(ws_result, reference_images)
     hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio, attempts=attempts)
     if hf_result:
         hf_result["fallback_from"] = "vertex-ai+wavespeed"
         hf_result["earlier_attempts"] = attempts
-        return hf_result
+        return _flag_dropped_references(hf_result, reference_images)
     return failure_payload(attempts, context="image generation")
 
 

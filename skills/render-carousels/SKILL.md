@@ -48,6 +48,8 @@ Pass the key to `render_carousel.py --template` (argparse rejects anything outsi
 ## Scripts Used
 - render_carousel.py — Playwright HTML→PNG rendering
 
+Prerequisites (calendar, Playwright, brand colors/fonts) and the exact files a render writes: read [prerequisites-and-output.md](prerequisites-and-output.md) when a render fails before the first slide or the user asks what was produced.
+
 ## Timeout & Fallback
 - Per-slide render: 15-second timeout. If Playwright hangs, retry without custom fonts.
 - Full carousel: 3-minute timeout for 10 slides.

@@ -17,8 +17,9 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 ## Prerequisites
 
 - Credentials must be configured via `/socialforge:setup`:
-  - **Vertex AI** (Nano Banana Pro / Gemini 3 Pro Image, resolved via `latest-image-google`) — used for first-frame and last-frame keyframe generation
-  - **WaveSpeed API** — used for image-to-video generation via Kling v3.0 Pro
+  - **Vertex AI** (registry alias `latest-image-google`) — used for first-frame and last-frame keyframe generation
+  - **WaveSpeed API** (registry alias `latest-video-wavespeed`) — used for image-to-video generation
+- Models are never named in this skill: each alias above is resolved to a current model id when the script runs. To see what they resolve to today, run `python scripts/generate_video.py --list-models` (video) or `python scripts/resolve_model.py --aliases` (every alias).
 - Brand profile must be active (`/socialforge:switch-brand` if needed)
 - Calendar must be parsed (`/socialforge:parse-calendar`) with video posts identified
 
@@ -56,23 +57,23 @@ pass supplies the craft, under four rules the scaffold carries with it:
 
 The user approves the filled script before any generation spend.
 
-### Stage 2: First Frame Generation (Vertex AI / Nano Banana Pro)
+### Stage 2: First Frame Generation (Vertex AI, `latest-image-google`)
 
 Generate **2 first-frame options** based on the chosen concept. These set the opening visual and establish the look and feel.
 
 - Images are shown **inline** in the terminal for immediate review
 - User selects one or requests a regeneration with adjusted direction
 
-### Stage 3: Last Frame Generation (Vertex AI / Nano Banana Pro)
+### Stage 3: Last Frame Generation (Vertex AI, `latest-image-google`)
 
 Generate **2 last-frame options** that complete the visual narrative arc, matching the approved first frame.
 
 - Images are shown **inline** in the terminal for immediate review
 - User selects one or requests a regeneration with adjusted direction
 
-### Stage 4: Video Generation (WaveSpeed / Kling v3.0 Pro)
+### Stage 4: Video Generation (WaveSpeed, `latest-video-wavespeed`)
 
-Using the approved first and last frames, generate **2 video versions** via WaveSpeed's Kling v3.0 Pro image-to-video endpoint (3-15 seconds).
+Using the approved first and last frames, generate **2 video versions** through `generate_video.py --generate-video --image <first-frame> --last-image <last-frame>` (the WaveSpeed image-to-video endpoint, 3-15 seconds). The first frame goes to every provider in the chain; the last frame goes to the `kling` rung only, as the clip's end image. After each run, read `video.last_frame_used` before presenting a clip as landing on the approved last frame — see "Keyframe and reference inputs" below.
 
 - A **video gallery is opened in the browser** for side-by-side comparison
 - User selects the final version or requests a regeneration
@@ -82,7 +83,7 @@ Using the approved first and last frames, generate **2 video versions** via Wave
 After the user picks the final video, post-processing runs before saving:
 - **Logo watermark** is automatically added to the video via video_postprocess.py
 - **Subtitles:** User is asked whether to burn subtitles into the video (optional). SRT was already generated from the script and is saved separately regardless.
-- **Background music:** If the video has no audio (sound=False in Kling config), user is asked whether to add background music (optional).
+- **Background music:** If the video has no audio (sound=False in the clip request), user is asked whether to add background music (optional).
 - **Platform resize:** Video is automatically resized for each target platform (letterbox/pillarbox with black padding, no stretching)
 
 Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video versions in `versions/`, platform-resized final videos in `final/`:
@@ -90,6 +91,18 @@ Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video ve
 - **Script** — timestamped narration/dialogue
 - **Storyboard** — shot-by-shot visual breakdown with keyframe references
 - **SRT subtitle file** (.srt) — for captioned playback
+
+## Keyframe and reference inputs — what `generate_video.py` implements
+
+Read from `scripts/generate_video.py`. Do not tell the user the video does more than this.
+
+| Input | Flag | What is true today |
+|---|---|---|
+| First frame (image-to-video) | `--image <path>` | Passed to every provider in the chain. The `kling` rung **requires** it — without one, and once its credential check has passed, that rung records `bad-input` and the chain moves on to a text-to-video rung. The `veo` and `higgsfield` rungs treat it as optional and run text-to-video when it is absent. Use a PNG or JPEG: file type is set from the extension (Veo) or always sent as PNG (the `higgsfield` rung). |
+| Last frame | `--last-image <path>` (requires `--generate-video`) | Sent to the `kling` rung as the clip's end image (the WaveSpeed image-to-video API's `end_image`, documented there as the end frame for guided transitions), so the clip is guided toward it. **Only that rung takes one:** the `veo` and `higgsfield` rungs have no end-frame input. A clip made by either of them (because `--provider` named one of them, or because `kling` had no key or failed and the chain fell through) carries `last_frame_used: false` and a `last_frame_note`; it was **not** steered to the approved last frame. A `--last-image` path that does not exist is an input error (exit 1), never dropped quietly. Use a PNG or JPEG. |
+| Reference images for video | none | Not implemented. |
+
+Practical consequence: Stage 3's approved last frame is a real model input on the `kling` rung only. Under `--provider auto`, a supplied `--last-image` makes the chain try `kling` first (without one, auto sends clips of 8 seconds or less to `veo` whenever Google credentials exist, and `veo` cannot take an end frame). Passing `--provider kling` says the same thing explicitly; an explicit `--provider veo` or `higgsfield` still wins and leaves the frame unused. Then read `video.last_frame_used` in the result. `true` means the end image was sent. `false` means it was not, and `last_frame_note` says which rung made the clip: tell the user, put the intended ending into the motion prompt in words, and do not describe the clip as landing on the approved frame. Even when it was sent, the model is *guided toward* the frame rather than guaranteed to reach it — look at the clip's final seconds before the user approves it.
 
 ## Output Per Video Post
 
@@ -100,7 +113,7 @@ Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video ve
 | Thumbnail | PNG/WebP (via compose-creative) | Yes |
 | First frame | PNG | Yes (Stage 2) |
 | Last frame | PNG | Yes (Stage 3) |
-| AI Video Clip | MP4 via WaveSpeed / Kling v3.0 Pro (image-to-video, 3-15 seconds) | If pipeline completed |
+| AI Video Clip | MP4 via WaveSpeed (`latest-video-wavespeed`, image-to-video, 3-15 seconds) | If pipeline completed |
 | SRT subtitles | .srt | If video generated |
 
 ## Video Types
@@ -124,6 +137,6 @@ Save all final assets to `{post_folder}/` -- keyframes in `keyframes/`, video ve
 
 ## Timeout & Fallback
 
-- AI video generation (Stage 4): **300-second timeout** (Kling v3.0 Pro can take several minutes for high-quality output)
+- AI video generation (Stage 4): **300-second timeout** (the video model can take several minutes for high-quality output)
 - Keyframe generation (Stages 2-3): 60-second timeout per image
 - If video generation fails or times out, deliver script + storyboard + keyframes as fallback

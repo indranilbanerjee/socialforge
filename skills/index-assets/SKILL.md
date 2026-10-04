@@ -8,7 +8,7 @@ user-invocable: true
 
 # /socialforge:index-assets — Asset Indexer
 
-Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by Gemini Vision to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
+Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by a vision model (registry alias `latest-vision-google`) to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
 
 ## Context efficiency
 
@@ -18,7 +18,7 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 
 1. **Locate assets** — Read asset-source.json for the brand's photo library location
 2. **Scan files** — Find all .jpg, .jpeg, .png, .webp files in the source
-3. **AI analysis** — For each image, use Gemini Vision (the registry alias `latest-vision-google`) to generate:
+3. **AI analysis** — For each image, use the vision model (the registry alias `latest-vision-google`) to generate:
    - Natural language description of the image
    - Tags (categories, subjects, setting, mood)
    - Dominant colors detected
@@ -89,10 +89,17 @@ Would you like to:
 
 `/socialforge:index-assets [brand] --source <path> --refresh`
 
-`--source` is required even in refresh mode. Only re-analyzes new or modified images since last index. Compares file timestamps with `indexed_at` in asset-index.json.
+`--source` may be omitted on a refresh: the script reuses the source recorded by the previous index and stops only when none was recorded. Only re-analyzes new or modified images since last index. Compares file timestamps with `indexed_at` in asset-index.json.
+
+Where the index is written (including the fallback location when no plugin data directory is set) and how `--source` is resolved: read [storage-and-refresh.md](storage-and-refresh.md) when the user asks where the index lives or why a refresh behaved a given way.
 
 ## Cost Awareness
 
-Each image analysis costs approximately $0.002-0.005 (Gemini Vision). For a 50-image library, expect ~$0.10-0.25 total.
+Each image analysis is a billed call, and its rate depends on the vision model the alias resolves to today. This skill therefore states no price — it quotes one that was looked up:
 
-Show estimated cost before starting: "Indexing 47 images will cost approximately $0.12 in Gemini Vision API calls. Proceed?"
+1. Resolve the model id the alias points at: `python "${CLAUDE_PLUGIN_ROOT}/scripts/resolve_model.py" --alias latest-vision-google`
+2. Quote the run: `python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote --model "<resolved model id>" --provider vertex --units <number of images to analyze>` (on `--refresh`, count only the new or modified images)
+
+If `price_book.py` answers `unknown` or `stale`, follow `/socialforge:price-check`: read the provider's pricing page, record the rate with its source URL, then quote. If the vendor bills by token rather than per image, or no price can be quoted at all, say so and give the pricing URL — never an estimate and never a per-image figure converted from memory.
+
+Show the quoted total before starting ("Indexing {N} images will cost {total} at {rate} per image, priced {age_hours}h ago. Proceed?") and wait for an explicit yes. A quote is not approval.

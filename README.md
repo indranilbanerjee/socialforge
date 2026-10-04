@@ -4,21 +4,23 @@
 
 Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:review`. Asset-first compositing keeps brand photos pixel-faithful while AI generates the scene around them. Per-platform copy adaptation handles Instagram + TikTok + LinkedIn + Threads + X + Facebook + YouTube Shorts in one pass. C2PA signing happens before review. No more "AI enhanced our logo into something else" disasters.
 
-Open-source agency-grade social media production engine — **20 skills · 25 commands · 5 agents · 28 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
+Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 29 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.26.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.27.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-262%2F262%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1260)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1260)
+[![Tests](https://img.shields.io/badge/tests-438%2F438%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1270)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1270)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.26.0 (October 4, 2026): the seven-week freshness pass.** **SocialForge was missing from Cowork's marketplace view** ([#3](https://github.com/indranilbanerjee/socialforge/issues/3)) — the one structural thing it had that the visible suite plugins didn't was a malformed plugin-root `settings.json` (`{"agent": {"model": "inherit"}}` where Claude Code expects an agent *name*), left over from v0.1.0. Removed and guarded. **Codex installs were silently broken** (the shared marketplace's source shorthand made Codex list zero plugins) — fixed, verified on a live Codex install, and the README command corrected to `codex plugin add socialforge@neels-plugins`. **Video and image models re-verified:** Google shut down `gemini-2.5-flash-image` on Oct 2 and Imagen 4 on Aug 17, and every Veo 3.1 *preview* id shuts down Oct 22 — the registry now marks all three and points `latest-video-google` at the GA-format Veo id, with the three-rung chain falling forward if it 404s. **EU AI labels:** the Commission's three icons and the first-exposure / survives-resharing rules, mapped to SocialForge's creative modes (Article 50 enforced since Aug 2). 20 skills, 262 tests. Previously — **v1.25.1 (August 17, 2026): schema-clean hooks manifest.** The `_readme` rationale field in `hooks/hooks.json` failed Cowork's plugin validation ([digital-marketing-pro#9](https://github.com/indranilbanerjee/digital-marketing-pro/issues/9)); the rationale now lives in `hooks/README.md`, the manifest is exactly `{"hooks": {}}`, and a guard pins it. 20 skills, 260 tests. Previously — **v1.25.0 (August 17, 2026): Grok (xAI Build CLI) becomes the ninth native platform.** A first-class `.grok-plugin/` manifest pair — `plugin.json` with the `"skills"` pointer Grok's loader reads, plus a single-plugin `marketplace.json` — makes `grok plugin install indranilbanerjee/socialforge` work directly ([Grok Build](https://docs.x.ai/build/features/skills-plugins-marketplaces) also reads the Claude Code manifests for compatibility; the native pair is what an official xAI marketplace listing points at). Both files are version-locked into the release-consistency suite, and Grok joins every platform-name guard. 20 skills, 258 tests. Previously — **v1.24.2 (August 16, 2026): the documentation truth pass.** A from-zero audit found the doc-count guard pattern-blind: the README quoted "25 scripts" against 28 shipped and "All 16 SKILL.md files" against 20 skills, and AGENTS.md — the file every non-Claude runtime auto-loads — pinned v1.13.1, eleven releases stale. Every number is now re-derived from the filesystem and the guard grew the exact patterns that escaped it (script counts, SKILL.md-file counts, SocialForge-qualified counts, AGENTS.md currency), each plant-checked against the phrasing it previously missed. 20 skills, 256 tests. Previously — **v1.24.1 (August 16, 2026): richer Agent Plugins listing metadata + the directory submission bundle** (docs/distribution/). And — **v1.24.0: the month-delivery audit — “the tracker says FINAL” is now checked against the disk.** New `scripts/delivery_audit.py` re-derives a month's delivery claims before `/finalize-month` packages anything: every status in the vocabulary, revision history landing on the recorded status, no ghost posts the calendar never knew, **every `force_finalized` post surfaced as a violation** (a bypassed gate is a decision the delivery reader must see, not a flag buried in JSON), every FINAL post's referenced file existing and non-empty (the empty-rectangle lesson), the failure log loadable, and cost totals honest about incompleteness. Exit 1 means the delivery claims something the disk does not support — resolve the finding, never package around it. The verdict lands in `delivery-audit.json` beside the tracker. 20 skills, 253 tests. Previously — **Just shipped — v1.23.0 (August 16, 2026): SocialForge travels in Agent Plugins 1.0.** OpenAI's vendor-neutral plugin standard (announced Aug 6; adopted by ChatGPT, Codex, Cursor, GitHub Copilot, VS Code, Kiro) reads a root `plugin.json` on a closed schema and defines `${PLUGIN_DATA}` as the persistent-data name. Shipped: the root manifest, version-synced and test-guarded, and `${PLUGIN_DATA}` accepted across all 20 scripts that read a data directory — a compliant non-Claude host previously resolved none at all. 20 skills, 243 tests. Previously — **Just shipped — v1.22.0 (August 15, 2026): "nothing fails silently" held where the plugin thought about it, and broke at the seams.** A full-pipeline run with no image or video credentials found all of it. **`render_preview.py` returned `{"status": "success"}` for an image that did not exist** — exit 0, and a real 600×800 PNG that was blank white, because the missing path became a `file://` URI and the browser rendered a broken image as nothing. A reviewer approving that gallery was approving an empty rectangle. It now refuses and writes no file; `--allow-missing-image` gives a copy-layout preview marked `placeholder`, never `success`. **`generate_image.py` exited 0 after every provider failed** — the failure record was perfect and the exit code said pass, so any `&&` chain read total failure as success while `price_book.py` exits 3 in the same situation. Now 0/4/1. **The failure record was never written to disk** — built, returned, printed, gone; it now appends to `shared/failure-log.jsonl`. **The cost report crashed in exactly the case it was for**: summing an unpriced entry raised `TypeError`, and unpriced entries are what a run without credentials produces — now counted, surfaced, and every total labelled a LOWER BOUND, because unpriced is not free. **And the setup skill quoted six prices from memory** against the plugin's own rule; removed and routed to `price_book.py`, with a guard test on any dollar figure. 20 skills, 237 tests. Previously — **Just shipped — v1.21.0 (August 14, 2026): significance markers stay out of captions.** The suite's long-form plugins gained a deterministic AI-tell scan; SocialForge deliberately did not, and now says so in writing. What arrives instead is the rule itself, at the point the caption is written: the copy-adapter never writes a line whose only job is to announce that the next line matters — "here's the thing", "here's the kicker", "that's the part that got me", "let that sink in" — because they read as machine-written to anyone who has scrolled a feed this year, and on a 280-character platform they spend the budget the point needs. Lead with the specific instead ("Approvals went from 14 days to 31" beats "Here's the thing about approval timelines"), and cap stacked soft adverbs at one per caption. **No scanner was added, on purpose:** caption-length copy has no document structure to measure and per-1000-word metrics are noise at 280 characters — a test now pins that reasoning so the absence reads as a decision rather than a gap. 20 skills, 237 tests. Previously — **v1.19.0 (August 13): nothing fails silently anymore.** The provider layer's fallback chains now record every abandoned attempt — who was tried, at which stage it stopped, and what to do about it — instead of collapsing a missing key, a retired model, and a content-policy rejection into one bare failure. Video generation became a real three-rung chain (a Veo failure finally falls back; routing reads stored credentials, not just env vars; a live SDK bug that broke every Veo call was caught by the chain's own attempt records on first execution). An adversarial sweep of the untested surface fixed six defects proven live: the compliance gate failed OPEN on unknown severity words and crashed on one bad regex (now fail-closed with rule_errors), the approval ledger minted ghost posts and accepted `"FINAL "` as a new frozen status (now calendar-validated vocabulary + atomic writes), asset re-indexing minted duplicate ids, a corrupt credentials.json silently destroyed stored keys on the next setup, alias resolution handed retired model ids to SDKs, and the review gallery rendered client-supplied titles unescaped. Plus: `/socialforge:ingest-performance` — platform analytics exports become per-post records with sample floors and margin rules, so `/socialforge:ideate-month` compounds measured wins (and says "no clear wins" about a flat month) instead of remembered ones. 20 skills, 214 tests. Previously — **v1.15.0–v1.18.0 (August 11–12): live pricing + Article 50 + the creator-craft wave.** `price_book.py` (no stored prices, source-URL-required, 24h TTL) + `model_book.py` (capability kinds, live-discovery ladder), C2PA `ai-disclosure` default-on, TikTok/Threads/Bluesky image specs, `/ideate-month`, mechanism-aware CTAs, vendor-neutral research intake + guard, and video scripts rebuilt hook-first with compliance-before-credits. And — **v1.14.2 (July 30): registry re-points + the anonymity guard.** Previously — **v1.14.1 (July 29): the Line-by-Line Audit.** All 134 files — every skill, agent, command, script, reference and doc — read end-to-end by a 5-reader audit fleet and re-verified against July-2026 ground truth. ~180 fixes: retired model ids purged from script defaults and docs (gemini-3-pro-image-preview, gemini-2.5-flash-image), the **model registry finally caught up to July** (Claude 5 + GPT-5.6 families, 51→57 entries, aliases re-pointed), fictional carousel-template names and creative modes corrected repo-wide, preview HTML now escaped, credential files chmod 600, path/storage split-brain resolved to `${CLAUDE_PLUGIN_DATA}`, and the self-containment guard extended across the whole repo. 56 tests passing. [Full changelog →](CHANGELOG.md)
+> 🆕 **Just shipped — v1.27.0 (October 4, 2026): research in, scheduler out, and nothing fails silently.** **New `/socialforge:research-month`:** outlier posts against the account's own baseline, the words customers actually use in comments, and competitor ad themes, all from material you supply, feeding next month's plan. **Optional scheduler hand-off** after `finalize-month` (Postiz), only on your approval of the exact posts and times. **Claims the code didn't keep, fixed:** the approved last video frame now really reaches the video model; dropped image references, dropped hashtags and repeat analytics ingests are now reported or prevented instead of happening silently; platform limits carry a source and a check date (Pinterest 800, Threads 1 hashtag, Instagram 5 hashtags), and X is counted the way X counts. Plus content-credentials and conversational-commerce references, a publishable review gallery, always-on recipes, and directory listing fields.
+>
+> **v1.26.0 (October 4, 2026): the seven-week freshness pass.** SocialForge was missing from Cowork's marketplace view ([#3](https://github.com/indranilbanerjee/socialforge/issues/3)) — its malformed plugin-root `settings.json` is gone; Codex installs repaired; model registry re-verified.
 
 ```bash
 # Install in Claude Code:
@@ -37,7 +39,7 @@ grok plugin install indranilbanerjee/socialforge
 
 > If SocialForge saves your team time, [give it a star ⭐](https://github.com/indranilbanerjee/socialforge/stargazers) — it's the single thing that helps other agencies find it.
 
-**Status:** Production Ready · 20 skills · 25 commands · 5 agents · 28 scripts · an opt-in catalog of 10 HTTP connectors (zero auto-connected) · 0 global hooks
+**Status:** Production Ready · 21 skills · 18 commands · 5 agents · 29 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks
 
 Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery.
 
@@ -67,7 +69,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.26.0)
+## Supported surfaces (v1.27.0)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -77,22 +79,22 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | **Cursor 2.5+** | In any Cursor Agent chat: `/add-plugin socialforge@https://github.com/indranilbanerjee/socialforge` | `.cursor-plugin/plugin.json` (verified Cursor 2.5+ JSON Schema) | Full skills + agents + commands support |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add indranilbanerjee/neels-plugins` then `copilot plugin install socialforge@neels-plugins` | `.github/plugin/plugin.json` (Copilot also recognizes `.claude-plugin/plugin.json` as fallback) | Full skills + MCP support |
 | **Google Antigravity 2.0** CLI + IDE | `agy plugin install https://github.com/indranilbanerjee/socialforge` | `gemini-extension.json` (at repo root, per Google's reference pattern) | Full skills + hooks support |
-| **Hermes Agent** (Nous Research) — Desktop + CLI on macOS / Windows / Linux | `hermes plugins install indranilbanerjee/socialforge` | `plugin.yaml` + `__init__.py` at repo root (Hermes native spec) | Native plugin — adapter walks `skills/` at register time and exposes all 20 skills via `ctx.register_skill()`. Targets Hermes Desktop v0.15.2+ (public preview June 2 2026). |
+| **Hermes Agent** (Nous Research) — Desktop + CLI on macOS / Windows / Linux | `hermes plugins install indranilbanerjee/socialforge` | `plugin.yaml` + `__init__.py` at repo root (Hermes native spec) | Native plugin — adapter walks `skills/` at register time and exposes all 21 skills via `ctx.register_skill()`. Targets Hermes Desktop v0.15.2+ (public preview June 2 2026). |
 | **OpenClaw** (formerly Clawdbot / Moltbot) | `openclaw plugins install git:github.com/indranilbanerjee/socialforge` | `openclaw.plugin.json` at repo root (also auto-detects `.claude-plugin/plugin.json` as Claude-compatible bundle) | Native plugin via `openclaw.plugin.json`; `skills` field points at `./skills`. |
 | **Grok** (xAI Build CLI) | `grok plugin install indranilbanerjee/socialforge` — or `grok plugin marketplace add indranilbanerjee/neels-plugins` then `grok plugin install socialforge` (append `--trust` to skip the install confirmation) | `.grok-plugin/plugin.json` + `.grok-plugin/marketplace.json` ([Grok Build](https://docs.x.ai/build/features/skills-plugins-marketplaces) also reads the Claude Code manifests for compatibility; the native pair is the first-class lane) | Full skills support |
 
-**Why this works:** Agent Skills became an open standard in December 2025 (41+ agent products by June 2026). All 20 SKILL.md files in SocialForge are platform-portable as written.
+**Why this works:** Agent Skills became an open standard in December 2025 (41+ agent products by June 2026). All 21 SKILL.md files in SocialForge are platform-portable as written.
 
-**Works on 35+ additional Agent Skills platforms** without per-platform manifests — Goose (Block), OpenHands, OpenCode (sst), Junie (JetBrains), Gemini CLI, Roo Code, Cline/Windsurf, Kiro, Amp, Letta, Mux, Factory, Workshop, Tabnine, Mistral Vibe, and more. Point any Agent-Skills-compatible client at `https://github.com/indranilbanerjee/socialforge/tree/main/skills` and all 20 SocialForge skills are immediately discoverable.
+**Works on 35+ additional Agent Skills platforms** without per-platform manifests — Goose (Block), OpenHands, OpenCode (sst), Junie (JetBrains), Gemini CLI, Roo Code, Cline/Windsurf, Kiro, Amp, Letta, Mux, Factory, Workshop, Tabnine, Mistral Vibe, and more. Point any Agent-Skills-compatible client at `https://github.com/indranilbanerjee/socialforge/tree/main/skills` and all 21 SocialForge skills are immediately discoverable.
 
 ## Architecture
 
-- **20 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
-- **25 commands** — Monthly production, post generation, editing, review, approval, finalization
+- **21 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
+- **18 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **28 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
-- **An opt-in catalog of 10 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary (all Cowork-compatible)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1260) for the rationale.
+- **29 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
+- **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1270) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -123,8 +125,8 @@ After installing the plugin, run the setup command in Claude Code:
 
 This configures two external API services that power SocialForge’s image and video generation:
 
-1. **Google Cloud Vertex AI** — Used for AI image generation (Gemini Nano Banana 2 / Pro models)
-2. **WaveSpeed** — Used for AI video generation (Kling v3.0 Pro model)
+1. **Google Cloud Vertex AI** — Used for AI image generation (the current Google image model, resolved live through the `latest-image-google` alias)
+2. **WaveSpeed** — Used for AI video generation (the current Kling image-to-video model, resolved live through the `latest-video-wavespeed` alias)
 
 Your admin provides you with:
 - A **Google Cloud service account JSON key file** (for Vertex AI image generation)
@@ -172,7 +174,7 @@ rm -rf ~/.claude/plugins/cache/neels-plugins
 
 ### Installs in Cowork
 
-Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 28 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 10 connectors are all HTTP and fully Cowork-compatible.
+Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 29 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 10 connectors are all HTTP and fully Cowork-compatible.
 
 ### Pre-Requisites for Image Generation
 
@@ -251,7 +253,7 @@ NEVER commit this file to Git. NEVER share it publicly.
 
 **Cost:** Image generation costs approximately $0.01-0.04 per image depending on resolution and model. All costs go to the admin’s billing account.
 
-### WaveSpeed (Kling v3.0 — Video Generation)
+### WaveSpeed (Video Generation)
 
 #### Step 1: Create a WaveSpeed Account
 1. Open https://wavespeed.ai
@@ -329,15 +331,23 @@ SocialForge produces short-form AI-generated video clips for video content posts
 
 1. **Post context** — The calendar post’s theme, copy, and visual direction inform the video
 2. **Script generation** — AI writes a short video script with scene descriptions
-3. **Keyframe generation** — Gemini (via Vertex AI) generates the first and last frame as keyframe images
-4. **Video animation** — WaveSpeed sends the keyframes to **Kling v3.0 Pro** (image-to-video), which animates them into a fluid video clip (3-15 seconds)
+3. **Keyframe generation** — the image model (via Vertex AI) generates the first and last frame as keyframe images
+4. **Video animation** — WaveSpeed's image-to-video model animates the approved first frame into a fluid video clip (3-15 seconds) and, when that provider makes the clip, steers it toward the approved last frame (see [The last frame](#the-last-frame))
 
 ### Models
 
-| Component | Model | Provider |
-|-----------|-------|----------|
-| Keyframe images | Gemini Nano Banana 2 / Pro | Google Cloud Vertex AI |
-| Image-to-video | Kling v3.0 Pro | WaveSpeed |
+Models are resolved at run time through the model registry, so no version is written here — a version in a README is wrong on a timetable nobody controls.
+
+| Component | Registry alias | Provider |
+|-----------|----------------|----------|
+| Keyframe images | `latest-image-google` | Google Cloud Vertex AI |
+| Image-to-video | `latest-video-wavespeed` | WaveSpeed |
+
+See which model each alias resolves to today with `python scripts/generate_video.py --list-models` (or `python scripts/resolve_model.py --aliases` for every alias).
+
+### The last frame
+
+`generate_video.py --last-image <path>` sends the approved last frame to the WaveSpeed rung as the clip's end image, so the clip is guided toward it. That rung is the only one with an end-frame input. With `--provider auto`, a supplied last frame makes the chain try that rung first. If another rung made the clip instead — because `--provider` named it, or the WaveSpeed key was missing or the call failed — the result says `last_frame_used: false` with a note, and the clip was **not** steered to the approved frame. Pass `--provider kling` when the clip must end on it. A `--last-image` path that does not exist is an error, never silently dropped.
 
 ### Post-Processing
 
@@ -364,8 +374,8 @@ Use `/socialforge:generate-video` to produce video for a specific post, or `/soc
 
 ## Connectors
 
-SocialForge ships **an opt-in catalog of 10 HTTP connectors** that work in both Cowork and Claude Code — zero are auto-connected. `.mcp.json` ships as `{"mcpServers":{}}` by design; enable the ones you want from `.mcp.json.connectors-reference`:
-Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary.
+SocialForge ships **an opt-in catalog of 12 HTTP connectors** that work in both Cowork and Claude Code — zero are auto-connected. `.mcp.json` ships as `{"mcpServers":{}}` by design; enable the ones you want from `.mcp.json.connectors-reference`:
+Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz, WhatsApp Business Tools (Meta beta).
 
 The plugin works fully without connectors — all skills, agents, and creative production function with local assets and AI generation APIs.
 
@@ -373,7 +383,11 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.26.0)
+## Current Release (v1.27.0)
+
+**Research in, scheduler out, and nothing fails silently.** New `research-month` skill (outliers vs the account's own baseline and comment language, scripted; competitor ad themes read from material you supply). Optional Postiz hand-off after `finalize-month`, only on approval of the exact batch. `--last-image` now reaches the video model's end-frame input; missing frames, dropped image references, dropped hashtags and repeat ingests are reported or prevented. Platform limits moved to sourced, dated data (Pinterest 800, Threads 1 hashtag, Instagram 5); X uses its weighted count. Vendor guard now scans every skill, agent and command; 7 duplicate commands folded into their skills. 438 tests.
+
+### Release v1.26.0
 
 **The seven-week freshness pass.** Removed the malformed plugin-root `settings.json` (the only structural difference from the suite plugins Cowork did list — [#3](https://github.com/indranilbanerjee/socialforge/issues/3)); Codex install repaired; model registry re-verified (retired Gemini/Imagen image ids marked, Veo 3.1 previews deprecated before their Oct 22 shutdown, current Claude/GPT/Gemini generation added); EU AI label taxonomy + first-exposure rule added to the Article 50 reference; `finalize-month` may never add `--force` on its own initiative. Tests 260 → 262.
 
@@ -521,7 +535,7 @@ SocialForge is part of the **Neelverse Marketing Suite** by [Indranil Banerjee](
 |--------|-------------|---------|
 | **[Digital Marketing Pro](https://github.com/indranilbanerjee/digital-marketing-pro)** | End-to-end engagement methodology — 12-Part Strategy Flow, Four Core Documents, Two-Views Model | `/plugin install digital-marketing-pro@neels-plugins` |
 | **[ContentForge](https://github.com/indranilbanerjee/contentforge)** | Publication-ready content via 10-phase pipeline — research, fact-check, draft, SEO, humanize, `.docx` export with C2PA signing | `/plugin install contentforge@neels-plugins` |
-| **SocialForge** (this plugin) | Social media calendar automation with AI image + video generation (Vertex AI Nano Banana Pro + WaveSpeed Kling v3.0 Pro), C2PA signing | `/plugin install socialforge@neels-plugins` |
+| **SocialForge** (this plugin) | Social media calendar automation with AI image + video generation (Vertex AI + WaveSpeed, models resolved live), C2PA signing | `/plugin install socialforge@neels-plugins` |
 
 **Use together:** Plan campaigns in DM Pro, produce articles with ContentForge, create social visuals and videos with SocialForge. All share the same brand profiles and marketplace.
 

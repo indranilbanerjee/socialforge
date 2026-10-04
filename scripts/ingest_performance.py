@@ -17,18 +17,27 @@ Doctrine (matches the suite's measurement ladder):
   (>= 1.5x the month's median rate) — otherwise it is reported as unranked
 - unmatched CSV rows are listed, never silently dropped
 - every payload carries basis: "platform-export" + the source label + timestamp
+- an export is never counted twice: each source records the sha256 of the CSV
+  bytes, so ingesting the same file again is a no-op (status "already_ingested")
+- every stored row carries the label of the source it came from, so a
+  cumulative export (month-to-date totals re-exported weekly) can be ingested
+  under one constant label with --replace and keep only its latest snapshot
 
 Usage:
     python ingest_performance.py --action ingest --brand acme --month 2026-07 \
         --csv july-export.csv --source "linkedin-analytics"
+    python ingest_performance.py --action ingest --brand acme --month 2026-07 \
+        --csv this-weeks-mtd.csv --source "linkedin-mtd" --replace
     python ingest_performance.py --action wins --brand acme --month 2026-07
-Exit codes: 0 ok, 1 bad input/paths, 3 ingest matched zero rows.
+Exit codes: 0 ok (including already_ingested), 1 bad input/paths, 3 ingest
+matched zero rows.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -113,7 +122,7 @@ def _load_calendar_ids(brand, month):
     return set(meta), meta
 
 
-def ingest(brand, month, csv_path, source_label):
+def ingest(brand, month, csv_path, source_label, replace=False):
     known_ids, _ = _load_calendar_ids(brand, month)
     if known_ids is None:
         print(json.dumps({"error": f"No calendar-data.json for {brand}/{month} — "
@@ -125,6 +134,33 @@ def ingest(brand, month, csv_path, source_label):
     if not csv_file.exists():
         print(json.dumps({"error": f"CSV not found: {csv_path}"}))
         return 1
+
+    # The identity of an export is its bytes. A file name proves nothing — the
+    # same name is re-exported every week — but identical bytes are the same
+    # numbers, and ingesting them twice doubles every row.
+    digest = hashlib.sha256(csv_file.read_bytes()).hexdigest()
+
+    perf_path = _perf_path(brand, month)
+    existing = {}
+    if perf_path.exists():
+        try:
+            existing = json.loads(perf_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            print(f"WARNING: existing performance.json unreadable — rebuilding from "
+                  f"this ingest only (damaged file at {perf_path})", file=sys.stderr)
+    sources = existing.get("sources", [])
+
+    earlier = next((s for s in sources if s.get("sha256") == digest), None)
+    if earlier is not None:
+        print(json.dumps({
+            "status": "already_ingested",
+            "sha256": digest,
+            "earlier_source": earlier,
+            "note": ("This exact file (identical bytes) is already in performance.json — "
+                     "nothing was appended. An export that changed, even by one row, is a "
+                     "different file and will ingest."),
+        }, indent=2))
+        return 0
 
     with open(csv_file, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
@@ -165,19 +201,39 @@ def ingest(brand, month, csv_path, source_label):
         }, indent=2))
         return 3
 
-    perf_path = _perf_path(brand, month)
-    existing = {}
-    if perf_path.exists():
-        try:
-            existing = json.loads(perf_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            print(f"WARNING: existing performance.json unreadable — rebuilding from "
-                  f"this ingest only (damaged file at {perf_path})", file=sys.stderr)
+    label = source_label or csv_file.name
     posts = existing.get("posts", {})
+    removed_rows = removed_sources = 0
+    if replace:
+        # Only after the new export parsed and matched something — a replace
+        # that ingests nothing must leave the old snapshot untouched.
+        legacy = [s for s in sources if s.get("label") == label and "sha256" not in s]
+        if legacy:
+            print(json.dumps({
+                "error": (f"--replace cannot isolate source {label!r}: it was ingested before "
+                          "rows carried their source label, so its rows cannot be told apart "
+                          "from the other sources' rows. Use a new --source label, or delete "
+                          "performance.json and re-ingest the month."),
+                "legacy_source": legacy[0],
+            }, indent=2))
+            return 1
+        for pid in list(posts):
+            kept = [r for r in posts[pid] if r.get("source") != label]
+            removed_rows += len(posts[pid]) - len(kept)
+            if kept:
+                posts[pid] = kept
+            else:
+                del posts[pid]
+        before = len(sources)
+        sources = [s for s in sources if s.get("label") != label]
+        removed_sources = before - len(sources)
+
     for pid, new_rows in entries.items():
+        for row in new_rows:
+            row["source"] = label  # lets --replace find this export's rows later
         posts.setdefault(pid, []).extend(new_rows)
-    sources = existing.get("sources", [])
-    sources.append({"label": source_label or csv_file.name,
+    sources.append({"label": label,
+                    "sha256": digest,
                     "ingested_at": datetime.now(timezone.utc).isoformat(),
                     "rows_matched": sum(len(v) for v in entries.values()),
                     "rows_unmatched": len(unmatched)})
@@ -190,10 +246,13 @@ def ingest(brand, month, csv_path, source_label):
     result = {
         "status": "success",
         "output": str(perf_path),
+        "source": label,
         "posts_with_data": len(posts),
         "rows_matched": sum(len(v) for v in entries.values()),
         "rows_unmatched": len(unmatched),
     }
+    if replace:
+        result["replaced"] = {"rows_removed": removed_rows, "sources_removed": removed_sources}
     if unmatched:
         # Unmatched rows are named — silent drops would misreport coverage.
         result["unmatched_row_ids"] = unmatched[:20]
@@ -298,6 +357,11 @@ def main():
     parser.add_argument("--month", required=True, help="YYYY-MM (the month the numbers are FROM)")
     parser.add_argument("--csv", default=None, help="Platform analytics export (ingest)")
     parser.add_argument("--source", default=None, help="Label for where the export came from")
+    parser.add_argument("--replace", action="store_true",
+                        help="Before ingesting, remove every row previously ingested under the "
+                             "same --source label (cumulative exports: ingest each new snapshot "
+                             "under one constant label and keep only the latest). Rows from other "
+                             "labels are untouched.")
     parser.add_argument("--min-impressions", type=int, default=100,
                         help="Sample floor below which a post is not ranked (default 100)")
     parser.add_argument("--top", type=int, default=3, help="Max winners to report (default 3)")
@@ -308,7 +372,9 @@ def main():
     if args.action == "ingest":
         if not args.csv:
             parser.error("--csv is required for --action ingest")
-        sys.exit(ingest(args.brand, args.month, args.csv, args.source))
+        sys.exit(ingest(args.brand, args.month, args.csv, args.source, args.replace))
+    if args.replace:
+        parser.error("--replace only applies to --action ingest")
     sys.exit(wins(args.brand, args.month, args.min_impressions, args.top, args.margin))
 
 

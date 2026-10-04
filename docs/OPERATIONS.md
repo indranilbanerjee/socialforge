@@ -490,17 +490,19 @@ SocialForge checks for API keys at specific execution points, not at startup:
 | Platform | Max Chars | Optimal Range | Fold Point | Hashtag Strategy | Link Strategy |
 |----------|-----------|---------------|------------|-----------------|---------------|
 | LinkedIn | 3,000 | 500-700 | 140 chars ("see more") | 3-5 at end of post | Direct URL in copy |
-| Instagram | 2,200 | 500-1,000 | First line | 20-30 in FIRST COMMENT (not caption) | "Link in bio" |
-| X/Twitter | 280 | 240 | -- (hard limit) | 1-2 inline | Direct URL (counts toward limit) |
+| Instagram | 2,200 | 500-1,000 | First line | up to 5 (Instagram's cap since Dec 2025) in the FIRST COMMENT (not caption) | "Link in bio" |
+| X/Twitter | 280 (counted by weight) | 240 | -- (hard limit) | 1-2 inline | Direct URL (counts 23 toward the limit) |
 | Facebook | 63,206 (optimal: 500) | 300-500 | 400 chars | 1-3 at end | Direct URL |
 | YouTube | 5,000 | 200-500 | 200 | 3-5 in description | Direct URLs + timestamps |
 | TikTok | 2,200 | 100-300 | -- | 3-5 trending + branded | "Link in bio" |
-| Pinterest | 500 | 200-300 | -- | 5-10 SEO-focused | Direct URL |
+| Pinterest | 800 | 200-300 | -- | 5-10 SEO-focused | Direct URL |
+
+The numbers are data in `scripts/platform_limits.json` (a source URL, a check date and a status for each); `python scripts/adapt_copy.py --sources` prints them. Several are unsourced working values; `references/platform-specs.md` says which.
 
 ### Smart Truncation
 
 If copy exceeds the platform limit:
-1. Find the last complete sentence that fits within the character limit.
+1. Find the last complete sentence that fits within the character limit (on X, "fits" is measured by X's weighted count: emoji and CJK 2, every URL 23).
 2. If no sentence break falls within 50% of the limit, truncate at the limit boundary with "..."
 3. For LinkedIn specifically: the full copy is preserved, but the first 140 characters must be the hook because that is the fold point (the "see more" boundary).
 
@@ -516,7 +518,7 @@ The adapt-copy skill does not just truncate. It restructures:
 
 1. Load the brand's `always_include` hashtags from brand-config.json.
 2. Add campaign-specific hashtags if an active campaign matches the post's campaign field.
-3. Respect the per-platform hashtag limit (e.g., Instagram allows 30, LinkedIn best practice is 3-5).
+3. Respect the per-platform hashtag limit (e.g., Instagram allows 5, LinkedIn best practice is 3-5). Hashtags past the cap come back in `hashtags_dropped`; they are never dropped silently.
 4. For Instagram: hashtags go in the `first_comment` field, never in the main caption.
 5. For LinkedIn: hashtags are appended at the end of the post body.
 6. For X/Twitter: hashtags count toward the 280-character limit.
@@ -1138,7 +1140,7 @@ A 28-post month with mixed content types typically costs $2-5 in API charges. HE
 | Compliance checking | Yes | Yes |
 | Preview rendering (Playwright) | Partial (same as carousel) | Yes |
 | Brand configs persist | Yes (${CLAUDE_PLUGIN_DATA}) | Yes (${CLAUDE_PLUGIN_DATA}) |
-| All 10 HTTP connectors | Yes | Yes |
+| All 12 HTTP connectors | Yes | Yes |
 | Document assembly (docx-js) | Yes (Node.js available in Cowork VM) | Yes |
 | Scheduled production | Yes (Cowork scheduled tasks) | Yes (/schedule, /loop) |
 
@@ -1164,7 +1166,7 @@ Claude Code runs on the user's local machine with full filesystem access:
 
 ### HTTP MCP Connectors (Both Platforms)
 
-All 10 HTTP connectors work identically on both platforms:
+All 12 HTTP connectors work identically on both platforms:
 
 | Connector | URL | What It Enables |
 |-----------|-----|-----------------|

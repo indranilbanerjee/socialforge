@@ -118,8 +118,18 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
     One rung of the provider chain (see generate_video_chain): returns the
     success dict, or None with the reason recorded into `attempts`. A rung
     that cannot run never aborts the chain and never fails silently.
+
+    A last frame that was asked for is never quietly dropped: a path that does
+    not exist is a `bad-input` record, and a clip that really was sent the end
+    image says so with `last_frame_used: true`.
     """
     from provider_failures import record
+    # Checked before anything environmental: a missing file is the caller's
+    # input, and it must be reported whether or not credentials exist.
+    if last_frame_path and not Path(last_frame_path).is_file():
+        record(attempts, "wavespeed-kling", "request", "bad-input",
+               f"last-frame image was given but not found: {last_frame_path}")
+        return None
     model = model or DEFAULT_KLING_MODEL
     if not model:
         record(attempts, "wavespeed-kling", "model-resolution", "unresolved-model",
@@ -173,7 +183,7 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
             "shot_type": "customize",
         }
 
-        if last_frame_path and Path(last_frame_path).exists():
+        if last_frame_path:
             print("  Uploading last frame...", file=sys.stderr)
             payload["end_image"] = _ws_client.upload(last_frame_path)
 
@@ -186,7 +196,7 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
         if video_url:
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(video_url, output_path)
-            return {
+            result = {
                 "status": "success",
                 "provider": "wavespeed-kling-v3",
                 "model": model,
@@ -195,6 +205,9 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
                 "duration": duration,
                 "sound": sound,
             }
+            if last_frame_path:
+                result["last_frame_used"] = True  # the end image really was sent
+            return result
         record(attempts, "wavespeed-kling", "response", "bad-response",
                f"no video URL in WaveSpeed response: {str(output)[:150]}")
     except Exception as e:
@@ -403,8 +416,18 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
         return None
 
 
+def preferred_provider(provider_arg, routed, last_image):
+    """The rung the chain tries first. An explicit --provider always wins.
+    Under auto routing an approved last frame sends kling first, because only
+    the kling rung takes an end frame; the others stay as fallbacks."""
+    if provider_arg != "auto":
+        return provider_arg
+    return "kling" if last_image else routed
+
+
 def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio="16:9",
-                         kling_model=None, veo_model=None, sound=False, preferred=None):
+                         kling_model=None, veo_model=None, sound=False, preferred=None,
+                         last_image_path=None):
     """Try every configured video provider in order, recording every failed
     attempt. The preferred provider (from routing or --provider) goes first;
     the others remain as fallbacks.
@@ -414,6 +437,13 @@ def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio
     WaveSpeed key aborted the whole run, and the terminal error was one
     80-character string. Now the terminal FAILED payload lists who was tried,
     at which stage each stopped, and what to do about it.
+
+    `last_image_path` is the approved last frame. Only the kling rung has an
+    end-frame input, so it is forwarded there and nowhere else. A clip made by
+    any other rung carries `last_frame_used: false` and a `last_frame_note`:
+    the caller asked for a clip that lands on an approved frame, and a fallback
+    rung that cannot do that must say so rather than hand back an unsteered
+    clip as if it were the one that was asked for.
     """
     from provider_failures import failure_payload
     attempts = []
@@ -423,7 +453,7 @@ def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio
         order.insert(0, preferred)
     for prov in order:
         if prov == "kling":
-            result = generate_video_kling(prompt, output_path, image_path, None,
+            result = generate_video_kling(prompt, output_path, image_path, last_image_path,
                                           duration, model=kling_model, sound=sound,
                                           attempts=attempts)
         elif prov == "veo":
@@ -436,6 +466,12 @@ def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio
             if attempts:
                 result["fallback_from"] = ", ".join(dict.fromkeys(a["provider"] for a in attempts))
                 result["earlier_attempts"] = attempts
+            if last_image_path and result.get("last_frame_used") is not True:
+                result["last_frame_used"] = False
+                result["last_frame_note"] = (
+                    f"the {prov} rung has no end-frame input, so this clip was not steered "
+                    "to the approved last frame (only the kling rung takes one). Do not "
+                    "present it as landing on that frame.")
             return result
     return failure_payload(attempts, context="video generation")
 
@@ -639,6 +675,10 @@ def main():
     parser.add_argument("--output-dir", required=False, default="")
     parser.add_argument("--generate-video", action="store_true", help="Generate AI video")
     parser.add_argument("--image", default=None, help="Input image for image-to-video")
+    parser.add_argument("--last-image", default=None,
+                        help="Approved last frame. Sent to the kling rung as its end image (the "
+                             "only rung that takes one); a clip from any other rung reports "
+                             "last_frame_used: false. Requires --generate-video.")
     parser.add_argument("--provider", default="auto", choices=["auto", "kling", "veo", "higgsfield"],
                         help="Preferred video provider (auto routes by duration and available "
                              "credentials; the others stay as fallbacks in the chain)")
@@ -672,6 +712,20 @@ def main():
 
     if not (args.brand and args.month and args.post_id and args.output_dir):
         parser.error("--brand, --month, --post-id, and --output-dir are required (unless --list-models is set)")
+
+    # A last frame that was asked for is either used or reported as unused, and
+    # a path that does not exist is an input error — never a silent drop.
+    if args.last_image:
+        if not args.generate_video:
+            parser.error("--last-image only applies together with --generate-video")
+        if not Path(args.last_image).is_file():
+            print(json.dumps({"error": "Last-frame image not found", "path": args.last_image}))
+            sys.exit(1)
+    # A first frame that was asked for and is missing would otherwise turn the
+    # Veo and HiggsField rungs into text-to-video without a word.
+    if args.image and not Path(args.image).is_file():
+        print(json.dumps({"error": "First-frame image not found", "path": args.image}))
+        sys.exit(1)
 
     # Resolve --video-model via curator (kling uses wavespeed alias; veo uses google alias)
     chosen_kling = _negotiate_video_model(args.video_model, "latest-video-wavespeed") if args.provider in {"auto", "kling"} else None
@@ -725,10 +779,11 @@ def main():
     if args.generate_video and routing["provider"] != "none":
         video_path = output_dir / f"post-{args.post_id}-video.mp4"
         prompt = post.get("visual", {}).get("direction_a", post.get("title", ""))
-        preferred = args.provider if args.provider != "auto" else routing["provider"]
+        preferred = preferred_provider(args.provider, routing["provider"], args.last_image)
         video_result = generate_video_chain(prompt, str(video_path), args.image, duration,
                                             args.aspect_ratio, kling_model=chosen_kling,
-                                            veo_model=chosen_veo, preferred=preferred)
+                                            veo_model=chosen_veo, preferred=preferred,
+                                            last_image_path=args.last_image)
     elif args.generate_video and routing["provider"] == "none":
         video_result = {"status": "FAILED", "error": routing["error"],
                         "credentials_found": routing.get("credentials_found"),

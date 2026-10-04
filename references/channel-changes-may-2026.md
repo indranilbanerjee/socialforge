@@ -7,7 +7,7 @@ Platform-by-platform changes that affect SocialForge content as of July 2026. Th
 - **Ownership structure:** TikTok USDS Joint Venture LLC. Oracle + Silver Lake + MGX hold ~45%; ByteDance retains <20%. US data and recommendation algorithm are under USDS control.
 - **AI creator labeling (mandatory):** AI-generated creators ("synthetic creators") are allowed only with disclosure. AI-generated content is **excluded from the Creator Rewards Program**. SocialForge-generated assets posted as creator content should carry both the C2PA manifest AND a visible AI-generation label in the post copy.
 - **Daily shoppable-post limits** effective 11 May 2026. Brands hitting the cap should rotate which products get featured each day rather than batch-posting all SKUs.
-- **Platform-specific recommendation:** when `--platform tiktok` is passed to image/video generation, set `ai-claim: ai-generated-content` and include "Created with AI" or equivalent in the caption.
+- **Platform-specific recommendation:** when `--platform tiktok` is passed to image/video generation, set `ai-claim: ai-generated-content` and include "Created with AI" or equivalent in the caption (a writer's step; see "What to update in your brand profile").
 
 ## LinkedIn (March 12 2026 algorithm announcement)
 
@@ -47,7 +47,7 @@ Platform-by-platform changes that affect SocialForge content as of July 2026. Th
 ## What to update in your brand profile
 
 - Add `c2pa_auto_sign: true` if any of your target platforms or jurisdictions are EU (or you want a defensible audit trail even outside EU).
-- Add `ai_disclosure_required: true` for TikTok / YouTube / EU markets so the caption-adapter inserts the required visible label.
+- **Visible AI labels in captions are a manual step.** Nothing inserts one: `adapt_copy.py` never changes a caption beyond fitting it to the platform, and `compliance_check.py` only reports a required disclaimer that is missing (when its trigger word appears in the copy) and suggests the text. For TikTok, YouTube and EU markets, use each platform's native AI-content toggle (flagged at publish handoff) and, where the brand's rules want visible wording in the caption, add it by hand. An earlier version of this page told you to set `ai_disclosure_required: true`; no script or skill reads that key, so setting it does nothing.
 - Verify your TikTok account is post-USDS (US-resident accounts as of Q1 2026) — affects which API endpoint SocialForge connectors talk to.
 
 ## Related

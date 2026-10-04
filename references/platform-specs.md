@@ -24,27 +24,42 @@ Complete dimension, character limit, and format specs for all supported social m
 
 ## Character Limits
 
-| Platform | Max Length | Optimal | Fold At | Notes |
-|----------|-----------|---------|---------|-------|
-| LinkedIn | 3,000 | 500-700 | 140 | "...see more" at 140 chars |
-| Instagram | 2,200 | 500-1000 | First line | First line is the hook |
-| X/Twitter | 280 | 240 | — | Hard limit, no fold |
-| Facebook | 63,206 | 300-500 | 400 | Optimal is short |
-| YouTube | 5,000 | 200-500 | 200 | First 200 visible |
-| TikTok | 2,200 | 100-300 | — | Brief is better |
-| Pinterest | 500 | 200-300 | — | Description for SEO |
+The numbers `adapt_copy.py` enforces live in `scripts/platform_limits.json`, each with a source URL, the date it was checked and a status; `python scripts/adapt_copy.py --sources` prints the record. Status below is as of 2026-10-04: **confirmed** means a primary platform page says it, **unsourced** means SocialForge's working value with no readable primary page. Optimal and Fold At are working guidance, not platform rules.
+
+| Platform | Max Length | Status | Optimal | Fold At | Notes |
+|----------|-----------|--------|---------|---------|-------|
+| LinkedIn | 3,000 | confirmed | 500-700 | 140 | "...see more" at 140 chars (a working value) |
+| Instagram | 2,200 | unsourced | 500-1000 | First line | First line is the hook |
+| X/Twitter | 280 | confirmed | 240 | — | Hard limit, no fold; counted by weight, see below |
+| Facebook | 63,206 | unsourced | 300-500 | 400 | Optimal is short; the adapter cuts at 500 |
+| YouTube | 5,000 | confirmed | 200-500 | 200 | First 200 visible |
+| TikTok | 2,200 | unsourced | 100-300 | — | Third-party pages report 4,000, unconfirmed; 2,200 stays as the safe cap |
+| Pinterest | 800 | confirmed | 200-300 | — | Description for SEO (title: 100) |
+| Threads | 500 | confirmed | — | — | Emojis count as UTF-8 bytes |
+| Bluesky | 300 | confirmed | — | — | 300 graphemes |
+
+### How platforms count
+
+- **X** counts by weight, not characters (twitter-text v3 config, read 2026-10-04): code points 0-4351, 8192-8205, 8208-8223 and 8242-8247 weigh 1, every other code point weighs 2 (so emoji and CJK cost 2), every URL costs 23 however long it is, and the maximum is 280. `adapt_copy.py` implements this for X, so X's `char_count` is a weighted length. It over-counts emoji sequences (each code point of a family emoji is weighed, where X weighs the whole sequence 2) and does not normalise to NFC, both in the safe direction. It counts a bare domain (no `http://`, `https://` or `www.`) as plain text although X links it, so a long bare domain counts low. X's docs table groups "Other Unicode" at weight 2, but the config gives weight 1 to everything up to U+10FF (Cyrillic, Greek, Hebrew, Arabic, Devanagari and Thai included); the script follows the config.
+- **Bluesky** counts 300 graphemes; `adapt_copy.py` counts code points, which can only over-count.
+- **Threads** counts an emoji as its number of UTF-8 bytes; `adapt_copy.py` counts an emoji as 1, so it under-counts emoji on Threads (not implemented).
+- Every other platform: plain characters.
 
 ## Hashtag Limits
 
-| Platform | Max | Optimal | Placement |
-|----------|-----|---------|-----------|
-| LinkedIn | 30 | 3-5 | End of post |
-| Instagram | 30 | 20-30 | First comment preferred |
-| X/Twitter | 280 chars total | 1-2 | Inline |
-| Facebook | No limit | 1-3 | End of post |
-| YouTube | 15 | 3-5 | Description |
-| TikTok | 10 (enforced by `adapt_copy.py`) | 3-5 | End of caption |
-| Pinterest | 20 | 5-10 | Description |
+| Platform | Platform maximum | Script cap | Optimal | Placement |
+|----------|------------------|------------|---------|-----------|
+| LinkedIn | unsourced | 5 | 3-5 | End of post |
+| Instagram | 5 (Instagram's @creators account, 2025-12-18) | 5 | 3-5 | First comment (SocialForge default) |
+| X/Twitter | no separate limit stated; tags count toward the 280 | 2 | 1-2 | Inline |
+| Facebook | unsourced | 3 | 1-3 | End of post |
+| YouTube | 60 (more than 60 and all are ignored; 3 show above the title) | 5 | 3-5 | Description |
+| TikTok | unsourced | 10 | 3-5 | End of caption |
+| Pinterest | unsourced | 20 | 5-10 | Description |
+| Threads | 1 topic tag per post | 1 | 1 | Inline |
+| Bluesky | 8 tags in the post record | 2 | 1-2 | Tag facets |
+
+The script cap is how many hashtags `adapt_copy.py` keeps; the rest come back in `hashtags_dropped`, so a cap never removes a tag without saying so. Where the maximum is "unsourced" the cap is SocialForge's own working value.
 
 ## Video Specs
 

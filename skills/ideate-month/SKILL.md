@@ -39,6 +39,7 @@ so an approved plan flows into production with zero re-typing.
      reports as having worked. Usable, but labeled — see the output rules.
    - If the measured path has no data, say so and offer to ingest an export
      first; a two-minute CSV ingest upgrades the whole plan's foundation.
+5. **A research brief** (optional) — if `/socialforge:research-month` wrote `output/{brand}/{month}/research-brief.md`, read it as evidence (outlier posts, customer language, competitor ad themes) and carry its basis labels into "What last month validated" and "Signals used / dropped"; its hypotheses are leads, not wins.
 
 ## Process
 

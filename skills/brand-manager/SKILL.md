@@ -212,7 +212,7 @@ Campaign hashtags (active campaigns only):
 
 Platform-specific hashtag rules:
   LinkedIn: max 3-5 hashtags, professional tone
-  Instagram: 20-30 in the first comment, mix of branded + discovery
+  Instagram: up to 5 (Instagram's current cap), in the first comment, mix of branded + discovery
   X: max 2-3, integrated into copy
   TikTok: trending + branded mix
 ```

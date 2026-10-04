@@ -569,8 +569,8 @@ Video posts (Reels, Shorts, TikTok) run through the same calendar, but the creat
 
 1. **Post context** — the calendar post's theme, copy, and visual direction seed the clip
 2. **Script + storyboard** — a short script with scene descriptions, which you approve
-3. **Keyframes** — Gemini (via Vertex AI) generates the first and last frame as images, which you approve
-4. **Video generation** — WaveSpeed sends the keyframes to **Kling v3.0 Pro** (`kwaivgi/kling-v3.0-pro/image-to-video`), which animates them into a 3-15 second clip
+3. **Keyframes** — the image model (Vertex AI, registry alias `latest-image-google`) generates the first and last frame as images, which you approve
+4. **Video generation** — WaveSpeed (registry alias `latest-video-wavespeed`) animates the approved first frame into a 3-15 second clip and sends the approved last frame as the clip's end image, so the clip is guided toward it. Only that provider can take a last frame: if a fallback provider made your clip (a missing key, a failure, or `--provider auto` routing a short clip to Veo), the result says `last_frame_used: false` and the clip was not steered to it. To see which model each alias resolves to today, run `python scripts/generate_video.py --list-models`.
 5. **Delivery** — the clip is post-processed and enters the same review gallery as image posts
 
 Every stage is human-in-the-loop. Nothing renders to delivery without your sign-off.
@@ -913,7 +913,7 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 
 ## 16. Connectors
 
-SocialForge ships an **opt-in catalog of 10 HTTP connectors** — **zero are auto-connected**. The shipped `.mcp.json` is `{"mcpServers":{}}` by design; the table below is the catalog, and you copy the entries you want from `.mcp.json.connectors-reference` into `.mcp.json` to enable them. All 10 work in both Cowork and Claude Code — no local server installation required.
+SocialForge ships an **opt-in catalog of 12 HTTP connectors** — **zero are auto-connected**. The shipped `.mcp.json` is `{"mcpServers":{}}` by design; the table below is the catalog, and you copy the entries you want from `.mcp.json.connectors-reference` into `.mcp.json` to enable them. All 12 work in both Cowork and Claude Code — no local server installation required.
 
 | Connector | URL | What For | Required? |
 |-----------|-----|----------|-----------|
@@ -927,6 +927,8 @@ SocialForge ships an **opt-in catalog of 10 HTTP connectors** — **zero are aut
 | Replicate | `https://replicate.com/mcp` | Alternative AI image gen | Optional |
 | Asana | `https://mcp.asana.com/sse` | Production task tracking | Optional |
 | Cloudinary | `https://mcp.cloudinary.com/mcp` | Professional DAM | Optional |
+| Postiz | `https://mcp.postiz.com/mcp-oauth-dynamic` | Scheduler hand-off after `finalize-month`, only on your approval of the exact posts and times | Optional |
+| WhatsApp Business Tools | `https://mcp.facebook.com/whatsapp_business_tools` | Business account setup and message templates (Meta beta, for development and testing) | Optional |
 
 **The plugin works fully without any connectors.** All skills function with local assets and direct Gemini API calls. Connectors add convenience — pull calendars from Notion, send reviews via Slack, access assets from Cloudinary — but are entirely optional.
 

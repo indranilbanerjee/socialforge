@@ -70,7 +70,7 @@ Common SocialForge errors with causes and fixes.
 1. Identify which key is needed from the error message.
 2. Run `/socialforge:setup` — it stores image (Vertex AI) and video (WaveSpeed) credentials in plugin persistent data. This is the supported path.
 3. As a documented fallback, export the key as an environment variable in the shell that launches the session, then restart the session.
-4. For MCP connectors (Slack, Notion, etc.): SocialForge ships **zero** active MCP servers — `.mcp.json` is empty by design. The 10 HTTP connectors are an opt-in catalog. Copy the server block you want from `.mcp.json.connectors-reference` into your own `.mcp.json`, supply its credentials, and restart the session.
+4. For MCP connectors (Slack, Notion, etc.): SocialForge ships **zero** active MCP servers — `.mcp.json` is empty by design. The 12 HTTP connectors are an opt-in catalog. Copy the server block you want from `.mcp.json.connectors-reference` into your own `.mcp.json`, supply its credentials, and restart the session.
 
 ---
 

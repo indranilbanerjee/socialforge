@@ -15,24 +15,22 @@ Both `--brand` and `--month` are required. The skill runs:
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/cost_tracker.py" --action report --brand <name> --month <YYYY-MM>
 ```
 
-The script returns JSON — `total_cost_usd`, `total_api_calls`, `by_operation`, and `by_post` (top 10). Render it for the user as below.
+The script returns JSON — `total_cost_usd`, `total_api_calls`, `by_operation`, `by_post` (top 10), `unpriced_calls`, `totals_complete` and, when something is unpriced, a `note`. Render it for the user as below, with the figures from the JSON and none from memory.
 
 ## Output
 ```
-Cost Report — AcmeCorp / April 2026
-  Total: $3.47 across 96 API calls
+Cost Report — <brand> / <month>
+  Total: <total_cost_usd> across <total_api_calls> API calls
 
   By Operation:
-    gemini_image_generation: $1.80
-    gemini_image_edit: $0.75
-    gemini_vision_analysis: $0.47
-    <operation>: $<amount>
-    carousel_render: $0.00 (local Playwright, free)
+    <operation>: <amount>
+    <local operation>: free (runs locally)
 
   By Post (top 10):
-    P01: $0.85
-    P07: $0.45
+    <post id>: <amount>
     ...
+
+  Unpriced calls: <unpriced_calls> — every total above is a LOWER BOUND
 ```
 
-Operation names come straight from the cost log. Only operations with a built-in estimate are priced automatically (vision analysis, image generation, image edit, fal.ai, Replicate; local compositing, background removal, and carousel rendering are $0.00). Video generation through WaveSpeed has no built-in estimate — log its actual cost with `--action log --cost <usd>`.
+Operation names come straight from the cost log. Local operations (compositing, background removal, resizing, carousel rendering) cost nothing. Paid work carries a figure only when it was logged with the real invoiced amount (`--cost`) or with `--model`, `--provider` and `--units`, which asks `price_book.py` for a live, sourced quote — there is no built-in price table. A call logged without either is `unpriced`: when `unpriced_calls` is above zero (`totals_complete` is false) show the `note`, say the totals are a lower bound, and point to `/socialforge:price-check` to record the missing prices. Unpriced is not free.

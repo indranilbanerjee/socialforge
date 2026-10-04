@@ -2,6 +2,12 @@
 """
 build_gallery.py — Build interactive HTML review gallery.
 Creates a self-contained HTML file with all post previews, scores, and copy.
+
+The local file is always the source of truth. The result reports its size and
+whether it is small enough to publish as a hosted page (`publishable_as_page`):
+inlined video is what makes a gallery too large, so `--no-inline-video` links
+video files by relative path instead and keeps the file small — at the price
+that a published copy cannot play those linked videos.
 """
 
 import argparse
@@ -10,7 +16,12 @@ import html as html_lib
 import json
 import os
 import sys
+import urllib.parse
 from pathlib import Path
+
+# A hosted page has a size ceiling (16 MB at the time of writing). 15 MiB is
+# under it however "MB" is counted, and leaves room for the page wrapper.
+PAGE_PUBLISH_LIMIT_BYTES = 15 * 1024 * 1024
 
 # Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
 # fall back to ~/socialforge-workspace (legacy/local)
@@ -99,8 +110,14 @@ def platform_label(p):
     return str(p)
 
 
-def build_gallery(brand, month):
-    """Build the review gallery HTML."""
+def build_gallery(brand, month, inline_video=True):
+    """Build the review gallery HTML.
+
+    inline_video=False links each video by its path relative to gallery.html
+    instead of embedding it as base64 — the gallery then works from its own
+    folder tree and stays small, but a copy published elsewhere cannot play
+    the linked videos.
+    """
     month_dir = WORKSPACE / "output" / brand / month
     tracker_path = month_dir / "status-tracker.json"
     calendar_path = month_dir / "calendar-data.json"
@@ -200,14 +217,32 @@ def build_gallery(brand, month):
     # from client documents — a '<' in a title must not break the card, and
     # markup in any field must never execute in the reviewer's browser.
     esc = html_lib.escape
+    output_path = month_dir / "review" / "gallery.html"
+    videos_inlined = videos_linked = 0
+
+    def video_src(path):
+        """The src for a <video>: a base64 data URI, or a relative link when
+        inlining is off. Empty when the file is missing/unreadable."""
+        nonlocal videos_inlined, videos_linked
+        if inline_video:
+            src = file_to_base64(path)
+            if src:
+                videos_inlined += 1
+            return src
+        if not Path(path).is_file():
+            return ""
+        videos_linked += 1
+        rel = os.path.relpath(path, output_path.parent).replace(os.sep, "/")
+        return html_lib.escape(urllib.parse.quote(rel, safe="/"), quote=True)
+
     cards_html = ""
     for p in posts_data:
         # Build visual: video takes priority over image
         if p.get("video_path"):
-            vid_b64 = file_to_base64(p["video_path"])
+            vid_b64 = video_src(p["video_path"])
             img_tag = f'<video src="{vid_b64}" controls style="width:100%;border-radius:4px;" preload="metadata"></video>' if vid_b64 else ""
             if p.get("alt_video_path"):
-                alt_b64 = file_to_base64(p["alt_video_path"])
+                alt_b64 = video_src(p["alt_video_path"])
                 if alt_b64:
                     img_tag += f'<div style="margin-top:8px;font-size:11px;color:#666;">Alternative:</div><video src="{alt_b64}" controls style="width:100%;border-radius:4px;" preload="metadata"></video>'
             if not img_tag:
@@ -268,18 +303,44 @@ def build_gallery(brand, month):
 <div class="grid">{cards_html}</div>
 </body></html>"""
 
-    output_path = month_dir / "review" / "gallery.html"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
 
+    size_bytes = output_path.stat().st_size
+    publishable = size_bytes <= PAGE_PUBLISH_LIMIT_BYTES
     summary = {
         "status": "success",
         "output": str(output_path),
         "posts": len(posts_data),
         "images_embedded": sum(1 for p in posts_data if p["image_b64"]),
+        "videos_embedded": videos_inlined,
+        "videos_linked": videos_linked,
+        "size_bytes": size_bytes,
+        "size_mb": round(size_bytes / (1024 * 1024), 2),
+        "publishable_as_page": publishable,
         "brand": brand,
         "month": month
     }
+    notes = []
+    if not publishable:
+        limit_mb = PAGE_PUBLISH_LIMIT_BYTES // (1024 * 1024)
+        if videos_inlined:
+            notes.append(
+                f"{summary['size_mb']} MB is over the {limit_mb} MB a hosted page can hold — the "
+                f"{videos_inlined} inlined video(s) are what make it too large. Rebuild with "
+                "--no-inline-video to link the videos by relative path instead (the local file "
+                "keeps working; a published copy will show images and copy but cannot play them).")
+        else:
+            notes.append(
+                f"{summary['size_mb']} MB is over the {limit_mb} MB a hosted page can hold, and "
+                "there is no inlined video to remove — the embedded images alone are too large. "
+                "Review from the local file.")
+    if videos_linked:
+        notes.append(
+            f"{videos_linked} video(s) are linked by relative path, not embedded: the gallery plays "
+            "them from this folder tree, but a copy published elsewhere will show broken video.")
+    if notes:
+        summary["note"] = " ".join(notes)
     # Name the posts that rendered with no media at all — a bare embed count
     # reads as "covered everything" when it didn't.
     no_media = [p["id"] for p in posts_data if not p["image_b64"] and not p.get("video_path")]
@@ -295,9 +356,13 @@ def main():
     parser = argparse.ArgumentParser(description="SocialForge Gallery Builder")
     parser.add_argument("--brand", required=True)
     parser.add_argument("--month", required=True)
+    parser.add_argument("--no-inline-video", action="store_true",
+                        help="Link videos by relative path instead of embedding them as base64 "
+                             "(keeps the file small enough to publish as a page; the published "
+                             "copy cannot play linked videos)")
     args = parser.parse_args()
 
-    build_gallery(args.brand, args.month)
+    build_gallery(args.brand, args.month, inline_video=not args.no_inline_video)
 
 
 if __name__ == "__main__":

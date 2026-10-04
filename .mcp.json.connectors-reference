@@ -50,6 +50,16 @@
       "type": "http",
       "url": "https://asset-management.mcp.cloudinary.com/mcp",
       "_description": "OPTIONAL: Cloudinary — Professional DAM with asset transformations, tagging, CDN delivery. Connect via OAuth."
+    },
+    "postiz": {
+      "type": "http",
+      "url": "https://mcp.postiz.com/mcp-oauth-dynamic",
+      "_description": "OPTIONAL, opt-in: scheduler hand-off AFTER finalize-month (see skills/finalize-month). Postiz can schedule, draft or publish posts to connected channels, so nothing is scheduled without the user's explicit approval of the exact posts and times. Connect via OAuth (no API key in this file). Self-hostable alternative: github.com/gitroomhq/postiz-app."
+    },
+    "whatsapp-business-tools": {
+      "type": "http",
+      "url": "https://mcp.facebook.com/whatsapp_business_tools",
+      "_description": "OPTIONAL, opt-in, BETA (Meta: development and testing workflows, not production sending at scale): set up a WhatsApp Business account and draft message templates. Some tools act on real customers, payments or credentials (send_message, configure_payments, verify_business, system_user_token) - approve each call by name. Connect via Meta developer-account OAuth. See references/conversational-commerce.md."
     }
   }
 }

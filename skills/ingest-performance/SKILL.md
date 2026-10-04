@@ -1,7 +1,7 @@
 ---
 name: ingest-performance
 description: "Feed last month's real numbers into next month's plan: ingest a platform analytics export (CSV from Instagram Insights, LinkedIn analytics, TikTok Studio, X analytics — any export with a post-id column) into per-post performance records, then rank the month's wins with sample floors and margin rules so ideation compounds measured winners, not remembered ones. Triggers on \"/ingest-performance\", \"here are last month's numbers\", \"import analytics\", \"which posts performed best\", \"engagement report\", \"what worked last month\", or whenever ideate-month needs its wins rung fed. Writes performance.json next to the month's tracker; /socialforge:ideate-month reads it and labels every win measured vs anecdotal."
-argument-hint: "--brand <name> --month <YYYY-MM> [--csv <export.csv>] [--source <label>]"
+argument-hint: "--brand <name> --month <YYYY-MM> [--csv <export.csv>] [--source <label>] [--replace]"
 user-invocable: true
 ---
 
@@ -31,8 +31,21 @@ python ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py --action ingest \
 ```
 
 - Rows matching calendar post ids are stored in
-  `output/{brand}/{month}/performance.json` (repeat ingests append — one CSV
-  per platform is normal).
+  `output/{brand}/{month}/performance.json`, each row tagged with its source
+  label, and each source records the sha256 of its CSV. Different files append —
+  one CSV per platform is normal.
+- **The same file twice is a no-op.** Identical bytes answer
+  `"status": "already_ingested"` (exit 0) and name the earlier source; nothing
+  is added. That is not an error — report "no new export".
+- **Cumulative exports use `--replace`.** If the platform's new file repeats
+  the posts of last week's (month-to-date totals), ingest every snapshot under
+  one constant `--source` label with `--replace`: rows previously ingested under
+  that label are removed first, so only the latest snapshot counts. Other
+  labels are untouched. Ingest only the **newest** export under `--replace`: it
+  trusts the file it is given, so an older file ingested after a newer one
+  replaces the newer numbers. `--replace` refuses a label ingested before rows
+  carried their source label (use a new label or re-ingest the month), and a
+  file that matches no calendar post leaves the old snapshot in place.
 - **Unmatched rows are listed in the output, never silently dropped.** Show
   the user the unmatched list; a typo'd id is data lost from the wins rung.
 - Exit 3 = nothing matched. Stop and reconcile ids before proceeding.

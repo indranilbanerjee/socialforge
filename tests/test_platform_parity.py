@@ -9,10 +9,14 @@ generation ahead of the image half.
 Nothing caught it because the two tables live in different files and no test
 compared them. This is that test.
 
+Since the limits moved out of adapt_copy.py into scripts/platform_limits.json, the copy side
+of the comparison reads that file (tests/test_platform_limits.py guards the file itself).
+
 Stdlib only.
 """
 from __future__ import annotations
 
+import json
 import re
 import unittest
 from pathlib import Path
@@ -26,8 +30,8 @@ IMAGE_ONLY_ALLOWED: set[str] = set()
 
 
 def copy_platforms() -> set[str]:
-    src = (SCRIPTS / "adapt_copy.py").read_text(encoding="utf-8")
-    return set(re.findall(r'^\s{4}"([a-z]+)":\s*\{"char_limit"', src, re.M))
+    data = json.loads((SCRIPTS / "platform_limits.json").read_text(encoding="utf-8"))
+    return set(data["platforms"])
 
 
 def image_platforms() -> dict[str, list[str]]:

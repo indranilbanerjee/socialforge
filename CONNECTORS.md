@@ -18,6 +18,10 @@ Plugins are **tool-agnostic** — they describe workflows in terms of categories
 | Email | `~~email` | Gmail | Outlook | Finalized document delivery, approval reminders |
 | Project management | `~~project` | Asana | Monday.com, Linear | Post status tracking, publishing schedule |
 | Asset management | `~~dam` | Cloudinary | Bynder, Brandfolder | Brand asset library, transformations, CDN delivery |
+| Scheduler (opt-in, catalog only) | `~~scheduler` | Postiz | Any scheduler with an MCP server | Optional hand-off after `finalize-month`; nothing is scheduled without explicit approval |
+| Business messaging (opt-in, catalog only, beta) | `~~messaging` | WhatsApp Business Tools (Meta) | — | Account and template setup sessions; not part of the monthly pipeline |
+
+The Scheduler and Business messaging entries live only in `.mcp.json.connectors-reference`. They are deliberately not in `.mcp.json.example`, so `cp .mcp.json.example .mcp.json` never connects a server that can schedule public posts or message customers; copy those entries by hand when you want them.
 
 ## The plugin works without connectors
 
@@ -43,7 +47,7 @@ Google Drive (asset images) → /socialforge:index-assets (AI analysis) → asse
 Cloudinary (optional DAM) ────────────────────────────────→ CDN delivery + transformations
 ```
 
-**All 20 skills, 5 agents, 28 scripts, and 25 commands work immediately** without any connectors. Connectors add live data and execution capabilities:
+**All 21 skills, 5 agents, 29 scripts, and 18 commands work immediately** without any connectors. Connectors add live data and execution capabilities:
 
 - Without Notion: Parse calendars from DOCX/XLSX/text (no Notion database sync)
 - Without fal.ai/Replicate: Use Gemini API directly for image generation (requires GEMINI_API_KEY)

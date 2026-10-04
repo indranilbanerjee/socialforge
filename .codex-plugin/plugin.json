@@ -1,7 +1,7 @@
 {
   "name": "socialforge",
-  "version": "1.26.0",
-  "description": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
+  "version": "1.27.0",
+  "description": "Open-source social media engine — 21 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
   "author": {
     "name": "Indranil Banerjee",
     "url": "https://github.com/indranilbanerjee"
@@ -24,8 +24,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "SocialForge",
-    "shortDescription": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
-    "longDescription": "20 skills + 25 commands + 5 agents + 25 scripts + 10 HTTP MCP connectors. Asset-first compositing (brand assets are sacred, AI is the creative layer around them). AI image (Vertex AI Nano Banana Pro), AI video (WaveSpeed Kling v3.0 Pro), 9-platform copy adaptation (Instagram, TikTok, LinkedIn, Threads, X, Facebook, YouTube Shorts), human-in-the-loop review galleries, C2PA content provenance signing for EU AI Act Article 50. Portable across Claude Code, Codex, Cursor, and Antigravity via the Agent Skills open standard.",
+    "shortDescription": "Open-source social media engine — 21 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
+    "longDescription": "21 skills + 18 commands + 5 agents + 29 scripts + 12 opt-in MCP connectors. Asset-first compositing (brand assets are sacred, AI is the creative layer around them). AI image and AI video through the providers you hold keys for, with models resolved live rather than hardcoded; 9-platform copy adaptation (LinkedIn, Instagram, X, Facebook, YouTube, TikTok, Pinterest, Threads, Bluesky), human-in-the-loop review galleries, C2PA content provenance signing for EU AI Act Article 50. Portable across Claude Code, Codex, Cursor, and Antigravity via the Agent Skills open standard.",
     "developerName": "Indranil Banerjee",
     "category": "Productivity",
     "capabilities": [

@@ -1,7 +1,7 @@
 ---
 name: parse-calendar
 description: "Parse a monthly content calendar from DOCX, XLSX, Notion, or pasted text into structured calendar-data.json — the source of truth every downstream skill reads. Triggers on \"/parse-calendar\", \"parse the calendar\", \"import this calendar\", \"here is the month\", \"load the content plan\", \"calendar to JSON\", or whenever a client calendar arrives in any format. No calendar yet? /socialforge:ideate-month drafts one in this exact shape."
-argument-hint: "[file-path or Notion URL]"
+argument-hint: "[file-path | notion-url | --paste]"
 effort: medium
 user-invocable: true
 ---
@@ -21,7 +21,7 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 | DOCX | Read tables and structured text from Word documents |
 | XLSX | Read rows from Excel spreadsheets (one row per post) |
 | Notion | Read from Notion database via MCP (requires Notion connector) |
-| Structured text | Parse markdown or plain text with consistent formatting |
+| Structured text | Parse markdown or plain text with consistent formatting — pasted inline (`--paste`) or from a .txt path |
 
 ## Required Fields Per Post
 

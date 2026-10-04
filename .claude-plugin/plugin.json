@@ -1,7 +1,8 @@
 {
   "name": "socialforge",
-  "version": "1.26.0",
-  "description": "Open-source social media engine — 20 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
+  "displayName": "SocialForge",
+  "version": "1.27.0",
+  "description": "Open-source social media engine — 21 skills, asset-first compositing, AI image+video, 9-platform copy adaptation. Runs on Claude Code, Codex, Cursor, Antigravity.",
   "author": {
     "name": "Indranil Banerjee",
     "url": "https://github.com/indranilbanerjee"
@@ -57,5 +58,10 @@
     "gemini-extension",
     "mcp",
     "neelverse"
-  ]
+  ],
+  "icon": "./assets/icon.png",
+  "documentationUrl": "https://github.com/indranilbanerjee/socialforge#readme",
+  "supportUrl": "https://github.com/indranilbanerjee/socialforge/issues",
+  "privacyPolicyUrl": "https://github.com/indranilbanerjee/socialforge/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/indranilbanerjee/socialforge/blob/main/LICENSE"
 }

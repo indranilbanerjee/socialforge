@@ -109,7 +109,13 @@ class TestConnectorCatalog(unittest.TestCase):
         return json.loads(path.read_text(encoding="utf-8"))["mcpServers"]
 
     def test_the_shipped_mcp_json_connects_nothing(self):
-        self.assertEqual(self.load(SHIPPED), {}, "zero auto-connecting MCP servers is a house rule")
+        # .mcp.json is gitignored, so an installed copy has none at all — which
+        # connects nothing. A local one must still be empty, and the ignore rule
+        # keeps any local edit out of every install.
+        ignored = [ln.strip() for ln in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()]
+        self.assertIn(".mcp.json", ignored, ".mcp.json must stay gitignored")
+        if SHIPPED.exists():
+            self.assertEqual(self.load(SHIPPED), {}, "zero auto-connecting MCP servers is a house rule")
 
     def test_every_catalog_entry_is_https_http_transport_and_described(self):
         for name, entry in self.load(CATALOG).items():

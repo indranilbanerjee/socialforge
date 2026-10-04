@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.27.1] - 2026-10-04
+
+### Fixed
+
+- **A test assumed `.mcp.json` exists.** It is gitignored, so an installed
+  copy has none, and the connects-nothing test failed when run from an
+  install (verify-from-installed caught it). An absent file now passes, a
+  present one must still be empty, and the test also requires `.gitignore`
+  to keep listing `.mcp.json` (planted). Test-only change.
+
 ## [1.27.0] - 2026-10-04
 
 ### Research in, scheduler out, and nothing fails silently

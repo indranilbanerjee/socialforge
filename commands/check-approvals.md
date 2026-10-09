@@ -1,5 +1,5 @@
 ---
-description: Check pending approval status and send reminders if overdue
+description: "Check pending approvals and send reminders where overdue. \"who still owes an approval\""
 argument-hint: "[--brand <name>] [--send-reminders]"
 ---
 

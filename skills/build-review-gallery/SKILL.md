@@ -1,6 +1,6 @@
 ---
 name: build-review-gallery
-description: "Build the interactive HTML review gallery showing every generated post — image, copy, platform, status — for team or client review in a browser. Triggers on \"/build-review-gallery\", \"review gallery\", \"show me the month\", \"build the gallery\", \"preview everything\", \"review page\", or after a generation batch completes and someone needs to see it all in one place. Local file, no server, no API cost."
+description: "Build the shareable HTML review gallery of every generated post for team or client. \"make me a gallery page\""
 argument-hint: "--brand <name> --month <YYYY-MM> [--no-inline-video]"
 effort: medium
 user-invocable: true

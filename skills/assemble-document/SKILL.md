@@ -1,6 +1,6 @@
 ---
 name: assemble-document
-description: "Assemble the final month-end delivery manifest — every approved post with its copy, creative files, platform variants, and metadata in one structured JSON handoff. Triggers on \"/assemble-document\", \"assemble the delivery\", \"final document\", \"package the month\", \"client handoff file\", \"delivery manifest\", or when all posts are approved and the month needs packaging. Runs after finalize-month; the output is what the client receives."
+description: "Assemble the month-end delivery manifest: approved posts, copy, files and metadata as one JSON. \"build the delivery manifest\""
 argument-hint: "[--brand <name>] [--month <YYYY-MM>]"
 effort: high
 user-invocable: true

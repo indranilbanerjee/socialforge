@@ -1,5 +1,5 @@
 ---
-description: Show current production status for the active brand and month
+description: "Show production status for the active brand and month. \"where are we on this month\""
 argument-hint: "[--brand <name>]"
 ---
 

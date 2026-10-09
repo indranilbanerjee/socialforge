@@ -1,6 +1,6 @@
 ---
 name: c2pa-sign
-description: "Embed C2PA provenance manifests in AI-generated assets — the machine-readable AI disclosure EU AI Act Article 50 expects (enforceable since 2 Aug 2026), plus the human-approval record for the Article 50(4) exemption. Triggers on \"/c2pa-sign\", \"sign this asset\", \"provenance\", \"content credentials\", \"AI disclosure\", \"Article 50\", \"is this compliant to publish\", or before any AI-generated asset ships. Pass --reviewed-by and --model-id so the manifest records who approved it and what made it."
+description: "Embed C2PA content credentials and an AI-disclosure record in AI-generated assets. \"sign these images for AI disclosure\""
 ---
 
 # /socialforge:c2pa-sign — Embed Content Authenticity Provenance

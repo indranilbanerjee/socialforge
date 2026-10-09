@@ -1,6 +1,6 @@
 ---
 name: adapt-copy
-description: "Adapt post copy for every target platform — character limits, hashtag counts and placement, tone, compliance, and the right CTA mechanism per platform (comment-keyword or link-in-bio on Instagram/TikTok, direct link elsewhere; the CTA is never dropped). Triggers on \"/adapt-copy\", \"adapt this copy\", \"platform versions\", \"rewrite for LinkedIn\", \"caption for each platform\", \"cross-post this\", or any time one piece of copy needs platform-native variants. Reads the brand profile for voice, hashtags, and cta_keyword."
+description: "Adapt post copy per platform: character limits, hashtags, tone and the right CTA mechanism. \"rewrite this caption for LinkedIn\""
 argument-hint: "[--post <id>] [--all] [--platform <name>]"
 effort: medium
 user-invocable: true

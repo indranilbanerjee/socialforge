@@ -1,6 +1,6 @@
 ---
 name: manage-reviews
-description: "Run the approval workflows — internal review, client review, CEO sign-off, revision requests, reminders — that gate every asset before delivery. Triggers on \"/manage-reviews\", \"send for review\", \"approval status\", \"who has not approved\", \"client feedback\", \"request revisions\", \"chase approvals\", or any time content is waiting on a human decision. The approver recorded here feeds the c2pa-sign human-oversight record."
+description: "Manage reviews: internal and client approvals, sign-offs, revisions and reminders. \"who hasn't approved yet\""
 argument-hint: "[--post <id>] [--approve] [--revise] [--client-send]"
 effort: medium
 user-invocable: true

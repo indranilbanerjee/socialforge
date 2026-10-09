@@ -1,6 +1,7 @@
 ---
-description: Finalize the month and package all approved content for delivery
+description: "Finalize the month and package approved content for delivery. \"close out the month\""
 argument-hint: "[--brand <name>] [--force]"
+disable-model-invocation: true
 ---
 
 # Finalize

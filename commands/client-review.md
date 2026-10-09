@@ -1,5 +1,5 @@
 ---
-description: Send approved posts to client for review via Slack or email
+description: "Send internally approved posts to the client by Slack or email with reminders; internal pass -> review. \"send these to the client\""
 argument-hint: "[--tier HERO|HUB] [--all-approved]"
 ---
 

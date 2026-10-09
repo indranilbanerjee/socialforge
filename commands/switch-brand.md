@@ -1,5 +1,5 @@
 ---
-description: Switch the active brand context
+description: "Switch the active brand context for all following commands. \"switch to the other client\""
 argument-hint: "<brand-name>"
 ---
 

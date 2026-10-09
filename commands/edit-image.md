@@ -1,5 +1,5 @@
 ---
-description: Edit a generated image — adjust background, lighting, colors, or composition
+description: "Edit a generated image: background, lighting, colors or composition. \"change the background on this image\""
 argument-hint: "<post-id> <instruction>"
 ---
 

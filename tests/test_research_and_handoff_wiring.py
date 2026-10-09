@@ -45,10 +45,14 @@ def frontmatter(text):
 
 
 class TestResearchMonthWiring(unittest.TestCase):
-    def test_frontmatter_names_the_skill_and_its_slash_alias(self):
+    def test_frontmatter_names_the_skill_and_carries_one_user_phrase(self):
         fm = frontmatter(RESEARCH)
         self.assertRegex(fm, r"(?m)^name:\s*research-month\s*$")
-        self.assertIn('\\"/research-month\\"', fm)
+        # description rule (test_description_density): one quoted phrase a user types, no slash alias
+        # (the name is already in the listing)
+        desc = re.search(r"(?m)^description:\s*(.+)$", fm).group(1)
+        self.assertEqual(len(re.findall(r'\\"[^"]+?\\"', desc)), 1)
+        self.assertNotIn("/research-month", desc)
         self.assertRegex(fm, r"(?m)^user-invocable:\s*true\s*$")
         self.assertNotIn("triggers:", fm, "triggers belong inside the description")
 

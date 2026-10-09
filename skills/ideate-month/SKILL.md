@@ -1,6 +1,6 @@
 ---
 name: ideate-month
-description: "Plan next month's content calendar from a theme, raw signals, and last month's results — before any calendar exists. Triggers on \"/ideate-month\", \"/plan-month\", \"what should we post next month\", \"plan the calendar\", \"ideas for next month\", \"month theme\", \"content ideas for [brand]\", \"build a calendar from scratch\", or any time a brand needs a month planned and no client calendar has arrived. Outputs a calendar-data.json-compatible draft — series arcs, one-off posts, tiers, platforms — that feeds straight into /socialforge:parse-calendar and the production pipeline. Reads the brand profile for pillars and voice; mines pasted news/trends/notes into on-pillar angles; compounds last month's measured wins (fed by /socialforge:ingest-performance, with anecdotal reports labeled as such) instead of starting from zero."
+description: "Plan next month's content calendar from a theme, signals and last month's results. \"what should we post next month\""
 argument-hint: "[--brand <name>] [--month <YYYY-MM>] [--theme <text>] [--signals <pasted material>]"
 effort: high
 user-invocable: true

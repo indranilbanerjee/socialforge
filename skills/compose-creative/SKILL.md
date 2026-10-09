@@ -1,6 +1,6 @@
 ---
 name: compose-creative
-description: "Core creative engine — turns a calendar post into finished images or video using 4 modes (anchor-compose, enhance-extend, style-referenced, pure-creative) with brand assets, AI generation, and human approval before credits are spent. Triggers on \"/compose-creative\", \"generate the creative\", \"make the image for P07\", \"produce this post\", \"create the visual\", \"compose this\", or any time a calendar post needs its creative produced. Overlay text follows the pairing rule — it never echoes the caption."
+description: "Compose just the creative (image or video) for a calendar post, in four modes. \"make the visual for this post\""
 argument-hint: "[--post <id>] [--all] [--variant b]"
 effort: max
 user-invocable: true

@@ -1,5 +1,5 @@
 ---
-description: Re-sync the calendar from its source (Notion, Drive, or file)
+description: "Re-sync the calendar from its source (Notion, Drive or file). \"refresh the calendar from Notion\""
 argument-hint: "[--brand <name>] [--source <path-or-url>]"
 ---
 

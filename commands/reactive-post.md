@@ -1,5 +1,5 @@
 ---
-description: Create a reactive/trending post outside the planned calendar
+description: "Create a quick off-calendar post reacting to a trend or news event. \"react to this trending topic\""
 argument-hint: "<topic> [--brand <name>] [--platform <name>]"
 ---
 

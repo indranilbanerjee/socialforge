@@ -1,5 +1,5 @@
 ---
-description: Swap the brand asset used for a post's image composition
+description: "Swap the brand asset used in a post's image composition. \"use a different photo for this post\""
 argument-hint: "<post-id> [--asset <asset-id>] [--browse]"
 ---
 

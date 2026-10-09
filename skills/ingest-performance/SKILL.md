@@ -1,6 +1,6 @@
 ---
 name: ingest-performance
-description: "Feed last month's real numbers into next month's plan: ingest a platform analytics export (CSV from Instagram Insights, LinkedIn analytics, TikTok Studio, X analytics — any export with a post-id column) into per-post performance records, then rank the month's wins with sample floors and margin rules so ideation compounds measured winners, not remembered ones. Triggers on \"/ingest-performance\", \"here are last month's numbers\", \"import analytics\", \"which posts performed best\", \"engagement report\", \"what worked last month\", or whenever ideate-month needs its wins rung fed. Writes performance.json next to the month's tracker; /socialforge:ideate-month reads it and labels every win measured vs anecdotal."
+description: "Turn a platform analytics export into per-post performance records and ranked winners. \"which of last month's posts worked\""
 argument-hint: "--brand <name> --month <YYYY-MM> [--csv <export.csv>] [--source <label>] [--replace]"
 user-invocable: true
 ---

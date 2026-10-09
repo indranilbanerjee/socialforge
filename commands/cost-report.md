@@ -1,5 +1,5 @@
 ---
-description: Show API cost breakdown for the current month's production
+description: "Report this month's generation cost by provider and post. \"what have we spent so far\""
 argument-hint: "--brand <name> --month <YYYY-MM>"
 ---
 

@@ -1,15 +1,19 @@
 ---
 name: create-previews
-description: "Generate platform-accurate mockup previews — the post as it will actually render on LinkedIn, Instagram, X, TikTok — before anything is published. Triggers on \"/create-previews\", \"preview this post\", \"how will it look\", \"platform mockup\", \"show it on Instagram\", \"preview batch\", or after creative and copy exist and stakeholders need to see the assembled post in context before approval."
+description: "Create platform previews: post mockups on LinkedIn, Instagram, X and TikTok before publishing. \"show how this will look\""
 argument-hint: "[--post <id>] [--all] [--platform <name>]"
 effort: medium
 user-invocable: true
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # /socialforge:create-previews — Preview Generator
 
 Generate realistic platform mockups showing exactly how each post will appear when published.
+
+## Execution gate
+
+Rendering writes preview images under `production/previews/`. State the scope (posts x platforms, destination) and proceed only on an explicit `yes`; any other reply cancels with nothing written.
 
 ## Process
 1. For each post × each platform:

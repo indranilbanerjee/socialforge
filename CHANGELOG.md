@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.28.0] - 2026-10-09
+
+### Skills that fit the listing budget, and one visible entry per purpose
+
+**Changed — descriptions**
+
+- **Every skill and command description now fits Claude Code's skill-listing
+  budget.** The budget is characters (the context window x 4 x
+  `skillListingBudgetFraction`, default 1%), and every listed name counts and
+  is never dropped. SocialForge's visible listing was 10,305 characters; it is
+  now 4,745 (median description 110, down from 384). Each description says
+  what the skill does, how it differs from its nearest sibling, and one phrase
+  a user would type. Slash aliases and "Triggers on" lists are gone from the
+  listing and remain in the skill bodies.
+- `tests/test_description_density.py` enforces the rule: 60-150 characters,
+  median ≤ 120, one owner per quoted phrase, near-miss pairs registered with a
+  one-sided pointer (generate-post/compose-creative, client-review/review,
+  new-month/parse-calendar, new-month/ideate-month), and the listing-cost
+  formula with a 5,800-character ceiling. Its docstring records why.
+
+**Fixed — two requests reached no skill**
+
+- `finalize-month` and `create-previews` were hidden from the model, and so
+  were their wrapper commands (`finalize`, `preview-batch`), so "package the
+  month for the client" and "show me how this will look" routed nowhere.
+  Each purpose now has one visible entry, the skill, behind a typed `yes`
+  gate (new for both). Wrapper commands stay as hidden slash shortcuts.
+  `assemble-document` (an internal step) and `manage-reviews` (reached through
+  its own commands) stay hidden by design. New `tests/test_execution_gates.py`
+  guards this, with planted failures.
+
+**Measured with trigger evals** (listing budget pinned, first action graded):
+every comparable case passes after as before (71/71), the four near-miss
+cases pass 5/5, "should not trigger" cases stay quiet, and
+finalize-month / create-previews route 6/6 on the skill. parse-calendar,
+0/3 in the first baseline, routes 3/3, including on a differently worded
+follow-up.
+
 ## [1.27.2] - 2026-10-04
 
 ### Fixed — Hermes refused to install the plugin

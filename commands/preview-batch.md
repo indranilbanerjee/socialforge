@@ -1,6 +1,7 @@
 ---
-description: Generate preview mockups for all posts in batch
+description: "Render preview mockups for all generated posts in one batch. \"preview all the posts\""
 argument-hint: "[--brand <name>] [--platform <name>]"
+disable-model-invocation: true
 ---
 
 # Preview Batch

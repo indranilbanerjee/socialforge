@@ -1,6 +1,6 @@
 ---
 name: research-month
-description: "Turn evidence the user supplies into a what's-working brief before planning a month: outlier posts versus the account's own baseline (analytics export), the words customers use (comment export), and competitor ad themes (ad-library URLs, screenshots or pasted text). Triggers on \"/research-month\", \"what's working\", \"mine these comments\", \"customer language\", \"analyse competitor ads\", \"which past posts outperformed\". Scrapes nothing, names no vendor; writes research-brief.md for /socialforge:ideate-month."
+description: "Turn supplied comment exports and competitor ads into a what's-working brief before planning a month. \"analyse these competitor ads and comments\""
 argument-hint: "--brand <name> --month <YYYY-MM> [--posts <export.csv>] [--comments <export.csv>] [--ads <urls|screenshots|pasted text>]"
 effort: high
 user-invocable: true

@@ -1,5 +1,5 @@
 ---
-description: Generate creative assets for all posts in the current month's calendar
+description: "Generate creative, copy and previews for every calendar post (generation step only). \"generate all the posts\""
 argument-hint: "[--brand <name>] [--week <N>] [--tier HERO|HUB|HYGIENE] [--platform <name>]"
 ---
 

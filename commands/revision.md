@@ -1,5 +1,5 @@
 ---
-description: Apply revision feedback to a post and regenerate affected elements
+description: "Apply revision feedback to a post and regenerate what changed. \"apply the client's feedback\""
 argument-hint: "<post-id> <feedback>"
 ---
 

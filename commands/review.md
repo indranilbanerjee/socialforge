@@ -1,5 +1,5 @@
 ---
-description: Open the review gallery for the current month's production
+description: "Open the review gallery to approve or flag every post this month. \"let me go through the month's posts\""
 argument-hint: "[--brand <name>] [--tier HERO|HUB|HYGIENE]"
 ---
 

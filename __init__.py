@@ -28,7 +28,7 @@ logger = logging.getLogger("socialforge")
 
 PLUGIN_ROOT = Path(__file__).resolve().parent
 SKILLS_DIR = PLUGIN_ROOT / "skills"
-PLUGIN_VERSION = "1.27.2"
+PLUGIN_VERSION = "1.28.0"
 
 
 def _parse_skill_frontmatter(skill_md_path: Path) -> dict:

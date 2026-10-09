@@ -6,19 +6,21 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 29 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.27.2-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.28.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-440%2F440%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1272)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1272)
+[![Tests](https://img.shields.io/badge/tests-449%2F449%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1280)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1280)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.27.2 (October 4, 2026), on top of v1.27.0: research in, scheduler out, and nothing fails silently.** **New `/socialforge:research-month`:** outlier posts against the account's own baseline, the words customers actually use in comments, and competitor ad themes, all from material you supply, feeding next month's plan. **Optional scheduler hand-off** after `finalize-month` (Postiz), only on your approval of the exact posts and times. **Claims the code didn't keep, fixed:** the approved last video frame now really reaches the video model; dropped image references, dropped hashtags and repeat analytics ingests are now reported or prevented instead of happening silently; platform limits carry a source and a check date (Pinterest 800, Threads 1 hashtag, Instagram 5 hashtags), and X is counted the way X counts. Plus content-credentials and conversational-commerce references, a publishable review gallery, always-on recipes, and directory listing fields.
+> 🆕 **Just shipped — v1.28.0 (October 9, 2026): every skill now reaches the model, and finalizing asks first.** Claude Code lists skills in a budget measured in characters, and SocialForge's descriptions were long enough that many were cut before the model saw them. They are now less than half the size: each says what the skill does, how it differs from its neighbour, and one phrase you would type. "Package the month for the client" and "show me how this will look" reached no skill because the skills were hidden; each now has one visible entry that shows the scope and waits for your `yes`. Measured with trigger evals: nothing that worked before stopped working.
+>
+> **v1.27.x (October 4, 2026): research in, scheduler out, and nothing fails silently.** research-month, an opt-in Postiz hand-off, a last video frame that really reaches the model, sourced platform limits; Hermes installs the plugin again.
 >
 > **v1.26.0 (October 4, 2026): the seven-week freshness pass.** SocialForge was missing from Cowork's marketplace view ([#3](https://github.com/indranilbanerjee/socialforge/issues/3)) — its malformed plugin-root `settings.json` is gone; Codex installs repaired; model registry re-verified.
 
@@ -69,7 +71,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 6. /socialforge:finalize                    — Package for delivery
 ```
 
-## Supported surfaces (v1.27.2)
+## Supported surfaces (v1.28.0)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -94,7 +96,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **29 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1272) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1280) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -382,7 +384,11 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.27.2)
+## Current Release (v1.28.0)
+
+**v1.28.0:** descriptions rewritten to fit Claude Code's character-based skill-listing budget (visible listing 10,305 → 4,745 characters), guarded by a rule test that records why. finalize-month and create-previews were hidden along with their wrapper commands, so their requests reached no skill; each now has one visible entry behind a typed `yes` gate, guarded. Trigger evals: 71/71 comparable cases before and after; near-miss pairs 5/5.
+
+### Release v1.27.2
 
 **v1.27.2:** Hermes Agent's install-time security scan rated SocialForge "dangerous", so Hermes refused to install it. Two findings were real (zero-width spaces before two code fences in `ideate-month`; an archived hook that piped echo output into inline Python); the rest were harmless lines written like attacks and are reworded. Hermes's own validator now passes, and a new guard applies the scanner's patterns to every shipped file.
 

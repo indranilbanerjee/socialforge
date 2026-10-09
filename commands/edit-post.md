@@ -1,5 +1,5 @@
 ---
-description: Edit an existing post's copy, visual direction, or metadata
+description: "Edit an existing post's copy, visual direction or metadata. \"tweak the copy on P07\""
 argument-hint: "<post-id> [--copy] [--visual] [--meta]"
 ---
 

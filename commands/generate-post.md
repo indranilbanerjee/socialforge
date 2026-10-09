@@ -1,5 +1,5 @@
 ---
-description: Generate creative for a single post by ID
+description: "Produce one post end to end by ID: image, approval, copy, compliance, previews; visual only -> compose-creative. \"do post P04\""
 argument-hint: "<post-id> [--variant b]"
 ---
 

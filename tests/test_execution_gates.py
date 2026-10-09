@@ -1,312 +1,159 @@
-"""Adversarial execution pins for the state-writing scripts.
+"""Side-effect skills stay reachable through their gate; hidden wrappers hand over to a visible skill.
 
-Each of these tests replays a probe that found a real defect during the
-v1.19.0 adversarial sweep, executed against a throwaway workspace:
+Why this test exists. A skill with `disable-model-invocation: true` is removed
+from the model's listing. A plain request such as "push this live" or
+"translate this into Spanish" then matches nothing, and the model can still
+reach the same tools freehand, with no gate in the way. Keeping a side-effect
+skill model-invocable routes the request through its `## Execution gate`
+block: scope or preview first, an explicit typed `yes`, anything else cancels.
+Hosts that ignore the flag (Codex) make the gate in the skill body the real
+safety layer on every platform. digital-marketing-pro/tests/test_execution_gates.py
+holds the same rule for its 18 execution skills.
 
-- compliance_check failed OPEN: unknown severity words downgraded to
-  warnings, one bad regex crashed the whole gate, a typo'd brand passed as
-  SKIPPED, and an empty forbidden-content entry matched everything.
-- status_manager minted ghost posts from typo'd ids, accepted "FINAL " as a
-  brand-new frozen status, and let calendar fields traverse out of the
-  month tree via '../' in a platform key.
-- index_assets minted duplicate asset ids on --refresh, so downstream
-  lookups by id resolved to the wrong image.
-- credential_manager destroyed every stored provider key when setup ran
-  over a corrupt credentials.json.
-- resolve_model handed retired model ids straight to SDKs when reached
-  through an alias (direct id lookups fell forward correctly).
-- build_gallery interpolated calendar strings into the review HTML raw.
+The listing carries one entry per purpose: thin wrapper COMMANDS are hidden
+(`disable-model-invocation: true`) so they do not compete with the skill they
+wrap, and this test requires every hidden wrapper's target skill to be visible.
 
-All subprocesses run offline: provider env vars are cleared.
+Stdlib only.
 """
 from __future__ import annotations
 
-import json
-import os
-import subprocess
-import sys
-import tempfile
+import re
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO / "scripts"
+ROOT = Path(__file__).resolve().parent.parent
+SKILLS = ROOT / "skills"
+COMMANDS = ROOT / "commands"
 
-OFFLINE = {
-    "GEMINI_API_KEY": "", "GOOGLE_CLOUD_PROJECT": "", "GOOGLE_APPLICATION_CREDENTIALS": "",
-    "WAVESPEED_API_KEY": "", "HF_API_KEY": "", "HF_API_SECRET": "",
-    "ANTHROPIC_API_KEY": "", "OPENAI_API_KEY": "",
+# Skills that change something outside the conversation (write files, upload,
+# send, switch backends). Each must be model-invocable AND carry a gate.
+SIDE_EFFECT_SKILLS = frozenset({"finalize-month", "create-previews"})
+
+# Hidden wrapper command -> the visible skill it hands over to.
+WRAPPER_TARGETS = {
+    "finalize": "finalize-month",
+    "preview-batch": "create-previews",
+    "brand-setup": "brand-manager",
 }
 
+# Skills allowed to stay hidden (internal steps whose commands are the visible entries).
+INTERNAL_HIDDEN_SKILLS = frozenset({"assemble-document", "manage-reviews"})
 
-def run(script, *args, workspace=None, stdin=None, extra_env=None):
-    """Run a scripts/ CLI against an isolated workspace; return (exit, stdout)."""
-    env = dict(os.environ)
-    env.update(OFFLINE)
-    if workspace:
-        env["CLAUDE_PLUGIN_DATA"] = str(workspace)
-    if extra_env:
-        env.update(extra_env)
-    proc = subprocess.run(
-        [sys.executable, str(SCRIPTS / script), *args],
-        capture_output=True, text=True, env=env, input=stdin, timeout=120,
-    )
-    return proc.returncode, proc.stdout
+FM_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---", re.S)
+GATE_RE = re.compile(r"^## Execution gate\b[^\n]*\n(.*?)(?=^## |\Z)", re.M | re.S)
 
 
-class WorkspaceCase(unittest.TestCase):
-    def setUp(self):
-        self.ws = Path(tempfile.mkdtemp())
-        (self.ws / "socialforge").mkdir()
-
-    def brand_dir(self, brand="probe"):
-        d = self.ws / "socialforge" / "brands" / brand
-        d.mkdir(parents=True, exist_ok=True)
-        return d
-
-    def month_dir(self, brand="probe", month="2026-09"):
-        d = self.ws / "socialforge" / "output" / brand / month
-        d.mkdir(parents=True, exist_ok=True)
-        return d
+def frontmatter(text: str) -> str:
+    m = FM_RE.match(text)
+    return m.group(1) if m else ""
 
 
-class TestComplianceGateFailsClosed(WorkspaceCase):
-    RULES = {
-        "banned_phrases": [
-            {"phrase": "guaranteed returns", "severity": "high"},
-            {"phrase": "unbalanced (regex", "match_type": "regex", "severity": "block"},
-            {"no_phrase_key": True},
-        ],
-        "platform_specific_rules": {"linkedin": {"forbidden_content_types": ["", "ad"]}},
-    }
-
-    def setUp(self):
-        super().setUp()
-        (self.brand_dir() / "compliance-rules.json").write_text(
-            json.dumps(self.RULES), encoding="utf-8")
-
-    def test_unknown_severity_blocks_and_bad_rules_never_crash_the_gate(self):
-        code, out = run("compliance_check.py", "--brand", "probe",
-                        "--text", "Our advice: enjoy guaranteed returns today",
-                        "--platform", "linkedin", workspace=self.ws)
-        self.assertEqual(code, 1, "BLOCKED must exit 1 so shell callers cannot sail past")
-        d = json.loads(out)
-        self.assertEqual(d["status"], "BLOCKED")
-        # One bad regex, one phrase-less rule, one empty forbidden entry:
-        # all three become blocking rule_errors instead of a crash or a skip.
-        self.assertEqual(d["rule_errors"], 3)
-        banned = [v for v in d["violations"] if v["type"] == "banned_phrase"]
-        self.assertEqual(len(banned), 1)
-        self.assertIn("fail closed", banned[0]["note"])
-        # Word-boundary matching: 'ad' must not fire on 'advice'.
-        self.assertFalse([v for v in d["violations"] if v["type"] == "forbidden_content"])
-
-    def test_typo_brand_fails_instead_of_skipping(self):
-        code, out = run("compliance_check.py", "--brand", "probe-typo",
-                        "--text", "anything", workspace=self.ws)
-        self.assertEqual(code, 2)
-        d = json.loads(out)
-        self.assertEqual(d["status"], "FAILED")
-        self.assertIn("probe", d["known_brands"])
-
-    def test_brand_without_rules_still_skips_cleanly(self):
-        self.brand_dir("bare")
-        code, out = run("compliance_check.py", "--brand", "bare",
-                        "--text", "anything", workspace=self.ws)
-        self.assertEqual(code, 0)
-        self.assertEqual(json.loads(out)["status"], "SKIPPED")
+def flag(text: str) -> str | None:
+    m = re.search(r"^disable-model-invocation:\s*(true|false)\s*$", frontmatter(text), re.M)
+    return m.group(1) if m else None
 
 
-class TestStatusLedger(WorkspaceCase):
-    CALENDAR = {"posts": [
-        {"post_id": "P01", "date": "2026-09-03",
-         "platforms": [{"key": "../../../escaped"}], "tier": "HERO", "content_type": "static"},
-        {"post_id": "P02", "date": "2026-09-10", "platforms": ["linkedin"],
-         "tier": "HUB", "content_type": "static"},
-    ]}
-
-    def setUp(self):
-        super().setUp()
-        (self.month_dir() / "calendar-data.json").write_text(
-            json.dumps(self.CALENDAR), encoding="utf-8")
-        run("status_manager.py", "--action", "init-month", "--brand", "probe",
-            "--month", "2026-09", workspace=self.ws)
-
-    def test_ghost_post_ids_are_rejected(self):
-        code, out = run("status_manager.py", "--action", "update-status",
-                        "--brand", "probe", "--month", "2026-09",
-                        "--post-id", "P99", "--status", "ASSET_MATCHING",
-                        workspace=self.ws)
-        self.assertEqual(code, 1)
-        self.assertIn("Unknown post id", json.loads(out)["error"])
-
-    def test_unknown_status_rejected_even_with_force(self):
-        code, out = run("status_manager.py", "--action", "update-status",
-                        "--brand", "probe", "--month", "2026-09",
-                        "--post-id", "P02", "--status", "BOGUS_STATE", "--force",
-                        workspace=self.ws)
-        self.assertEqual(code, 1)
-        self.assertIn("known_statuses", json.loads(out))
-
-    def test_calendar_post_transitions_normally(self):
-        code, out = run("status_manager.py", "--action", "update-status",
-                        "--brand", "probe", "--month", "2026-09",
-                        "--post-id", "P02", "--status", "ASSET_MATCHING",
-                        workspace=self.ws)
-        self.assertEqual(code, 0)
-        self.assertEqual(json.loads(out)["new_status"], "ASSET_MATCHING")
-
-    def test_traversal_in_calendar_fields_is_sanitized(self):
-        code, out = run("status_manager.py", "--action", "get-post-folder",
-                        "--brand", "probe", "--month", "2026-09",
-                        "--post-id", "P01", workspace=self.ws)
-        self.assertEqual(code, 0)
-        name = json.loads(out)["name"]
-        self.assertNotIn("..", name)
-        self.assertNotIn("/", name)
-        self.assertNotIn("\\", name)
+def gate_problems(text: str) -> list[str]:
+    out = []
+    if flag(text) != "false":
+        out.append("frontmatter does not say `disable-model-invocation: false`")
+    m = GATE_RE.search(text.replace("\r\n", "\n"))
+    if not m:
+        out.append("no `## Execution gate` block")
+    else:
+        body = m.group(1)
+        if "`yes`" not in body:
+            out.append("gate block never asks for a typed `yes`")
+        if "cancel" not in body.lower():
+            out.append("gate block never says that any other reply cancels")
+    return out
 
 
-class TestAssetIndexIds(WorkspaceCase):
-    def test_refresh_never_mints_duplicate_ids(self):
-        src = self.ws / "assets"
-        src.mkdir()
-        for n in ("beta.png", "gamma.png", "delta.png"):
-            (src / n).write_bytes(b"fake")
-        code, _ = run("index_assets.py", "--brand", "probe", "--source", str(src),
-                      workspace=self.ws)
-        self.assertIn(code, (0, 3))  # 3 = honest "AI analysis did not run"
-        (src / "alpha.png").write_bytes(b"fake")  # sorts before every existing file
-        code, _ = run("index_assets.py", "--brand", "probe", "--source", str(src),
-                      "--refresh", workspace=self.ws)
-        self.assertIn(code, (0, 3))
-        index = json.loads((self.ws / "socialforge" / "brands" / "probe" /
-                            "asset-index.json").read_text(encoding="utf-8"))
-        ids = [a["id"] for a in index["assets"]]
-        self.assertEqual(len(ids), len(set(ids)),
-                         f"duplicate asset ids after refresh: {ids}")
-
-    def test_total_ai_failure_is_loud_not_a_quiet_success(self):
-        src = self.ws / "assets"
-        src.mkdir()
-        (src / "one.png").write_bytes(b"fake")
-        code, out = run("index_assets.py", "--brand", "probe", "--source", str(src),
-                        workspace=self.ws)
-        self.assertEqual(code, 3)
-        d = json.loads(out)
-        self.assertIn("ai_failure_reasons", d)
-        self.assertTrue(d.get("action_required"))
+def wrapper_problems(commands: dict[str, str], skills: dict[str, str], targets: dict[str, str]) -> list[str]:
+    """commands/skills: name -> file text."""
+    out = []
+    for name, text in commands.items():
+        if flag(text) == "true" and name not in targets:
+            out.append(f"hidden command {name} has no registered target skill")
+    for cmd, skill in targets.items():
+        if cmd not in commands:
+            out.append(f"registered wrapper {cmd} does not exist")
+        elif skill not in skills:
+            out.append(f"wrapper {cmd} points at missing skill {skill}")
+        elif flag(skills[skill]) == "true":
+            out.append(f"wrapper {cmd} is hidden and so is its target {skill}: nothing is left to route to")
+    return out
 
 
-class TestCredentialCorruptionProtection(WorkspaceCase):
-    def test_setup_refuses_to_overwrite_a_corrupt_credentials_file(self):
-        key = "probe-key-abcdefgh12345678901234"
-        code, out = run("credential_manager.py", "setup-wavespeed",
-                        workspace=self.ws, stdin=key + "\n")
-        self.assertEqual(json.loads(out)["status"], "success")
-        cred_file = self.ws / "socialforge" / "credentials.json"
-        cred_file.write_text(cred_file.read_text(encoding="utf-8") + "}",
-                             encoding="utf-8")
-        code, out = run("credential_manager.py", "setup-wavespeed",
-                        workspace=self.ws, stdin="other-key-abcdefgh12345678901234\n")
-        d = json.loads(out)
-        self.assertEqual(d["status"], "FAILED")
-        self.assertIn("refusing to overwrite", d["error"])
-        # The original key must still be on disk, recoverable.
-        self.assertIn(key, cred_file.read_text(encoding="utf-8"))
+def hidden_skill_problems(skills: dict[str, str], allowed) -> list[str]:
+    return [f"skill {n} is hidden but is not an allowed internal step"
+            for n, t in sorted(skills.items()) if flag(t) == "true" and n not in allowed]
 
 
-class TestResolverAliasStatusLadder(unittest.TestCase):
-    def test_alias_to_retired_model_falls_forward(self):
-        reg = {"last_updated": "2026-08-01",
-               "aliases": {"latest-test-alias": "dead-model-1"},
-               "models": [
-                   {"id": "dead-model-1", "status": "retired",
-                    "replacement_id": "live-model-2", "modality": "text"},
-                   {"id": "live-model-2", "status": "current", "modality": "text"},
-               ]}
-        with tempfile.TemporaryDirectory() as tmp:
-            reg_path = Path(tmp) / "registry.json"
-            reg_path.write_text(json.dumps(reg), encoding="utf-8")
-            env = dict(os.environ)
-            env["MODEL_REGISTRY"] = str(reg_path)
-            proc = subprocess.run(
-                [sys.executable, "-c",
-                 "import sys; sys.path.insert(0, r'" + str(SCRIPTS) + "'); "
-                 "from resolve_model import resolve; "
-                 "print(resolve('latest-test-alias'))"],
-                capture_output=True, text=True, env=env, timeout=60)
-        self.assertEqual(proc.stdout.strip(), "live-model-2",
-                         "an alias to a retired model must fall forward like a "
-                         "direct id lookup does — never hand a dead id to an SDK")
+def _load(dirpath: Path, pattern: str, name_of) -> dict[str, str]:
+    out = {}
+    for p in sorted(dirpath.glob(pattern)):
+        out[name_of(p)] = p.read_text(encoding="utf-8", errors="replace")
+    return out
 
 
-class TestGalleryEscapes(WorkspaceCase):
-    def test_calendar_strings_never_reach_the_review_html_raw(self):
-        month = self.month_dir()
-        calendar = {"posts": [{
-            "post_id": "P01", "date": "2026-09-03", "platforms": ["linkedin"],
-            "tier": "HERO", "content_type": "static",
-            "title": "</div><script>alert(1)</script>",
-        }]}
-        (month / "calendar-data.json").write_text(json.dumps(calendar), encoding="utf-8")
-        run("status_manager.py", "--action", "init-month", "--brand", "probe",
-            "--month", "2026-09", workspace=self.ws)
-        code, out = run("build_gallery.py", "--brand", "probe", "--month", "2026-09",
-                        workspace=self.ws)
-        self.assertEqual(code, 0)
-        d = json.loads(out)
-        self.assertEqual(d["posts_without_media"], ["P01"],
-                         "posts with no media must be named, not hidden in a count")
-        html = (month / "review" / "gallery.html").read_text(encoding="utf-8")
-        self.assertNotIn("<script>alert(1)</script>", html)
-        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html)
+class TestExecutionGates(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.skills = _load(SKILLS, "*/SKILL.md", lambda p: p.parent.name)
+        cls.commands = _load(COMMANDS, "*.md", lambda p: p.stem)
 
+    def test_side_effect_skills_exist(self):
+        self.assertEqual(sorted(n for n in SIDE_EFFECT_SKILLS if n not in self.skills), [])
 
-class TestVideoChainEndToEnd(WorkspaceCase):
-    def test_failed_video_is_failed_at_the_top_level_with_attempts(self):
-        month = self.month_dir()
-        (month / "calendar-data.json").write_text(json.dumps({"posts": [
-            {"post_id": "P02", "date": "2026-09-10", "platforms": ["linkedin"],
-             "tier": "HUB", "content_type": "static"}]}), encoding="utf-8")
-        out_dir = self.ws / "video-out"
-        code, out = run("generate_video.py", "--brand", "probe", "--month", "2026-09",
-                        "--post-id", "P02", "--output-dir", str(out_dir),
-                        "--generate-video", workspace=self.ws)
-        self.assertEqual(code, 4, "requested-but-failed video must exit 4")
-        d = json.loads(out)
-        self.assertEqual(d["status"], "FAILED",
-                         "top-level status must reflect the failed video, not say success")
-        self.assertEqual(d["routing"]["provider"], "none")
-        self.assertIn("credentials_found", d["routing"])
-        # Script and storyboard artifacts still exist — express honesty, not loss
-        self.assertTrue((out_dir / "post-P02-script.json").exists())
+    def test_every_side_effect_skill_is_invocable_and_has_its_gate(self):
+        bad = {n: p for n in sorted(SIDE_EFFECT_SKILLS) if n in self.skills
+               and (p := gate_problems(self.skills[n]))}
+        self.assertEqual(bad, {}, "a side-effect skill lost its gate or was hidden again "
+                                  "(see this module's docstring for why)")
 
+    def test_every_hidden_wrapper_points_at_a_visible_skill(self):
+        self.assertEqual(wrapper_problems(self.commands, self.skills, WRAPPER_TARGETS), [])
 
-class TestRefreshModelsHonesty(unittest.TestCase):
-    def test_bump_refused_when_nothing_was_checked(self):
-        reg_src = (SCRIPTS / "model_registry.json").read_text(encoding="utf-8")
-        with tempfile.TemporaryDirectory() as tmp:
-            reg_path = Path(tmp) / "registry.json"
-            reg_path.write_text(reg_src, encoding="utf-8")
-            env = dict(os.environ)
-            env.update(OFFLINE)
-            env["MODEL_REGISTRY"] = str(reg_path)
-            proc = subprocess.run(
-                [sys.executable, str(SCRIPTS / "refresh_models.py"),
-                 "--json", "--bump-timestamp"],
-                capture_output=True, text=True, env=env, timeout=60)
-            d = json.loads(proc.stdout)
-            self.assertEqual(proc.returncode, 2)
-            self.assertEqual(d["vendors_checked"], 0)
-            self.assertIn("timestamp_bump_refused", d)
-            self.assertNotIn("timestamp_bumped", d)
-            # Every vendor names its reason; none hide behind a conflated string
-            for vendor in ("anthropic", "openai", "google"):
-                self.assertIn("reason", d[vendor])
-                self.assertIn("no-key", d[vendor]["reason"])
-            # The registry file itself must be untouched
-            self.assertEqual(reg_path.read_text(encoding="utf-8"), reg_src)
+    def test_no_skill_is_hidden_unless_it_is_an_internal_step(self):
+        self.assertEqual(hidden_skill_problems(self.skills, INTERNAL_HIDDEN_SKILLS), [])
+
+    # ── planted failures ────────────────────────────────────────────────
+
+    GOOD_SKILL = ("---\nname: x\ndisable-model-invocation: false\n---\n\n# x\n\n## Execution gate\n\n"
+                  "Show the preview and wait for `yes`; any other reply cancels.\n\n## Process\n")
+
+    def test_plant_gate_missing(self):
+        t = self.GOOD_SKILL.replace("## Execution gate", "## Notes")
+        self.assertIn("no `## Execution gate` block", gate_problems(t))
+
+    def test_plant_hidden_again(self):
+        t = self.GOOD_SKILL.replace("disable-model-invocation: false", "disable-model-invocation: true")
+        self.assertTrue(any("disable-model-invocation: false" in p for p in gate_problems(t)))
+        self.assertTrue(gate_problems(self.GOOD_SKILL.replace("disable-model-invocation: false\n", "")))
+
+    def test_plant_gate_without_yes_or_cancel(self):
+        no_yes = self.GOOD_SKILL.replace("`yes`", "a go-ahead")
+        no_cancel = self.GOOD_SKILL.replace("; any other reply cancels", "")
+        self.assertTrue(any("typed `yes`" in p for p in gate_problems(no_yes)))
+        self.assertTrue(any("cancels" in p for p in gate_problems(no_cancel)))
+        self.assertEqual(gate_problems(self.GOOD_SKILL), [])
+
+    def test_plant_wrapper_target_hidden_or_missing(self):
+        hidden = "---\nname: t\ndisable-model-invocation: true\n---\n"
+        visible = "---\nname: t\ndisable-model-invocation: false\n---\n"
+        cmd = "---\ndescription: d\ndisable-model-invocation: true\n---\n"
+        self.assertEqual(wrapper_problems({"w": cmd}, {"t": visible}, {"w": "t"}), [])
+        self.assertTrue(wrapper_problems({"w": cmd}, {"t": hidden}, {"w": "t"}))      # target hidden too
+        self.assertTrue(wrapper_problems({"w": cmd}, {}, {"w": "t"}))                  # target missing
+        self.assertTrue(wrapper_problems({"w": cmd}, {"t": visible}, {}))              # unregistered hidden command
+        self.assertTrue(wrapper_problems({}, {"t": visible}, {"w": "t"}))              # registered wrapper missing
+
+    def test_plant_unexpected_hidden_skill(self):
+        hidden = "---\nname: s\ndisable-model-invocation: true\n---\n"
+        self.assertTrue(hidden_skill_problems({"s": hidden}, frozenset()))
+        self.assertEqual(hidden_skill_problems({"s": hidden}, frozenset({"s"})), [])
 
 
 if __name__ == "__main__":

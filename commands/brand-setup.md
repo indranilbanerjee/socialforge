@@ -1,6 +1,7 @@
 ---
-description: Configure a new brand profile with colors, fonts, logo, visual style, platforms, and compliance rules
+description: "Create or update a brand profile: colors, fonts, logo, voice, platforms. \"set up a new client brand\""
 argument-hint: "<brand-name> [--update] [--switch]"
+disable-model-invocation: true
 ---
 
 # Brand Setup

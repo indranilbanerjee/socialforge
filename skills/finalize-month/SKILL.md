@@ -1,15 +1,19 @@
 ---
 name: finalize-month
-description: "Package all approved content into the final delivery folder — files renamed per convention, per-platform copy files, manifest included — ready for client handoff. Triggers on \"/finalize-month\", \"finalize the month\", \"package everything\", \"prepare the delivery\", \"close out the month\", \"handoff folder\", or when every post has cleared its approval queue and the month ships to the client."
+description: "Finalize the month: package approved content into the delivery folder with copy files and manifest. \"package the month for the client\""
 argument-hint: "[--brand <name>] [--force]"
 effort: high
 user-invocable: true
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # /socialforge:finalize-month — Month Finalizer
 
 Package all approved posts into the organized delivery folder structure.
+
+## Execution gate
+
+Packaging copies and renames files, and steps 5-6 can upload to a Drive and send a completion message. After the Step 0 delivery audit passes, show an Execution Summary (posts packaged, any force-finalized posts, destination folder, whether a Drive upload and a notification will happen and to whom) and proceed only on an explicit `yes`; any other reply cancels with nothing written or sent. `--force` still needs the user to have typed it.
 
 ## Pre-Finalization Check
 

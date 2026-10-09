@@ -1,6 +1,6 @@
 ---
 name: render-carousels
-description: "Render multi-slide carousels from HTML templates via Playwright — slide content injected, brand styling applied, assembled to platform-ready images or PDF. Triggers on \"/render-carousels\", \"render the carousel\", \"carousel for P04\", \"build the slides\", \"multi-slide post\", \"carousel from this outline\", or any calendar post whose content_type is carousel. Local rendering, no API cost."
+description: "Render multi-slide carousels from HTML templates into platform-ready images or PDF. \"build the carousel slides\""
 argument-hint: "[--post <id>] [--all] [--template <type>]"
 effort: high
 user-invocable: true

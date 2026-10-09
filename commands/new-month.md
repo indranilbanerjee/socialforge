@@ -1,5 +1,5 @@
 ---
-description: Start a new month's social media calendar production for a brand
+description: "Start a new month for a brand: folder and settings; a calendar to load -> parse-calendar; ideas -> ideate-month. \"start a new month for this brand\""
 argument-hint: "<brand-name> <YYYY-MM>"
 ---
 

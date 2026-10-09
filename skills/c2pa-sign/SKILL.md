@@ -1,6 +1,7 @@
 ---
 name: c2pa-sign
 description: "Embed C2PA content credentials and an AI-disclosure record in AI-generated assets. \"sign these images for AI disclosure\""
+effort: medium
 ---
 
 # /socialforge:c2pa-sign — Embed Content Authenticity Provenance

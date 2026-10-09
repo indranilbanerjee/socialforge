@@ -77,8 +77,8 @@ require re-scan, re-review, re-publish per release.
 ## Caveats to disclose
 
 - Image/video generation requires user-connected providers; without them the
-  pipeline degrades honestly (placeholders + failure records, never fake
-  success).
-- Scripts require Python 3.10+; rendering needs Playwright for carousels.
+  pipeline degrades honestly (failure records listing every attempt, never fake
+  success; a placeholder image only if the user asks for one).
+- Scripts require Python 3.10+ (3.11+ for the optional background-removal extra); rendering needs Playwright for carousels.
 
 > **ChatGPT directory ZIP (checked 2026-10-04):** OpenAI's submission rules state "No app references or lifecycle hooks permitted." Our `hooks/hooks.json` is empty, but leave the `hooks/` directory out of the uploaded ZIP to remove any ambiguity. Requires a verified identity and the org permission "Apps Management Write". Source: https://developers.openai.com/plugins/deploy/submission

@@ -2,6 +2,7 @@
 name: ingest-performance
 description: "Turn a platform analytics export into per-post performance records and ranked winners. \"which of last month's posts worked\""
 argument-hint: "--brand <name> --month <YYYY-MM> [--csv <export.csv>] [--source <label>] [--replace]"
+effort: medium
 user-invocable: true
 ---
 

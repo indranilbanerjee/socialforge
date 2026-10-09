@@ -205,7 +205,7 @@ Open `/plugin`, go to the **Marketplaces** tab, find `neels-plugins`, and toggle
 
 ### Installs in Cowork
 
-Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 30 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 10 connectors are all HTTP and fully Cowork-compatible.
+Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 30 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 12 catalog connectors are all HTTP and fully Cowork-compatible.
 
 ### Pre-Requisites for Image Generation
 
@@ -424,7 +424,7 @@ Older releases are in [CHANGELOG.md](CHANGELOG.md).
 
 - **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery (with real agency examples)
 - **[Technical Operations](docs/OPERATIONS.md)** — Pipeline logic, scoring algorithms, AI models, folder structures, cost tracking
-- **[Connectors](CONNECTORS.md)** — All 10 MCP connectors + storage architecture
+- **[Connectors](CONNECTORS.md)** — All 12 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
 - **[X/Twitter Research Intake](references/x-twitter-research-intake.md)** - Optional, vendor-neutral evidence workflow for reactive posts and X copy — uses the harness's own web tools, any research tool the user has connected, or pasted threads
 - **[Contributing](CONTRIBUTING.md)** — How to contribute to SocialForge

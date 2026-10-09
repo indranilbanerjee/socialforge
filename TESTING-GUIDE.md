@@ -303,7 +303,7 @@ Test each of the 8 templates renders correctly.
 Run after any code change to verify nothing broke.
 
 - [ ] All 30 Python scripts (+ `assemble_docx.js`) pass `--help` without import errors
-- [ ] `python tests/run_all.py` passes | 55 tests
+- [ ] `python tests/run_all.py` passes | every test passes (the README badge carries the count)
 - [ ] Brand setup creates valid brand-config.json
 - [ ] Asset indexing produces valid asset-index.json
 - [ ] Calendar parsing handles DOCX input

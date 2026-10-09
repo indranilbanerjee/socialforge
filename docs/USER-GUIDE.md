@@ -12,6 +12,7 @@ Before you start, make sure you have:
 - **API credentials configured via `/socialforge:setup`** (one-time setup):
   - **Google Cloud service account JSON file** -- for Vertex AI image generation
   - **WaveSpeed API key** -- for image-to-video generation (kept in an environment variable, never pasted into the chat)
+- **Python 3.10 or newer** (3.11 or newer for the optional background-removal extra)
 - **Python packages:** `/socialforge:setup` lists what is missing and prints the exact pinned install command for each; it installs only after you say yes (`python scripts/install_deps.py` prints the same report)
 
 Get both credentials from your admin. If you ARE the admin, see the [Admin Setup (One-Time) section of the README](../README.md#admin-setup-one-time).
@@ -905,7 +906,7 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 | full-pipeline | max | End-to-end orchestration running all 7 production phases in sequence |
 | ideate-month | high | Plan next month's content calendar from a theme, signals and last month's results |
 | research-month | high | Turn supplied comment exports and competitor ads into a what's-working brief |
-| ingest-performance | n/a | Turn a platform analytics export into per-post performance records and ranked winners |
+| ingest-performance | medium | Turn a platform analytics export into per-post performance records and ranked winners |
 | price-check | low | Price a generation run from live provider rates before any spend |
 | model-check | low | Find the best current model for a capability from the live catalogue and record its source |
 
@@ -1026,7 +1027,7 @@ A: For 28 posts across 3 platforms: approximately 45 minutes total. Brand setup:
 **Q: What if my calendar changes mid-month?**
 A: Run `/socialforge:sync-calendar` to re-parse. Existing approved posts are preserved. New posts enter the pipeline. Removed posts are flagged for your confirmation before deletion.
 
-**Q: Do I need all 10 connectors?**
+**Q: Do I need all 12 connectors?**
 A: No. SocialForge works fully without any connectors. They add convenience (pull calendars from Notion, send reviews via Slack, access Cloudinary assets) but every core feature works with local files and direct API calls.
 
 **Q: Can I customize carousel templates?**

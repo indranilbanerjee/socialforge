@@ -32,8 +32,22 @@ REPO = Path(__file__).resolve().parent.parent
 # "20 skills" / "28 Python scripts" but not "3-5 skills", "<5 agents", "v1.19.2 skills"
 # 2026-10-04: one optional qualifier let "18 top-level commands" and "24 specialist
 # agents" escape in the sibling plugin after a command fold; qualifiers now chain.
-COUNT_RE = re.compile(r"(?<![-<>~\d])\b(\d{1,3})\s+(?:(?:Python|top-level|slash|specialist)\s+)*"
-                      r"(skills|agents|commands|scripts)\b")
+# 2026-10-10 (Hermes docs sweep): the pattern above could not see "16 Agent Skills", "25 Claude
+# Code slash commands", "22 Python helpers", "10 opt-in HTTP MCP connectors", the heading
+# "All 25 Commands" (capital C) or "the 10-connector catalog" (hyphen), and AGENTS.md carried
+# all of them, 3 to 10 releases stale. Nouns are now case-insensitive, singular or plural, the
+# separator may be a hyphen, and the qualifier list covers those phrasings. A '#' before the
+# number is a markdown anchor (#14-commands), not a claim.
+COUNT_RE = re.compile(
+    r"(?<![-<>~#\d])\b(\d{1,3})[\s-]+"
+    r"(?:(?:Python|top-level|slash|specialist|Agent|Claude\s+Code|opt-in|HTTP|MCP|executable)[\s-]+)*"
+    r"(skill|agent|command|script|helper|connector)s?\b", re.I)
+NOUNS = {"skill": "skills", "agent": "agents", "command": "commands", "script": "scripts",
+         "helper": "scripts", "connector": "connectors"}
+# "passes | 55 tests" — a suite size, counted only when the line carries a suite marker
+# (in a marketing repo "tests" also means A/B tests).
+TESTS_RE = re.compile(r"(?<![-<>~\d])\b(\d{2,4})\s+(?:stdlib-unittest\s+|unit\s+)?tests\b", re.I)
+TEST_MARKER = re.compile(r"\b(?:passes|passing|test suite|unittest|run_all|pytest)\b", re.I)
 # "All 16 SKILL.md files" — the phrasing the original guard could not see
 SKILL_MD_RE = re.compile(r"(?<![-<>~\d])\b(\d{1,3})\s+SKILL\.md files?\b")
 # "all 16 SocialForge skills" — plugin name between number and noun
@@ -53,7 +67,43 @@ def ground_truth():
         "agents": len(list((REPO / "agents").glob("*.md"))),
         "commands": len(list((REPO / "commands").glob("*.md"))),
         "scripts": len(list((REPO / "scripts").glob("*.py"))),
+        "connectors": _catalog_connectors(),
+        "tests": _badge_tests(),
     }
+
+
+def _badge_tests():
+    """The suite size the README badge states (release_consistency keeps it honest)."""
+    m = re.search(r"badge/tests-(\d+)%2F(\d+)", (REPO / "README.md").read_text(encoding="utf-8"))
+    return int(m.group(2))
+
+
+def _catalog_connectors():
+    """Entries in the opt-in catalog (.mcp.json.connectors-reference)."""
+    data = json.loads((REPO / ".mcp.json.connectors-reference").read_text(encoding="utf-8"))
+    return len([k for k in data["mcpServers"] if not k.startswith("_")])
+
+
+# Counts that are right under another definition and so are allowed next to the main one.
+EXTRA_OK = {}
+
+
+def claims_in(line):
+    """Every (number, noun, matched text) count claim on one line."""
+    found = [(int(m.group(1)), NOUNS[m.group(2).lower()], m.group(0))
+             for m in COUNT_RE.finditer(line)]
+    found += [(int(m.group(1)), "skills", m.group(0))
+              for pat in (SKILL_MD_RE, NAMED_SKILLS_RE)
+              for m in pat.finditer(line)]
+    if TEST_MARKER.search(line):
+        found += [(int(m.group(1)), "tests", m.group(0)) for m in TESTS_RE.finditer(line)]
+    return found
+
+
+def stale_claims(line, truth):
+    """The claims on a line that disagree with the repo."""
+    return [(n, noun, shown) for n, noun, shown in claims_in(line)
+            if n != truth[noun] and n not in EXTRA_OK.get(noun, set())]
 
 
 def live_docs():
@@ -100,16 +150,10 @@ class TestLiveDocCounts(unittest.TestCase):
                 low = line.lower()
                 if any(s in low for s in SIBLINGS):
                     continue
-                found = [(int(m.group(1)), m.group(2), m.group(0))
-                         for m in COUNT_RE.finditer(line)]
-                found += [(int(m.group(1)), "skills", m.group(0))
-                          for pat in (SKILL_MD_RE, NAMED_SKILLS_RE)
-                          for m in pat.finditer(line)]
-                for n, noun, shown in found:
-                    if n != truth[noun]:
-                        stale.append(
-                            "%s:%d says '%s' but the repo has %d %s"
-                            % (f.relative_to(REPO).as_posix(), i, shown, truth[noun], noun))
+                for n, noun, shown in stale_claims(line, truth):
+                    stale.append(
+                        "%s:%d says '%s' but the repo has %d %s"
+                        % (f.relative_to(REPO).as_posix(), i, shown, truth[noun], noun))
         self.assertEqual(stale, [], "Stale counts in live docs:\n  " + "\n  ".join(stale))
 
     def test_ground_truth_is_sane(self):
@@ -119,6 +163,8 @@ class TestLiveDocCounts(unittest.TestCase):
         self.assertGreater(truth["agents"], 0)
         self.assertGreater(truth["commands"], 0)
         self.assertGreater(truth["scripts"], 0)
+        self.assertGreater(truth["connectors"], 0)
+        self.assertGreater(truth["tests"], 0)
 
     def test_guard_can_fail(self):
         """Plant-check: each new pattern must actually match its rot form."""
@@ -128,6 +174,84 @@ class TestLiveDocCounts(unittest.TestCase):
         self.assertFalse(COUNT_RE.search("~22 scripts"))  # approx stays exempt
         self.assertTrue(COUNT_RE.search("25 top-level slash commands"))
         self.assertTrue(COUNT_RE.search("5 specialist agents"))
+        # 2026-10-10 phrasings (each was invisible to the old pattern)
+        self.assertTrue(COUNT_RE.search("16 Agent Skills"))
+        self.assertTrue(COUNT_RE.search("25 Claude Code slash commands"))
+        self.assertTrue(COUNT_RE.search("22 Python helpers"))
+        self.assertTrue(COUNT_RE.search("10 opt-in HTTP MCP connectors"))
+        self.assertTrue(COUNT_RE.search("## 14. All 25 Commands"))
+        self.assertTrue(COUNT_RE.search("The 10-connector catalog"))
+        self.assertFalse(COUNT_RE.search("3-5 skills"))      # ranges stay exempt
+        self.assertFalse(COUNT_RE.search("10-15 scripts"))
+
+    def test_guard_flags_planted_numbers(self):
+        """Plant a wrong number in each phrasing and confirm the guard reports it; the
+        right number must pass. A pattern that matches but never reports proves nothing."""
+        truth = ground_truth()
+        plants = [("%d Agent Skills", "skills"),
+                  ("%d Claude Code slash commands", "commands"),
+                  ("%d Python helpers", "scripts"),
+                  ("%d opt-in HTTP MCP connectors", "connectors"),
+                  ("## 14. All %d Commands", "commands"),
+                  ("The %d-connector catalog", "connectors"),
+                  ("`python tests/run_all.py` passes | %d tests", "tests"),
+                  ("%d specialist agents", "agents")]
+        for template, noun in plants:
+            wrong = template % (truth[noun] + 7)
+            right = template % truth[noun]
+            self.assertTrue(stale_claims(wrong, truth), "guard missed a planted '%s'" % wrong)
+            self.assertEqual(stale_claims(right, truth), [], "guard rejected '%s'" % right)
+        # a test count on a line with no suite marker is an A/B-testing sentence, not a claim
+        self.assertEqual(stale_claims("a team running 8 tests per quarter", truth), [])
+
+
+class TestPythonMinimum(unittest.TestCase):
+    """One Python minimum, stated the same way everywhere.
+
+    Before 2026-10-10 the docs disagreed (3.8+ in guides, 3.10+ in the submission bundle)
+    while the pinned c2pa-python 0.38.0 needs 3.10. The floor is the highest requires_python
+    among the pinned packages (scripts/install_deps.py PINNED); raise FLOOR_MINOR here and in every doc when a pin
+    moves. This test cannot reach PyPI, so it keeps the prose consistent, not the pins.
+    """
+    FLOOR_MINOR = 10
+    # rembg 2.0.77 (the optional background-removal group) needs 3.11; the default groups need 3.10.
+    OPTIONAL_EXTRA_MINOR = 11
+    OPTIONAL_EXTRA_LINE = re.compile(r"background-removal|rembg", re.I)
+    STATEMENT = re.compile(r"Python\s+3\.(\d{1,2})\s*(?:\+|or newer)|\b3\.(\d{1,2})\+")
+
+    def statements(self):
+        for f, text in live_docs():
+            for i, line in enumerate(text.splitlines(), 1):
+                if "python" not in line.lower():
+                    continue
+                for m in self.STATEMENT.finditer(line):
+                    yield f, i, int(m.group(1) or m.group(2)), line
+
+    def allowed(self, minor, line):
+        if minor == self.FLOOR_MINOR:
+            return True
+        return bool(self.OPTIONAL_EXTRA_MINOR and minor == self.OPTIONAL_EXTRA_MINOR
+                    and self.OPTIONAL_EXTRA_LINE.search(line))
+
+    def test_every_statement_names_the_same_minimum(self):
+        seen, wrong = 0, []
+        for f, i, minor, line in self.statements():
+            seen += 1
+            if not self.allowed(minor, line):
+                wrong.append("%s:%d says Python 3.%d but the minimum is 3.%d"
+                             % (f.relative_to(REPO).as_posix(), i, minor, self.FLOOR_MINOR))
+        self.assertGreater(seen, 0, "no Python-minimum statement found; the guard is vacuous")
+        self.assertEqual(wrong, [], "Python minimum disagrees:\n  " + "\n  ".join(wrong))
+
+    def test_guard_can_fail(self):
+        """Plant-check: the old wrong forms must be seen and rejected."""
+        for planted in ("Requires Python 3.8+ with optional dependencies",
+                        "- **Python 3.9 or newer** unlocks scoring",
+                        "Python version: must be 3.8+"):
+            hits = [int(m.group(1) or m.group(2)) for m in self.STATEMENT.finditer(planted)]
+            self.assertTrue(hits and not all(self.allowed(h, planted) for h in hits), planted)
+        self.assertTrue(all(self.allowed(int(m.group(1) or m.group(2)), "Python 3.%d+" % self.FLOOR_MINOR)
+                            for m in self.STATEMENT.finditer("Python 3.%d+" % self.FLOOR_MINOR)))
 
 
 class TestAgentsContextCurrent(unittest.TestCase):

@@ -39,11 +39,15 @@ REPO = Path(__file__).resolve().parent.parent
 # separator may be a hyphen, and the qualifier list covers those phrasings. A '#' before the
 # number is a markdown anchor (#14-commands), not a claim.
 COUNT_RE = re.compile(
-    r"(?<![-<>~#\d])\b(\d{1,3})[\s-]+"
-    r"(?:(?:Python|top-level|slash|specialist|Agent|Claude\s+Code|opt-in|HTTP|MCP|executable)[\s-]+)*"
-    r"(skill|agent|command|script|helper|connector)s?\b", re.I)
-NOUNS = {"skill": "skills", "agent": "agents", "command": "commands", "script": "scripts",
-         "helper": "scripts", "connector": "connectors"}
+    r"(?<![-<>~#\d])\b([1-9]\d{0,2})\s+"
+    r"(?:(?:Python|top-level|slash|specialist|Claude\s+Code|opt-in|HTTP|MCP|executable)\s+)*"
+    r"(?:Agent\s+(?=skills))?"
+    r"(skills|agents|commands|scripts|helpers|connectors)\b", re.I)
+# "the 10-connector catalog" — the singular only counts in this hyphenated form ("a 3-agent
+# workflow" and "0 connectors configured" are not inventory claims).
+HYPHEN_RE = re.compile(r"(?<![-<>~#\d])\b([1-9]\d{0,2})-connector catalog", re.I)
+NOUNS = {"skills": "skills", "agents": "agents", "commands": "commands", "scripts": "scripts",
+         "helpers": "scripts", "connectors": "connectors"}
 # "passes | 55 tests" — a suite size, counted only when the line carries a suite marker
 # (in a marketing repo "tests" also means A/B tests).
 TESTS_RE = re.compile(r"(?<![-<>~\d])\b(\d{2,4})\s+(?:stdlib-unittest\s+|unit\s+)?tests\b", re.I)
@@ -84,8 +88,9 @@ def _catalog_connectors():
     return len([k for k in data["mcpServers"] if not k.startswith("_")])
 
 
-# Counts that are right under another definition and so are allowed next to the main one.
-EXTRA_OK = {}
+def extra_ok(noun):
+    """Counts that are right under another definition and so are allowed next to the main one."""
+    return set()
 
 
 def claims_in(line):
@@ -95,6 +100,7 @@ def claims_in(line):
     found += [(int(m.group(1)), "skills", m.group(0))
               for pat in (SKILL_MD_RE, NAMED_SKILLS_RE)
               for m in pat.finditer(line)]
+    found += [(int(m.group(1)), "connectors", m.group(0)) for m in HYPHEN_RE.finditer(line)]
     if TEST_MARKER.search(line):
         found += [(int(m.group(1)), "tests", m.group(0)) for m in TESTS_RE.finditer(line)]
     return found
@@ -103,7 +109,7 @@ def claims_in(line):
 def stale_claims(line, truth):
     """The claims on a line that disagree with the repo."""
     return [(n, noun, shown) for n, noun, shown in claims_in(line)
-            if n != truth[noun] and n not in EXTRA_OK.get(noun, set())]
+            if n != truth[noun] and n not in extra_ok(noun)]
 
 
 def live_docs():
@@ -180,9 +186,12 @@ class TestLiveDocCounts(unittest.TestCase):
         self.assertTrue(COUNT_RE.search("22 Python helpers"))
         self.assertTrue(COUNT_RE.search("10 opt-in HTTP MCP connectors"))
         self.assertTrue(COUNT_RE.search("## 14. All 25 Commands"))
-        self.assertTrue(COUNT_RE.search("The 10-connector catalog"))
+        self.assertTrue(HYPHEN_RE.search("The 10-connector catalog"))
         self.assertFalse(COUNT_RE.search("3-5 skills"))      # ranges stay exempt
         self.assertFalse(COUNT_RE.search("10-15 scripts"))
+        self.assertFalse(COUNT_RE.search("expect 0 connectors configured"))   # zero is a state
+        self.assertFalse(COUNT_RE.search("Phase 2 Agent output"))              # not an inventory claim
+        self.assertFalse(COUNT_RE.search("a 3-agent workflow"))
 
     def test_guard_flags_planted_numbers(self):
         """Plant a wrong number in each phrasing and confirm the guard reports it; the

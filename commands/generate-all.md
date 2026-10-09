@@ -31,7 +31,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --ite
 1. Load calendar-data.json and asset-matches.json
 2. For each post (ordered by date):
    - Determine creative mode (ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED, PURE_CREATIVE)
-   - Generate image(s) via image-compositor agent
+   - Generate image(s) via image-compositor agent, handing it the approved quote from Step 0 (the agent refuses to run a paid call without one)
    - Render carousel if content_type = carousel
    - Adapt copy for each target platform
    - Run compliance check

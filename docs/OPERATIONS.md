@@ -836,7 +836,7 @@ For each post (ordered by date):
   4. Show variants to user for selection/approval
   5. Adapt copy for each platform
   6. Run compliance check on all copy
-  7. Generate platform preview mockups
+  7. Generate a preview card per platform
   8. Update status-tracker.json -> PENDING_REVIEW
   9. Log cost to cost-log.json
   10. Show progress [N/total]
@@ -947,7 +947,7 @@ Previous months are preserved as archives. `/socialforge:new-month` creates a fr
 |   |   +-- linkedin/
 |   |   |   +-- image-1200x627.png      <- Correct dimensions for LinkedIn
 |   |   |   +-- copy.txt                 <- LinkedIn-adapted copy (3000 char, 5 hashtags)
-|   |   |   +-- preview.png              <- How it looks in the LinkedIn feed
+|   |   |   +-- preview.png              <- Preview card: copy, image, platform badge
 |   |   +-- instagram/
 |   |   |   +-- image-1080x1350.png     <- 4:5 portrait for Instagram feed
 |   |   |   +-- copy.txt                 <- Instagram copy (2200 char)

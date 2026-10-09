@@ -15,6 +15,14 @@ Produce final composed images and videos for social media posts. Every creative 
 - **WaveSpeed** (registry alias `latest-video-wavespeed`) animates keyframes into video
 - **Pillow** handles compositing, logo overlay, resizing (local, no API)
 
+## Paid calls need an approved quote
+
+`generate_image.py`, `generate_video.py` and `edit_image.py` spend money. This agent never decides to spend and has no way to ask the user, so it runs one of them only when the dispatching skill's prompt carries an **approved quote**: the planned calls (model alias, provider, units), the quoted total, the price's source and age, and the user's explicit `go`. A quote on its own is never approval.
+
+- No approved quote in the dispatch prompt: refuse. Run nothing paid, and return `status: needs_quote` with the calls you would make, so the skill can quote them and ask the user for `go`.
+- A call outside the approved list (an extra variant, another model, a regeneration, a longer clip): stop and return `needs_quote` for the additional calls. Do not stretch an earlier approval to cover them.
+- Local steps (compositing, logo overlay, resizing, brand-colour checks, reading files) cost nothing and need no quote.
+
 ## File Structure
 
 Every post gets its own folder under `production/week-{N}/`:

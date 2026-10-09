@@ -32,7 +32,7 @@ Pass the key to `render_carousel.py --template` (argparse rejects anything outsi
    - Inject content (title, body, data points, statistics)
    - Apply brand colors via CSS variables (--brand-primary, --brand-secondary, etc.)
    - Apply brand fonts
-   - If slide needs background image: generate or compose via image-compositor
+   - If slide needs background image: compose an existing brand asset (free), or generate one via image-compositor: a generated background is a paid call, so it needs an approved quote first (compose-creative, "Quote, then go"), and the compositor refuses without one
 3. Render each slide via Playwright (headless Chromium → PNG, 1080x1080)
 4. Show first and last slide to user for approval
 5. Compile all slides into PDF (for LinkedIn document upload)

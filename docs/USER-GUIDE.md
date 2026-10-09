@@ -604,7 +604,7 @@ Post-processing runs on ffmpeg, provided by the pinned `imageio-ffmpeg` Python p
 ```
 
 This builds an interactive HTML gallery showing all 28 posts with:
-- Image preview + platform mockup (how it will actually look on LinkedIn, Instagram, Facebook)
+- Image preview card per platform (post copy, image, platform badge) to check copy and crop
 - Copy text for each platform variant
 - Quality score and compliance status
 - Tier badge (HERO red, HUB blue, HYGIENE green)
@@ -867,7 +867,7 @@ Eighteen of these have a command file under `commands/`. The other seven (`setup
 | `/socialforge:swap-asset` | Change the matched asset | `/socialforge:swap-asset P03 --asset asset_015` |
 | `/socialforge:review` | Open review gallery | `/socialforge:review --tier HERO` |
 | `/socialforge:revision` | Apply revision feedback | `/socialforge:revision P06 "fix background color"` |
-| `/socialforge:preview-batch` | Generate preview mockups for all posts | `/socialforge:preview-batch --brand GreenLeaf` |
+| `/socialforge:preview-batch` | Generate a preview card per platform for all posts | `/socialforge:preview-batch --brand GreenLeaf` |
 | `/socialforge:client-review` | Send to client for review | `/socialforge:client-review --tier HERO` |
 | `/socialforge:check-approvals` | Check pending approvals | `/socialforge:check-approvals --send-reminders` |
 | `/socialforge:assemble-document` | Create delivery DOCX | `/socialforge:assemble-document` |
@@ -897,7 +897,7 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 | adapt-copy | medium | Platform-specific copy with character limits, hashtags, CTAs, compliance |
 | render-carousels | high | HTML template to PNG slides via Playwright (8 templates) |
 | generate-video | high | Video scripts, storyboards, AI video clips for Reels/Shorts |
-| create-previews | medium | Platform mockup previews showing how posts will actually appear |
+| create-previews | medium | A preview card per platform (post copy, image, badge) to check copy and crop before publishing |
 | build-review-gallery | medium | Interactive HTML review gallery with filtering and actions |
 | manage-reviews | medium | Multi-tier approval workflow with escalation and reminders |
 | assemble-document | high | DOCX calendar delivery document with images, copy, and schedule |

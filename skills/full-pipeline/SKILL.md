@@ -49,6 +49,27 @@ Phase 2 operates in two distinct modes depending on how it is invoked.
 
 Produces creative for a single post with full user control at each stage.
 
+#### Quote, then go (interactive, before the Generate stage)
+
+Direction and confirmation cost nothing. The first paid call is the Generate stage, so the post is quoted once, after the user confirms the details and before anything is generated. This skill states no price: `price_book.py` is the only source.
+
+1. List what is about to be generated: for each paid call, the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images, or seconds of video, plus any option that changes the price, such as synchronised audio). For an image post that is the planned variants (typically 2-3); for a video post, both keyframe rounds and the clip.
+2. Quote it:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[{"model":"<resolved model id>","provider":"<provider>","units":<n>,"label":"<post id and stage>"}]'
+```
+
+   A single item can use `--action quote --model <id> --provider <provider> --units <n>`. If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.
+3. Show the user the total, each line, its **source URL**, and how old the price is (a price older than 24 hours is stale and is refused; it must be looked up again):
+
+```
+Estimated cost: <total_usd> USD for <n> generations. Prices from <source>, <age_hours> h old (valid for 24 h).
+Type "go" to generate. Anything else cancels.
+```
+
+4. Continue only on an explicit `go` for exactly this list. Anything else, including silence, cancels and nothing is generated. If the list changes (a regeneration, another model, an added option), quote again and ask again. A quote is never approval (`approved_to_run` is always `false`); only the user's `go` is.
+
 **Image posts — 4-stage approval:**
 1. **Direction** — Review creative direction and prompt before generation
 2. **Generate** — AI generates 2-3 variants; user picks the best or requests regeneration

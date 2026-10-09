@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-render_preview.py — Render platform mockup previews via Playwright.
-Shows how posts will look when published on each social platform.
+render_preview.py — Render a preview card per platform via Playwright.
+Each card shows the post copy, the image and the platform badge, so copy, line breaks and
+crop can be checked before publishing. It is one layout with the platform named, not a
+replica of the platform's feed (no per-platform layouts ship).
 """
 
 import argparse
@@ -19,8 +21,8 @@ if _plugin_data and Path(_plugin_data).exists():
     WORKSPACE = Path(_plugin_data) / "socialforge"
 else:
     WORKSPACE = Path.home() / "socialforge-workspace"
-# Optional per-platform mockup overrides: assets/preview-templates/<platform>.html
-# with {{name}} / {{handle}} / {{platform}} / {{image_uri}} / {{copy}} placeholders.
+# Optional per-platform layout overrides: assets/preview-templates/<platform>.html
+# with {{name}} / {{handle}} / {{platform}} / {{image_uri}} / {{copy}} placeholders (none ship).
 TEMPLATE_DIR = PLUGIN_ROOT / "assets" / "preview-templates"
 
 
@@ -45,7 +47,7 @@ def _image_data_uri(path):
 
 def render_preview(image_path, copy_text, platform, brand, output_path,
                    allow_missing_image=False):
-    """Render a platform preview mockup."""
+    """Render the preview card for one post on one platform."""
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -159,7 +161,7 @@ def render_preview(image_path, copy_text, platform, brand, output_path,
 
 
 def build_default_html(name, handle, platform_label, image_uri, copy_html):
-    """Inline mockup used when no per-platform template is present."""
+    """The built-in preview card, used when no per-platform template is present."""
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <style>
@@ -171,18 +173,15 @@ def build_default_html(name, handle, platform_label, image_uri, copy_html):
   .handle {{ color: #666; font-size: 12px; }}
   .image {{ width: 100%; }}
   .copy {{ padding: 12px 16px; font-size: 14px; line-height: 1.5; color: #333; white-space: pre-wrap; }}
-  .platform-badge {{ position: absolute; top: 10px; right: 10px; background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; }}
-  .wrapper {{ position: relative; }}
+  .platform-badge {{ margin-left: auto; background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; }}
 </style></head><body>
 <div class="card">
   <div class="header">
     <div class="avatar"></div>
     <div><div class="name">{name}</div><div class="handle">{handle}</div></div>
-  </div>
-  <div class="wrapper">
-    <img class="image" src="{image_uri}" />
     <div class="platform-badge">{platform_label}</div>
   </div>
+  <img class="image" src="{image_uri}" />
   <div class="copy">{copy_html}</div>
 </div></body></html>"""
 

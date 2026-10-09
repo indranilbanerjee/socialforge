@@ -401,17 +401,28 @@ class TestSetupNeverTakesKeysThroughTheChat(unittest.TestCase):
 # ── F2: quote, then go ─────────────────────────────────────────────────
 
 class TestPaidGenerationIsQuotedThenWaitsForGo(unittest.TestCase):
-    # skill -> the text that marks the first paid step; the quote section must come BEFORE it
+    # Every path that can spend: where it carries its quote section (file, the heading's own
+    # words, the text that marks that path's first paid step). The quote section must come
+    # BEFORE that step. 1.29.2: generate-post and the full pipeline's interactive mode used to
+    # generate with no quote at all (only the batch path and compose-creative / generate-video
+    # had one), so a single post could spend without the user seeing a price.
     PAID = {
-        "compose-creative": "### Stage 3: Generate and Select",
-        "generate-video": "### Stage 2: First Frame Generation",
-        "full-pipeline": "2. **Quote, then go, then auto-generate**",
+        "compose-creative": ("skills/compose-creative/SKILL.md", r"Quote, then go",
+                             "### Stage 3: Generate and Select"),
+        "generate-video": ("skills/generate-video/SKILL.md", r"Quote, then go",
+                           "### Stage 2: First Frame Generation"),
+        "full-pipeline batch": ("skills/full-pipeline/SKILL.md", r"Quote, then go \(batch",
+                                "2. **Quote, then go, then auto-generate**"),
+        "full-pipeline interactive": ("skills/full-pipeline/SKILL.md", r"Quote, then go \(interactive",
+                                      "2. **Generate** \u2014 AI generates 2-3 variants"),
+        "generate-post": ("commands/generate-post.md", r"Quote, then go",
+                          "3. Generate the image"),
     }
 
     @staticmethod
-    def problems(text: str, paid_marker: str) -> list[str]:
+    def problems(text: str, paid_marker: str, heading: str = r"Quote, then go") -> list[str]:
         out = []
-        m = re.search(r"(?m)^#{2,4} Quote, then go\b.*$", text)
+        m = re.search(r"(?m)^#{2,4} " + heading + r"\b.*$", text)
         if not m:
             return ["no 'Quote, then go' section"]
         nxt = re.search(r"(?m)^#{1,4} (?!Quote, then go)", text[m.end():])
@@ -430,11 +441,11 @@ class TestPaidGenerationIsQuotedThenWaitsForGo(unittest.TestCase):
             out.append("never says that anything else cancels")
         return out
 
-    def test_each_paid_skill_carries_the_quote_then_go_step(self):
-        for skill, marker in self.PAID.items():
-            text = (SKILLS / skill / "SKILL.md").read_text(encoding="utf-8")
-            with self.subTest(skill=skill):
-                self.assertEqual(self.problems(text, marker), [])
+    def test_each_paid_path_carries_the_quote_then_go_step(self):
+        for name, (rel, heading, marker) in self.PAID.items():
+            text = (ROOT / rel).read_text(encoding="utf-8")
+            with self.subTest(path=name):
+                self.assertEqual(self.problems(text, marker, heading), [])
 
     GOOD = ("# s\n\n## Quote, then go (before any paid call)\n\nRun `price_book.py --action quote-batch ...`. Show the total, the "
             "source URL and the age (valid for 24 hours). Type \"go\" to generate. Anything else cancels. "
@@ -453,17 +464,91 @@ class TestPaidGenerationIsQuotedThenWaitsForGo(unittest.TestCase):
         late = "# s\n\n### Stage 3: Generate and Select\n\ngenerate\n\n" + self.GOOD.split("# s\n\n", 1)[1]
         self.assertTrue(any("before the first paid step" in p for p in self.problems(late, marker)))
 
+    def test_plant_the_two_paths_that_spent_without_a_quote_are_flagged(self):
+        """The 1.29.1 text of both paths: a command and an interactive mode with no quote section."""
+        old_command = "# Generate Post\n\n## Process\n1. Load post\n2. Load asset\n3. Generate the image using the assigned creative mode\n"
+        self.assertEqual(self.problems(old_command, "3. Generate the image"), ["no 'Quote, then go' section"])
+        old_interactive = ("### Interactive mode\n\n**Image posts**\n1. **Direction**\n"
+                           "2. **Generate** \u2014 AI generates 2-3 variants; user picks the best\n")
+        self.assertEqual(self.problems(old_interactive, "2. **Generate** \u2014 AI generates 2-3 variants",
+                                       r"Quote, then go \(interactive"), ["no 'Quote, then go' section"])
+
     def test_privacy_sentence_and_skills_agree(self):
         privacy = (ROOT / "PRIVACY.md").read_text(encoding="utf-8")
         self.assertIn("Generation always waits for your approval of the brief and the quoted cost", privacy)
 
     def test_no_price_is_written_in_the_quote_sections(self):
-        for skill in self.PAID:
-            text = (SKILLS / skill / "SKILL.md").read_text(encoding="utf-8")
-            m = re.search(r"(?m)^#{2,4} Quote, then go\b.*$", text)
+        for name, (rel, heading, _marker) in self.PAID.items():
+            text = (ROOT / rel).read_text(encoding="utf-8")
+            m = re.search(r"(?m)^#{2,4} " + heading + r"\b.*$", text)
             section = text[m.end(): m.end() + 2600]
-            with self.subTest(skill=skill):
+            with self.subTest(path=name):
                 self.assertIsNone(re.search(r"\$\s?\d", section), "a dollar figure in a quote section")
+
+    def test_every_dispatcher_of_the_compositor_passes_the_approved_quote(self):
+        """A skill or command that hands generation to the image-compositor agent must say it
+        passes the approved quote, because the agent refuses to run a paid call without one."""
+        dispatchers = [p for p in list(SKILLS.glob("*/SKILL.md")) + list(COMMANDS.glob("*.md"))
+                       if "image-compositor" in p.read_text(encoding="utf-8")]
+        self.assertTrue(dispatchers, "no dispatcher of image-compositor found; the guard is vacuous")
+        for p in dispatchers:
+            with self.subTest(file=p.relative_to(ROOT).as_posix()):
+                self.assertIn("approved quote", p.read_text(encoding="utf-8").lower())
+
+
+class TestImageCompositorRefusesWithoutAnApprovedQuote(unittest.TestCase):
+    """The agent can spend (generate_image.py, generate_video.py, edit_image.py) but has no way
+    to ask the user, so it must run a paid call only when the dispatching skill hands it an
+    approved quote. Before 1.29.2 its body said "WAIT for approval" at a creative stage and
+    never mentioned a price."""
+    AGENT = ROOT / "agents" / "image-compositor.md"
+    PAID_STEP = re.compile(r"(?m)^\d+\. .*\b(?:generate_image|generate_video|edit_image)\.py")
+
+    @classmethod
+    def problems(cls, text: str) -> list[str]:
+        m = re.search(r"(?m)^## Paid calls need an approved quote\b.*$", text)
+        if not m:
+            return ["no 'Paid calls need an approved quote' section"]
+        nxt = re.search(r"(?m)^#{1,2} ", text[m.end():])
+        section = text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
+        out = []
+        first = cls.PAID_STEP.search(text)
+        if first and first.start() < m.start():
+            out.append("the section comes after the first paid script step")
+        for script in ("generate_image.py", "generate_video.py", "edit_image.py"):
+            if script not in section:
+                out.append("does not name " + script)
+        if not re.search(r"(?i)\brefuse", section):
+            out.append("never says the agent refuses")
+        if "needs_quote" not in section:
+            out.append("never names the needs_quote result")
+        if not re.search(r"(?i)dispatching (?:skill|command)", section):
+            out.append("never says the dispatching skill supplies the quote")
+        if not re.search(r"explicit `?go`?", section):
+            out.append("never ties the quote to the user's explicit go")
+        if not re.search(r"(?i)total", section) or not re.search(r"(?i)source", section):
+            out.append("does not say what the approved quote carries (total, source)")
+        return out
+
+    def test_the_agent_body_carries_the_refusal(self):
+        self.assertEqual(self.problems(self.AGENT.read_text(encoding="utf-8")), [])
+
+    GOOD = ("# A\n\n## Paid calls need an approved quote\n\ngenerate_image.py, generate_video.py and edit_image.py spend. "
+            "Run one only when the dispatching skill passes an approved quote: the total, the source and age of the price, "
+            "and the user's explicit `go`. Otherwise refuse and return `status: needs_quote`.\n\n"
+            "## Pipeline\n\n1. Run generate_image.py\n")
+
+    def test_plant_the_agent_without_the_refusal_is_flagged(self):
+        self.assertEqual(self.problems(self.GOOD), [])
+        self.assertEqual(self.problems(self.GOOD.replace("Paid calls need an approved quote", "Spending")),
+                         ["no 'Paid calls need an approved quote' section"])
+        self.assertTrue(any("refuses" in p for p in self.problems(self.GOOD.replace("refuse", "ask"))))
+        self.assertTrue(any("needs_quote" in p for p in self.problems(self.GOOD.replace("needs_quote", "stop"))))
+        self.assertTrue(any("dispatching" in p for p in self.problems(self.GOOD.replace("dispatching skill", "caller"))))
+        self.assertTrue(any("explicit go" in p for p in self.problems(self.GOOD.replace("explicit `go`", "approval"))))
+        self.assertTrue(any("edit_image.py" in p for p in self.problems(self.GOOD.replace("edit_image.py", "an editor"))))
+        late = "# A\n\n1. Run generate_image.py\n\n" + self.GOOD.split("# A\n\n", 1)[1].replace("1. Run generate_image.py\n", "")
+        self.assertTrue(any("after the first paid" in p for p in self.problems(late)))
 
 
 # ── S4 / F3: what the docs say ─────────────────────────────────────────

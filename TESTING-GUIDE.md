@@ -62,7 +62,7 @@ All 18 commands, plus seven further `/socialforge:` entries that are skills star
 | 13 | `/socialforge:edit-post <post-id> --copy` | Edit post copy | Copy updated in calendar data |
 | 14 | `/socialforge:edit-image <post-id> "warmer tones"` | Edit generated image | Image regenerated with instruction |
 | 15 | `/socialforge:swap-asset <post-id> --browse` | Browse and swap asset | Asset replaced, image regenerated |
-| 16 | `/socialforge:preview-batch` | Generate previews | Platform mockups created for all posts |
+| 16 | `/socialforge:preview-batch` | Generate previews | A preview card created for every post and platform |
 | 17 | `/socialforge:review` | Open review gallery | HTML gallery renders with all posts |
 | 18 | `/socialforge:revision <post-id> "feedback"` | Apply revision | Affected elements regenerated |
 | 19 | `/socialforge:check-approvals` | Check approval status | Pending approvals listed by tier |
@@ -89,7 +89,7 @@ All 18 commands, plus seven further `/socialforge:` entries that are skills star
 | 8 | `compose-creative` | PURE_CREATIVE for abstract post | Image generated from text prompt + brand colors |
 | 9 | `adapt-copy` | Adapt 500-word copy for X/Twitter | Output respects 280 char limit, hashtags adjusted |
 | 10 | `render-carousels` | Render tips-5slide template | 5-slide carousel PNG/PDF produced with brand styling |
-| 11 | `create-previews` | Preview for LinkedIn + Instagram | Mockups show correct dimensions per platform |
+| 11 | `create-previews` | Preview for LinkedIn + Instagram | Preview card shows the post copy, the image and the platform badge (badge in the header, not over the image) |
 | 12 | `manage-reviews` | Approve HERO post → check escalation | Approval recorded, moves to client review stage |
 | 13 | `build-review-gallery` | Build gallery for 10 posts | HTML file renders with all 10 posts, images load |
 | 14 | `finalize-month` | Finalize with all approved | Delivery folder with images/, carousels/, copy/, calendar.docx |
@@ -167,7 +167,7 @@ The old configuration is archived at `hooks/hooks-reference.example.json` as an 
 - [ ] Phase 4: Copy generation | Master copy written for all 10 posts
 - [ ] Phase 5: Copy adaptation | Platform variants respect character limits
 - [ ] Phase 6: Compliance check | No false positives on clean copy; banned phrases caught
-- [ ] Phase 7: Preview generation | Mockups created for each platform target
+- [ ] Phase 7: Preview generation | A preview card created for each platform target
 - [ ] Phase 8: Gallery build | HTML gallery renders all 10 posts with images and copy
 - [ ] Pipeline resume | Kill mid-run, restart — picks up from last completed phase
 

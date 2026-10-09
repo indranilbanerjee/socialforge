@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.2] - 2026-10-10
+
+### Every paid path is quoted, and previews say what they are
+
+Found by checking the README's new claims against the code.
+
+**Fixed - spend**
+
+- **`/socialforge:generate-post` and the full pipeline's interactive mode generated with no
+  price quote.** Only the batch path, `compose-creative` and `generate-video` quoted, so a
+  single post could spend before the user saw a price. Both now carry the same "Quote, then go"
+  step: a `price_book.py` quote, the total with each line's source URL and the price's age, and
+  an explicit `go`; anything else cancels. The Generate stage cannot start before it.
+- **The image-compositor agent now refuses to run a paid call** (`generate_image.py`,
+  `generate_video.py`, `edit_image.py`) unless the skill that dispatched it passes an approved
+  quote: the planned calls, the total, the price's source and age, and the user's `go`. Without
+  one it returns `status: needs_quote` with the calls it would make, and a call outside the
+  approved list needs a new quote. `generate-all` and `render-carousels` (a generated slide
+  background is paid) say they pass the approved quote.
+- Tests: the quote guard now covers all five paths (compose-creative, generate-video, the
+  pipeline's batch and interactive modes, generate-post), the agent, and every file that
+  dispatches the agent. The 1.29.1 text of the two uncovered paths is planted and flagged.
+
+**Fixed - previews**
+
+- **The platform badge sat on top of the image's corner and hid artwork** (it covered part of a
+  chart title in the first real preview). It is now in the header row. A rendered test
+  checks the artwork's top-right corner is untouched; it fails on 1.29.1.
+- **No per-platform layouts ship** (`assets/preview-templates/` is empty), so every platform
+  gets the same card. README, `create-previews`, `preview-batch`, the User Guide, Operations
+  and the Testing Guide no longer promise realistic platform mockups; they say "a preview card
+  per platform (post copy, image, platform badge) to check copy and crop before publishing".
+- The real-run preview in the README is re-rendered with the badge out of the picture, and its
+  caption names its source (the link-rot article of a documented real run, August 2026).
+
+**Fixed - README and manifests**
+
+- "Produce the whole month" says what it pauses for (asset confirmation, the price quote and
+  client review), and the never-do panel notes that a typed `--force` is logged and flagged by
+  the delivery audit.
+- `.cursor-plugin/plugin.json` and `.github/plugin/plugin.json` pointed `mcpServers` at
+  `.mcp.json`, which never ships (it is gitignored). Cursor discovers `mcp.json` by default and
+  treats the field as an override of that; Copilot CLI discovers `.mcp.json` on its own. The key
+  is removed. New test: no manifest names a path that does not ship.
+- Tests 507 -> 516.
+
 ## [1.29.1] - 2026-10-10
 
 ### Previews show the image, and a post's length includes its hashtags

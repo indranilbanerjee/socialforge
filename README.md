@@ -6,19 +6,21 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.29.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.29.2-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-507%2F507%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1291)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1291)
+[![Tests](https://img.shields.io/badge/tests-516%2F516%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1292)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1292)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.1 (October 10, 2026): previews show the image, and a post's length includes its hashtags.** Every platform preview had been showing a broken-image icon while reporting success; the image is now embedded and the script checks it was drawn, line breaks are kept, and a file that is not an image is refused. The copy adapter now counts inline hashtags against the platform limit (an X post had been reported within 280 and published at 282) and returns `post_text`, exactly what to publish. Found by rendering the real preview below.
+> 🆕 **Just shipped — v1.29.2 (October 10, 2026): every paid path is quoted, and previews say what they are.** Checking the README's new claims against the code found a real spend gap: `/socialforge:generate-post` and the pipeline's interactive mode generated with no price quote. Both now quote and wait for `go`, and the image-compositor agent refuses a paid call unless the skill that dispatched it passes an approved quote. Previews are described as what they are, one preview card per platform to check copy and crop (no per-platform layouts ship), and the platform badge no longer covers the artwork. The Cursor and Copilot manifests no longer point at a `.mcp.json` that never ships.
+>
+> Previously — **v1.29.1 (October 10, 2026): previews show the image, and a post's length includes its hashtags.** Every platform preview had been showing a broken-image icon while reporting success; the image is now embedded and the script checks it was drawn, line breaks are kept, and a file that is not an image is refused. The copy adapter now counts inline hashtags against the platform limit (an X post had been reported within 280 and published at 282) and returns `post_text`, exactly what to publish. Found by rendering the real preview below.
 >
 > Previously — **v1.29.0 (October 10, 2026): nothing installs itself, keys stay out of the chat, and paid generation waits for a quote.** Reviewed for the Hermes Agent plugin catalog, SocialForge now never installs a Python package or a browser on its own (`scripts/install_deps.py` reports and prints pinned commands; `--install` is your go-ahead), setup takes API keys from your environment instead of the chat or the command line, `compose-creative`, `generate-video` and batch `full-pipeline` quote the run with `price_book.py` and wait for an explicit `go` before any paid call, and `--brand` / `--month`, provider URLs and slide text can no longer reach a path, a `file://` download or the page markup. **If you relied on the automatic install, run `python scripts/install_deps.py --install` once.**
 >
@@ -54,8 +56,8 @@ Install, run the one-time setup, then ask in plain words. Each of these kinds of
 | "load this month's calendar" | Your calendar (DOCX, XLSX, Notion or pasted text) parsed into structured posts |
 | "make the visual for this post" | The creative for one post: your brand photos kept faithful, AI image or video where needed, quoted before any paid call |
 | "rewrite this caption for LinkedIn" | Copy adapted to the platform: character limits, hashtags, tone and the right call to action |
-| "show how this will look" | Post mockups for LinkedIn, Instagram, X and TikTok; it shows the scope and waits for your `yes` |
-| "produce the whole month" | The full pipeline from calendar to delivery, pausing between phases |
+| "show how this will look" | A preview card per platform (post copy, image, platform badge) to check copy and crop before publishing; it shows the scope and waits for your `yes` |
+| "produce the whole month" | The full pipeline from calendar to delivery, pausing for asset confirmation, the price quote and client review |
 | "package the month for the client" | The delivery folder with copy files and a manifest, after a delivery audit; it waits for your `yes` |
 
 ### What SocialForge will never do
@@ -63,7 +65,7 @@ Install, run the one-time setup, then ask in plain words. Each of these kinds of
 - **Spend on image or video generation before you see the price.** It quotes each paid item from a live price lookup and waits for "go"; anything else cancels.
 - **Install a package or a browser on its own.** Setup shows what is missing and installs only when you say so.
 - **Ask for an API key in the chat.** Keys come from environment variables.
-- **Package or send the month without your `yes`,** and never before the client review.
+- **Package or send the month without your `yes`,** and never before the client review (a typed `--force` is logged and flagged by the delivery audit).
 - **Connect a service you did not set up.** No MCP server ships enabled and no hooks run.
 - **Remove or hide AI watermarks.** AI involvement is disclosed, with C2PA provenance.
 
@@ -79,9 +81,9 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 
 The amber steps are yours: nothing is spent before the quote is approved, and nothing is packaged before the client review.
 
-**A real preview.** Rendered by this release's copy adapter and preview renderer from the verified facts and chart of a real, fact-checked article: no AI generation, no credits spent.
+**A real preview.** Rendered by this release's copy adapter and preview renderer from the verified facts and chart of the link-rot article of a documented real run (August 2026): no AI generation, no credits spent.
 
-![A LinkedIn post preview rendered by SocialForge: a bar chart of four link-rot benchmarks (70% of web-citing science articles, 66.5% of outbound links, 38% of 2013 webpages, 25% of 2013-2023 webpages), then the post copy with its line breaks, the call to action and two hashtags](docs/assets/real-run/linkedin-preview.png)
+![A LinkedIn preview card rendered by SocialForge: a bar chart of four link-rot benchmarks (70% of web-citing science articles, 66.5% of outbound links, 38% of 2013 webpages, 25% of 2013-2023 webpages), then the post copy with its line breaks, the call to action and two hashtags](docs/assets/real-run/linkedin-preview.png)
 
 ## The Four Creative Modes
 
@@ -105,7 +107,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 
 > **Claude answers in chat instead of using a SocialForge skill?** Claude Code lists every installed skill in a budget of 1% of the context window. On a 200k window with several plugins installed, only skill names fit, so Claude can't see what each skill does. Add `"skillListingBudgetFraction": 0.05` to your Claude Code `settings.json`, or start a skill by name, e.g. `/socialforge:full-pipeline`.
 
-## Supported surfaces (v1.29.1)
+## Supported surfaces (v1.29.2)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -130,7 +132,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **30 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1291) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1292) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -414,7 +416,9 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.29.1)
+## Current Release (v1.29.2)
+
+**v1.29.2:** every paid path is quoted, and previews say what they are. `generate-post` and the pipeline's interactive mode now quote and wait for `go`; the image-compositor agent refuses a paid call without an approved quote; previews are one card per platform (no realistic mockups are claimed) with the badge in the header, not over the image; the README's pipeline row and `--force` note are exact; the Cursor and Copilot manifests drop a `mcpServers` path to a file that never ships.
 
 **v1.29.1:** previews show the image (every preview had shown a broken-image icon while reporting success), line breaks are kept, a non-image file is refused, and the copy adapter counts inline hashtags against the limit and returns `post_text`.
 

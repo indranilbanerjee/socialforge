@@ -114,6 +114,38 @@ class TestPreviewShowsTheImage(unittest.TestCase):
             red = sum(1 for (r, g, b) in pixels if r > 200 and g < 60 and b < 90)
             self.assertGreater(red, 1000, "the preview must show the image, not a broken-image icon")
 
+    def test_platform_badge_is_in_the_header_not_over_the_image(self):
+        """The badge used to be positioned over the image's top-right corner and covered the
+        artwork (it hid part of a chart title in the first real preview)."""
+        rp = _load("sf_render_preview_badge", "render_preview.py")
+        html = rp.build_default_html("n", "@n", "LINKEDIN", "data:image/png;base64,AAAA", "copy")
+        header, badge, img = (html.index('class="header"'), html.index('class="platform-badge"'),
+                              html.index("<img"))
+        self.assertLess(header, badge, "the badge belongs in the header row")
+        self.assertLess(badge, img, "the badge must come before the image, not sit on it")
+        import re
+        self.assertIsNone(re.search(r"\.platform-badge\s*\{[^}]*position:\s*absolute", html),
+                          "an absolutely positioned badge floats over the artwork")
+
+    @unittest.skipUnless(HAVE_CHROMIUM and HAVE_PIL, "needs Playwright Chromium and Pillow")
+    def test_rendered_badge_never_covers_the_artwork(self):
+        from PIL import Image
+        with tempfile.TemporaryDirectory() as td:
+            img, out = Path(td) / "red.png", Path(td) / "preview.png"
+            _solid_png(img, rgb=(220, 20, 60), size=500)
+            p, payload = _render(img, "copy", out)
+            self.assertEqual(payload["status"], "success", p.stdout + p.stderr)
+            im = Image.open(out).convert("RGB")
+            w, h = im.size
+            x = w - 12   # the column where a corner badge used to sit
+            ys = [y for y in range(h) if (lambda c: c[0] > 200 and c[1] < 60 and c[2] < 90)(im.getpixel((x, y)))]
+            self.assertTrue(ys, "no artwork found at the right edge")
+            top = ys[0]
+            for y in range(top, min(top + 40, ys[-1])):
+                r, g, b = im.getpixel((x, y))
+                self.assertTrue(r > 200 and g < 60 and b < 90,
+                                "something covers the artwork's top-right corner at y=%d: %s" % (y, (r, g, b)))
+
     @unittest.skipUnless(HAVE_CHROMIUM, "needs Playwright Chromium")
     def test_a_file_that_is_not_an_image_is_refused(self):
         with tempfile.TemporaryDirectory() as td:

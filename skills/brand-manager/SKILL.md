@@ -184,9 +184,9 @@ Platform: [platform name]
   Profile URL: [full URL to the profile page]
 ```
 
-This data powers preview rendering (showing exactly how posts look on each platform).
+This data fills the name and handle on each preview card.
 
-If user skips: Previews will use brand name and placeholder avatar. Recommend filling in for accurate mockups.
+If user skips: Previews use the brand name and a placeholder avatar. Recommend filling it in so the cards read as the real account.
 
 ### Step 9: Languages
 

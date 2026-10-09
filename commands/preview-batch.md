@@ -1,12 +1,12 @@
 ---
-description: "Render preview mockups for all generated posts in one batch. \"preview all the posts\""
+description: "Render a preview card for every generated post in one batch. \"preview all the posts\""
 argument-hint: "[--brand <name>] [--platform <name>]"
 disable-model-invocation: true
 ---
 
 # Preview Batch
 
-Generate platform mockup previews for all generated posts.
+Generate a preview card per platform for all generated posts.
 
 ## Process
 1. Find all posts with generated images

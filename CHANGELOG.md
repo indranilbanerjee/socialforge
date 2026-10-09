@@ -62,11 +62,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   new-month/parse-calendar, new-month/ideate-month), and the listing-cost
   formula with a 5,800-character ceiling. Its docstring records why.
 
-**Fixed — two requests reached no skill**
+**Fixed — two side-effect skills were hidden from the model**
 
-- `finalize-month` and `create-previews` were hidden from the model, and so
-  were their wrapper commands (`finalize`, `preview-batch`), so "package the
-  month for the client" and "show me how this will look" routed nowhere.
+- `finalize-month` and `create-previews` were hidden from the model, so
+  "package the month for the client" and "show me how this will look" could
+  reach them only through their wrapper commands (`finalize`,
+  `preview-batch`). (Corrected 2026-10-10: this note first said the wrapper
+  commands were hidden too; in 1.27.2 they were visible.)
   Each purpose now has one visible entry, the skill, behind a typed `yes`
   gate (new for both). Wrapper commands stay as hidden slash shortcuts.
   `assemble-document` (an internal step) and `manage-reviews` (reached through

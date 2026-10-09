@@ -51,6 +51,10 @@ except (ImportError, KeyError, ValueError):  # pragma: no cover
     DEFAULT_VEO_MODEL = None
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def _resolve_execution_model(kind, provider, registry_alias=None):
     """Model id for a capability, discovered live where possible.
 
@@ -156,11 +160,11 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
                 import wavespeed  # noqa: F401
             else:
                 record(attempts, "wavespeed-kling", "dependencies", "dependency-missing",
-                       "wavespeed install failed. Run: pip install wavespeed")
+                       "wavespeed is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)")
                 return None
         except Exception as exc:
             record(attempts, "wavespeed-kling", "dependencies", "dependency-missing",
-                   f"wavespeed not installed ({exc}). Run: pip install wavespeed")
+                   f"wavespeed is not installed ({exc}). Run: python scripts/install_deps.py (it prints the pinned install command)")
             return None
     os.environ["WAVESPEED_API_KEY"] = ws_key
     from wavespeed import Client as WsClient
@@ -194,8 +198,9 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
         if not video_url and isinstance(output.get("video"), dict):
             video_url = output["video"].get("url")
         if video_url:
+            from provider_failures import download_https
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-            urllib.request.urlretrieve(video_url, output_path)
+            download_https(video_url, output_path)
             result = {
                 "status": "success",
                 "provider": "wavespeed-kling-v3",
@@ -271,8 +276,9 @@ def generate_video_higgsfield(prompt, output_path, image_path=None, duration=5, 
             if st.get("status") == "completed":
                 vid_url = st.get("video", {}).get("url") or (st.get("outputs", [None]) or [None])[0]
                 if vid_url:
+                    from provider_failures import download_https
                     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-                    urllib.request.urlretrieve(vid_url, output_path)
+                    download_https(vid_url, output_path)
                     return {"status": "success", "provider": "higgsfield-kling", "output": str(output_path)}
                 record(attempts, "higgsfield", "response", "bad-response",
                        "job completed but no video URL in status payload")
@@ -320,11 +326,11 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                 from google.genai import types
             else:
                 record(attempts, "veo", "dependencies", "dependency-missing",
-                       "google-genai install failed. Run: pip install google-genai")
+                       "google-genai is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)")
                 return None
         except Exception as exc:
             record(attempts, "veo", "dependencies", "dependency-missing",
-                   f"google-genai not installed ({exc}). Run: pip install google-genai")
+                   f"google-genai is not installed ({exc}). Run: python scripts/install_deps.py (it prints the pinned install command)")
             return None
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -669,8 +675,8 @@ def route_video_provider(duration_seconds, video_type):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Video Generator (Kling + Veo)")
-    parser.add_argument("--brand", required=False, default="")
-    parser.add_argument("--month", required=False, default="")
+    parser.add_argument("--brand", type=_common.path_component, required=False, default="")
+    parser.add_argument("--month", type=_common.path_component, required=False, default="")
     parser.add_argument("--post-id", required=False, default="")
     parser.add_argument("--output-dir", required=False, default="")
     parser.add_argument("--generate-video", action="store_true", help="Generate AI video")

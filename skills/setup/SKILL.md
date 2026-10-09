@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:setup — API Credential Configuration
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 One-time setup that stores credentials persistently. Run once, works forever across all sessions.
 
 ## Context efficiency
@@ -37,16 +39,29 @@ If you are the admin, see the Admin Setup section below.
 
 ## Interactive Flow
 
-### Step 0: Install Dependencies (Automatic)
+### Step 0: Check Dependencies (nothing installs without your yes)
 
-Run this first — installs all required Python packages:
+Run this first. It only REPORTS which packages are present and prints the exact pinned install command for each one that is missing; it installs nothing:
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py"
 ```
 
-This auto-installs: google-genai (Vertex AI), wavespeed (video), Pillow (compositing), imageio-ffmpeg (video post-processing), playwright (carousels).
+Packages it checks by default (every version is pinned in `scripts/install_deps.py`): Pillow (compositing), google-genai (Vertex AI), wavespeed and imageio-ffmpeg (video), playwright (carousels; its Chromium browser is a large download).
 
-If any package fails, show the manual install command and continue.
+Show the user the list, then ask:
+
+```
+These packages are missing: <list>. Install them now with the pinned versions? (yes / no)
+  Playwright's browser (for carousels) is a large download; say so if playwright is on the list.
+```
+
+Only on an explicit `yes`, run:
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py" --install
+```
+Any other answer: print the pinned commands from the report for the user to run themselves, and continue.
+
+Extra packages are never part of that default and are installed only when the user asks for them by name: HiggsField's client (`--groups higgsfield`), background removal, which fetches model weights on first use (`--groups background-removal`), and C2PA signing (`--groups c2pa`).
 
 ### Step 1: Image Generation (Vertex AI)
 
@@ -85,14 +100,16 @@ Image generation configured.
 Video Generation Setup (WaveSpeed)
 
 Do you have a WaveSpeed API key?
-  Paste the key here
+  Do NOT paste it here: anything typed into this chat is stored in the conversation transcript.
+  Set it as the environment variable WAVESPEED_API_KEY (in your shell or your host's environment
+  settings) and tell me when it is set.
 
 Or type "skip" to configure later (video generation will not work).
 ```
 
-When user provides the key:
+When the user says it is set, run this WITHOUT `--api-key` (the script reads `WAVESPEED_API_KEY`, or one line from stdin; a key on the command line lands in shell history and the process table):
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed --api-key "<user-provided-key>"
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed
 ```
 
 Show the result. If success:
@@ -108,14 +125,15 @@ Video generation configured.
 HiggsField Setup (Optional — adds fallback resilience)
 
 Do you have a HiggsField API key and secret?
-  → Paste the API key, then the API secret
+  Do NOT paste them here. Set the environment variables HF_API_KEY and HF_API_SECRET and tell me
+  when they are set.
 
 Or type "skip" (HiggsField is optional — Vertex AI and WaveSpeed are sufficient).
 ```
 
-When user provides both:
+When the user says both are set, run this WITHOUT `--api-key` or `--api-secret` (the script reads `HF_API_KEY` and `HF_API_SECRET`, or stdin):
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-higgsfield --api-key "<key>" --api-secret "<secret>"
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-higgsfield
 ```
 
 ### Step 3: Summary
@@ -260,5 +278,6 @@ Share both the API key AND secret with your team. Both are needed for authentica
 - Credentials are stored in the plugin persistent data directory
 - The GCP JSON file is copied (not linked) to ensure it survives if the original is deleted
 - WaveSpeed API key is stored in credentials.json within plugin data
+- Keys are never taken through the chat or the command line: only from environment variables or stdin
 - No credentials are committed to git or shared outside the local machine
 - To revoke access: rotate the service account key in GCP Console or regenerate the WaveSpeed API key

@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:compose-creative — Creative Production Engine
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 The core production skill. Takes asset matching results and produces visual and video assets for each post according to its assigned creative mode, using a staged human-in-the-loop approval flow.
 
 ## Context efficiency
@@ -71,6 +73,27 @@ Two caveats from the code: file type is set from the extension (`.jpg`/`.jpeg` a
 
 If any prerequisite is missing: "Run `/socialforge:match-assets` first — creative production needs asset matching results."
 
+## Quote, then go (before any paid call)
+
+Generation spends provider credits, so the first paid call waits for a quote and an explicit go. This skill states no price and the model registry stores none: `price_book.py` is the only source, and it refuses rather than guesses.
+
+1. List what is about to be generated: for each paid call, the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images, or seconds of video, plus any option that changes the price, such as synchronised audio). For an image post that is the 2-3 variants of Stage 3; for a video post it is both keyframe rounds and the clip.
+2. Quote it:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[{"model":"<resolved model id>","provider":"<provider>","units":<n>,"label":"<post id and stage>"}]'
+```
+
+   A single item can use `--action quote --model <id> --provider <provider> --units <n>`. If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.
+3. Show the user the total, each line, its **source URL**, and how old the price is (a price older than 24 hours is stale and is refused; it must be looked up again):
+
+```
+Estimated cost: <total_usd> USD for <n> generations. Prices from <source>, <age_hours> h old (valid for 24 h).
+Type "go" to generate. Anything else cancels.
+```
+
+4. Continue only on an explicit `go` for exactly this list. Anything else, including silence, cancels and nothing is generated. If the list changes (more posts, another model, an added option), quote again and ask again. A quote is never approval (`approved_to_run` is always `false`).
+
 ## Process (For Each IMAGE Post) — 4-Stage Approval Flow
 
 ### Stage 1: Creative Direction (No API Call)
@@ -99,6 +122,7 @@ Once the user selects a direction, confirm the specifics before generating:
 User explicitly approves to proceed to generation.
 
 ### Stage 3: Generate and Select (image provider, Vertex AI)
+- **First: Quote, then go** (the section above). Nothing is generated until the user types `go`.
 - Generate 2-3 image versions based on the confirmed direction
 - Show all versions inline via the Read tool so the user can compare
 - User picks their preferred version (or requests another round with adjustments)
@@ -126,6 +150,7 @@ Present 2-3 video concept ideas to the user. Each option includes:
 User picks a concept before any generation begins.
 
 ### Stage 2: First Frame Generation (image provider, Vertex AI)
+- **First: Quote, then go** for the whole video post (both keyframe rounds and the clip), as above. Nothing is generated until the user types `go`.
 - Generate 2 first-frame options based on the selected concept
 - Show both inline via the Read tool
 - User picks their preferred first frame (or requests adjustments)

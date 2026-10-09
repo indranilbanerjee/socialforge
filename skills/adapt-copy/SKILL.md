@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:adapt-copy — Copy Adapter
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Transform a single caption brief into platform-optimized copy for each target platform.
 
 ## Context efficiency

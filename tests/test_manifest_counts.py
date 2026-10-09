@@ -59,7 +59,7 @@ class TestManifestCounts(unittest.TestCase):
         self.assertEqual(bad, {}, f"manifests naming a model (resolve it live instead): {bad}")
 
     def test_guard_can_fail(self):
-        real = {"skills": 21, "commands": 18, "agents": 5, "scripts": 29}
+        real = {"skills": 21, "commands": 18, "agents": 5, "scripts": 30}
         self.assertEqual(stale_counts("21 skills, 18 commands", real), [])
         self.assertEqual(stale_counts("16 skills, 25\n  commands", real), ["16 skills", "25\n  commands"])
         self.assertTrue(stale_counts("5 agents + 25 scripts", real))

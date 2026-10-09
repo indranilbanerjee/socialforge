@@ -45,7 +45,7 @@ def remove_background(input_path, output_path):
             img.save(output_path, format="PNG")
             return {"status": "success", "output": str(output_path), "method": "threshold_fallback", "has_alpha": True, "note": "Basic white-background removal. Install rembg for better results."}
         except ImportError:
-            return {"error": "Neither rembg nor Pillow available. Run: pip install Pillow (minimum) or pip install rembg Pillow (recommended)"}
+            return {"error": "Neither rembg nor Pillow available. Run: python scripts/install_deps.py (it prints the pinned install command) (Pillow is the minimum; rembg is optional: --groups background-removal)"}
         except Exception as exc:
             return {"error": f"Threshold background removal failed: {type(exc).__name__}: {exc}"}
 
@@ -55,7 +55,7 @@ def composite_layers(background_path, foreground_path, output_path, position="ce
     try:
         from PIL import Image
     except ImportError:
-        return {"error": "Pillow not installed. Run: pip install Pillow"}
+        return {"error": "Pillow is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}
 
     bg = Image.open(background_path).convert("RGBA")
     fg = Image.open(foreground_path).convert("RGBA")

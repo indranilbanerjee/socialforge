@@ -28,6 +28,17 @@ Reasons are kebab-case and stable — tests and docs may pin them.
 
 from __future__ import annotations
 
+
+def download_https(url, dest):
+    """Download a provider-returned URL to `dest`. https only: `urlretrieve` also opens file:// and
+    ftp:// URLs, and the URL is data the provider (or whoever answers for it) controls."""
+    from urllib.parse import urlparse
+    import urllib.request
+    scheme = urlparse(str(url)).scheme.lower()
+    if scheme != "https":
+        raise ValueError(f"refusing to download a non-https URL (scheme {scheme!r})")
+    urllib.request.urlretrieve(str(url), str(dest))
+
 # What the user should do about each failure reason. Surfaced verbatim in the
 # terminal payload — keep these actionable and product-neutral.
 NEXT_STEPS = {

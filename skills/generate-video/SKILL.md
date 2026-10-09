@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:generate-video — Video Production Kit
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Generate video production assets through a 5-stage human-in-the-loop pipeline. Each stage requires user approval before advancing.
 
 ## Context efficiency
@@ -22,6 +24,27 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 - Models are never named in this skill: each alias above is resolved to a current model id when the script runs. To see what they resolve to today, run `python scripts/generate_video.py --list-models` (video) or `python scripts/resolve_model.py --aliases` (every alias).
 - Brand profile must be active (`/socialforge:switch-brand` if needed)
 - Calendar must be parsed (`/socialforge:parse-calendar`) with video posts identified
+
+## Quote, then go (before any paid call)
+
+Generation spends provider credits, so the first paid call waits for a quote and an explicit go. This skill states no price and the model registry stores none: `price_book.py` is the only source, and it refuses rather than guesses.
+
+1. List what is about to be generated: for each paid call, the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images, or seconds of video, plus any option that changes the price, such as synchronised audio). The first paid call is Stage 2, so quote the whole chain (the keyframes of Stages 2 and 3 and the clip of Stage 4) once, before Stage 2.
+2. Quote it:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[{"model":"<resolved model id>","provider":"<provider>","units":<n>,"label":"<post id and stage>"}]'
+```
+
+   A single item can use `--action quote --model <id> --provider <provider> --units <n>`. If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.
+3. Show the user the total, each line, its **source URL**, and how old the price is (a price older than 24 hours is stale and is refused; it must be looked up again):
+
+```
+Estimated cost: <total_usd> USD for <n> generations. Prices from <source>, <age_hours> h old (valid for 24 h).
+Type "go" to generate. Anything else cancels.
+```
+
+4. Continue only on an explicit `go` for exactly this list. Anything else, including silence, cancels and nothing is generated. If the list changes (more posts, another model, an added option), quote again and ask again. A quote is never approval (`approved_to_run` is always `false`).
 
 ## The 5-Stage Pipeline
 
@@ -58,6 +81,8 @@ pass supplies the craft, under four rules the scaffold carries with it:
 The user approves the filled script before any generation spend.
 
 ### Stage 2: First Frame Generation (Vertex AI, `latest-image-google`)
+
+**First: Quote, then go** (the section above). Nothing is generated until the user types `go`.
 
 Generate **2 first-frame options** based on the chosen concept. These set the opening visual and establish the look and feel.
 

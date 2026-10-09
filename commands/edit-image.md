@@ -5,6 +5,8 @@ argument-hint: "<post-id> <instruction>"
 
 # Edit Image
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Send an AI edit instruction to modify a generated image while preserving the core subject.
 
 ## Process

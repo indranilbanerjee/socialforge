@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:price-check — What this run will cost, looked up today
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Prices here are never remembered. They are looked up, recorded with the URL they
 came from, and expire after 24 hours.
 

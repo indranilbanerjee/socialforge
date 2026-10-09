@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:index-assets — Asset Indexer
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by a vision model (registry alias `latest-vision-google`) to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
 
 ## Context efficiency

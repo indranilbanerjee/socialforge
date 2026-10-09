@@ -67,6 +67,10 @@ COLUMN_ALIASES = {
 ENGAGEMENT_FIELDS = ("likes", "comments", "shares", "saves")
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def _month_dir(brand, month):
     return WORKSPACE / "output" / brand / month
 
@@ -353,8 +357,8 @@ def wins(brand, month, min_impressions, top_k, margin):
 def main():
     parser = argparse.ArgumentParser(description="SocialForge performance ingestion")
     parser.add_argument("--action", required=True, choices=["ingest", "wins"])
-    parser.add_argument("--brand", required=True)
-    parser.add_argument("--month", required=True, help="YYYY-MM (the month the numbers are FROM)")
+    parser.add_argument("--brand", type=_common.path_component, required=True)
+    parser.add_argument("--month", type=_common.path_component, required=True, help="YYYY-MM (the month the numbers are FROM)")
     parser.add_argument("--csv", default=None, help="Platform analytics export (ingest)")
     parser.add_argument("--source", default=None, help="Label for where the export came from")
     parser.add_argument("--replace", action="store_true",

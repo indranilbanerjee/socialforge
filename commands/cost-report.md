@@ -5,6 +5,8 @@ argument-hint: "--brand <name> --month <YYYY-MM>"
 
 # Cost Report
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Display the API cost breakdown from cost-log.json.
 
 ## Contract

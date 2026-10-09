@@ -31,12 +31,12 @@ Usage (auto-called from SocialForge pipeline):
     --c2pa-sign on a generate_image / generate_video call. The pipeline
     calls this script as a finalization step.
 
-Tested with c2pa-python 0.32.6 — uses the current Builder + Signer.from_info
+Tested with c2pa-python 0.38.0 (the pin in install_deps.py) — uses the current Builder + Signer.from_info
 API. Verified end-to-end against contentcredentials.org/verify.
 
 Exit codes:
     0  success
-    2  c2pa-python install failed
+    2  c2pa-python is not installed (the pinned install command is printed; nothing installs itself)
     3  unsupported asset format
     4  signing failure
     5  invalid arguments
@@ -44,7 +44,7 @@ Exit codes:
 
 import argparse
 import json
-import subprocess
+import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,23 +70,49 @@ AI_CLAIM_TO_C2PA_TYPE = {
     "ai-no-substantive-changes": "HUMAN_EDITS",
 }
 
+# The same vocabulary as IPTC URIs. Since c2pa-python 0.38 the `c2pa.created` action must carry its own
+# digitalSourceType or the manifest fails validation at sign time ("c2pa.created action must have a
+# digitalSourceType"); builder.set_intent() sets the intent as well.
+IPTC_SOURCE_TYPE = {
+    "ai-generated-content":      "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+    "ai-assisted-edits":         "http://cv.iptc.org/newscodes/digitalsourcetype/compositeWithTrainedAlgorithmicMedia",
+    "ai-no-substantive-changes": "http://cv.iptc.org/newscodes/digitalsourcetype/humanEdits",
+}
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
+class C2paNotInstalled(RuntimeError):
+    """c2pa-python is missing. Raised, never exit()ed, so a caller that already paid for a generation can
+    still deliver the unsigned asset and report the signing failure."""
+
 
 def ensure_c2pa():
+    """Import c2pa. Never installs on its own: a missing package raises with the exact pinned command
+    (SOCIALFORGE_INSTALL_DEPS=1, set by the user for the run, is the only consent that installs).
+    It raises instead of exiting, so a caller that already paid for a generation can still deliver
+    the unsigned asset and report the signing failure."""
     try:
         import c2pa
         return c2pa
     except ImportError:
         pass
-    print("Installing c2pa-python...", file=sys.stderr)
-    try:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", "c2pa-python>=0.32"]
-        )
-        import c2pa
-        return c2pa
-    except Exception as exc:
-        print(f"ERROR: could not install c2pa-python: {exc}", file=sys.stderr)
-        sys.exit(2)
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    from install_deps import ensure_package, install_command
+    if ensure_package("c2pa-python"):
+        try:
+            import c2pa
+            return c2pa
+        except ImportError:
+            pass
+    raise C2paNotInstalled(
+        "c2pa-python is not installed, and SocialForge does not install packages on its own. "
+        "Install it, then re-run: " + install_command(["c2pa-python", "cryptography"])
+    )
 
 
 def _plugin_version() -> str:
@@ -121,6 +147,7 @@ def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_
         {
             "action": "c2pa.created",
             "when": created,
+            "digitalSourceType": IPTC_SOURCE_TYPE[ai_claim],
             "softwareAgent": {
                 "name": generator,
                 "version": "1.0",
@@ -128,11 +155,10 @@ def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_
         }
     ]
     if prompt:
-        actions.append({
-            "action": "c2pa.opened",
-            "when": created,
-            "parameters": {"description": f"Source prompt: {prompt}"},
-        })
+        # The prompt used to be a separate `c2pa.opened` action. c2pa-python 0.38 rejects that
+        # ("cannot have more than one c2pa.created or c2pa.opened action", and an opened action needs
+        # an ingredient), so the prompt travels as the description of the `c2pa.created` action.
+        actions[0]["description"] = f"Source prompt: {prompt}"
     if platform:
         actions.append({
             "action": "c2pa.published",
@@ -274,15 +300,26 @@ def sign_asset(in_path, out_path, brand, generator, ai_claim, prompt=None, platf
     c2pa = ensure_c2pa()
 
     using_dev_cert = False
+    dev_tmpdir = None
     if not (signing_cert and signing_key):
         import tempfile
-        tmpdir = tempfile.mkdtemp(prefix="sf-c2pa-")
-        signing_cert, signing_key = generate_self_signed_cert(tmpdir)
+        dev_tmpdir = tempfile.mkdtemp(prefix="sf-c2pa-")
+        try:
+            signing_cert, signing_key = generate_self_signed_cert(dev_tmpdir)
+        except Exception:
+            shutil.rmtree(dev_tmpdir, ignore_errors=True)
+            raise
         using_dev_cert = True
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    cert_bytes = open(signing_cert, "rb").read()
-    key_bytes = open(signing_key, "rb").read()
+    try:
+        cert_bytes = open(signing_cert, "rb").read()
+        key_bytes = open(signing_key, "rb").read()
+    finally:
+        # The throwaway key is unencrypted PKCS#8 and only needed in memory from here on, so the
+        # folder holding it is deleted now, whatever happens next (Hermes review of 2026-10-04).
+        if dev_tmpdir:
+            shutil.rmtree(dev_tmpdir, ignore_errors=True)
 
     signer_info = c2pa.C2paSignerInfo(
         alg=b"es256", sign_cert=cert_bytes, private_key=key_bytes,
@@ -336,7 +373,7 @@ def main():
     parser = argparse.ArgumentParser(description="Embed a C2PA manifest in a SocialForge AI-generated asset.")
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--brand", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
     parser.add_argument("--generator", required=True, help='e.g. "Vertex AI Nano Banana Pro", "WaveSpeed Kling v3.0 Pro"')
     parser.add_argument("--ai-claim", default="ai-generated-content", choices=sorted(AI_CLAIM_TO_C2PA_TYPE.keys()))
     parser.add_argument("--created", help="ISO-8601 timestamp (default: now)")
@@ -369,6 +406,9 @@ def main():
             reviewed_by=args.reviewed_by, reviewed_at=args.reviewed_at,
             model_id=args.model_id,
         )
+    except C2paNotInstalled as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(2)
     except FileNotFoundError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(5)

@@ -19,6 +19,10 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def _hex_to_rgb(value):
     """Parse a hex color into an (r, g, b) tuple.
 
@@ -41,7 +45,7 @@ def add_text_overlay(image_path, output_path, text, brand=None, position="bottom
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
-        return {"error": "Pillow not installed. Run: pip install Pillow"}
+        return {"error": "Pillow is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}
 
     img = Image.open(image_path).convert("RGBA")
 
@@ -140,7 +144,7 @@ def main():
     parser.add_argument("--image", required=True, help="Input image path")
     parser.add_argument("--output", required=True, help="Output image path")
     parser.add_argument("--text", required=True, help="Overlay text")
-    parser.add_argument("--brand", default=None, help="Brand slug for fonts/colors")
+    parser.add_argument("--brand", type=_common.path_component, default=None, help="Brand slug for fonts/colors")
     parser.add_argument("--position", default="bottom", choices=["top", "center", "bottom"])
     parser.add_argument("--font-size", type=int, default=48)
     parser.add_argument("--color", default="#FFFFFF", help="Text color (hex)")

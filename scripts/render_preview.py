@@ -22,13 +22,17 @@ else:
 TEMPLATE_DIR = PLUGIN_ROOT / "assets" / "preview-templates"
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def render_preview(image_path, copy_text, platform, brand, output_path,
                    allow_missing_image=False):
     """Render a platform preview mockup."""
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        return {"error": "Playwright not installed. Run: pip install playwright && playwright install chromium"}
+        return {"error": "Playwright is not installed. Run: python scripts/install_deps.py --groups carousel (it prints the pinned pip command and the browser command)"}
 
     # Load brand config for profile info
     config_path = WORKSPACE / "brands" / brand / "brand-config.json"
@@ -138,7 +142,7 @@ def main():
     parser.add_argument("--image", required=True, help="Post image path")
     parser.add_argument("--copy", required=True, help="Post copy text")
     parser.add_argument("--platform", required=True)
-    parser.add_argument("--brand", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--allow-missing-image", action="store_true",
                         help="Render a copy-layout preview with no artwork. The result is "

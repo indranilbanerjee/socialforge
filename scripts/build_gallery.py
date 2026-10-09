@@ -32,6 +32,10 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def file_to_base64(file_path, mime_type=None):
     """Convert a file to base64 data URI."""
     path = Path(file_path)
@@ -354,8 +358,8 @@ def build_gallery(brand, month, inline_video=True):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Gallery Builder")
-    parser.add_argument("--brand", required=True)
-    parser.add_argument("--month", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
+    parser.add_argument("--month", type=_common.path_component, required=True)
     parser.add_argument("--no-inline-video", action="store_true",
                         help="Link videos by relative path instead of embedding them as base64 "
                              "(keeps the file small enough to publish as a page; the published "

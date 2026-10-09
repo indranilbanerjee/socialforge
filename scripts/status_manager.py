@@ -20,6 +20,17 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+def require_components(**names):
+    """Raise ValueError unless every named value is a single plain folder name."""
+    for label, value in names.items():
+        if not is_single_component(value):
+            raise ValueError(f"{label} must be a single folder name, not a path: {value!r}")
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+from _common import is_single_component  # noqa: E402
+
+
 def utc_now():
     """Timezone-aware UTC timestamp in Zulu form."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
@@ -65,6 +76,7 @@ KNOWN_STATUSES = set(VALID_TRANSITIONS)
 
 def update_status(brand, month, post_id, new_status, actor="system", notes="", force=False):
     """Transition a post's status in the tracker with validation."""
+    require_components(brand=brand, month=month)
     tracker_path = WORKSPACE / "output" / brand / month / "status-tracker.json"
     if not tracker_path.exists():
         print(json.dumps({"error": f"Status tracker not found: {tracker_path}"}))
@@ -152,6 +164,7 @@ def update_status(brand, month, post_id, new_status, actor="system", notes="", f
 
 
 def get_summary(brand, month):
+    require_components(brand=brand, month=month)
     """Get pipeline status summary."""
     tracker_path = WORKSPACE / "output" / brand / month / "status-tracker.json"
     if not tracker_path.exists():
@@ -210,6 +223,7 @@ def get_week_number(date_str):
 
 
 def init_post_folder(brand, month, post):
+    require_components(brand=brand, month=month)
     """Create the post-specific folder structure."""
     month_dir = WORKSPACE / "output" / brand / month
     week = get_week_number(post.get("date", ""))
@@ -228,6 +242,7 @@ def init_post_folder(brand, month, post):
 
 
 def init_month(brand, month, force=False):
+    require_components(brand=brand, month=month)
     """Initialize a new month's tracking.
 
     Existing status-tracker.json / cost-log.json are preserved so a re-run cannot
@@ -306,6 +321,11 @@ def main():
     parser.add_argument("--force", action="store_true",
                         help="Force state transition even if invalid; for init-month, back up and rebuild existing tracker/cost log")
     args = parser.parse_args()
+
+    for label, value in (("--brand", args.brand), ("--month", args.month)):
+        if value is not None and not is_single_component(value):
+            print(json.dumps({"error": f"{label} must be a single folder name, not a path: {value!r}"}))
+            sys.exit(1)
 
     if args.action == "session-init":
         session_init()

@@ -19,6 +19,10 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB tuple."""
     hex_color = hex_color.lstrip("#")
@@ -35,7 +39,7 @@ def verify_colors(image_path, brand, threshold=50, min_percentage=15):
     try:
         from PIL import Image
     except ImportError:
-        print(json.dumps({"error": "Pillow not installed. Run: pip install Pillow"}))
+        print(json.dumps({"error": "Pillow is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}))
         sys.exit(1)
 
     config_path = WORKSPACE / "brands" / brand / "brand-config.json"
@@ -100,7 +104,7 @@ def verify_colors(image_path, brand, threshold=50, min_percentage=15):
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Brand Color Verifier")
     parser.add_argument("--image", required=True)
-    parser.add_argument("--brand", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
     parser.add_argument("--threshold", type=int, default=50, help="Color distance threshold (0-255)")
     parser.add_argument("--min-percentage", type=float, default=15, help="Minimum brand color percentage")
     args = parser.parse_args()

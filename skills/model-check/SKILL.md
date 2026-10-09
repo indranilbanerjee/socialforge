@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:model-check — which model to call, decided today
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 SocialForge does not know which model to use. That is deliberate.
 
 A model id written into a plugin is a claim about the day it was written, and

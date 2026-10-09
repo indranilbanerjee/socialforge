@@ -584,7 +584,7 @@ After generation, `scripts/video_postprocess.py` applies:
 - **Optional subtitle burning** (you approve — SRT with brand fonts)
 - **Optional background music** (you approve — mixed at appropriate levels)
 
-Post-processing runs on ffmpeg, auto-installed via the `imageio-ffmpeg` Python package.
+Post-processing runs on ffmpeg, provided by the pinned `imageio-ffmpeg` Python package (`scripts/install_deps.py` prints the install command; nothing installs itself).
 
 ### Requirements
 
@@ -745,7 +745,7 @@ Calendar document generated
   - Platform-specific resizing (no stretching)
   - Optional subtitle burning (user approves)
   - Optional background music (user approves)
-  - Powered by ffmpeg (auto-installed via imageio-ffmpeg)
+  - Powered by ffmpeg (from the pinned imageio-ffmpeg package)
 - **Review Gallery** — The HTML gallery for archival reference.
 - **Publishing Schedule** — A CSV/JSON schedule compatible with scheduling tools (Buffer, Hootsuite, Later).
 - **Production Checklist** — What was approved, by whom, and when.

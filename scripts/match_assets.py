@@ -19,6 +19,10 @@ else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def platform_key(p):
     """Platform entries may be dicts ({"key": ...}) or plain strings."""
     if isinstance(p, dict):
@@ -233,8 +237,8 @@ def match_all(brand, month):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Asset Matcher")
-    parser.add_argument("--brand", required=True)
-    parser.add_argument("--month", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
+    parser.add_argument("--month", type=_common.path_component, required=True)
     args = parser.parse_args()
 
     match_all(args.brand, args.month)

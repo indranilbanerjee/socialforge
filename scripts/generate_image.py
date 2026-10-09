@@ -51,6 +51,10 @@ except (ImportError, KeyError, ValueError):  # pragma: no cover — fallback if 
     DEFAULT_MODEL = None
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def _resolve_execution_model(kind, provider, registry_alias=None):
     """Model id for a capability, discovered live where possible.
 
@@ -103,13 +107,13 @@ def create_client():
             from google import genai
         except ImportError:
             try:
-                from install_deps import ensure_package
+                from install_deps import ensure_package, install_command
                 if ensure_package("google-genai"):
                     from google import genai
                 else:
-                    return None, None, "google-genai install failed. Run: pip install google-genai"
+                    return None, None, "google-genai is not installed. Run: " + install_command(["google-genai"])
             except Exception:
-                return None, None, "google-genai not installed. Run: pip install google-genai"
+                return None, None, "google-genai is not installed (run scripts/install_deps.py to see the pinned command)"
 
         project = os.environ.get("GOOGLE_CLOUD_PROJECT")
         api_key = os.environ.get("GEMINI_API_KEY")
@@ -290,9 +294,9 @@ def generate_image_wavespeed(prompt, output_path, reference_images=None, aspect_
         output = client.run(model_id, payload, timeout=120.0, poll_interval=3.0)
         img_url = output.get("outputs", [None])[0]
         if img_url:
-            import urllib.request
+            from provider_failures import download_https
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-            urllib.request.urlretrieve(img_url, output_path)
+            download_https(img_url, output_path)
             return {"status": "success", "provider": "wavespeed-kling-image-v3", "output": str(output_path)}
         record(attempts, "wavespeed", "response", "bad-response",
                "provider returned no output URL")
@@ -339,9 +343,9 @@ def generate_image_higgsfield(prompt, output_path, aspect_ratio="1:1", attempts=
             if st.get("status") == "completed":
                 img_url = st.get("image", {}).get("url") or (st.get("outputs", [None]) or [None])[0]
                 if img_url:
-                    import urllib.request
+                    from provider_failures import download_https
                     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-                    urllib.request.urlretrieve(img_url, output_path)
+                    download_https(img_url, output_path)
                     return {"status": "success", "provider": "higgsfield-soul", "output": str(output_path)}
                 record(attempts, "higgsfield", "response", "bad-response",
                        "job completed but no image URL in status payload")
@@ -398,13 +402,13 @@ def generate_placeholder(prompt, output_path, width=1080, height=1080):
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
         try:
-            from install_deps import ensure_package
+            from install_deps import ensure_package, install_command
             if ensure_package("Pillow"):
                 from PIL import Image, ImageDraw, ImageFont
             else:
-                return {"error": "Pillow install failed. Run: pip install Pillow"}
+                return {"error": "Pillow is not installed. Run: " + install_command(["Pillow"])}
         except Exception:
-            return {"error": "Pillow not installed. Run: pip install Pillow"}
+            return {"error": "Pillow is not installed (run scripts/install_deps.py to see the pinned command)"}
 
     img = Image.new("RGB", (width, height), (240, 240, 240))
     draw = ImageDraw.Draw(img)
@@ -482,7 +486,7 @@ def main():
     # v1.6 — EU AI Act Article 50 compliance: optional C2PA provenance signing
     parser.add_argument("--c2pa-sign", action="store_true",
                         help="Embed C2PA provenance manifest in the output asset (EU AI Act Article 50 compliance). Requires --brand.")
-    parser.add_argument("--brand", default=None,
+    parser.add_argument("--brand", type=_common.path_component, default=None,
                         help="Brand name for C2PA CreativeWork.author (required with --c2pa-sign)")
     parser.add_argument("--platform", default=None,
                         help="Target social platform for C2PA c2pa.published action: tiktok / instagram / linkedin / meta / youtube / x / threads")

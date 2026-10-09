@@ -100,10 +100,10 @@ Reference: [opensource.contentauthenticity.org/docs/manifest/signing-manifests/]
 
 ## Python dependencies
 
-- `c2pa-python>=0.32.6` — auto-installed on first run
-- `cryptography` — only required for the dev self-signed cert path; auto-installed if missing
+- `c2pa-python==0.38.0` (the version the script was tested against)
+- `cryptography==46.0.6` — only required for the dev self-signed cert path
 
-These are part of SocialForge's full install. The script auto-installs them via `pip install --quiet` on first invocation if not present.
+Neither is installed for you. If `c2pa-python` is missing, the script stops with the exact pinned command (`python scripts/install_deps.py --groups c2pa` prints it; add `--install` to have the script run it, or set `SOCIALFORGE_INSTALL_DEPS=1` for one run). `cryptography` is not installed for you either: without it the dev self-signed path fails with an error, so install it first.
 
 ## Output
 

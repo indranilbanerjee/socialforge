@@ -7,6 +7,8 @@ user-invocable: true
 
 # /socialforge:ingest-performance — real numbers into the wins rung
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 `/socialforge:ideate-month` compounds "what worked last month." Before this
 skill, that meant whatever someone remembered in the planning call — and
 memory favors the post that felt good, not the one that performed. This skill

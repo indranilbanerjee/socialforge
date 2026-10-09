@@ -5,6 +5,8 @@ argument-hint: "[--brand <name>] [--week <N>] [--tier HERO|HUB|HYGIENE] [--platf
 
 # Generate All
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Produce images, carousels, copy, and previews for every post in the calendar.
 
 This is the most expensive command in SocialForge. It fans out across a whole

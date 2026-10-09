@@ -5,6 +5,7 @@ Handles template selection, brand variable injection, and PDF assembly.
 """
 
 import argparse
+import html
 import json
 import os
 import sys
@@ -29,6 +30,10 @@ TEMPLATE_MAP = {
     "data": "data-infographic-6slide.html",
     "quote": "quote-card-single.html",
 }
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
 
 
 def inject_brand_vars(html_content, brand_config):
@@ -56,13 +61,23 @@ def inject_brand_vars(html_content, brand_config):
     return html_content
 
 
+def inject_slide_values(html_content, slide):
+    """Fill `{{slide_<key>}}` placeholders. Slide text is data (it can come from a calendar, a comment
+    export or a pasted brief), so every value is HTML-escaped: it can never inject markup or script into
+    the page being rendered (Hermes review of 2026-10-04)."""
+    out = html_content
+    for key, value in slide.items():
+        out = out.replace("{{slide_" + str(key) + "}}", html.escape(str(value)))
+    return out
+
+
 def render_slides(template_type, slides_data, brand, output_dir, width=1080, height=1080):
     """Render carousel slides from HTML template."""
     # Check Playwright availability
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        return {"error": "Playwright not installed. Run: pip install playwright && playwright install chromium"}
+        return {"error": "Playwright is not installed. Run: python scripts/install_deps.py --groups carousel (it prints the pinned pip command and the browser command)"}
 
     # Load template
     template_file = TEMPLATE_MAP.get(template_type)
@@ -100,9 +115,7 @@ def render_slides(template_type, slides_data, brand, output_dir, width=1080, hei
 
         for i, slide in enumerate(slides_data):
             # Inject slide content into template
-            slide_html = html_content
-            for key, value in slide.items():
-                slide_html = slide_html.replace(f"{{{{slide_{key}}}}}", str(value))
+            slide_html = inject_slide_values(html_content, slide)
 
             page.set_content(slide_html)
 
@@ -141,7 +154,7 @@ def main():
     parser.add_argument("--template", choices=list(TEMPLATE_MAP.keys()),
                         help="Carousel template type")
     parser.add_argument("--slides", help="JSON file with slide content array")
-    parser.add_argument("--brand", help="Brand slug for theming")
+    parser.add_argument("--brand", type=_common.path_component, help="Brand slug for theming")
     parser.add_argument("--output-dir", help="Output directory for slide PNGs")
     parser.add_argument("--width", type=int, default=1080)
     parser.add_argument("--height", type=int, default=1080)

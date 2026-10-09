@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:ideate-month — the month before the calendar exists
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 SocialForge's pipeline starts at `parse-calendar` — someone hands it a calendar.
 This skill is for when nobody has: the client asks "what should this month be
 about?", and that question is the actual work they are paying for.

@@ -52,27 +52,31 @@ PLATFORM_SPECS = {
 # ffmpeg binary
 # ---------------------------------------------------------------------------
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def get_ffmpeg():
     """Return the path to the ffmpeg binary bundled with imageio-ffmpeg.
 
-    If imageio-ffmpeg is not installed, attempts auto-install via install_deps.
+    If imageio-ffmpeg is not installed, raises with the exact pinned install command (nothing installs itself).
     Returns the absolute path string to the ffmpeg executable.
     """
     try:
         import imageio_ffmpeg
     except ImportError:
         try:
-            from install_deps import ensure_package
+            from install_deps import ensure_package, install_command
             if ensure_package("imageio-ffmpeg"):
                 import imageio_ffmpeg
             else:
                 raise RuntimeError(
-                    "imageio-ffmpeg install failed. Run: pip install imageio-ffmpeg"
+                    "imageio-ffmpeg is not installed. Run: " + install_command(["imageio-ffmpeg"])
                 )
         except ImportError:
             raise RuntimeError(
-                "imageio-ffmpeg not installed and install_deps unavailable. "
-                "Run: pip install imageio-ffmpeg"
+                "imageio-ffmpeg is not installed and install_deps is unavailable. "
+                "Install the pinned version listed in scripts/install_deps.py."
             )
 
     return imageio_ffmpeg.get_ffmpeg_exe()
@@ -556,7 +560,7 @@ def main():
     )
     parser.add_argument("--input", required=True, help="Input video path")
     parser.add_argument("--output-dir", required=True, help="Output directory for processed videos")
-    parser.add_argument("--brand", required=True, help="Brand slug (reads brand-config.json)")
+    parser.add_argument("--brand", type=_common.path_component, required=True, help="Brand slug (reads brand-config.json)")
     parser.add_argument("--platforms", default=None,
                         help="Comma-separated platform list (default: all platforms)")
     parser.add_argument("--srt", default=None, help="Path to SRT subtitle file")

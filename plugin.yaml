@@ -12,7 +12,7 @@
 #   hermes plugins install indranilbanerjee/socialforge
 
 name: socialforge
-version: 1.28.1
+version: 1.29.0
 description: >-
   Open-source agency-grade social media production plugin. 21 skills, 18
   commands, asset-first compositing + AI image + AI video + C2PA signing
@@ -24,3 +24,34 @@ homepage: https://github.com/indranilbanerjee/socialforge
 provides_tools: []
 provides_hooks: []
 requires_env: []
+# Every credential below is OPTIONAL: nothing is required to install, and a script that needs one
+# says so and stops. They are listed (not in requires_env) so the catalog and `hermes plugins` can show
+# which environment variables the scripts read.
+optional_env:
+  - name: GEMINI_API_KEY
+    description: Gemini API key for image generation and asset indexing (an alternative to Vertex AI)
+    secret: true
+  - name: GOOGLE_CLOUD_PROJECT
+    description: Vertex AI project id (an alternative to a stored service-account JSON)
+    secret: false
+  - name: GOOGLE_CLOUD_LOCATION
+    description: Vertex AI region, default us-central1
+    secret: false
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    description: Path to a Google service-account JSON file (not a secret value)
+    secret: false
+  - name: WAVESPEED_API_KEY
+    description: WaveSpeed API key for video generation
+    secret: true
+  - name: HF_API_KEY
+    description: HiggsField API key (optional fallback provider)
+    secret: true
+  - name: HF_API_SECRET
+    description: HiggsField API secret (optional fallback provider)
+    secret: true
+  - name: ANTHROPIC_API_KEY
+    description: Only for scripts/refresh_models.py (model-registry refresh); a provider without a key is skipped
+    secret: true
+  - name: OPENAI_API_KEY
+    description: Only for scripts/refresh_models.py (model-registry refresh); a provider without a key is skipped
+    secret: true

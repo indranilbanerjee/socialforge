@@ -33,6 +33,10 @@ PLATFORMS_PATH = Path(__file__).resolve().parent / "platform_limits.json"
 _COUNT_METHODS = ("x_weighted",)
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def _x_weighted_config(raw):
     """The X counting rules recorded in the data file (`counting.x_weighted.config`,
     field names as in twitter-text's config/v3.json), checked and unpacked."""
@@ -329,7 +333,7 @@ def main():
     # Required for an adaptation, but must stay optional so --list-platforms works
     parser.add_argument("--text", help="Source copy text")
     parser.add_argument("--platform", help="Target platform")
-    parser.add_argument("--brand", default=None, help="Brand slug for hashtags")
+    parser.add_argument("--brand", type=_common.path_component, default=None, help="Brand slug for hashtags")
     parser.add_argument("--cta", default=None, help="Call-to-action text or URL")
     parser.add_argument("--cta-keyword", default=None,
                         help="Comment-keyword for bio-link platforms when the brand runs a "

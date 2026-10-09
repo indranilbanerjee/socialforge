@@ -9,6 +9,8 @@ disable-model-invocation: false
 
 # /socialforge:finalize-month — Month Finalizer
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Package all approved posts into the organized delivery folder structure.
 
 ## Execution gate

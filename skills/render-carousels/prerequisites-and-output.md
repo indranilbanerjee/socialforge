@@ -9,9 +9,10 @@ user asks what files a render leaves behind. Everything below is read from
 - A calendar parsed with the carousel posts identified (`calendar-data.json`, see
   `/socialforge:parse-calendar`).
 - Playwright and its Chromium build installed. `/socialforge:setup` runs
-  `scripts/install_deps.py`, whose `carousel` group installs `playwright` and then
-  `python -m playwright install chromium`. If the import still fails, `render_carousel.py`
-  returns the manual fix: `pip install playwright && playwright install chromium`.
+  `scripts/install_deps.py`, which reports what is missing and prints the pinned commands; its
+  `carousel` group is `playwright` plus `python -m playwright install chromium` (a large browser
+  download), and it installs only when the user says yes (`--install`). If the import fails,
+  `render_carousel.py` returns the same pointer: `python scripts/install_deps.py --groups carousel`.
 - Brand colors and fonts set in `brand-config.json`. Missing keys fall back to the
   renderer's built-in default palette and fonts rather than failing, so a half-configured
   brand renders in the wrong colors instead of erroring — confirm the first slide before

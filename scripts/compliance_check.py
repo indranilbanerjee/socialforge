@@ -37,6 +37,10 @@ BLOCKING_SEVERITIES = {"critical", "block"}
 ADVISORY_SEVERITIES = {"warning", "warn", "advisory", "info", "notice"}
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def _word_match(phrase, text):
     """Whole-word occurrence of `phrase` in `text` (both already case-folded
     by the caller). Substring matching is wrong for short phrases: 'ad' must
@@ -301,7 +305,7 @@ def check_compliance(brand, text, platform=None):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Compliance Checker")
-    parser.add_argument("--brand", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
     parser.add_argument("--text", required=True)
     parser.add_argument("--platform", default=None)
     args = parser.parse_args()

@@ -54,6 +54,10 @@ KNOWN_STATUSES = {"QUEUED", "ASSET_MATCHING", "GENERATING", "PENDING_REVIEW",
                   "REJECTED", "FINAL"}
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 class Audit:
     def __init__(self):
         self.checks = []
@@ -194,8 +198,8 @@ def audit_month(brand: str, month: str, strict=False) -> dict:
 def main():
     ap = argparse.ArgumentParser(description="Audit a month's delivery claims "
                                              "against the disk.")
-    ap.add_argument("--brand", required=True)
-    ap.add_argument("--month", required=True, help="YYYY-MM")
+    ap.add_argument("--brand", type=_common.path_component, required=True)
+    ap.add_argument("--month", type=_common.path_component, required=True, help="YYYY-MM")
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()

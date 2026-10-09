@@ -58,6 +58,10 @@ Provide a JSON response with these fields:
 }"""
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def scan_images(source_path):
     """Find all image files in the source directory.
     Supports local paths and Google Drive paths.
@@ -335,7 +339,7 @@ def index_all(brand, source_path, refresh=False, model=None):
 
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Asset Indexer")
-    parser.add_argument("--brand", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
     parser.add_argument("--source", default=None,
                         help="Path to image folder (omit to reuse the source recorded by the previous index)")
     parser.add_argument("--refresh", action="store_true", help="Only index new/changed images")

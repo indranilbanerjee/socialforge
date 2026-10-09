@@ -8,6 +8,8 @@ user-invocable: true
 
 # /socialforge:full-pipeline — Complete Production Pipeline
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+
 Run all phases sequentially with quality gates between each.
 
 ## Context efficiency
@@ -64,8 +66,29 @@ Produces creative for a single post with full user control at each stage.
 
 Produces creative for all posts in the calendar with minimal interruption.
 
+#### Quote, then go (batch, before any paid call)
+
+A batch fans out across the whole calendar and video is billed by the second, so the batch is quoted once, after the group directions are approved and before anything is generated. This skill states no price: `price_book.py` is the only source, and one unpriced item blocks the whole batch.
+
+1. List what is about to be generated: for each paid call, the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images, or seconds of video, plus any option that changes the price, such as synchronised audio). In a batch, list every paid generation of every post. Interactive mode (`/socialforge:generate-post`) does the same per post, in `/socialforge:compose-creative`.
+2. Quote it:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[{"model":"<resolved model id>","provider":"<provider>","units":<n>,"label":"<post id and stage>"}]'
+```
+
+   A single item can use `--action quote --model <id> --provider <provider> --units <n>`. If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.
+3. Show the user the total, each line, its **source URL**, and how old the price is (a price older than 24 hours is stale and is refused; it must be looked up again):
+
+```
+Estimated cost: <total_usd> USD for <n> generations. Prices from <source>, <age_hours> h old (valid for 24 h).
+Type "go" to generate. Anything else cancels.
+```
+
+4. Continue only on an explicit `go` for exactly this list. Anything else, including silence, cancels and nothing is generated. If the list changes (more posts, another model, an added option), quote again and ask again. A quote is never approval (`approved_to_run` is always `false`).
+
 1. **Group-based direction** — Posts are grouped by creative mode (ANCHOR, ENHANCE, STYLE_REF, PURE). User approves creative direction per group rather than per post.
-2. **Auto-generate** — All posts generate in sequence using the approved group directions. Progress is displayed per post with quality scores.
+2. **Quote, then go, then auto-generate** — run the quote step above for the whole batch; only on an explicit `go` do all posts generate in sequence using the approved group directions. Progress is displayed per post with quality scores.
 3. **Gallery review** — Once all posts are generated, a review gallery is built automatically so the user can review everything at once.
 4. **Flagged regeneration** — User flags any posts that need rework. Flagged posts regenerate with adjusted prompts. Unflagged posts proceed as approved.
 

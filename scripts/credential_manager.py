@@ -144,7 +144,7 @@ def get_gemini_client():
     try:
         from google import genai
     except ImportError:
-        return None, "google-genai not installed. Run: pip install google-genai"
+        return None, "google-genai is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"
 
     tried = []
 

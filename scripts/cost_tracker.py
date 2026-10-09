@@ -39,6 +39,10 @@ FREE_OPERATIONS = {
 }
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
+
 def write_json_atomic(path, data):
     """Write JSON via a temp file + os.replace so a crash can't truncate the cost log."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -176,8 +180,8 @@ def get_report(brand, month):
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Cost Tracker")
     parser.add_argument("--action", required=True, choices=["log", "report"])
-    parser.add_argument("--brand", required=True)
-    parser.add_argument("--month", required=True)
+    parser.add_argument("--brand", type=_common.path_component, required=True)
+    parser.add_argument("--month", type=_common.path_component, required=True)
     parser.add_argument("--post-id", default=None)
     parser.add_argument("--operation", default=None)
     parser.add_argument("--cost", type=float, default=None,

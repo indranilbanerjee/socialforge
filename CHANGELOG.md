@@ -7,6 +7,120 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.0] - 2026-10-10
+
+### Nothing installs itself, keys stay out of the chat, and paid generation waits for a quote
+
+A Hermes Agent maintainer reviewed SocialForge 1.27.2 for the Hermes plugin catalog
+(NousResearch/hermes-agent#132573) and asked for changes. Each point is below with how it
+was fixed. This is a minor release because install behaviour changes.
+
+**Changed - installs (review point: setup installs unpinned packages and a browser with no confirmation)**
+
+- **`scripts/install_deps.py` no longer installs unless you say so.** It used to run
+  `pip install <name>` with no version for nine packages, plus `playwright install chromium`,
+  as the first step of `/socialforge:setup`, and generation scripts called it mid-run. Now:
+  no flags (or `--check`) only reports what is present and prints the exact pinned commands;
+  `--install` is your explicit go-ahead; and `ensure_package()` (used mid-run) prints the
+  pinned command and returns False. `SOCIALFORGE_INSTALL_DEPS=1` for one run is the only
+  consent that lets it install from inside a script. **If you relied on the automatic
+  install, run `python scripts/install_deps.py --install` once, or the command it prints.**
+- **Exact pins** in `PINNED` (the versions the scripts were tested against): Pillow 12.3.0,
+  google-genai 1.70.0, wavespeed 1.0.11, imageio-ffmpeg 0.6.0, playwright 1.52.0,
+  higgsfield-client 0.1.0, rembg 2.0.77, c2pa-python 0.38.0, cryptography 46.0.6.
+- **The optional packages left the defaults.** `rembg` (which fetches model weights on first
+  use) and `higgsfield-client` are extra groups you name yourself (`--groups
+  background-removal`, `--groups higgsfield`, `--groups c2pa`). The default groups are
+  core, image, video and carousel.
+- **The setup skill asks first.** `/socialforge:setup` runs the report, shows the missing
+  packages, and installs only after an explicit `yes` (and says plainly that Playwright's
+  browser is a large download). The "Install Dependencies (Automatic)" step is gone.
+- **C2PA signing no longer installs `c2pa-python` mid-run** (`c2pa_sign.py` ran
+  `pip install c2pa-python>=0.32`). A missing package now raises `C2paNotInstalled` with the
+  pinned command; the command line exits 2 with that message. It also no longer calls
+  `sys.exit(2)` from inside a library call, which killed a generation run after the paid
+  call had already happened: callers keep the unsigned asset and report the failure.
+- The c2pa-sign skill, the carousel prerequisites, the user guide and the README no longer
+  claim an automatic install (the c2pa-sign skill said `cryptography` was auto-installed; it
+  never was).
+
+**Fixed - keys (review point: the setup skill asked users to paste API keys into chat and then put them on the command line)**
+
+- The setup skill now tells the user to set `WAVESPEED_API_KEY` (and `HF_API_KEY` /
+  `HF_API_SECRET`) in their environment and runs `setup-wavespeed` / `setup-higgsfield`
+  without `--api-key` / `--api-secret`; `credential_manager.py` already read the environment
+  or stdin. Keys no longer land in the conversation transcript or the process table.
+
+**Changed - paid generation is quoted, then waits for "go" (review point: PRIVACY.md promised an approved quote that only `price-check` enforced)**
+
+- `compose-creative`, `generate-video` and `full-pipeline` (batch mode) now each run
+  `price_book.py` for the planned generations before the first paid call, show the total, each
+  line's source URL and the price's age (older than 24 hours is stale and refused), and wait
+  for an explicit `go`. Anything else cancels. A quote is never approval. No prices are stored
+  in the skills; `price_book.py` stays the only source. PRIVACY.md's sentence ("Generation
+  always waits for your approval of the brief and the quoted cost") is now true as written.
+
+**Fixed - names that choose a path, and downloaded data (review notes)**
+
+- `status_manager.py`: `--brand` and `--month` must each be one plain folder name; a path
+  (`../x`, `a/b`, `C:\x`, absolute, NUL, colon) is refused with an error before anything is
+  read or written, for every action.
+- **Every `--brand` and `--month` on every script is checked at the command line.** A new shared
+  `scripts/_common.py` holds `path_component` (an argparse type: one plain folder name, else a usage
+  error), `is_single_component` and `safe_child`. The 16 scripts that take `--brand` or `--month`
+  (adapt_copy, build_gallery, c2pa_sign, compliance_check, compose_text_overlay, cost_tracker,
+  delivery_audit, generate_image, generate_video, index_assets, ingest_performance, match_assets,
+  render_carousel, render_preview, verify_brand_colors, video_postprocess) use it, so
+  `--brand ../x` stops with a usage error before anything is read or written; status_manager keeps its
+  own JSON error and uses the same check. A test parses every script and fails if one declares the
+  argument without the type. The script count is now 30.
+- Provider-returned asset URLs (image and video generators) are downloaded only over https
+  (`provider_failures.download_https`); `urlretrieve` also opened `file://` and `ftp://`.
+- Carousel slide values are HTML-escaped before they enter the template
+  (`render_carousel.inject_slide_values`).
+- The throwaway C2PA dev signing key folder is deleted right after the key is read (it was
+  left in a temp folder).
+- `README.md` no longer starts with a byte-order mark (Hermes's scanner rates U+FEFF as a
+  finding).
+
+**Fixed - `${CLAUDE_PLUGIN_ROOT}` (review note: Hermes never defines it)**
+
+- Every skill and command that uses `${CLAUDE_PLUGIN_ROOT}` now carries one sentence under
+  its title: "If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this
+  plugin's `scripts/` folder, next to `skills/`." A test keeps it that way.
+
+**Fixed - PRIVACY.md (review point: missing endpoints and one wrong row)**
+
+- Added the C2PA timestamp request (`http://timestamp.digicert.com`, plain HTTP, carrying a
+  hash of the signature, not your file), the rembg model-weights download, the gcloud
+  application-default-credential read when `GOOGLE_CLOUD_PROJECT` is set, the opt-in
+  install with its exact pins, and Playwright's browser download. Corrected the Google Drive
+  row for `index_assets`: it records a Drive URL and makes no Drive call.
+
+**Fixed - C2PA on c2pa-python 0.38.0, checked end to end**
+
+- The pin is 0.38.0, the version an unpinned install pulls today, and 0.38 refused every
+  manifest SocialForge built: the `c2pa.created` action needs its own `digitalSourceType`
+  (now written as the IPTC URI for the claim), and the prompt can no longer be a separate
+  `c2pa.opened` action (0.38: "cannot have more than one c2pa.created or c2pa.opened
+  action", and an opened action needs an ingredient), so it is now the description of the
+  `c2pa.created` action. Checked in a scratch environment with the exact pin: all three
+  claim types, with prompt, platform and a named reviewer, sign and read back `Valid`.
+
+**Declared - credentials (review note: `requires_env: []` under-declared them)**
+
+- `plugin.yaml` now lists the credentials the scripts read under `optional_env` (GEMINI_API_KEY,
+  GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, GOOGLE_APPLICATION_CREDENTIALS, WAVESPEED_API_KEY,
+  HF_API_KEY, HF_API_SECRET, and ANTHROPIC_API_KEY / OPENAI_API_KEY for the model-registry
+  refresh), each marked secret or not and described. They are optional, so `requires_env` stays
+  empty. A test fails when a script reads a credential that plugin.yaml does not list.
+
+**Tests**
+
+- New `tests/test_hermes_review_fixes.py` (installs, c2pa, signing key, https downloads,
+  escaping, brand/month, script-location sentence, setup and keys, quote-then-go, docs). Each
+  fix was checked by putting the old behaviour back and confirming a test fails (14 of 14).
+
 ## [1.28.1] - 2026-10-10
 
 ### The listing figures now count the workflow

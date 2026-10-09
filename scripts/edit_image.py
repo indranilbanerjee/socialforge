@@ -57,7 +57,7 @@ def edit_with_gemini(image_path, instruction, output_path, reference_images=None
         try:
             from google import genai
         except ImportError:
-            return {"status": "FAILED", "error": "google-genai not installed. Run: pip install google-genai"}
+            return {"status": "FAILED", "error": "google-genai is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             return {"status": "FAILED", "error": "No credentials. Run /socialforge:setup"}

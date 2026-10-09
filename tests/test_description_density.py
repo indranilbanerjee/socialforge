@@ -26,8 +26,17 @@ The rule enforced here (measured with the trigger evals in evals/triggers):
   * one owner per quoted phrase, plugin-wide
   * a registered near-miss pair states its axis in both descriptions; a
     "-> sibling" pointer sits on exactly ONE side, and nowhere else
-  * listing cost (formula below, namespaced names, skills AND commands)
-    stays under 5800 characters for this plugin
+  * listing cost (formula below, namespaced names, skills, commands AND
+    workflows) stays under 5800 characters for this plugin
+
+Workflows (workflows/*.js, `meta.description`) are listed to the model next to
+skills - the model calls them through the Skill tool - so they follow the same
+rule and count toward the ceiling. The first version of this guard read only
+skills and commands: the month-copy-preview workflow carried a 185-character description
+that broke the 60-150 rule, and every published listing figure left it out.
+test_plant_old_workflow_text_is_rejected puts that text back and requires the
+guard to fail; test_every_workflow_description_is_readable fails when a workflow
+cannot be parsed, so a workflow cannot escape the count.
 
 Stdlib only.
 """
@@ -40,7 +49,11 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+WORKFLOWS = ROOT / "workflows"
 PLUGIN = "socialforge"
+# The description this plugin's workflow shipped with in the first stage-2 release (4.4.0 / 1.28.0).
+OLD_WORKFLOW_NAME = "month-copy-preview"
+OLD_WORKFLOW_DESC = "For an already-parsed month, adapt every post's copy per platform and run the compliance check in parallel, then return one review sheet — no image or video generation, no credits spent"
 
 MIN_LENGTH = 60
 MAX_LENGTH = 150
@@ -52,12 +65,14 @@ LISTING_CEILING = 5800   # chars for this plugin's share of the listing
 ENTRY_DESC_CAP = 1536                   # description is truncated here by the host
 
 # (a, b): a and b are confusable siblings; exactly one description names the other.
-NEAR_MISS_PAIRS = [('generate-post', 'compose-creative'), ('client-review', 'review'), ('new-month', 'parse-calendar'), ('new-month', 'ideate-month')]
+NEAR_MISS_PAIRS = [('generate-post', 'compose-creative'), ('client-review', 'review'), ('new-month', 'parse-calendar'), ('new-month', 'ideate-month'), ('month-copy-preview', 'adapt-copy')]
 
 FM_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---", re.S)
 PHRASE_RE = re.compile(r'"([^"]+)"')
 SLASH_ALIAS_RE = re.compile(r"(?<![\w/])/[A-Za-z][\w-]*")
-POINTER_RE = re.compile(r"->\s*([a-z0-9-]+)")
+POINTER_RE = re.compile(r"(?:->|→)\s*([a-z0-9-]+)")
+WORKFLOW_META_RE = re.compile(r"export const meta = \{(.*?)\n\}", re.S)
+WORKFLOW_DESC_RE = re.compile(r"^\s*description:\s*'((?:[^'\\]|\\.)*)'", re.M)
 
 
 def _unquote(raw: str) -> str:
@@ -85,6 +100,17 @@ def parse_entry(path: Path, name: str, kind: str) -> dict:
     }
 
 
+def parse_workflow_description(js: str) -> str | None:
+    """The literal single-quoted `description` inside a workflow's `export const meta = {...}` block."""
+    meta = WORKFLOW_META_RE.search(js)
+    m = WORKFLOW_DESC_RE.search(meta.group(1)) if meta else None
+    return re.sub(r"\\(.)", r"\1", m.group(1)) if m else None
+
+
+def workflow_files() -> dict[str, Path]:
+    return {p.stem: p for p in sorted(WORKFLOWS.glob("*.js"))} if WORKFLOWS.is_dir() else {}
+
+
 def load_entries() -> list[dict]:
     out = []
     for d in sorted((ROOT / "skills").iterdir()):
@@ -94,6 +120,11 @@ def load_entries() -> list[dict]:
     if cmds.is_dir():
         for f in sorted(cmds.glob("*.md")):
             out.append(parse_entry(f, f.stem, "command"))
+    for name, p in workflow_files().items():
+        desc = parse_workflow_description(p.read_text(encoding="utf-8", errors="replace"))
+        if desc is not None:
+            out.append({"name": name, "kind": "workflow", "desc": desc, "single_line": True,
+                        "has_when_to_use": False, "model_hidden": False})
     return out
 
 
@@ -182,6 +213,14 @@ class TestDescriptionRule(unittest.TestCase):
 
     def test_entries_were_found(self):
         self.assertGreater(len(self.entries), 20)
+
+    def test_every_workflow_description_is_readable(self):
+        unreadable = [n for n, p in workflow_files().items()
+                      if parse_workflow_description(p.read_text(encoding="utf-8", errors="replace")) is None]
+        self.assertEqual(unreadable, [], "workflows whose meta.description this guard cannot read "
+                                         "(they would escape the rule and the listing ceiling)")
+        listed = {e["name"] for e in self.entries if e["kind"] == "workflow"}
+        self.assertEqual(listed, set(workflow_files()))
 
     def test_every_entry_meets_the_rule(self):
         failures = [f"{e['kind']} {e['name']}: " + "; ".join(p)
@@ -279,6 +318,32 @@ class TestDescriptionRule(unittest.TestCase):
         self.assertGreater(listing_cost(over), LISTING_CEILING)
         hidden = self._bad(name="h", desc="d" * 100, model_hidden=True)
         self.assertEqual(listing_cost([hidden], "p", only_model_visible=True), 0)
+
+    def test_plant_old_workflow_text_is_rejected(self):
+        old = self._bad(name=OLD_WORKFLOW_NAME, kind="workflow", desc=OLD_WORKFLOW_DESC)
+        self.assertGreater(len(OLD_WORKFLOW_DESC), MAX_LENGTH)
+        self.assertTrue(any(">" in p for p in entry_problems(old)))
+        current = [e for e in self.entries if e["name"] == OLD_WORKFLOW_NAME and e["kind"] == "workflow"]
+        self.assertEqual(len(current), 1, "the workflow is no longer in the guard's entries")
+        swapped = [old if e is current[0] else e for e in self.entries]
+        self.assertGreater(listing_cost(swapped), listing_cost(self.entries))
+
+    def test_plant_workflow_parser(self):
+        js = ("export const meta = {\n  name: 'w',\n  description: 'It\\'s a sweep',\n}\n"
+              "const schema = { description: 'not this one' }\n")
+        self.assertEqual(parse_workflow_description(js), "It's a sweep")
+        # a double-quoted or missing description is unreadable; the readability test turns that into a failure
+        self.assertIsNone(parse_workflow_description('export const meta = {\n  name: "w",\n  description: "d",\n}\n'))
+        self.assertIsNone(parse_workflow_description("export const meta = {\n  name: 'w',\n}\n"))
+
+    def test_plant_unicode_arrow_cannot_hide_a_pointer(self):
+        # a stray U+2192 pointer is parsed like "->", so it cannot slip past the pair check
+        a = self._bad(name="alpha", desc='Alpha does one thing; the other thing → beta. "do alpha"')
+        b = self._bad(name="beta", desc='Beta does the other thing → alpha. "do beta"')
+        self.assertTrue(pair_problems([a, b], [("alpha", "beta")]))            # both sides name each other
+        stray = self._bad(name="gamma", desc='Gamma does a thing → alpha. "do gamma"')
+        self.assertTrue(pair_problems([a, self._bad(name="beta", desc='Beta. "do beta"'), stray], [("alpha", "beta")]))
+        self.assertEqual(pair_problems([a, self._bad(name="beta", desc='Beta. "do beta"')], [("alpha", "beta")]), [])
 
     def test_plant_multiline_description_is_flagged(self):
         self.assertTrue(any("single-line" in p for p in entry_problems(self._bad(single_line=False))))

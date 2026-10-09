@@ -1,6 +1,6 @@
 export const meta = {
   name: 'month-copy-preview',
-  description: 'For an already-parsed month, adapt every post\'s copy per platform and run the compliance check in parallel, then return one review sheet — no image or video generation, no credits spent',
+  description: 'Adapt every post\'s copy and run compliance for a parsed month; one review sheet, no credits. One post -> adapt-copy. "check the whole month\'s copy"',
   phases: ['List posts', 'Adapt and check each post', 'Review sheet'],
 }
 

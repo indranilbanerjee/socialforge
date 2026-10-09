@@ -1,6 +1,7 @@
 ---
 description: Natural phrasing for adapt-copy (the skill is never named) must route to it.
-tags: [trigger]
+tags: [trigger, near-miss]
+runs: 5
 max_turns: 1
 timeout_seconds: 240
 allowed_tools: [Read, Glob, Grep, Skill]

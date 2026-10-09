@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.28.1] - 2026-10-10
+
+### The listing figures now count the workflow
+
+**Fixed**
+
+- **1.28.0's listing figures left out the plugin's one workflow.** Claude Code lists
+  plugin workflows (`workflows/*.js`, `meta.description`) to the model next to skills
+  and commands, and neither our listing formula nor the description-rule guard read
+  them. `month-copy-preview` shipped with a 185-character description (a listing
+  entry of 220 characters), over the 60-150 rule. The corrected totals, in the same
+  characters-per-listing unit: visible listing 10,525 before 1.28.0 (1.28.0 said
+  10,305), 4,965 as 1.28.0 shipped (it said 4,745), 4,927 now, against the 5,800
+  ceiling. Median description 110.5 characters including the workflow.
+- `month-copy-preview` rewritten to the rule: 147 characters, the whole parsed
+  month's copy and compliance as one review sheet, no credits, with a one-sided
+  pointer to `adapt-copy` for a single post (a registered near-miss pair). The word
+  "preview" stays out of its phrase, because `create-previews` and `preview-batch`
+  own it.
+- `tests/test_description_density.py` now reads `workflows/*.js`: workflows count
+  toward the listing cost, follow the per-description rule and the phrase-owner and
+  pair checks, and a workflow whose description cannot be parsed fails the test.
+  A planted test puts the old 185-character text back and requires the guard to
+  fail. The pointer check also recognises the unicode arrow, so a stray one cannot
+  hide a pointer.
+
+**Evals**
+
+- New near-miss case `month-copy-preview` (a whole parsed month's copy plus
+  compliance) next to `adapt-copy`, each with a must-not-fire grader for the other.
+  Listing budget pinned, first action graded, 5 runs each: 5/5 and 5/5 on the old
+  text and 5/5 and 5/5 on the new text, and both stay-quiet cases 3/3. The old text
+  did not misroute on these prompts, so this is a no-regression result, not a
+  measured improvement.
+
 ## [1.28.0] - 2026-10-09
 
 ### Skills that fit the listing budget, and one visible entry per purpose

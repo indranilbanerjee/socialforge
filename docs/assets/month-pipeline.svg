@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 372" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>A SocialForge month, start to finish</title>
+  <desc>Optional research and ideation, then parse the calendar, match brand assets (you confirm), quote the paid generation and wait for go, compose the creative, adapt the copy for each platform with a compliance check, render previews, build the review gallery, pause for client review, and finalize with a delivery audit and a packaged folder.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6577"/>
+    </marker>
+  </defs>
+
+  <text x="590" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#8a94a4">A SocialForge month — calendar in, client-ready posts out, and you decide at every step that costs money or goes to the client</text>
+
+  <!-- row 1 -->
+  <g font-size="13" text-anchor="middle">
+    <g>
+      <rect x="20" y="64" width="200" height="88" rx="10" fill="none" stroke="#8a94a4" stroke-dasharray="6 5"/>
+      <text x="120" y="90" font-weight="700" fill="#8a94a4">Research + ideate</text>
+      <text x="120" y="112" fill="#8a94a4" font-size="11.5">optional: research-month,</text>
+      <text x="120" y="130" fill="#8a94a4" font-size="11.5">ideate-month</text>
+    </g>
+    <g>
+      <rect x="250" y="64" width="200" height="88" rx="10" fill="#e5f1ee" stroke="#9cc5bb"/>
+      <text x="350" y="90" font-weight="700" fill="#1f2733">Parse calendar</text>
+      <text x="350" y="112" fill="#5a6577" font-size="11.5">every post has the</text>
+      <text x="350" y="130" fill="#5a6577" font-size="11.5">fields it needs</text>
+    </g>
+    <g>
+      <rect x="480" y="64" width="200" height="88" rx="10" fill="#f9efe2" stroke="#d9b389"/>
+      <text x="580" y="90" font-weight="700" fill="#1f2733">Match assets</text>
+      <text x="580" y="112" fill="#5a6577" font-size="11.5">brand photos matched</text>
+      <text x="580" y="130" fill="#5a6577" font-size="11.5">to posts — you confirm</text>
+    </g>
+    <g>
+      <rect x="710" y="64" width="200" height="88" rx="10" fill="#f9efe2" stroke="#d9b389"/>
+      <text x="810" y="90" font-weight="700" fill="#1f2733">Quote, then go</text>
+      <text x="810" y="112" fill="#5a6577" font-size="11.5">live price per item, with</text>
+      <text x="810" y="130" fill="#5a6577" font-size="11.5">its source — type go</text>
+    </g>
+    <g>
+      <rect x="940" y="64" width="200" height="88" rx="10" fill="#e5f1ee" stroke="#9cc5bb"/>
+      <text x="1040" y="90" font-weight="700" fill="#1f2733">Compose creative</text>
+      <text x="1040" y="112" fill="#5a6577" font-size="11.5">brand photos stay faithful;</text>
+      <text x="1040" y="130" fill="#5a6577" font-size="11.5">AI image or video, scored</text>
+    </g>
+  </g>
+  <g stroke="#5a6577" stroke-width="1.6" fill="none">
+    <line x1="220" y1="108" x2="244" y2="108" marker-end="url(#arr)" stroke-dasharray="4 3"/>
+    <line x1="450" y1="108" x2="474" y2="108" marker-end="url(#arr)"/>
+    <line x1="680" y1="108" x2="704" y2="108" marker-end="url(#arr)"/>
+    <line x1="910" y1="108" x2="934" y2="108" marker-end="url(#arr)"/>
+  </g>
+
+  <path d="M 1040 152 L 1040 182 L 120 182 L 120 208" stroke="#5a6577" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+
+  <!-- row 2 -->
+  <g font-size="13" text-anchor="middle">
+    <g>
+      <rect x="20" y="214" width="200" height="88" rx="10" fill="#e5f1ee" stroke="#9cc5bb"/>
+      <text x="120" y="240" font-weight="700" fill="#1f2733">Adapt copy</text>
+      <text x="120" y="262" fill="#5a6577" font-size="11.5">per platform, with a</text>
+      <text x="120" y="280" fill="#5a6577" font-size="11.5">compliance check</text>
+    </g>
+    <g>
+      <rect x="250" y="214" width="200" height="88" rx="10" fill="#e5f1ee" stroke="#9cc5bb"/>
+      <text x="350" y="240" font-weight="700" fill="#1f2733">Previews</text>
+      <text x="350" y="262" fill="#5a6577" font-size="11.5">how each post will look</text>
+      <text x="350" y="280" fill="#5a6577" font-size="11.5">on its platform</text>
+    </g>
+    <g>
+      <rect x="480" y="214" width="200" height="88" rx="10" fill="#e5f1ee" stroke="#9cc5bb"/>
+      <text x="580" y="240" font-weight="700" fill="#1f2733">Review gallery</text>
+      <text x="580" y="262" fill="#5a6577" font-size="11.5">images and video on</text>
+      <text x="580" y="280" fill="#5a6577" font-size="11.5">one shareable page</text>
+    </g>
+    <g>
+      <rect x="710" y="214" width="200" height="88" rx="10" fill="#f9efe2" stroke="#d9b389"/>
+      <text x="810" y="240" font-weight="700" fill="#1f2733">Client review</text>
+      <text x="810" y="262" fill="#5a6577" font-size="11.5">the pipeline pauses</text>
+      <text x="810" y="280" fill="#5a6577" font-size="11.5">until the client decides</text>
+    </g>
+    <g>
+      <rect x="940" y="214" width="200" height="88" rx="10" fill="#e3eefb" stroke="#9db8dd"/>
+      <text x="1040" y="240" font-weight="700" fill="#1f2733">Finalize</text>
+      <text x="1040" y="262" fill="#5a6577" font-size="11.5">delivery audit, then the</text>
+      <text x="1040" y="280" fill="#5a6577" font-size="11.5">packaged folder + manifest</text>
+    </g>
+  </g>
+  <g stroke="#5a6577" stroke-width="1.6" fill="none">
+    <line x1="220" y1="258" x2="244" y2="258" marker-end="url(#arr)"/>
+    <line x1="450" y1="258" x2="474" y2="258" marker-end="url(#arr)"/>
+    <line x1="680" y1="258" x2="704" y2="258" marker-end="url(#arr)"/>
+    <line x1="910" y1="258" x2="934" y2="258" marker-end="url(#arr)"/>
+  </g>
+
+  <g font-size="11.5" fill="#8a94a4">
+    <rect x="330" y="322" width="14" height="14" rx="3" fill="#f9efe2" stroke="#d9b389"/>
+    <text x="350" y="334">you decide (nothing is spent or sent before this)</text>
+    <rect x="690" y="322" width="14" height="14" rx="3" fill="#e3eefb" stroke="#9db8dd"/>
+    <text x="710" y="334">client-ready delivery</text>
+  </g>
+  <text x="590" y="362" text-anchor="middle" font-size="11.5" fill="#8a94a4">Before anything: a credential check (keys come from environment variables, never pasted into chat). Phases as in skills/full-pipeline/SKILL.md</text>
+</svg>

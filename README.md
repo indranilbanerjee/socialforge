@@ -6,21 +6,21 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.29.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.29.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
 [![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
 [![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
 [![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-496%2F496%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1290)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1290)
+[![Tests](https://img.shields.io/badge/tests-504%2F504%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1291)
+[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1291)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.0 (October 10, 2026): nothing installs itself, keys stay out of the chat, and paid generation waits for a quote.** Reviewed for the Hermes Agent plugin catalog, SocialForge now never installs a Python package or a browser on its own (`scripts/install_deps.py` reports and prints pinned commands; `--install` is your go-ahead), setup takes API keys from your environment instead of the chat or the command line, `compose-creative`, `generate-video` and batch `full-pipeline` quote the run with `price_book.py` and wait for an explicit `go` before any paid call, and `--brand` / `--month`, provider URLs and slide text can no longer reach a path, a `file://` download or the page markup. **If you relied on the automatic install, run `python scripts/install_deps.py --install` once.**
+> 🆕 **Just shipped — v1.29.1 (October 10, 2026): previews show the image, and a post's length includes its hashtags.** Every platform preview had been showing a broken-image icon while reporting success; the image is now embedded and the script checks it was drawn, line breaks are kept, and a file that is not an image is refused. The copy adapter now counts inline hashtags against the platform limit (an X post had been reported within 280 and published at 282) and returns `post_text`, exactly what to publish. Found by rendering the real preview below.
 >
-> Previously — **v1.28.1 (October 10, 2026): the listing figures now count the workflow.** v1.28.0's numbers left out the `month-copy-preview` workflow, which Claude Code lists to the model like a skill; counted, SocialForge's listing went from 10,525 to 4,927 characters (not 10,305 to 4,745). `month-copy-preview` now follows the same 60-150 character rule, and the guard reads workflows. **v1.28.0 (October 9, 2026): every skill now reaches the model, and finalizing asks first.** Claude Code lists skills in a budget measured in characters, and SocialForge's descriptions were long enough that many were cut before the model saw them. They are now less than half the size: each says what the skill does, how it differs from its neighbour, and one phrase you would type. "Package the month for the client" and "show me how this will look" reached their skills only through a wrapper command, because the skills were hidden; each now has one visible entry that shows the scope and waits for your `yes`. Measured with trigger evals: nothing that worked before stopped working.
+> Previously — **v1.29.0 (October 10, 2026): nothing installs itself, keys stay out of the chat, and paid generation waits for a quote.** Reviewed for the Hermes Agent plugin catalog, SocialForge now never installs a Python package or a browser on its own (`scripts/install_deps.py` reports and prints pinned commands; `--install` is your go-ahead), setup takes API keys from your environment instead of the chat or the command line, `compose-creative`, `generate-video` and batch `full-pipeline` quote the run with `price_book.py` and wait for an explicit `go` before any paid call, and `--brand` / `--month`, provider URLs and slide text can no longer reach a path, a `file://` download or the page markup. **If you relied on the automatic install, run `python scripts/install_deps.py --install` once.**
 >
 > Older releases: [CHANGELOG.md](CHANGELOG.md)
 
@@ -79,6 +79,10 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 
 The amber steps are yours: nothing is spent before the quote is approved, and nothing is packaged before the client review.
 
+**A real preview.** Rendered by this release's copy adapter and preview renderer from the verified facts and chart of a real, fact-checked article: no AI generation, no credits spent.
+
+![A LinkedIn post preview rendered by SocialForge: a bar chart of four link-rot benchmarks (70% of web-citing science articles, 66.5% of outbound links, 38% of 2013 webpages, 25% of 2013-2023 webpages), then the post copy with its line breaks, the call to action and two hashtags](docs/assets/real-run/linkedin-preview.png)
+
 ## The Four Creative Modes
 
 | Mode | When | What Happens |
@@ -101,7 +105,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 
 > **Claude answers in chat instead of using a SocialForge skill?** Claude Code lists every installed skill in a budget of 1% of the context window. On a 200k window with several plugins installed, only skill names fit, so Claude can't see what each skill does. Add `"skillListingBudgetFraction": 0.05` to your Claude Code `settings.json`, or start a skill by name, e.g. `/socialforge:full-pipeline`.
 
-## Supported surfaces (v1.29.0)
+## Supported surfaces (v1.29.1)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -126,7 +130,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **30 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1290) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1291) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Installation
@@ -410,7 +414,9 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.29.0)
+## Current Release (v1.29.1)
+
+**v1.29.1:** previews show the image (every preview had shown a broken-image icon while reporting success), line breaks are kept, a non-image file is refused, and the copy adapter counts inline hashtags against the limit and returns `post_text`.
 
 **v1.29.0:** nothing installs itself, keys stay out of the chat, paid generation waits for a quote. Fixes every point of a Hermes Agent catalog review: `install_deps.py` reports by default and installs only with `--install` (exact pins; the optional packages left the defaults); setup asks before installing and takes keys from the environment; c2pa signing raises a clear error instead of installing mid-run or exiting after a paid call; `compose-creative`, `generate-video` and batch `full-pipeline` quote with `price_book.py` and wait for `go`; `status_manager.py` refuses a path as `--brand` / `--month`; provider downloads are https only; slide text is escaped; the throwaway signing key and the README byte-order mark are gone; skills say where the scripts are when `${CLAUDE_PLUGIN_ROOT}` is unset; PRIVACY.md lists the timestamp request, the opt-in install and the other endpoints.
 

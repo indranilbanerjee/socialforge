@@ -5,8 +5,10 @@ Shows how posts will look when published on each social platform.
 """
 
 import argparse
+import base64
 import html as html_lib
 import json
+import mimetypes
 import os
 import sys
 from pathlib import Path
@@ -24,6 +26,21 @@ TEMPLATE_DIR = PLUGIN_ROOT / "assets" / "preview-templates"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
 import _common  # noqa: E402
+
+# Preview copy is capped so one runaway caption cannot stretch the mockup; when
+# the cap bites, the preview says so instead of cutting the text silently.
+PREVIEW_COPY_CHARS = 500
+
+
+def _image_data_uri(path):
+    """The image as a data: URI.
+
+    The preview page is loaded with set_content(), so it lives at about:blank,
+    and Chromium refuses file:// images from about:blank. Every preview used to
+    show a broken-image icon while this script reported success. Embedding the
+    bytes needs no file access from the page at all."""
+    mime = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
+    return f"data:{mime};base64," + base64.b64encode(Path(path).read_bytes()).decode("ascii")
 
 
 def render_preview(image_path, copy_text, platform, brand, output_path,
@@ -48,7 +65,9 @@ def render_preview(image_path, copy_text, platform, brand, output_path,
     name = html_lib.escape(str(profile.get("name", brand)))
     handle = html_lib.escape(str(profile.get("handle", "@" + brand)))
     platform_label = html_lib.escape(platform.upper())
-    copy_html = html_lib.escape(copy_text[:500])
+    copy_truncated = len(copy_text) > PREVIEW_COPY_CHARS
+    shown = copy_text[:PREVIEW_COPY_CHARS].rstrip() + ("…" if copy_truncated else "")
+    copy_html = html_lib.escape(shown)
 
     # A missing image used to sail straight through: the path became a file://
     # URI, the browser rendered a broken image as blank white, and this function
@@ -72,7 +91,7 @@ def render_preview(image_path, copy_text, platform, brand, output_path,
             ],
             "platform": platform, "brand": brand, "action_required": True,
         }
-    image_uri = "" if missing else html_lib.escape(resolved.as_uri())
+    image_uri = "" if missing else _image_data_uri(resolved)
 
     # Per-platform template if one exists, otherwise the inline mockup below
     template_path = TEMPLATE_DIR / f"{platform}.html"
@@ -92,8 +111,35 @@ def render_preview(image_path, copy_text, platform, brand, output_path,
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 600, "height": 800})
         page.set_content(html)
-        page.wait_for_timeout(500)
-        page.screenshot(path=str(output_path), full_page=True)
+        try:
+            page.wait_for_function(
+                "() => Array.from(document.images).every(i => i.complete)", timeout=10000)
+        except Exception:
+            pass  # judged below: an image that never finished has no natural width
+        # An existing file is not proof the reviewer sees it: an unreadable or
+        # non-image file renders as a broken icon. Check what the page drew.
+        drawn = page.evaluate(
+            "() => Array.from(document.images).filter(i => i.getAttribute('src'))"
+            ".every(i => i.naturalWidth > 0)")
+        if not missing and not drawn:
+            browser.close()
+            return {
+                "status": "FAILED",
+                "error": f"image did not render: {resolved}",
+                "stage": "render",
+                "reason": "image-did-not-render",
+                "detail": ("The file exists but the browser could not draw it (not an image, "
+                           "or an unsupported format). A preview with a broken image is not a "
+                           "preview of the post."),
+                "next_steps": ["Check the file opens as an image (PNG, JPEG, WebP or GIF).",
+                               "Re-export it, or match a different asset with /socialforge:match-assets."],
+                "platform": platform, "brand": brand, "action_required": True,
+            }
+        card = page.query_selector(".card")
+        if card is not None:
+            card.screenshot(path=str(output_path))
+        else:
+            page.screenshot(path=str(output_path), full_page=True)
         browser.close()
 
     if missing:
@@ -105,7 +151,11 @@ def render_preview(image_path, copy_text, platform, brand, output_path,
                 "warning": ("Copy-layout preview only — no artwork was rendered. "
                             "Do not treat this as an approved creative."),
                 "action_required": True}
-    return {"status": "success", "output": str(output_path), "platform": platform, "brand": brand}
+    result = {"status": "success", "output": str(output_path), "platform": platform, "brand": brand}
+    if copy_truncated:
+        result["copy_truncated"] = True
+        result["note"] = f"Preview shows the first {PREVIEW_COPY_CHARS} characters of the copy."
+    return result
 
 
 def build_default_html(name, handle, platform_label, image_uri, copy_html):
@@ -120,7 +170,7 @@ def build_default_html(name, handle, platform_label, image_uri, copy_html):
   .name {{ font-weight: 600; font-size: 14px; }}
   .handle {{ color: #666; font-size: 12px; }}
   .image {{ width: 100%; }}
-  .copy {{ padding: 12px 16px; font-size: 14px; line-height: 1.5; color: #333; }}
+  .copy {{ padding: 12px 16px; font-size: 14px; line-height: 1.5; color: #333; white-space: pre-wrap; }}
   .platform-badge {{ position: absolute; top: 10px; right: 10px; background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; }}
   .wrapper {{ position: relative; }}
 </style></head><body>

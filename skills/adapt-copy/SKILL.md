@@ -60,9 +60,10 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/adapt_copy.py" --text "<the variant>" --pl
 
 Read these fields of the JSON it prints:
 
-- `within_limit`, `char_count`, `char_limit` - the variant measured against the limit. `count_method` says how it was counted: `code_points` (plain characters) everywhere except X, which is `x_weighted`: emoji and CJK characters count 2 and every URL counts 23 however long it is, so X's `char_count` is not `len(copy)`. If `within_limit` is false, shorten the copy or the CTA.
+- `within_limit`, `post_char_count`, `char_limit` - the post measured against the limit: `post_text`, which is the copy plus any hashtags the platform shows in the post (`char_count` is the copy alone). `count_method` says how it was counted: `code_points` (plain characters) everywhere except X, which is `x_weighted`: emoji and CJK characters count 2 and every URL counts 23 however long it is, so X's `char_count` is not `len(copy)`. If `within_limit` is false, shorten the copy or the CTA.
 - `copy` - the variant with the CTA turned into the platform's mechanism. If it is shorter than what you wrote, the script cut it mechanically: tighten the prose and run it again rather than shipping the cut.
-- `hashtags`, `first_comment` - what to post and where (Instagram: first comment).
+- `post_text` - what to publish: the copy with the hashtags appended where the platform puts them in the post. Tags given without `#` get one.
+- `hashtags`, `first_comment` - the hashtags, and where they go when they are not in the post (Instagram: first comment).
 - `hashtags_dropped` - the hashtags the platform's cap left out, in the order given (an empty list when none). **Tell the user which hashtags were dropped, per platform**; a cap must never remove a tag without saying so. Put the tags that must survive first.
 
 What the script does not measure: Threads counts emoji as UTF-8 bytes (more than 1 each), Bluesky's limit is 300 graphemes (code points can only over-count), and a bare domain without `http://`, `https://` or `www.` counts as plain text although X links it. Keep a margin on X and Threads when the copy has emoji or bare domains.

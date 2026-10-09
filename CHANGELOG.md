@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.1] - 2026-10-10
+
+### Previews show the image, and a post's length includes its hashtags
+
+Found by rendering a real LinkedIn preview for the README.
+
+**Fixed**
+
+- **Every platform preview showed a broken-image icon while
+  `render_preview.py` reported `success`.** The preview page is loaded with
+  `set_content()`, so it lives at `about:blank`, and Chromium refuses `file://`
+  images from there. 1.19.0 refused a missing image; an existing one still
+  rendered as nothing. The image is now embedded in the page, and the script
+  checks the page actually drew it: a file that exists but is not a drawable
+  image now fails with `reason: image-did-not-render`, exit 1, and no preview
+  file. A reviewer approving a gallery was approving empty frames.
+- **Previews joined the post's paragraphs into one.** Line breaks are kept,
+  as every platform keeps them, and the screenshot is cropped to the post card.
+  Copy longer than the preview's 500 characters is marked (`copy_truncated`)
+  instead of being cut silently.
+- **`adapt_copy.py` measured a post without its inline hashtags.** Hashtags go
+  inline at the end of the post on every platform but Instagram, yet only the
+  copy was counted: a 255-character X post plus `#LinkRot #ContentMarketing` was
+  reported within 280 and published at 282. Room for the kept hashtags is now
+  reserved before the body is cut, the new `post_text` holds exactly what to
+  publish (copy plus in-text hashtags), and `within_limit` and the new
+  `post_char_count` measure it. `char_count` still covers the copy alone.
+  Tags given without `#` ("LinkRot") now get one.
+
+**Tests**
+
+- New `tests/test_preview_and_post_length.py` (8 tests): the image is
+  embedded, line breaks are kept, a rendered preview contains the image's
+  pixels, a non-image file is refused, long copy is marked, an X post with
+  hashtags stays within 280, bare tags get `#`, Instagram's first-comment
+  hashtags stay out of the post. All 8 fail against 1.29.0.
+
+**Docs**
+
+- The adapt-copy skill reads `post_text` and `post_char_count`. The README
+  shows a real preview rendered by this release from a real article's verified
+  facts and chart, with no AI generation and no credits spent.
+- The standalone copy-adapter skill (socialforge-copy-adapter) carries the
+  same `adapt_copy.py` change; its parity tests pass against this release.
+
 ## [1.29.0] - 2026-10-10
 
 ### Nothing installs itself, keys stay out of the chat, and paid generation waits for a quote

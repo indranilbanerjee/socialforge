@@ -2,7 +2,7 @@
   "id": "socialforge",
   "name": "SocialForge",
   "description": "Open-source agency-grade social media production plugin — 21 skills, 18 commands, asset-first compositing + AI image + AI video + C2PA signing (EU AI Act Article 50 ready).",
-  "version": "1.29.0",
+  "version": "1.29.1",
   "skills": ["./skills"],
   "configSchema": {
     "type": "object",

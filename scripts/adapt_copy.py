@@ -207,6 +207,16 @@ def _always_include_hashtags(value):
     return []
 
 
+def _as_hashtag(value):
+    """One hashtag with its '#': brand configs and --campaign-hashtags are
+    written both ways ("#AcmeCorp" and "AcmeCorp"), and a bare word posted as a
+    hashtag is just a word."""
+    tag = str(value or "").strip().replace(" ", "")
+    if not tag.lstrip("#"):
+        return ""
+    return "#" + tag.lstrip("#")
+
+
 _URL_RE = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
 
 
@@ -259,12 +269,26 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None, cta_k
     rendered_cta = render_cta(cta, specs, cta_keyword)
     cta_block = f"\n\n{rendered_cta}" if rendered_cta else ""
 
+    # Hashtags, normalised ("LinkRot" -> "#LinkRot"). Whatever the cap leaves out
+    # is reported, never lost silently.
+    all_hashtags = [_as_hashtag(h) for h in (brand_hashtags or []) if _as_hashtag(h)]
+    hashtag_limit = specs.get("hashtag_limit", 5)
+    hashtag_text = " ".join(all_hashtags[:hashtag_limit])
+    hashtags_dropped = all_hashtags[hashtag_limit:]
+    placement = specs.get("hashtag_placement", "inline")
+    # Inline hashtags (and Bluesky's tag facets) are part of the post's text, so
+    # their room is reserved like the CTA's. They used to be measured apart: a
+    # 255-character X post plus "#LinkRot #ContentMarketing" was reported within
+    # the 280 limit and published at 282.
+    in_text = placement != "first_comment" and bool(hashtag_text)
+    hashtag_block = f"\n\n{hashtag_text}" if in_text else ""
+
     adapted = copy_text
 
     # Truncate to fold point (for preview visibility) or optimal limit
     fold_at = specs.get("fold_at")
     limit = specs.get("optimal_limit", specs["char_limit"])
-    body_limit = max(1, limit - count(cta_block))
+    body_limit = max(1, limit - count(cta_block) - count(hashtag_block))
 
     if fold_at and len(copy_text) > fold_at:
         # For platforms with "see more" fold: ensure hook is in first N chars
@@ -277,25 +301,23 @@ def adapt_for_platform(copy_text, platform, brand_hashtags=None, cta=None, cta_k
 
     adapted += cta_block
 
-    # Prepare hashtags. Whatever the cap leaves out is reported, never lost silently.
-    all_hashtags = list(brand_hashtags or [])
-    hashtag_limit = specs.get("hashtag_limit", 5)
-    hashtag_text = " ".join(all_hashtags[:hashtag_limit])
-    hashtags_dropped = all_hashtags[hashtag_limit:]
-
     # Instagram first-comment strategy: hashtags go in first comment, not caption
     first_comment = None
-    if specs.get("hashtag_placement") == "first_comment":
-        first_comment = hashtag_text
+    if placement == "first_comment":
+        first_comment = hashtag_text or None
         hashtag_text = ""  # Don't include in main copy
 
+    # What actually gets published: the copy plus any in-text hashtags.
+    post_text = adapted + hashtag_block
     fold_at_val = specs.get("fold_at")
     result = {
         "platform": platform,
         "copy": adapted,
+        "post_text": post_text,
         "char_count": count(adapted),
+        "post_char_count": count(post_text),
         "char_limit": specs["char_limit"],
-        "within_limit": count(adapted) <= specs["char_limit"],
+        "within_limit": count(post_text) <= specs["char_limit"],
         "count_method": specs.get("count_method", "code_points"),
         "cta_mechanism": ("comment-keyword" if (cta and cta_keyword and specs.get("link") == "bio")
                           else "bio-link" if (cta and specs.get("link") == "bio")

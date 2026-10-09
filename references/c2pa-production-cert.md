@@ -21,14 +21,14 @@ Everything a SocialForge operator needs to move from the dev-only self-signed pa
 # Direct sign
 python3 scripts/c2pa_sign.py \
     --input asset.png --output signed.png \
-    --brand "Acme Corp" --generator "Vertex AI Nano Banana Pro" \
+    --brand "Acme Corp" --generator "Vertex AI image model" \
     --ai-claim ai-generated-content --platform instagram \
     --signing-cert /secure/c2pa-prod-cert.pem \
     --signing-key /secure/c2pa-prod-key.pem
 
 # Auto-sign via image generation hook
 python3 scripts/generate_image.py \
-    --prompt "..." --output asset.png --model gemini-3-pro-image \
+    --prompt "..." --output asset.png \
     --c2pa-sign --brand "Acme Corp" --platform instagram \
     --c2pa-signing-cert /secure/c2pa-prod-cert.pem \
     --c2pa-signing-key /secure/c2pa-prod-key.pem
@@ -37,7 +37,7 @@ python3 scripts/generate_image.py \
 python3 scripts/video_postprocess.py \
     --input source.mp4 --output-dir processed/ --brand acme-corp \
     --c2pa-sign \
-    --c2pa-generator "WaveSpeed Kling v3.0 Pro" \
+    --c2pa-generator "WaveSpeed image-to-video" \
     --c2pa-signing-cert /secure/c2pa-prod-cert.pem \
     --c2pa-signing-key /secure/c2pa-prod-key.pem
 ```

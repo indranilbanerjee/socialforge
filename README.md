@@ -254,7 +254,7 @@ Share the downloaded JSON file with your team via:
 
 NEVER commit this file to Git. NEVER share it publicly.
 
-**Cost:** Image generation costs approximately $0.01-0.04 per image depending on resolution and model. All costs go to the admin’s billing account.
+**Cost:** Image generation is billed per image to the admin’s Google Cloud account. The price depends on the model and resolution and changes over time, so SocialForge stores no prices: before any paid run it quotes the planned generations from a live lookup (with the source URL and the price’s age) and waits for your `go`.
 
 ### WaveSpeed (Video Generation)
 
@@ -267,9 +267,7 @@ NEVER commit this file to Git. NEVER share it publicly.
 1. After logging in, go to your dashboard
 2. Click "Top Up" or navigate to billing
 3. Add credits (minimum top-up required to activate API access)
-4. Pricing: approximately $0.08-0.11 per second of video
-   - A 5-second video costs roughly $0.40-0.56
-   - A 10-second video costs roughly $0.84-1.12
+4. Pricing: WaveSpeed bills per second of video and the rate depends on the model. SocialForge quotes it from a live lookup (source URL and the price’s age shown) before every paid run and waits for your `go`.
 
 #### Step 3: Create an API Key
 1. Go to https://wavespeed.ai/accesskey
@@ -312,10 +310,10 @@ Team members do NOT need any cloud accounts. The admin shares credentials, and t
 /socialforge:setup
 ```
 
-The setup wizard asks for:
-1. Path to the Google Cloud JSON file (for images) — paste the file path
-2. WaveSpeed API key (for video) — paste the key
-3. HiggsField credentials (optional) — paste key and secret if provided
+The setup wizard first lists the Python packages that are missing and the exact pinned install command for each; it installs them only after you say `yes`. Then it asks for:
+1. Path to the Google Cloud JSON file (for images) — give the file path
+2. WaveSpeed API key (for video) — set `WAVESPEED_API_KEY` in your environment and say when it is set; never paste the key into the chat
+3. HiggsField credentials (optional) — set `HF_API_KEY` and `HF_API_SECRET` the same way
 
 Credentials are stored in the plugin’s persistent data directory. They survive across sessions, restarts, and plugin updates.
 
@@ -370,14 +368,14 @@ All video generation goes through human-in-the-loop approval. Videos are generat
 
 - WaveSpeed API key configured via `/socialforge:setup`
 - Google Cloud Vertex AI credentials configured via `/socialforge:setup` (for keyframe generation)
-- Python dependencies: `pip install google-genai wavespeed Pillow imageio-ffmpeg`
+- Python packages: `/socialforge:setup` lists what is missing and prints the exact pinned install command for each; it installs only after you say yes (`python scripts/install_deps.py` prints the same report)
 - Video duration: 3-15 seconds per clip
 
 Use `/socialforge:generate-video` to produce video for a specific post, or `/socialforge:generate-all` to include video posts in batch production.
 
 ## Connectors
 
-SocialForge ships **an opt-in catalog of 12 HTTP connectors** that work in both Cowork and Claude Code — zero are auto-connected. `.mcp.json` ships as `{"mcpServers":{}}` by design; enable the ones you want from `.mcp.json.connectors-reference`:
+SocialForge ships **an opt-in catalog of 12 HTTP connectors** that work in both Cowork and Claude Code — zero are auto-connected. no `.mcp.json` ships (it is gitignored), by design; to enable one, create a `.mcp.json` containing the entries you want from `.mcp.json.connectors-reference`:
 Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz, WhatsApp Business Tools (Meta beta).
 
 The plugin works fully without connectors — all skills, agents, and creative production function with local assets and AI generation APIs.
@@ -556,7 +554,7 @@ SocialForge is part of the **Neelverse Marketing Suite** by [Indranil Banerjee](
 | **[ContentForge](https://github.com/indranilbanerjee/contentforge)** | Publication-ready content via 10-phase pipeline — research, fact-check, draft, SEO, humanize, `.docx` export with C2PA signing | `/plugin install contentforge@neels-plugins` |
 | **SocialForge** (this plugin) | Social media calendar automation with AI image + video generation (Vertex AI + WaveSpeed, models resolved live), C2PA signing | `/plugin install socialforge@neels-plugins` |
 
-**Use together:** Plan campaigns in DM Pro, produce articles with ContentForge, create social visuals and videos with SocialForge. All share the same brand profiles and marketplace.
+**Use together:** Plan campaigns in DM Pro, produce articles with ContentForge, create social visuals and videos with SocialForge. They share a marketplace; each keeps its own brand setup, so set the brand up once in each plugin you use.
 
 ```
 claude plugin marketplace add indranilbanerjee/neels-plugins

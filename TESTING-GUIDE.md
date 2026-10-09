@@ -37,17 +37,17 @@
 - [ ] `/socialforge:status` reports credential state on demand | Shows "No active brand" or brand status, plus Vertex AI / WaveSpeed credential state
 - [ ] Commands appear in Customize panel | Count matches expected 25
 - [ ] Skills appear in Skills section | Count matches expected 16
-- [ ] `.mcp.json` has zero active servers by design | `{"mcpServers":{}}`; no MCP initialization errors in logs. The 10-connector catalog lives in `.mcp.json.connectors-reference` and is opt-in.
+- [ ] No `.mcp.json` ships and zero MCP servers are active | no MCP initialization errors in logs. The 12-connector catalog lives in `.mcp.json.connectors-reference` and is opt-in.
 
 ---
 
 ## 3. Command Tests
 
-All 25 shipped commands:
+All 18 commands, plus seven further `/socialforge:` entries that are skills started the same way (`setup`, `index-assets`, `match-assets`, `parse-calendar`, `adapt-copy`, `render-carousels`, `assemble-document`):
 
 | # | Command | Test Action | Expected Result |
 |---|---------|------------|-----------------|
-| 1 | `/socialforge:setup` | Run credential setup | Wizard prompts for Vertex AI JSON path + WaveSpeed key |
+| 1 | `/socialforge:setup` | Run credential setup | Lists missing packages and asks before installing; asks for the Vertex AI JSON path; asks you to set `WAVESPEED_API_KEY` in the environment (it never asks you to paste the key) |
 | 2 | `/socialforge:brand-setup test-brand` | Run with test brand name | Interactive wizard starts, `brand-config.json` created |
 | 3 | `/socialforge:switch-brand test-brand` | Switch to existing brand | Active brand changes, confirmed in status |
 | 4 | `/socialforge:index-assets test-brand` | Index test asset folder | `asset-index.json` created with per-image metadata |
@@ -128,6 +128,15 @@ Run each script from the command line to verify it executes without import error
 | 21 | `status_manager.py` | `python3 scripts/status_manager.py --help` | Usage info displayed |
 | 22 | `verify_brand_colors.py` | `python3 scripts/verify_brand_colors.py --help` | Usage info displayed |
 | 23 | `video_postprocess.py` | `python3 scripts/video_postprocess.py --help` | Usage info displayed |
+| 24 | `price_book.py` | `python3 scripts/price_book.py --help` | Usage info displayed |
+| 25 | `model_book.py` | `python3 scripts/model_book.py --help` | Usage info displayed |
+| 26 | `delivery_audit.py` | `python3 scripts/delivery_audit.py --help` | Usage info displayed |
+| 27 | `detect_surface.py` | `python3 scripts/detect_surface.py --help` | Usage info displayed |
+| 28 | `ingest_performance.py` | `python3 scripts/ingest_performance.py --help` | Usage info displayed |
+| 29 | `research_month.py` | `python3 scripts/research_month.py --help` | Usage info displayed |
+| 30 | `provider_failures.py` | `python3 scripts/provider_failures.py --help` | Usage info displayed |
+
+`_common.py` is the shared helper module (`path_component`, `safe_child`); it is imported by the scripts above rather than run on its own.
 
 ---
 
@@ -322,7 +331,7 @@ Run after any code change to verify nothing broke.
 - [ ] Command count in README matches actual command files | 18 commands
 - [ ] Agent count in README matches actual agent files | 5 agents
 - [ ] Script count in README matches actual script files | 30 Python scripts (+ `assemble_docx.js`)
-- [ ] Connector count in README matches `.mcp.json.connectors-reference` | 12 opt-in connectors; `.mcp.json` itself is `{"mcpServers":{}}`
+- [ ] Connector count in README matches `.mcp.json.connectors-reference` | 12 opt-in connectors; no `.mcp.json` ships
 - [ ] Carousel template count in README matches actual templates | 8 templates
 - [ ] All agents have valid YAML frontmatter (name + description) | No missing frontmatter
 - [ ] All skills have valid YAML frontmatter (name + description) | No missing frontmatter

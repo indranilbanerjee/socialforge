@@ -4,11 +4,11 @@
 >
 > This is the **original v1.0.0 engineering design record**, retained for provenance. It describes what SocialForge was designed to be in March 2026, not what it is today.
 >
-> **The shipped v1.13.1 architecture is authoritative.** For anything you intend to rely on, read [`README.md`](README.md) and [`docs/OPERATIONS.md`](docs/OPERATIONS.md) instead.
+> **The shipped architecture is authoritative.** For anything you intend to rely on, read [`README.md`](README.md) and [`docs/OPERATIONS.md`](docs/OPERATIONS.md) instead.
 >
-> In particular, every **count** (skills / commands / scripts / connectors), every **model id**, the **hooks** section, and the **MCP** section below are historical and in several places wrong for the current release. Shipped today: **19 skills · 25 commands · 5 agents · 22 Python scripts (+ `assemble_docx.js`) · 0 global hooks · an opt-in catalog of 10 HTTP connectors, zero auto-connected**. Where a section below contradicts that, the shipped repo wins.
+> In particular, every **count** (skills / commands / scripts / connectors), every **model id**, the **hooks** section, and the **MCP** section below are historical and in several places wrong for the current release. The current counts (skills, commands, agents, scripts, connectors) are in the README; they change every release, so none are repeated here. Where a section below contradicts the shipped repo, the shipped repo wins.
 >
-> Obvious traps have been corrected in place even under this banner (retired model ids, unimplemented scripts, nonexistent commands), but the document as a whole has not been rewritten to match v1.13.1.
+> Obvious traps have been corrected in place even under this banner (retired model ids, unimplemented scripts, nonexistent commands), but the document as a whole has not been rewritten to match the shipped release.
 
 ## Plugin for Claude Code / Cowork
 ## Social Media Calendar Automation with Asset-First Compositing
@@ -27,13 +27,13 @@ PART 1:  VISION & ARCHITECTURE OVERVIEW
 PART 2:  PLUGIN MANIFEST & DIRECTORY STRUCTURE
 PART 3:  DATA SCHEMAS (ALL JSON SCHEMAS)
 PART 4:  CORE CONCEPT — ASSET-FIRST COMPOSITING
-PART 5:  SKILL SPECIFICATIONS (14 SKILLS — historical; 16 ship today)
+PART 5:  SKILL SPECIFICATIONS (14 SKILLS — historical; see the README for today's count)
 PART 6:  COMMAND SPECIFICATIONS (18 COMMANDS — historical; 25 ship today)
 PART 7:  AGENT SPECIFICATIONS (ALL 5 AGENTS)
 PART 8:  HOOKS CONFIGURATION (COMPLETE hooks.json)
 PART 9:  MCP CONNECTORS (.mcp.json)
 PART 10: SETTINGS (settings.json)
-PART 11: SCRIPT LOGIC (17 SCRIPTS — historical; 22 ship today)
+PART 11: SCRIPT LOGIC (17 SCRIPTS — historical; see the README for today's count)
 PART 12: REFERENCE DOCUMENTS
 PART 13: TEMPLATE SPECIFICATIONS
 PART 14: PIPELINE ORCHESTRATION (DETERMINISTIC WORKFLOWS)

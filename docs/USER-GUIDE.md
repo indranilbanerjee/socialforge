@@ -11,11 +11,8 @@ Before you start, make sure you have:
 - **Claude Code CLI** or **Claude Desktop with Code tab** (any plan)
 - **API credentials configured via `/socialforge:setup`** (one-time setup):
   - **Google Cloud service account JSON file** -- for Vertex AI image generation
-  - **WaveSpeed API key** -- for Kling v3.0 video generation
-- **Python dependencies installed:**
-  ```
-  pip install google-genai wavespeed Pillow imageio-ffmpeg
-  ```
+  - **WaveSpeed API key** -- for image-to-video generation (kept in an environment variable, never pasted into the chat)
+- **Python packages:** `/socialforge:setup` lists what is missing and prints the exact pinned install command for each; it installs only after you say yes (`python scripts/install_deps.py` prints the same report)
 
 Get both credentials from your admin. If you ARE the admin, see the [Admin Setup (One-Time) section of the README](../README.md#admin-setup-one-time).
 
@@ -37,8 +34,8 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 11. [Finalizing and Delivering](#11-finalizing-and-delivering)
 12. [Working with Multiple Brands](#12-working-with-multiple-brands)
 13. [Where Your Data Lives](#13-where-your-data-lives)
-14. [All 25 Commands](#14-all-25-commands)
-15. [All 16 Skills](#15-all-16-skills)
+14. [Commands and Slash Shortcuts](#14-commands-and-slash-shortcuts)
+15. [All 21 Skills](#15-all-21-skills)
 16. [Connectors](#16-connectors)
 17. [Troubleshooting](#17-troubleshooting)
 18. [FAQ](#18-faq)
@@ -59,7 +56,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 - Replicate account -- connected via Connectors panel (HTTP, works in Cowork)
 
 **For AI video generation:**
-- **WaveSpeed API key via `/socialforge:setup`** -- powers Kling v3.0 video generation
+- **WaveSpeed API key via `/socialforge:setup`** -- powers image-to-video generation
 
 **Optional (enhances workflow):**
 - Google Drive — store brand assets (connects automatically in Cowork via Settings > Integrations)
@@ -77,15 +74,21 @@ Run this once after installing the plugin:
 /socialforge:setup
 ```
 
+Step 0 — Packages (nothing installs without your yes):
+- Setup first lists the Python packages that are missing and the exact pinned install command for each
+- Say `yes` and it installs them; any other answer prints the commands for you to run yourself
+
 Step 1 — Image generation (Google Cloud Vertex AI):
 - Your admin gives you a service account JSON file
 - When prompted, provide the file path
-- Models: Nano Banana 2 (gemini-3.1-flash-image), Nano Banana Pro (gemini-3-pro-image)
+- Models: resolved at run time from the registry (aliases `latest-image-balanced-google` and `latest-image-google`)
 
-Step 2 — Video generation (WaveSpeed / Kling v3.0):
+Step 2 — Video generation (WaveSpeed):
 - Your admin gives you a WaveSpeed API key
-- When prompted, paste the key
-- Models: Kling v3.0 Pro (image-to-video, text-to-video, 3-15 seconds)
+- Set it as the environment variable `WAVESPEED_API_KEY` and tell setup when it is set. Do not paste the key into the chat: everything typed there is stored in the conversation transcript
+- Models: image-to-video and text-to-video, 3-15 seconds, resolved from the alias `latest-video-wavespeed`
+
+Step 3 (optional) — HiggsField fallback: set `HF_API_KEY` and `HF_API_SECRET` the same way.
 
 Credentials are stored persistently. You never need to run /socialforge:setup again unless credentials change.
 
@@ -141,25 +144,21 @@ SocialForge Credential Setup
 
 Step 1 of 2: Google Cloud (Vertex AI -- Image Generation)
   Provide the path to your Google Cloud service account JSON file.
-  This enables Vertex AI image generation (Gemini 3 Pro Image / Nano Banana Pro,
-  plus Gemini Vision for asset indexing).
+  This enables Vertex AI image generation (plus Gemini Vision for asset indexing).
 
   Path to JSON file: > /path/to/my-service-account.json
 
-  Validating... OK
   Project: my-project-123
   Service account: socialforge@my-project-123.iam.gserviceaccount.com
-  Vertex AI API: enabled
 
-Step 2 of 2: WaveSpeed (Kling v3.0 -- Video Generation)
-  Paste your WaveSpeed API key.
-  This enables Kling v3.0 video generation for Reels, Shorts, and TikTok.
+Step 2 of 2: WaveSpeed (Video Generation)
+  Do not paste the key here: anything typed into this chat is stored in the
+  conversation transcript. Set WAVESPEED_API_KEY in your environment and
+  tell me when it is set.
 
-  API key: > wvs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  > set
 
-  Validating... OK
-  Account: team@agency.com
-  Credits remaining: 847
+  WaveSpeed key saved to the plugin data directory.
 
 Setup complete. Credentials saved to plugin data directory.
 Both persist across sessions -- you won't need to do this again.
@@ -174,7 +173,7 @@ Both persist across sessions -- you won't need to do this again.
 ```
 SocialForge Credentials
   Vertex AI:  CONFIGURED (project: my-project-123)
-  WaveSpeed:  CONFIGURED (847 credits remaining)
+  WaveSpeed:  CONFIGURED
 ```
 
 ### Updating Credentials
@@ -271,7 +270,7 @@ GreenLeaf has a Google Drive folder with 45 photos: products, farm scenes, team 
 
 Asset Index Complete: greenleaf-organics
   Total: 45 assets | Background-removable: 18 | Style references: 6
-  Estimated cost: $0.14 (Gemini Vision)
+  Cost: quoted before indexing; see /socialforge:cost-report
 ```
 
 **Now the system knows:**
@@ -590,7 +589,7 @@ Post-processing runs on ffmpeg, provided by the pinned `imageio-ffmpeg` Python p
 
 - WaveSpeed API key configured via `/socialforge:setup`
 - Vertex AI credentials configured via `/socialforge:setup` (for keyframes)
-- `pip install google-genai wavespeed Pillow imageio-ffmpeg`
+- The pinned Python packages (`python scripts/install_deps.py` lists what is missing and prints the install command; nothing installs itself)
 - Clip length: 3-15 seconds
 
 ---
@@ -846,7 +845,9 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 
 ---
 
-## 14. All 25 Commands
+## 14. Commands and Slash Shortcuts
+
+Eighteen of these have a command file under `commands/`. The other seven (`setup`, `index-assets`, `match-assets`, `parse-calendar`, `adapt-copy`, `render-carousels`, `assemble-document`) are skills that you start the same way, as `/socialforge:<name>`; they also appear in the skills table below.
 
 | Command | What It Does | Example |
 |---------|-------------|---------|
@@ -876,11 +877,11 @@ ${CLAUDE_PLUGIN_DATA}/socialforge/output/greenleaf-organics/2026-04/
 | `/socialforge:status` | Show production dashboard | `/socialforge:status` |
 | `/socialforge:cost-report` | API cost breakdown | `/socialforge:cost-report --brand GreenLeaf` |
 
-`/socialforge:manage-reviews` and `/socialforge:generate-video` appear elsewhere in this guide — they are skills, not commands, so they live in the skills table below rather than here. You invoke them the same way.
+The remaining skills (for example `/socialforge:manage-reviews` and `/socialforge:generate-video`) are started the same way and are described in the skills table below.
 
 ---
 
-## 15. All 16 Skills
+## 15. All 21 Skills
 
 Skills are the internal engines that commands invoke. You rarely call them directly, but understanding them helps when troubleshooting or customizing behavior.
 
@@ -902,9 +903,15 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 | finalize-month | high | Final packaging, compliance verification, and delivery folder creation |
 | c2pa-sign | medium | Embed C2PA provenance manifests into AI-generated images, video, and audio |
 | full-pipeline | max | End-to-end orchestration running all 7 production phases in sequence |
+| ideate-month | high | Plan next month's content calendar from a theme, signals and last month's results |
+| research-month | high | Turn supplied comment exports and competitor ads into a what's-working brief |
+| ingest-performance | n/a | Turn a platform analytics export into per-post performance records and ranked winners |
+| price-check | low | Price a generation run from live provider rates before any spend |
+| model-check | low | Find the best current model for a capability from the live catalogue and record its source |
 
 ### Effort Levels
 
+- **low** — Looks something up (a price, a model); nothing is generated
 - **medium** — Completes in seconds, minimal API cost
 - **high** — May take 1-5 minutes, moderate API cost
 - **max** — Extended operation (10-45 minutes for full pipeline), highest API cost
@@ -913,7 +920,7 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 
 ## 16. Connectors
 
-SocialForge ships an **opt-in catalog of 12 HTTP connectors** — **zero are auto-connected**. The shipped `.mcp.json` is `{"mcpServers":{}}` by design; the table below is the catalog, and you copy the entries you want from `.mcp.json.connectors-reference` into `.mcp.json` to enable them. All 12 work in both Cowork and Claude Code — no local server installation required.
+SocialForge ships an **opt-in catalog of 12 HTTP connectors** — **zero are auto-connected**. No `.mcp.json` ships (it is gitignored), by design; the table below is the catalog, and you copy the entries you want from `.mcp.json.connectors-reference` into a `.mcp.json` of your own to enable them. All 12 work in both Cowork and Claude Code — no local server installation required.
 
 | Connector | URL | What For | Required? |
 |-----------|-----|----------|-----------|
@@ -999,7 +1006,7 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ## 18. FAQ
 
 **Q: How much does it cost per month?**
-A: For a 28-post calendar: ~$2-4 in Gemini API calls. Carousels and previews are free (local rendering via Playwright). Video generation costs more (~$0.40-1.12 per 5-10 second clip via WaveSpeed (Kling v3.0 Pro)). Run `/socialforge:cost-report` for exact figures.
+A: It depends on the models you use and how many images and clips the month needs. Carousels and previews are free (local rendering via Playwright). Image and video generation are billed by the provider at prices that change, so SocialForge quotes the planned run from live pricing before it spends anything and waits for your `go` (`/socialforge:price-check` shows the quote on its own). Run `/socialforge:cost-report` for what a month actually cost.
 
 **Q: Can I use my own images instead of AI generation?**
 A: Yes. Upload your pre-made image and it bypasses all generation — just gets resized, overlaid with logo, and adapted per platform. Set the post's creative mode to ANCHOR_COMPOSE and provide the image directly.

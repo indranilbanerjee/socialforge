@@ -4,7 +4,7 @@ This file is auto-loaded by OpenAI Codex, Google Antigravity, GitHub Copilot CLI
 
 ## What this plugin is
 
-SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI Nano Banana Pro), AI video generation (WaveSpeed Kling v3.0 Pro), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **21 skills · 18 commands · 5 agents · 30 scripts · 10 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
+SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI), AI video generation (WaveSpeed image-to-video), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **21 skills · 18 commands · 5 agents · 30 scripts · 12 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
 
 **Supported surfaces (v1.29.0):** Claude Code (CLI + IDE extensions), Anthropic Cowork, OpenAI Codex (CLI + IDE + App), Cursor 2.5+, GitHub Copilot CLI, Google Antigravity 2.0 (CLI + IDE), Hermes Agent, OpenClaw, Grok (xAI Build CLI, native `.grok-plugin/` pair).
 
@@ -25,7 +25,7 @@ SocialForge is an open-source agency-grade social media production engine — ca
 
 1. **Discover skills by description.** 21 skills auto-discover via SKILL.md frontmatter.
 2. **Skill bodies reference Python scripts at `scripts/<name>.py`** — invoke via Bash. Key: `generate_image.py`, `edit_image.py`, `index_assets.py`, `match_assets.py`, `c2pa_sign.py`.
-3. **Image/video APIs require credentials.** Vertex AI for Nano Banana Pro (image); WaveSpeed for Kling v3.0 Pro (video). Run `setup` skill once to store credentials in plugin persistent data.
+3. **Image/video APIs require credentials.** Vertex AI for images; WaveSpeed for image-to-video (models resolve at run time from the registry aliases). Run the `setup` skill once to store credentials in plugin persistent data; API keys come from environment variables, never from the chat. Nothing installs itself: a missing package prints its exact pinned install command.
 4. **C2PA signing happens automatically before delivery** when `--c2pa-sign` flag is on (recommended for EU campaigns).
 5. **Human-in-the-loop review is mandatory** before delivery — `build-review-gallery` + `manage-reviews` skills surface posts for client approval.
 
@@ -46,12 +46,12 @@ SocialForge is an open-source agency-grade social media production engine — ca
 
 ## Files in this repo
 
-- `skills/<name>/SKILL.md` — 16 Agent Skills.
+- `skills/<name>/SKILL.md` — 21 Agent Skills.
 - `agents/<name>.md` — 5 specialist agent definitions.
-- `commands/<name>.md` — 25 Claude Code slash commands (`/socialforge:<name>`).
-- `scripts/*.py` — 22 Python helpers.
+- `commands/<name>.md` — 18 Claude Code slash commands (`/socialforge:<name>`; the skills answer to the same prefix).
+- `scripts/*.py` — 30 Python helpers.
 - `hooks/hooks.json` — `{"hooks":{}}` (zero global hooks).
-- `.mcp.json` — `{"mcpServers":{}}` (zero auto-connecting MCPs).
+- `.mcp.json` — not shipped (gitignored): zero auto-connecting MCPs. The opt-in catalog is `.mcp.json.connectors-reference`.
 - `assets/` + `references/` + `templates/` — brand assets, channel-pack references, post templates.
 
 ## July 2026 channel pack

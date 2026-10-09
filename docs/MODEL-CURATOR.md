@@ -3,7 +3,7 @@
 `scripts/model_registry.json` is the single source of truth for every AI model id that the plugin's scripts hand to a provider SDK. The resolver `scripts/resolve_model.py` reads the registry and answers three questions for the rest of the plugin:
 
 1. "What's the current best model for X?" → `resolve("latest-fast-anthropic")` returns the concrete id.
-2. "Is this model id still good?" → `check("claude-sonnet-4-5-20250929")` returns `("deprecated", "claude-sonnet-5")`.
+2. "Is this model id still good?" → `check("claude-sonnet-4-5-20250929")` returns `("deprecated", <the replacement id>)`.
 3. "What's available?" → `list_models(vendor="google", modality="image-gen")` returns the matching catalog.
 
 This means a single edit to `model_registry.json` propagates to every script the next time it runs — no grep-and-replace across the plugin when a model is deprecated.
@@ -30,16 +30,16 @@ Every script that calls a provider model accepts `--model` (or `--openai-model` 
 python scripts/generate_image.py --prompt "product on marble" --output out.png
 
 # Override to a specific id
-python scripts/generate_image.py --prompt "product on marble" --output out.png --model gemini-3-pro-image
+python scripts/generate_image.py --prompt "product on marble" --output out.png --model <any id from --list-models>
 
 # Pass a retired id — the resolver warns and substitutes the replacement
-python scripts/generate_image.py --prompt "product on marble" --output out.png --model gemini-3-pro-image-preview
-# WARNING (google): gemini-3-pro-image-preview is retired, using gemini-3-pro-image instead
+python scripts/generate_image.py --prompt "product on marble" --output out.png --model <a retired id>
+# WARNING (google): <the retired id> is retired, using <its replacement> instead
 
 # See what's curated
 python scripts/generate_image.py --list-models
 python scripts/resolve_model.py --alias latest-image-google
-python scripts/resolve_model.py --check gemini-3.1-flash-image
+python scripts/resolve_model.py --check <a model id>
 python scripts/resolve_model.py --registry-age
 python scripts/resolve_model.py --list --vendor google --status current
 ```
@@ -48,28 +48,9 @@ python scripts/resolve_model.py --list --vendor google --status current
 
 ## Aliases (the public API for "give me the latest X")
 
-| Alias | What it resolves to today (July 2026) |
-|---|---|
-| `latest-text-anthropic` | Claude Opus 5 (frontier — Anthropic's current recommendation) |
-| `latest-balanced-anthropic` | Claude Sonnet 5 |
-| `latest-fast-anthropic` | Claude Haiku 4.5 |
-| `latest-text-openai` | GPT-5.6 (Sol) |
-| `latest-balanced-openai` | GPT-5.4 mini |
-| `latest-fast-openai` | GPT-5.4 nano |
-| `latest-image-openai` | GPT Image 2 |
-| `latest-text-google` | Gemini 3 Pro |
-| `latest-balanced-google` | Gemini 3.5 Flash (GA May 19 2026) |
-| `latest-vision-google` | Gemini 3.5 Flash |
-| `latest-multimodal-google` | Gemini Omni |
-| `latest-image-google` | Nano Banana Pro (gemini-3-pro-image — GA May 28 2026; preview retired June 25) |
-| `latest-image-balanced-google` | Nano Banana 2 (gemini-3.1-flash-image — GA May 28; supersedes gemini-2.5-flash-image) |
-| `latest-image-edit-google` | Nano Banana Pro (for higher-fidelity edits) |
-| `latest-image-photoreal-google` | Nano Banana Pro (Imagen 4 was deprecated June 15 2026 — migrated to gemini-3-pro-image) |
-| `latest-video-google` | Veo 3.1 preview (replacement for Veo 2.0/3.0/3.0-Fast, all retired June 30 2026) |
-| `latest-video-wavespeed` | Kling v3.0 Pro |
-| `latest-image-character-higgsfield` | Higgsfield Soul v2 |
+An alias names a capability kind, never a model id: `latest-<kind>-<vendor>`. The kinds in the registry today are `text`, `balanced`, `fast`, `vision`, `multimodal`, `image`, `image-balanced`, `image-edit`, `image-photoreal`, `image-character` and `video`, each under the vendors that offer one. Which id an alias resolves to changes every few weeks, so this page lists none (the table that used to be here went stale within a month).
 
-This table is a dated snapshot. `python scripts/resolve_model.py --aliases` prints the live mappings straight out of the registry and is always authoritative.
+`python scripts/resolve_model.py --aliases` prints the live mappings straight out of the registry and is the source of truth; nothing in the docs or skills should name the id.
 
 ---
 

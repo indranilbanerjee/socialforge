@@ -12,7 +12,7 @@
 
 ## Network endpoints and credentials
 
-Nothing connects on install: there are no hooks and `.mcp.json` ships empty. Pricing and model pages are read by your host's own web tools; `price_book.py` and `model_book.py` make no network calls. A SocialForge script opens a network connection only when you, or a skill you invoked, run it, and only to the endpoints below. Generation always waits for your approval of the brief and the quoted cost.
+Nothing connects on install: there are no hooks and no `.mcp.json` ships. Pricing and model pages are read by your host's own web tools; `price_book.py` and `model_book.py` make no network calls. A SocialForge script opens a network connection only when you, or a skill you invoked, run it, and only to the endpoints below. Generation always waits for your approval of the brief and the quoted cost.
 
 | What | When | Endpoint | Credential |
 |---|---|---|---|

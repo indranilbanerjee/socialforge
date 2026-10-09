@@ -192,7 +192,7 @@ Requires Notion MCP connector. Claude queries the Notion database and maps prope
 
 1. **Scan source directory** -- Recursively find all .jpg/.jpeg/.png/.webp files under the asset source path.
 2. **Incremental detection** -- Compare the file list against the existing asset-index.json. Only new or modified files (by modification timestamp) are sent for AI analysis. Already-indexed files are skipped.
-3. **For each new image** -- Call Gemini Vision API (`gemini-3.5-flash`) with a structured prompt requesting JSON analysis:
+3. **For each new image** -- Call the Gemini vision model (registry alias `latest-vision-google`) with a structured prompt requesting JSON analysis:
    - Description (2-3 sentences of what the image shows)
    - Subjects (person, product, office, event, nature, abstract, etc.)
    - Tags (15-20 descriptive keywords covering subject, setting, mood, style, colors, composition)
@@ -397,12 +397,12 @@ The SSIM (structural similarity) check in step 4 compares the edited image again
    Layer 3: Creative direction (visual brief from calendar)
    Layer 4: Image rules (from brand-config.json)
    Layer 5: Technical (aspect ratio, resolution, platform)
-3. Feed refs + prompt to Gemini Nano Banana 2      [Non-deterministic]
+3. Feed refs + prompt to the Gemini image model   [Non-deterministic]
 4. Quality review (5-dimension scoring)            [Non-deterministic -- but scored numerically]
 5. Text overlay + logo + resize                    [Deterministic]
 ```
 
-Nano Banana 2 (`gemini-3.1-flash-image`) accepts up to 14 reference images per request. The references cause the AI to absorb the brand's visual DNA -- lighting style, color temperature, composition patterns. The output is a new image that looks like it belongs in the same photo library.
+The Gemini image model behind `latest-image-balanced-google` accepts several reference images per request (its model card under `references/models/` states the limit). The references cause the AI to absorb the brand's visual DNA -- lighting style, color temperature, composition patterns. The output is a new image that looks like it belongs in the same photo library.
 
 ### PURE_CREATIVE Pipeline
 
@@ -412,12 +412,12 @@ Same as STYLE_REFERENCED but without reference images in the API call. Only the 
 
 | Failure | Handling |
 |---------|---------|
-| AI generation returns no image | Retry once with simplified prompt. If still fails, placeholder image + manual flag |
+| AI generation returns no image | Retry once with simplified prompt. If still fails, the run reports FAILED with every attempt and the post is flagged for manual image creation |
 | Background removal produces artifacts | Flag for manual masking, continue with original background |
 | Quality score < 3.0 | Auto-regenerate once with strengthened prompt |
 | Quality score 3.0-6.9 | Flag for user review but do not auto-regenerate |
 | Quality score >= 7.0 | Pass |
-| API timeout (60s) | Retry once. If still fails, placeholder + flag |
+| API timeout (60s) | Retry once. If still fails, the next provider in the chain is tried; if none works, FAILED + manual flag |
 | Rate limit (429) | Wait rate_limit_delay_ms, retry up to retry_attempts |
 | Content policy block | Log, return failure with "content policy violation" message |
 | Total per-post timeout (5 min) | Mark as `production_timeout`, move to next post |
@@ -426,23 +426,26 @@ Same as STYLE_REFERENCED but without reference images in the API call. Only the 
 
 ## 6. AI Models & Fallbacks
 
+The model column names a registry alias (a capability kind), not a model id. Which id an alias resolves to changes every few weeks; `python scripts/resolve_model.py --aliases` prints what each resolves to today.
+
 ### Image Generation
 
-| Provider | Model ID | When Used | Fallback |
-|----------|----------|-----------|----------|
-| **Gemini (primary)** | `gemini-3.1-flash-image` (Nano Banana 2) — registry alias `latest-image-balanced-google` | All 4 creative modes, ref image support | fal.ai MCP |
-| **Gemini (top tier)** | `gemini-3-pro-image` (Nano Banana Pro) — registry alias `latest-image-google` | Pass `--model` when you want the higher-fidelity/4K path | fal.ai MCP |
-| **fal.ai (HTTP MCP)** | Flux 2, SDXL, etc. | When Gemini unavailable or user prefers | Replicate MCP |
-| **Replicate (HTTP MCP)** | Various (user's choice) | Alternative provider | Placeholder |
-| **Placeholder (Pillow)** | None (local rendering) | When ALL providers fail | Gray image with prompt text overlay |
+| Provider | Model (registry alias) | When Used |
+|----------|----------|-----------|
+| **Gemini (Vertex AI; an AI Studio key as its fallback)** | `latest-image-balanced-google` | Default; all 4 creative modes, reference image support |
+| **Gemini (top tier)** | `latest-image-google` | Pass `--model` when you want the higher-fidelity path |
+| **WaveSpeed** | the image model in its catalog | First fallback; takes the prompt only (no reference images) |
+| **HiggsField** | its image endpoint | Second fallback; takes the prompt only |
+| **fal.ai / Replicate (HTTP MCP connectors)** | the models the connector offers | Alternatives you choose in the conversation; not part of the script chain |
+| **Placeholder (Pillow)** | None (local rendering) | Only when you pass `--placeholder`; marked "not a real image" |
 
-The fallback chain is: Gemini -> fal.ai -> Replicate -> Placeholder. Each transition is automatic when the previous provider returns an error or is not configured.
+The script's fallback chain is Gemini -> WaveSpeed -> HiggsField. Each transition is automatic when the previous provider returns an error or has no credentials, and every rung that cannot run records why. If none works, the run reports FAILED with each attempt and what to do next, and the post is flagged for manual image creation; no placeholder is made unless you ask for one.
 
 ### Image Editing
 
 | Provider | Model ID | When Used |
 |----------|----------|-----------|
-| **Gemini** | `gemini-3-pro-image` (Nano Banana Pro) — registry alias `latest-image-edit-google` | ENHANCE_EXTEND mode edits, iterative refinement |
+| **Gemini** | `latest-image-edit-google` | ENHANCE_EXTEND mode edits, iterative refinement |
 
 Image editing runs on the same Gemini image family as generation. The original image is sent as the first content part, edit instructions as text, and optional style references alongside.
 
@@ -450,18 +453,18 @@ Image editing runs on the same Gemini image family as generation. The original i
 
 | Provider | Model ID | When Used |
 |----------|----------|-----------|
-| **Gemini** | `gemini-3.5-flash` — registry alias `latest-vision-google` | Asset indexing (understanding what each photo contains) |
+| **Gemini** | `latest-vision-google` | Asset indexing (understanding what each photo contains) |
 
 This is a different model from the image generator. Flash is used because vision analysis is a classification/description task, not a generation task.
 
 ### Video Generation
 
-| Provider | Model ID | When Used | Duration |
+| Provider | Model (registry alias) | When Used | Duration |
 |----------|----------|-----------|----------|
-| **Veo 3.1 (fast)** | `veo-3.1-generate-preview` | Quick social clips | <=10 seconds |
-| **Veo 3.1 (standard)** | `veo-3.1-generate-preview` | Reels, stories | 10-30 seconds |
-| **Kling v3.0 Pro** | `kwaivgi/kling-v3.0-pro/image-to-video` | Longer form content | 30s-3min |
-| **Manual** | None | Extended content | Script + storyboard only |
+| **Google (Vertex AI)** | `latest-video-google` | Clips of 8 seconds or less, when Google credentials exist | up to 8 seconds |
+| **WaveSpeed** | `latest-video-wavespeed` | Longer clips, and any clip when there are no Google credentials; the only rung that takes an approved last frame | up to 15 seconds |
+| **HiggsField** | its video endpoint | Further fallback when the others fail or are not configured | up to 15 seconds |
+| **Manual** | None | Live-action video types, or no provider configured | Script + storyboard only |
 
 ### When API Keys Are Checked
 
@@ -470,8 +473,8 @@ SocialForge checks for API keys at specific execution points, not at startup:
 | Moment | Key Needed | What Happens If Missing |
 |--------|-----------|------------------------|
 | `/socialforge:index-assets` | `GEMINI_API_KEY` | Metadata-only index (dimensions, filename, folder). No AI analysis. Warning shown. |
-| `/socialforge:generate-all` or `/socialforge:generate-post` | `GEMINI_API_KEY` or fal.ai/Replicate connected | Placeholder images generated. Warning: "Connect an image generation provider." |
-| `/socialforge:generate-video --generate-video` | `GEMINI_API_KEY` (for Veo) | Script + storyboard only. No actual video clip. |
+| `/socialforge:generate-all` or `/socialforge:generate-post` | A Gemini credential (the Vertex service account from setup, or `GEMINI_API_KEY`), `WAVESPEED_API_KEY`, or HiggsField keys | The run reports FAILED with every attempt and what to do next; the post is flagged for manual image creation. |
+| `/socialforge:generate-video --generate-video` | Google credentials (Veo), `WAVESPEED_API_KEY`, or HiggsField keys | Script + storyboard only. No actual video clip. |
 | Brand setup | None | No API needed for configuration |
 | Calendar parsing | None | Claude reads the document directly |
 | Asset matching | None | Uses existing index, pure math |
@@ -723,7 +726,7 @@ These three outputs are always delivered, even when no API key is configured.
 
 ### Optionally Generated (Non-Deterministic, --generate-video flag)
 
-4. **AI video clip** -- Generated via Gemini Veo 3.1 or Kling API depending on duration.
+4. **AI video clip** -- Generated by the first configured provider that fits the clip length (see Duration-Based Routing).
 5. **SRT subtitles** -- Derived from script timestamps, synced to the video duration.
 
 ### Post-Processing (via video_postprocess.py)
@@ -737,12 +740,12 @@ After AI video generation, clips are post-processed using ffmpeg via `imageio-ff
 
 ### Duration-Based Routing
 
-| Duration | Provider | Mode | Notes |
-|----------|----------|------|-------|
-| <=10s | Veo 3.1 | Fast preview | Quick social clips, animated product shots |
-| 10-30s | Veo 3.1 | Standard | Reels, stories, short brand videos |
-| 30s-3min | Kling (if configured) | Long form | Mini case studies, event recaps |
-| >3min | Manual | -- | Script + storyboard only, too long for current AI video |
+| Duration | First choice | Then | Notes |
+|----------|--------------|------|-------|
+| <=8s | Google (Veo), if Google credentials exist | WaveSpeed, then HiggsField | Quick social clips, animated product shots |
+| >8s | WaveSpeed | Google, then HiggsField | Reels, stories, short brand videos |
+
+Provider caps: 8 seconds for Google, 15 seconds for WaveSpeed and HiggsField; plan anything longer as several clips. A video type that needs filming (for example `talking_head`) is never routed to a provider. An approved last frame sends the clip to WaveSpeed first, because only that rung takes an end frame. `generate_video.py --provider <name>` always overrides the routing.
 
 ### Video Type Classification
 
@@ -1029,22 +1032,25 @@ SocialForge is designed so that non-deterministic steps are always sandwiched be
 
 ### Production Phase (API Keys Needed)
 
-| Step | Key Required | How To Get | Estimated Cost |
-|------|-------------|-----------|----------------|
-| Asset indexing (AI analysis) | `GEMINI_API_KEY` | https://aistudio.google.com/apikey | ~$0.003/image |
-| Image generation (Gemini) | `GEMINI_API_KEY` | Same | ~$0.02/image |
-| Image generation (fal.ai) | fal.ai MCP connected | Connectors panel in Claude | ~$0.03/image |
-| Image generation (Replicate) | Replicate MCP connected | Connectors panel | ~$0.025/image |
-| Image editing | `GEMINI_API_KEY` | Same | ~$0.015/edit |
-| Video generation (Veo) | `GEMINI_API_KEY` | Same | ~$0.10/clip |
-| Video generation (Kling) | `KLING_API_KEY` | Kling API dashboard | Varies |
+| Step | Key Required | How To Get |
+|------|-------------|-----------|
+| Asset indexing (AI analysis) | `GEMINI_API_KEY` | https://aistudio.google.com/apikey |
+| Image generation (Gemini) | The Vertex AI service account from `/socialforge:setup`, or `GEMINI_API_KEY` | Same |
+| Image generation (fal.ai) | fal.ai MCP connected | Connectors panel in Claude |
+| Image generation (Replicate) | Replicate MCP connected | Connectors panel |
+| Image editing | Same as Gemini image generation | Same |
+| Video generation (Google) | The same Google credentials | Same |
+| Video generation (WaveSpeed) | `WAVESPEED_API_KEY` | https://wavespeed.ai/accesskey |
+| Video generation (HiggsField) | `HF_API_KEY` + `HF_API_SECRET` | HiggsField dashboard |
+
+Costs are not listed here: providers change their prices and SocialForge stores none. Before each paid step it quotes from a recorded lookup (`price_book.py`), shows the source URL and the price's age, and waits for your explicit `go`. Set keys as environment variables; never paste one into the chat.
 
 ### No-API Fallback Behavior
 
 If no API key is configured:
 
 - **Asset indexing**: Creates a metadata-only index containing dimensions, filename, folder path, and file size. No AI analysis (no tags, descriptions, mood, or suitability data). Asset matching will fall back to filename/folder-based heuristics, which are significantly less accurate.
-- **Image generation**: Placeholder images are generated locally using Pillow -- a gray rectangle with the generation prompt text overlaid. Posts are flagged for manual image creation.
+- **Image generation**: Not possible. The run reports FAILED with each attempt and the post is flagged for manual image creation. A gray placeholder (the prompt text on a rectangle, marked "not a real image") is made only when you pass `--placeholder`.
 - **Image editing**: Not available. Posts requiring ENHANCE_EXTEND mode are flagged for manual editing.
 - **Video**: Script + storyboard are always generated (Claude writes these). No AI video clips without an API key.
 - **Everything else works**: Copy adaptation, compliance checking, carousel rendering, platform previews, review gallery, approval management, and finalization all function without any API keys.
@@ -1053,70 +1059,27 @@ If no API key is configured:
 
 ## 17. Cost Tracking
 
-**Script:** `cost_tracker.py` -- logs every API call with estimated cost
+**Script:** `cost_tracker.py` -- logs every paid API call with the cost it can support
 
-### Per-Operation Costs
+SocialForge stores no per-operation prices. Providers change them, and a table of guesses looks the same as a table of invoices. Each log entry gets its cost one of three ways, in this order:
 
-| Operation | Estimated Cost | Provider | Local? |
-|-----------|---------------|----------|--------|
-| Vision analysis (per image) | $0.003 | Gemini | No |
-| Image generation | $0.020 | Gemini | No |
-| Image editing | $0.015 | Gemini | No |
-| fal.ai generation | $0.030 | fal.ai | No |
-| Replicate generation | $0.025 | Replicate | No |
-| Video generation (Veo) | $0.100 | Gemini | No |
-| Background removal (rembg) | $0.000 | Local | Yes |
-| Compositing (Pillow) | $0.000 | Local | Yes |
-| Text overlay | $0.000 | Local | Yes |
-| Carousel rendering (Playwright) | $0.000 | Local | Yes |
-| Preview rendering (Playwright) | $0.000 | Local | Yes |
-| Copy adaptation | $0.000 | Claude (subscription) | N/A |
-| Compliance checking | $0.000 | Local | Yes |
+1. `--cost`: the amount actually invoiced (`basis: "actual"`).
+2. A price-book quote from `price_book.py`, when `--model`, `--provider` and `--units` are given. The entry records the unit price, the source URL and when the price was looked up (`basis: "price-book-quote"`).
+3. Nothing. The entry is logged with `cost_usd: null` and `basis: "unpriced"`. Unpriced is not free.
+
+Only operations that run locally (background removal, compositing, carousel rendering, resizing) are logged as `0.0` (`basis: "local-no-api-cost"`).
 
 ### How Costs Are Logged
 
-Every API call made by any script writes an entry to `cost-log.json`:
-
-```json
-{
-  "timestamp": "2026-04-01T10:30:15Z",
-  "operation": "image_generation",
-  "model": "gemini-3.1-flash-image",
-  "post_id": 1,
-  "reference_count": 5,
-  "resolution": "1024",
-  "estimated_cost_usd": 0.020,
-  "success": true
-}
-```
-
-Failed API calls are also logged (with `"success": false`) but are not counted toward cost totals because the provider typically does not charge for failed requests.
+Every paid call writes an entry to `cost-log.json` with `timestamp`, `post_id`, `operation`, `cost_usd` and `basis`. A quoted entry also carries `model`, `provider`, `unit_price_usd`, `units`, `source` (the URL the price came from) and `priced_at`; an unpriced entry carries a `note` saying what was missing. The file's own totals say whether they are complete (`total_is_complete`, `unpriced_entries`).
 
 ### Monthly Cost Report
 
-The `/socialforge:cost-report` command reads cost-log.json and produces:
-
-```
-Total: $2.87 (28 posts)
-  Image generation: $1.60 (80 generations x $0.02)
-  Vision analysis: $0.14 (45 images x $0.003)
-  Image editing: $0.45 (30 edits x $0.015)
-  Video generation: $0.40 (4 clips x $0.10)
-  Local operations: $0.00
-
-Average per post: $0.10
-Most expensive: P01 (HERO, 3 variants + 2 regenerations) -- $0.18
-Least expensive: P22 (HYGIENE, text_only) -- $0.00
-```
+The `/socialforge:cost-report` command reads cost-log.json and reports `total_cost_usd`, `total_api_calls`, `by_operation`, `by_post` (the ten most expensive), `unpriced_calls` and `totals_complete`. When any call is unpriced, every total is a LOWER BOUND and the report says so.
 
 ### Cost Drivers
 
-The primary cost driver is the number of image generations. Each post typically requires:
-- 2-3 variant generations ($0.04-0.06)
-- 0-1 regenerations after quality review ($0.00-0.02)
-- 0-1 edits for refinement ($0.00-0.015)
-
-A 28-post month with mixed content types typically costs $2-5 in API charges. HERO posts cost more (more variants, more iterations). HYGIENE text-only posts cost nothing.
+The primary cost driver is the number of image generations, then video clips, which are billed per second (clip length and options such as sound change the price). A post typically needs a few variant generations, the odd regeneration after quality review, and the odd edit. HERO posts cost more (more variants, more iterations); HYGIENE text-only posts cost nothing. `/socialforge:price-check` shows a quote before you commit to a run.
 
 ---
 

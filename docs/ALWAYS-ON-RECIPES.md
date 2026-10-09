@@ -12,7 +12,7 @@ SocialForge's approval chain needs a human. An always-on job is therefore limite
 | Weekly performance ingest — `ingest-performance` (ingest, then wins) | Yes, only when a new export file is present | Writes `performance.json` and reports; never invents numbers |
 | Creative generation (`compose-creative`, `generate-video`, `full-pipeline`), approvals (`manage-reviews`), `finalize-month`, scheduler or messaging hand-off | **Never** | Spends credits, passes approval gates, or reaches the public. A saved, scheduled prompt is not live user input and cannot stand in for approval |
 
-`create-previews` declares `disable-model-invocation`, so a scheduled prompt may not be able to start it. The review gallery covers the monthly view and is model-invocable.
+`create-previews` writes files, so it stops at its `## Execution gate` and waits for a typed `yes`; a scheduled prompt cannot supply that, so it cannot get past the gate. The review gallery covers the monthly view and runs without a gate.
 
 ## The two jobs
 

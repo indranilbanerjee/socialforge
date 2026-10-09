@@ -40,8 +40,8 @@ Thank you for your interest in contributing to SocialForge!
 ```bash
 git clone https://github.com/indranilbanerjee/socialforge.git
 cd socialforge
-pip install Pillow  # Minimum for image scripts
-# Optional: pip install rembg playwright google-genai imageio-ffmpeg
+python scripts/install_deps.py            # reports what is missing and prints the pinned commands
+python scripts/install_deps.py --install  # installs the pinned versions (the default groups)
 ```
 
 ## Coding Standards
@@ -50,7 +50,7 @@ pip install Pillow  # Minimum for image scripts
 - Description under 130 characters
 - `effort` frontmatter on every skill (low/medium/high/max)
 - `argument-hint` showing usage pattern
-- `disable-model-invocation: true` on the destructive/irreversible execution skills only — currently `manage-reviews`, `create-previews`, `finalize-month`, `assemble-document`. Most skills omit it so they stay model-discoverable.
+- `disable-model-invocation: true` on the wrapper commands that hand over to a visible skill, and on the two skills whose every step is a per-item approval (currently `manage-reviews` and `assemble-document`). Every other side-effect skill stays model-invocable behind a `## Execution gate` (scope first, an explicit typed `yes`, anything else cancels); `tests/test_execution_gates.py` enforces this.
 - Timeout + fallback documented for every network operation
 
 ### Agents

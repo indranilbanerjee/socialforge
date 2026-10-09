@@ -16,17 +16,17 @@ This file is the submission packet for the Anthropic Software Directory. It is *
 
 ## 1. One-line description
 
-> Agency-grade social media calendar automation with asset-first compositing, AI image generation (Vertex AI Nano Banana Pro), and AI video generation (WaveSpeed Kling v3.0 Pro). C2PA content provenance for EU AI Act Article 50 compliance.
+> Agency-grade social media calendar automation with asset-first compositing, AI image generation (Google Vertex AI), and AI image-to-video generation (WaveSpeed). C2PA content provenance for EU AI Act Article 50 compliance.
 
 ## 2. Long description
 
 SocialForge is a social media calendar and creative production system for marketing agencies and in-house teams running multi-brand, multi-platform social calendars. It parses content calendars, matches brand assets, generates AI-composed creative, renders carousels, adapts copy per platform, post-processes video with ffmpeg, and produces approval-ready review galleries.
 
-**v1.6.0** adds end-to-end-tested C2PA content provenance for AI-generated assets — the EU AI Act Article 50 obligation that applies from 2 August 2026 falls squarely on SocialForge (it's the plugin generating AI images and video). New `scripts/c2pa_sign.py` wraps `c2pa-python>=0.32` with the current Builder + Signer.from_info API. New `/socialforge:c2pa-sign` skill exposes it. Optional auto-sign hooks in `scripts/generate_image.py` (post-image-generation) and `scripts/video_postprocess.py` (post-per-platform-resize) embed machine-readable provenance manifests with brand, generator, prompt, target-platform metadata before assets hit delivery. Plus a May 2026 channel-pack reference covering TikTok USDS Joint Venture (post-Jan 2026), LinkedIn March 2026 algorithm + Depth Score, Apple MPP B2C open-rate decline, Meta Advantage+ shopping, YouTube AI labeling, Sora deprecation timeline.
+**v1.6.0** adds end-to-end-tested C2PA content provenance for AI-generated assets — the EU AI Act Article 50 obligation that applies from 2 August 2026 falls squarely on SocialForge (it's the plugin generating AI images and video). New `scripts/c2pa_sign.py` wraps `c2pa-python` (pinned to 0.38.0) with the current Builder + Signer.from_info API. New `/socialforge:c2pa-sign` skill exposes it. Optional auto-sign hooks in `scripts/generate_image.py` (post-image-generation) and `scripts/video_postprocess.py` (post-per-platform-resize) embed machine-readable provenance manifests with brand, generator, prompt, target-platform metadata before assets hit delivery. Plus a May 2026 channel-pack reference covering TikTok USDS Joint Venture (post-Jan 2026), LinkedIn March 2026 algorithm + Depth Score, Apple MPP B2C open-rate decline, Meta Advantage+ shopping, YouTube AI labeling, Sora deprecation timeline.
 
-Image generation defaults to Google Vertex AI (Gemini Nano Banana 2 / 3 Pro) with WaveSpeed and HiggsField fallbacks. Video generation defaults to WaveSpeed Kling v3.0 Pro with Vertex AI Veo and HiggsField fallbacks. All AI-generated visuals require explicit user approval before use — SocialForge is built around human-in-the-loop creative review, not autonomous publishing.
+Image generation defaults to Google Vertex AI (Gemini image models) with WaveSpeed and HiggsField fallbacks. Video generation is routed by clip length: Vertex AI (Veo) for clips of 8 seconds or less when Google credentials exist, otherwise WaveSpeed image-to-video (up to 15 seconds), with HiggsField as a further fallback. Model ids are resolved at run time from the registry, never hardcoded; every paid run is quoted from a live price lookup and waits for the user's `go`. All AI-generated visuals require explicit user approval before use — SocialForge is built around human-in-the-loop creative review, not autonomous publishing.
 
-25 commands, 19 skills, 5 agents, 22 Python scripts, an opt-in catalog of 10 HTTP MCP connectors (Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary — all Cowork-compatible). Multi-plugin coexistence by design (zero global hooks).
+18 commands, 21 skills, 5 agents, 30 Python scripts, an opt-in catalog of 12 HTTP MCP connectors (Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz, WhatsApp Business Tools — all Cowork-compatible; none auto-connected, and no `.mcp.json` ships). Multi-plugin coexistence by design (zero global hooks).
 
 ## 3. Category
 
@@ -50,12 +50,11 @@ Image generation defaults to Google Vertex AI (Gemini Nano Banana 2 / 3 Pro) wit
 python3 scripts/generate_image.py \
     --prompt "minimalist product hero shot, soft natural lighting" \
     --output assets/acme/q3-hero.png \
-    --model gemini-3-pro-image \
     --aspect-ratio 1:1 \
     --c2pa-sign --brand "Acme Corp" --platform instagram
 ```
 
-The script generates the image via Vertex AI, then post-processes through `c2pa_sign.py` which embeds a C2PA manifest (brand = Acme Corp organization, generator = "vertex_ai / gemini-3-pro-image", target platform = Instagram, IPTC `TRAINED_ALGORITHMIC_MEDIA` digital-source-type). Resulting PNG verifies at contentcredentials.org/verify. Article 50 compliant.
+The script generates the image via Vertex AI, then post-processes through `c2pa_sign.py` which embeds a C2PA manifest (brand = Acme Corp organization, generator = "vertex_ai / <the model id resolved from the registry>", target platform = Instagram, IPTC `TRAINED_ALGORITHMIC_MEDIA` digital-source-type). Resulting PNG verifies at contentcredentials.org/verify. Article 50 compliant.
 
 **Empirically tested:** 75-byte test PNG → 42,996-byte signed PNG with `manifest_embedded_and_verified=true`, active manifest ID `urn:c2pa:...`.
 
@@ -69,7 +68,6 @@ python3 scripts/generate_video.py \
     --output-dir campaigns/ \
     --generate-video \
     --provider kling \
-    --video-model kwaivgi/kling-v3.0-pro/image-to-video \
     --image campaigns/q3-launch-keyframe.png \
     --duration 10 \
     --aspect-ratio 9:16
@@ -81,7 +79,7 @@ python3 scripts/video_postprocess.py \
     --platforms tiktok,instagram_reel,linkedin,youtube \
     --burn-subs --srt campaigns/captions.srt \
     --c2pa-sign \
-    --c2pa-generator "WaveSpeed Kling v3.0 Pro" \
+    --c2pa-generator "WaveSpeed image-to-video" \
     --c2pa-prompt "30-second product launch teaser"
 ```
 

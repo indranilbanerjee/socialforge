@@ -10,7 +10,7 @@ Open the interactive review gallery showing all generated posts with quality sco
 ## What You See
 - Each post card: image preview, platform copy, quality score, compliance status
 - Filter by: tier, platform, status (pending/approved/revision-needed)
-- Actions per post: approve, request revision, swap asset, regenerate, skip
+- Actions per post: approve, request revision, swap asset, regenerate, skip (regenerate and swap asset run `/socialforge:compose-creative`, which quotes the paid generation and waits for `go`)
 
 ## Workflow
 1. Review HERO tier first (highest priority)

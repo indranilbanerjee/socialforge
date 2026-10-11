@@ -536,7 +536,7 @@ The adapter handles character limits, hashtag placement strategy, CTA style (lin
 /socialforge:swap-asset P03 --asset asset_015
 ```
 
-Each edit regenerates only the affected element — not the entire post.
+Each edit regenerates only the affected element — not the entire post. An edit that generates (an AI image edit, a swapped asset that is composed again) is a paid call: you see the price and its source first and type `go`; anything else cancels. Copy edits cost nothing.
 
 ### Generate Variants for A/B Testing
 
@@ -554,7 +554,7 @@ A trending topic or breaking news warrants an unplanned post:
 /socialforge:reactive-post "Earth Day celebration" --brand GreenLeaf --platform instagram
 ```
 
-Creates a one-off post with the same quality pipeline (asset matching, creative mode, copy adaptation, compliance check) but outside the planned calendar.
+Creates a one-off post with the same quality pipeline (asset matching, creative mode, copy adaptation, compliance check) but outside the planned calendar. Its creative goes through `compose-creative`, so a paid generation is quoted and waits for your `go` like any other.
 
 ---
 
@@ -633,7 +633,7 @@ Flag posts that need changes:
 /socialforge:manage-reviews --revise P06 "The background color doesn't match our brand green"
 ```
 
-The revision command regenerates only the affected elements:
+The revision command regenerates only the affected elements. A revised image or video is a new paid call, so it is quoted again and waits for your `go`, even when the first generation was approved:
 
 ```
 /socialforge:revision P06 "Use darker green (#2D5016) in the background, keep the product placement"

@@ -8,7 +8,7 @@ user-invocable: true
 
 # /socialforge:generate-video — Video Production Kit
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 Generate video production assets through a 5-stage human-in-the-loop pipeline. Each stage requires user approval before advancing.
 
@@ -33,7 +33,7 @@ Generation spends provider credits, so the first paid call waits for a quote and
 2. Quote it:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[{"model":"<resolved model id>","provider":"<provider>","units":<n>,"label":"<post id and stage>"}]'
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[{"model":"<resolved model id>","provider":"<provider>","units":<n>,"label":"<post id and stage>"}]'
 ```
 
    A single item can use `--action quote --model <id> --provider <provider> --units <n>`. If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.

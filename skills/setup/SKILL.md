@@ -8,7 +8,7 @@ user-invocable: true
 
 # /socialforge:setup — API Credential Configuration
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 One-time setup that stores credentials persistently. Run once, works forever across all sessions.
 
@@ -43,7 +43,7 @@ If you are the admin, see the Admin Setup section below.
 
 Run this first. It only REPORTS which packages are present and prints the exact pinned install command for each one that is missing; it installs nothing:
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py"
+python "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py"
 ```
 
 Packages it checks by default (every version is pinned in `scripts/install_deps.py`): Pillow (compositing), google-genai (Vertex AI), wavespeed and imageio-ffmpeg (video), playwright (carousels; its Chromium browser is a large download).
@@ -57,7 +57,7 @@ These packages are missing: <list>. Install them now with the pinned versions? (
 
 Only on an explicit `yes`, run:
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py" --install
+python "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py" --install
 ```
 Any other answer: print the pinned commands from the report for the user to run themselves, and continue.
 
@@ -67,7 +67,7 @@ Extra packages are never part of that default and are installed only when the us
 
 Check if already configured:
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" status
+python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" status
 ```
 
 If not configured, ask:
@@ -83,7 +83,7 @@ Or type "skip" to configure later (image generation will not work).
 
 When user provides the path:
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-vertex --json-path "<user-provided-path>"
+python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-vertex --json-path "<user-provided-path>"
 ```
 
 Show the result. If success:
@@ -109,7 +109,7 @@ Or type "skip" to configure later (video generation will not work).
 
 When the user says it is set, run this WITHOUT `--api-key` (the script reads `WAVESPEED_API_KEY`, or one line from stdin; a key on the command line lands in shell history and the process table):
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed
+python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed
 ```
 
 Show the result. If success:
@@ -133,7 +133,7 @@ Or type "skip" (HiggsField is optional — Vertex AI and WaveSpeed are sufficien
 
 When the user says both are set, run this WITHOUT `--api-key` or `--api-secret` (the script reads `HF_API_KEY` and `HF_API_SECRET`, or stdin):
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-higgsfield
+python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-higgsfield
 ```
 
 ### Step 3: Summary

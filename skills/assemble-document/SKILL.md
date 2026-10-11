@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 # /socialforge:assemble-document — Document Assembler
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 Create the final delivery manifest — a structured JSON file describing the complete monthly calendar, its posts, copy, and metadata. The manifest is the deliverable this skill produces; a formatted DOCX is a manual/optional step downstream (see below).
 

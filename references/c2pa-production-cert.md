@@ -19,7 +19,7 @@ Everything a SocialForge operator needs to move from the dev-only self-signed pa
 
 ```bash
 # Direct sign
-python3 scripts/c2pa_sign.py \
+python scripts/c2pa_sign.py \
     --input asset.png --output signed.png \
     --brand "Acme Corp" --generator "Vertex AI image model" \
     --ai-claim ai-generated-content --platform instagram \
@@ -27,14 +27,14 @@ python3 scripts/c2pa_sign.py \
     --signing-key /secure/c2pa-prod-key.pem
 
 # Auto-sign via image generation hook
-python3 scripts/generate_image.py \
+python scripts/generate_image.py \
     --prompt "..." --output asset.png \
     --c2pa-sign --brand "Acme Corp" --platform instagram \
     --c2pa-signing-cert /secure/c2pa-prod-cert.pem \
     --c2pa-signing-key /secure/c2pa-prod-key.pem
 
 # Auto-sign every per-platform video output
-python3 scripts/video_postprocess.py \
+python scripts/video_postprocess.py \
     --input source.mp4 --output-dir processed/ --brand acme-corp \
     --c2pa-sign \
     --c2pa-generator "WaveSpeed image-to-video" \

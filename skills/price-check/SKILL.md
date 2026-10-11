@@ -8,7 +8,7 @@ user-invocable: true
 
 # /socialforge:price-check — What this run will cost, looked up today
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 Prices here are never remembered. They are looked up, recorded with the URL they
 came from, and expire after 24 hours.
@@ -32,7 +32,7 @@ the answer — go and read the provider's page, then record what you read.
 1. Find where to look:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action providers
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action providers
 ```
 
 That returns each provider's pricing URL and its auth shape. Two things it will
@@ -50,7 +50,7 @@ tell you that save time:
 3. Record it, with the URL you read it from:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action record \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action record \
   --model "<model id>" --provider wavespeed \
   --unit second --price <the rate you read> --source <the pricing URL you read it from>
 ```
@@ -63,7 +63,7 @@ provenance is a guess wearing a number's clothes.
 Single item:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
   --model "<model id>" --provider wavespeed --units <seconds of video>
 ```
 
@@ -72,7 +72,7 @@ out across an entire monthly calendar and is the most expensive command in the
 product:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items '[
   {"model":"<model id>","provider":"wavespeed","units":5,"label":"post-01"},
   {"model":"<another model id>","provider":"wavespeed","units":6,"label":"post-02"}
 ]'
@@ -94,7 +94,7 @@ it understates the cost of every clip by a third.
 Look the surcharge up on the model's page, then pass it:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
   --model "<model id>" --provider wavespeed --units 10 \
   --multiplier 1.5 --multiplier-reason "sound=true"
 ```
@@ -121,7 +121,7 @@ video model has been seen at more than double the per-second rate on one
 provider than on another, for identical output.
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action compare --model "<model id>"
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action compare --model "<model id>"
 ```
 
 Cheapest first, grouped by unit — a per-image price is never "cheaper" than a
@@ -132,7 +132,7 @@ before telling the user something is the cheapest option.
 ## Checking what has gone stale
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action staleness
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action staleness
 ```
 
 Run this at the start of a production month. Anything listed as stale needs a

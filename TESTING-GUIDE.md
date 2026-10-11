@@ -8,7 +8,7 @@
 
 ## 1. Test Environment Setup
 
-- [ ] Python 3.10+ available | `python3 --version` returns 3.10+
+- [ ] Python 3.10+ available | `python --version` returns 3.10+
 - [ ] Node.js 18+ available | `node --version` returns 18+
 - [ ] Playwright installed | `python -c "from playwright.sync_api import sync_playwright; print('OK')"` prints OK
 - [ ] Chromium binary installed | `playwright install chromium` completes without error
@@ -102,36 +102,36 @@ Run each script from the command line to verify it executes without import error
 
 | # | Script | CLI Test | Expected Result |
 |---|--------|---------|-----------------|
-| 1 | `adapt_copy.py` | `python3 scripts/adapt_copy.py --help` | Usage info or no import errors |
+| 1 | `adapt_copy.py` | `python scripts/adapt_copy.py --help` | Usage info or no import errors |
 | 2 | `assemble_docx.js` | `node scripts/assemble_docx.js --help` | Usage info or no import errors |
-| 3 | `build_gallery.py` | `python3 scripts/build_gallery.py --help` | Usage info displayed |
-| 4 | `c2pa_sign.py` | `python3 scripts/c2pa_sign.py --help` | Usage info displayed |
-| 5 | `compliance_check.py` | `python3 scripts/compliance_check.py --help` | Usage info displayed |
-| 6 | `compose_image.py` | `python3 scripts/compose_image.py --help` | Usage info displayed |
-| 7 | `compose_text_overlay.py` | `python3 scripts/compose_text_overlay.py --help` | Usage info displayed |
-| 8 | `cost_tracker.py` | `python3 scripts/cost_tracker.py --help` | Usage info displayed |
-| 9 | `credential_manager.py` | `python3 scripts/credential_manager.py --help` | Usage info displayed |
-| 10 | `edit_image.py` | `python3 scripts/edit_image.py --help` | Usage info displayed |
-| 11 | `generate_image.py` | `python3 scripts/generate_image.py --help` | Usage info displayed |
-| 12 | `generate_video.py` | `python3 scripts/generate_video.py --help` | Usage info displayed |
-| 13 | `index_assets.py` | `python3 scripts/index_assets.py --help` | Usage info displayed |
-| 14 | `install_deps.py` | `python3 scripts/install_deps.py --help` | Usage info displayed |
-| 15 | `match_assets.py` | `python3 scripts/match_assets.py --help` | Usage info displayed |
-| 16 | `refresh_models.py` | `python3 scripts/refresh_models.py --help` | Usage info displayed |
-| 17 | `render_carousel.py` | `python3 scripts/render_carousel.py --help` | Usage info displayed |
-| 18 | `render_preview.py` | `python3 scripts/render_preview.py --help` | Usage info displayed |
-| 19 | `resize_image.py` | `python3 scripts/resize_image.py --help` | Usage info displayed |
-| 20 | `resolve_model.py` | `python3 scripts/resolve_model.py --aliases` | Alias table printed from the registry |
-| 21 | `status_manager.py` | `python3 scripts/status_manager.py --help` | Usage info displayed |
-| 22 | `verify_brand_colors.py` | `python3 scripts/verify_brand_colors.py --help` | Usage info displayed |
-| 23 | `video_postprocess.py` | `python3 scripts/video_postprocess.py --help` | Usage info displayed |
-| 24 | `price_book.py` | `python3 scripts/price_book.py --help` | Usage info displayed |
-| 25 | `model_book.py` | `python3 scripts/model_book.py --help` | Usage info displayed |
-| 26 | `delivery_audit.py` | `python3 scripts/delivery_audit.py --help` | Usage info displayed |
-| 27 | `detect_surface.py` | `python3 scripts/detect_surface.py --help` | Usage info displayed |
-| 28 | `ingest_performance.py` | `python3 scripts/ingest_performance.py --help` | Usage info displayed |
-| 29 | `research_month.py` | `python3 scripts/research_month.py --help` | Usage info displayed |
-| 30 | `provider_failures.py` | `python3 scripts/provider_failures.py --help` | Usage info displayed |
+| 3 | `build_gallery.py` | `python scripts/build_gallery.py --help` | Usage info displayed |
+| 4 | `c2pa_sign.py` | `python scripts/c2pa_sign.py --help` | Usage info displayed |
+| 5 | `compliance_check.py` | `python scripts/compliance_check.py --help` | Usage info displayed |
+| 6 | `compose_image.py` | `python scripts/compose_image.py --help` | Usage info displayed |
+| 7 | `compose_text_overlay.py` | `python scripts/compose_text_overlay.py --help` | Usage info displayed |
+| 8 | `cost_tracker.py` | `python scripts/cost_tracker.py --help` | Usage info displayed |
+| 9 | `credential_manager.py` | `python scripts/credential_manager.py --help` | Usage info displayed |
+| 10 | `edit_image.py` | `python scripts/edit_image.py --help` | Usage info displayed |
+| 11 | `generate_image.py` | `python scripts/generate_image.py --help` | Usage info displayed |
+| 12 | `generate_video.py` | `python scripts/generate_video.py --help` | Usage info displayed |
+| 13 | `index_assets.py` | `python scripts/index_assets.py --help` | Usage info displayed |
+| 14 | `install_deps.py` | `python scripts/install_deps.py --help` | Usage info displayed |
+| 15 | `match_assets.py` | `python scripts/match_assets.py --help` | Usage info displayed |
+| 16 | `refresh_models.py` | `python scripts/refresh_models.py --help` | Usage info displayed |
+| 17 | `render_carousel.py` | `python scripts/render_carousel.py --help` | Usage info displayed |
+| 18 | `render_preview.py` | `python scripts/render_preview.py --help` | Usage info displayed |
+| 19 | `resize_image.py` | `python scripts/resize_image.py --help` | Usage info displayed |
+| 20 | `resolve_model.py` | `python scripts/resolve_model.py --aliases` | Alias table printed from the registry |
+| 21 | `status_manager.py` | `python scripts/status_manager.py --help` | Usage info displayed |
+| 22 | `verify_brand_colors.py` | `python scripts/verify_brand_colors.py --help` | Usage info displayed |
+| 23 | `video_postprocess.py` | `python scripts/video_postprocess.py --help` | Usage info displayed |
+| 24 | `price_book.py` | `python scripts/price_book.py --help` | Usage info displayed |
+| 25 | `model_book.py` | `python scripts/model_book.py --help` | Usage info displayed |
+| 26 | `delivery_audit.py` | `python scripts/delivery_audit.py --help` | Usage info displayed |
+| 27 | `detect_surface.py` | `python scripts/detect_surface.py --help` | Usage info displayed |
+| 28 | `ingest_performance.py` | `python scripts/ingest_performance.py --help` | Usage info displayed |
+| 29 | `research_month.py` | `python scripts/research_month.py --help` | Usage info displayed |
+| 30 | `provider_failures.py` | `python scripts/provider_failures.py --help` | Usage info displayed |
 
 `_common.py` is the shared helper module (`path_component`, `safe_child`); it is imported by the scripts above rather than run on its own.
 
@@ -286,7 +286,7 @@ Test each of the 8 templates renders correctly.
 ## 13. Cowork Compatibility Tests
 
 - [ ] Plugin installs in Cowork VM | No SSH errors (HTTPS source used)
-- [ ] Python 3.10 available in Cowork | `python3 --version` confirms 3.10+
+- [ ] Python 3.10 available in Cowork | `python --version` confirms 3.10+
 - [ ] `pip install` works for dependencies | playwright, python-docx, Pillow, gspread install
 - [ ] Playwright Chromium runs in Cowork | Carousel rendering works (may need `--no-sandbox`)
 - [ ] `.mcp.json` HTTP connectors load in Cowork | No npx/node dependency issues

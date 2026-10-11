@@ -8,7 +8,7 @@ user-invocable: true
 
 # /socialforge:research-month — what's working, from the user's own evidence
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 `/socialforge:ideate-month` plans a month from pillars, signals and last month's
 results. Those results cover one brand's own calendar. This skill widens the

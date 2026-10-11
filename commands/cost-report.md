@@ -5,7 +5,7 @@ argument-hint: "--brand <name> --month <YYYY-MM>"
 
 # Cost Report
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 Display the API cost breakdown from cost-log.json.
 
@@ -14,7 +14,7 @@ Display the API cost breakdown from cost-log.json.
 Both `--brand` and `--month` are required. The skill runs:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/cost_tracker.py" --action report --brand <name> --month <YYYY-MM>
+python "${CLAUDE_PLUGIN_ROOT}/scripts/cost_tracker.py" --action report --brand <name> --month <YYYY-MM>
 ```
 
 The script returns JSON — `total_cost_usd`, `total_api_calls`, `by_operation`, `by_post` (top 10), `unpriced_calls`, `totals_complete` and, when something is unpriced, a `note`. Render it for the user as below, with the figures from the JSON and none from memory.

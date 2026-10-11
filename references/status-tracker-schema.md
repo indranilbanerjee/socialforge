@@ -16,7 +16,7 @@ When `CLAUDE_PLUGIN_DATA` is unset, the script falls back to:
 ~/socialforge-workspace/output/<brand-slug>/<month>/status-tracker.json
 ```
 
-Created by `python3 scripts/status_manager.py --action init-month --brand <slug> --month <YYYY-MM>`.
+Created by `python scripts/status_manager.py --action init-month --brand <slug> --month <YYYY-MM>`.
 
 ## Top-Level Fields
 

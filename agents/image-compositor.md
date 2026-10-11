@@ -6,6 +6,8 @@ maxTurns: 30
 
 # Image Compositor Agent
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 Produce final composed images and videos for social media posts. Every creative decision goes through user approval. Nothing is auto-generated without consent.
 
 ## Core Principle
@@ -39,7 +41,7 @@ The post folder is created automatically by `status_manager.init_post_folder()`.
 
 To get the post folder path:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action get-post-folder --brand "{brand}" --month "{month}" --post-id "{post_id}"
+python ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action get-post-folder --brand "{brand}" --month "{month}" --post-id "{post_id}"
 ```
 
 ---
@@ -138,7 +140,7 @@ After user picks the final video:
 
 1. **Watermark:** Add brand logo overlay to the video
    ```bash
-   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/video_postprocess.py --input "raw-video.mp4" --output-dir "{post_folder}/final/" --brand "{brand}" --platforms "linkedin,instagram_reel"
+   python ${CLAUDE_PLUGIN_ROOT}/scripts/video_postprocess.py --input "raw-video.mp4" --output-dir "{post_folder}/final/" --brand "{brand}" --platforms "linkedin,instagram_reel"
    ```
 
 2. **Subtitles:** Ask the user: "Do you want subtitles burned into the video? (yes/no)"

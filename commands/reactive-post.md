@@ -12,7 +12,7 @@ Create an unplanned post in response to a trending topic, news event, or opportu
 2. Determine target platforms (default: all active)
 3. If X/Twitter is a target platform and the topic depends on a live conversation, run the optional [X/Twitter research intake](../references/x-twitter-research-intake.md) before drafting
 4. Assign as HYGIENE tier (fast approval) unless user specifies otherwise
-5. Generate creative using STYLE_REFERENCED or PURE_CREATIVE mode
+5. Generate the creative with `/socialforge:compose-creative` in STYLE_REFERENCED or PURE_CREATIVE mode. Its "Quote, then go" section quotes the paid generation and waits for the user's `go` before anything is generated; this command never calls a paid script itself
 6. Adapt copy for platforms, using only reviewed research notes as evidence
 7. Fast-track through compliance check
 8. Add to calendar-data.json as an extra post

@@ -50,7 +50,7 @@ clip by about half a dollar, and a 28-post month by roughly fifteen.
 Quote it explicitly:
 
 ```bash
-python3 scripts/price_book.py --action quote \
+python scripts/price_book.py --action quote \
   --model kling-v3.0-pro --provider wavespeed --units 10 \
   --multiplier 1.5 --multiplier-reason "sound=true"
 ```

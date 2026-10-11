@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.3] - 2026-10-12
+
+### Every command that can spend now quotes first, and the scripts run as `python`
+
+Found by a fresh-install smoke test.
+
+**Fixed - spending without a quote**
+
+- `/socialforge:edit-image` ran `edit_image.py` at step 4, a paid call the image-compositor agent itself lists as paid,
+  with no quote; its only approval came after the edit. It now carries the standard "Quote, then go" section
+  (`price_book.py` quote, the total with its source and age, `Type "go" to generate. Anything else cancels.`) before the
+  call. The approval after the edit stays; it decides whether the edit replaces the variant, not whether it is paid.
+- `/socialforge:reactive-post` (step 5 generated the creative) and `/socialforge:revision` (step 4 re-ran the pipeline
+  steps) spent with no quote. Both now route a generated or regenerated image or video through
+  `/socialforge:compose-creative` by name, whose "Quote, then go" section quotes the paid generation and waits for
+  `go`; a revision is a new paid call even when the first one was approved.
+- `/socialforge:review`'s "regenerate" action had the same gap (found by the new guard); it now names
+  `/socialforge:compose-creative` too.
+- `/socialforge:generate-all` had a quote step in its own words (Step 0 "Price the run and get a go"). It now uses the
+  standard section and wording, and a filter is applied before the quote is built.
+
+**Fixed - portability**
+
+- Skills, commands and the image-compositor agent called `python3` 28 times, and `python3` often does not resolve on
+  Windows. They say `python`, as ContentForge and Digital Marketing Pro do. 40 more uses in SUBMISSION.md,
+  TESTING-GUIDE.md and `references/` are changed the same way (script shebangs stay).
+- The "Script location" line in every file that has it, and in the compositor agent (which uses the variable), now
+  ends: "Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux
+  systems)."
+
+**Docs**
+
+- The User Guide says that an AI edit, a re-composed asset, a reactive post's creative and a revised image or video are
+  quoted and wait for `go`.
+- TESTING-GUIDE's `python3` commands are `python`.
+
+**Added - tests**
+
+- `TestEverySpendingFilePassesThroughAQuote` (7 tests) finds every skill, command and agent file that names a paid
+  script, dispatches the image-compositor, or says to generate or regenerate a creative, and requires its own "Quote,
+  then go" section or a named hand-off to a file that has one and says it quotes. Four files that mention generation
+  without spending are exempt, each with a stated reason. Planted with the 1.29.2 text of `edit-image`,
+  `generate-all`, `reactive-post`, `revision` and `review`: all five fail.
+- `TestPaidGenerationIsQuotedThenWaitsForGo` also orders `generate-all` and `edit-image`: the quote section must come
+  before the first paid step.
+- `TestNoPython3AsTheCommand` (2 tests): no skill, command, agent, SUBMISSION, TESTING-GUIDE or reference file runs
+  `python3` as the command (the fallback sentence is allowed); the old commands are planted and flagged.
+- `TestScriptRootFallback` checks the extended sentence in skills, commands and agents, and plants the 1.29.2 one.
+
 ## [1.29.2] - 2026-10-10
 
 ### Every paid path is quoted, and previews say what they are

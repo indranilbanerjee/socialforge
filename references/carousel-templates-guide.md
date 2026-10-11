@@ -24,7 +24,7 @@ If the brand override exists it wins; otherwise the shipped template is used.
 
 ## Available Templates
 
-The eight keys below are the complete set — they are the `--template` choices in `render_carousel.py` and the keys of its `TEMPLATE_MAP`. Run `python3 scripts/render_carousel.py --list-templates` to print the mapping.
+The eight keys below are the complete set — they are the `--template` choices in `render_carousel.py` and the keys of its `TEMPLATE_MAP`. Run `python scripts/render_carousel.py --list-templates` to print the mapping.
 
 | Key | File | Design slide count | Best For |
 |-----|------|--------------------|----------|

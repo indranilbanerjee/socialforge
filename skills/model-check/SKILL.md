@@ -8,7 +8,7 @@ user-invocable: true
 
 # /socialforge:model-check — which model to call, decided today
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 SocialForge does not know which model to use. That is deliberate.
 
@@ -30,7 +30,7 @@ not from what a model was called last time you looked. If `model_book.py` says
 ## What the code asks for
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action kinds
+python "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action kinds
 ```
 
 Capabilities, not products — `video.image-to-video`, not a version number. A kind
@@ -41,7 +41,7 @@ outlives every model that has ever satisfied it, which is the entire point.
 1. See where to look, and what is odd about each provider:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action discovery
+python "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action discovery
 ```
 
 Two things it will tell you that save time: **Higgsfield puts the model in the
@@ -62,7 +62,7 @@ exists"; ask the user.
 4. Record it, with the URL you read:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action record \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action record \
   --kind video.image-to-video --provider wavespeed \
   --model-id "<exact id from the catalogue>" \
   --source https://wavespeed.ai/models \
@@ -78,7 +78,7 @@ same guess this system exists to replace.
 ## Checking before a production month
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action staleness
+python "${CLAUDE_PLUGIN_ROOT}/scripts/model_book.py" --action staleness
 ```
 
 Reports what has gone stale (older than 7 days) and, more usefully, which kinds

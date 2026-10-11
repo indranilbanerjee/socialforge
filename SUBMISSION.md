@@ -47,7 +47,7 @@ Image generation defaults to Google Vertex AI (Gemini image models) with WaveSpe
 /socialforge:setup    # one-time admin credential setup
 /socialforge:brand-setup acme-corp
 
-python3 scripts/generate_image.py \
+python scripts/generate_image.py \
     --prompt "minimalist product hero shot, soft natural lighting" \
     --output assets/acme/q3-hero.png \
     --aspect-ratio 1:1 \
@@ -61,7 +61,7 @@ The script generates the image via Vertex AI, then post-processes through `c2pa_
 ### Use case 2 — Multi-platform video pipeline with per-platform C2PA
 
 ```
-python3 scripts/generate_video.py \
+python scripts/generate_video.py \
     --brand acme-corp \
     --month 2026-06 \
     --post-id P07 \
@@ -72,7 +72,7 @@ python3 scripts/generate_video.py \
     --duration 10 \
     --aspect-ratio 9:16
 
-python3 scripts/video_postprocess.py \
+python scripts/video_postprocess.py \
     --input campaigns/q3-launch.mp4 \
     --output-dir campaigns/processed/ \
     --brand acme-corp \

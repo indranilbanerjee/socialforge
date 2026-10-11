@@ -5,33 +5,39 @@ argument-hint: "[--brand <name>] [--week <N>] [--tier HERO|HUB|HYGIENE] [--platf
 
 # Generate All
 
-> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`.
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 Produce images, carousels, copy, and previews for every post in the calendar.
 
 This is the most expensive command in SocialForge. It fans out across a whole
-month, and video is billed by the second. **Quote it before you run it.**
+month, and video is billed by the second.
 
-## Step 0 — Price the run and get a go (required)
+## Quote, then go (before any paid call)
 
-Build the item list from the calendar (one entry per paid generation, `units` =
-seconds for video, images for stills), then:
+Generation spends provider credits, so the first paid call waits for a quote and an explicit go. This command states no price: `price_book.py` is the only source, and it refuses rather than guesses.
+
+1. List what is about to be generated: one entry per paid generation, with the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images for stills, seconds for video, plus any option that changes the price, such as synchronised audio). Build the list after any filter is applied: a total for 28 posts is not the price of the 6 you run.
+2. Quote it:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items @/tmp/run-plan.json
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items @/tmp/run-plan.json
 ```
 
-- Exits non-zero if anything cannot be priced. **Do not proceed** — run
-  `/socialforge:price-check` to look the missing models up, then re-quote.
-- A clean quote still returns `approved_to_run: false`. Show the user the total
-  and wait for an explicit go. One approval covers one run; if the calendar
-  changes afterwards, re-quote and ask again.
+   If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.
+3. Show the user the total, each line, its **source URL**, and how old the price is (a price older than 24 hours is stale and is refused; it must be looked up again):
+
+```
+Estimated cost: <total_usd> USD for <n> generations. Prices from <source>, <age_hours> h old (valid for 24 h).
+Type "go" to generate. Anything else cancels.
+```
+
+4. Continue only on an explicit `go` for exactly this list. Anything else, including silence, cancels and nothing is generated. One approval covers one run; if the calendar, a filter, a model or an option changes afterwards, quote again and ask again. A quote is never approval (`approved_to_run` is always `false`); only the user's `go` is.
 
 ## Process
 1. Load calendar-data.json and asset-matches.json
 2. For each post (ordered by date):
    - Determine creative mode (ANCHOR_COMPOSE, ENHANCE_EXTEND, STYLE_REFERENCED, PURE_CREATIVE)
-   - Generate image(s) via image-compositor agent, handing it the approved quote from Step 0 (the agent refuses to run a paid call without one)
+   - Generate image(s) via image-compositor agent, handing it the approved quote from the Quote, then go section above (the agent refuses to run a paid call without one)
    - Render carousel if content_type = carousel
    - Adapt copy for each target platform
    - Run compliance check
@@ -45,8 +51,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --ite
 - `--tier HERO` — Only generate HERO tier posts
 - `--platform instagram` — Only generate for Instagram
 
-Filters change the item list, so they change the quote. Re-price after applying
-one — a total for 28 posts is not the price of the 6 you actually ran.
+Filters change the item list, so they change the quote: apply them first, then quote and ask for `go`.
 
 ## Signing
 
@@ -56,7 +61,7 @@ Every generated asset is signed with a C2PA manifest carrying the
 the manifest records who signed it off:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/c2pa_sign.py" ... \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/c2pa_sign.py" ... \
   --reviewed-by "<approver name>" --model-id "<exact generating model id>"
 ```
 

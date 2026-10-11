@@ -342,14 +342,15 @@ class TestBrandAndMonthCannotChooseAPath(unittest.TestCase):
 
 class TestScriptRootFallback(unittest.TestCase):
     SENTENCE = ("If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's "
-                "`scripts/` folder, next to `skills/`.")
+                "`scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or "
+                "`python3` where `python` is not found (macOS, many Linux systems).")
 
     @staticmethod
     def missing(text: str, sentence: str) -> bool:
         return "CLAUDE_PLUGIN_ROOT" in text.replace(sentence, "") and sentence not in text
 
-    def test_every_skill_and_command_that_uses_the_variable_says_where_the_scripts_are(self):
-        files = sorted(SKILLS.glob("*/SKILL.md")) + sorted(COMMANDS.glob("*.md"))
+    def test_every_skill_command_and_agent_that_uses_the_variable_says_where_the_scripts_are(self):
+        files = sorted(SKILLS.glob("*/SKILL.md")) + sorted(COMMANDS.glob("*.md")) + sorted((ROOT / "agents").glob("*.md"))
         bad = [str(p.relative_to(ROOT)) for p in files
                if self.missing(p.read_text(encoding="utf-8", errors="replace"), self.SENTENCE)]
         self.assertEqual(bad, [])
@@ -358,6 +359,41 @@ class TestScriptRootFallback(unittest.TestCase):
         self.assertTrue(self.missing("run `python ${CLAUDE_PLUGIN_ROOT}/scripts/x.py`", self.SENTENCE))
         self.assertFalse(self.missing("run `python ${CLAUDE_PLUGIN_ROOT}/scripts/x.py`\n" + self.SENTENCE, self.SENTENCE))
         self.assertFalse(self.missing("no variable here", self.SENTENCE))
+
+    def test_plant_the_one_line_sentence_of_1_29_2_is_flagged(self):
+        """Before 1.29.3 the line stopped at the folder and said nothing about which Python to run."""
+        old = "If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`."
+        self.assertTrue(self.missing("run `python ${CLAUDE_PLUGIN_ROOT}/scripts/x.py`\n" + old, self.SENTENCE))
+        self.assertIn("`python`", self.SENTENCE)
+
+
+class TestNoPython3AsTheCommand(unittest.TestCase):
+    """1.29.3: `python3` often does not resolve on Windows, where a smoke test of the installed plugin found 28 uses of it
+    in skills, commands and the compositor agent. They run Python as `python` (as ContentForge and Digital Marketing Pro
+    do); the script-location line above says to fall back to `python3` where `python` is not found."""
+    COMMAND = re.compile(r"(?<![\w/.-])python3(?=\s+[\w\"'$./-])")
+
+    @classmethod
+    def files(cls):
+        out = sorted(SKILLS.glob("*/SKILL.md")) + sorted(COMMANDS.glob("*.md")) + sorted((ROOT / "agents").glob("*.md"))
+        return out + [ROOT / "SUBMISSION.md", ROOT / "TESTING-GUIDE.md"] + sorted((ROOT / "references").rglob("*.md"))
+
+    def test_no_instruction_file_or_user_doc_runs_python3(self):
+        files = self.files()
+        self.assertGreater(len(files), 40, "the scan found too few files; the guard is vacuous")
+        bad = []
+        for p in files:
+            for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+                if self.COMMAND.search(line):
+                    bad.append("%s:%d" % (p.relative_to(ROOT).as_posix(), i))
+        self.assertEqual(bad, [])
+
+    def test_plant_the_old_commands_are_flagged_and_the_fallback_sentence_is_not(self):
+        self.assertTrue(self.COMMAND.search('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote'))
+        self.assertTrue(self.COMMAND.search("   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/video_postprocess.py --input x"))
+        self.assertTrue(self.COMMAND.search("python3 --version"))
+        self.assertFalse(self.COMMAND.search('python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote'))
+        self.assertFalse(self.COMMAND.search(TestScriptRootFallback.SENTENCE))
 
 
 # ── F1: keys never in the chat or on the command line ──────────────────
@@ -417,6 +453,10 @@ class TestPaidGenerationIsQuotedThenWaitsForGo(unittest.TestCase):
                                       "2. **Generate** \u2014 AI generates 2-3 variants"),
         "generate-post": ("commands/generate-post.md", r"Quote, then go",
                           "3. Generate the image"),
+        "generate-all": ("commands/generate-all.md", r"Quote, then go",
+                         "Generate image(s) via image-compositor agent"),
+        "edit-image": ("commands/edit-image.md", r"Quote, then go",
+                       "4. Only after the go above, call the editor"),
     }
 
     @staticmethod
@@ -429,6 +469,11 @@ class TestPaidGenerationIsQuotedThenWaitsForGo(unittest.TestCase):
         section = text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
         if text.find(paid_marker) < m.start():
             out.append("the quote section does not come before the first paid step")
+        return out + TestPaidGenerationIsQuotedThenWaitsForGo.section_problems(section)
+
+    @staticmethod
+    def section_problems(section: str) -> list[str]:
+        out = []
         if "price_book.py" not in section or not re.search(r"--action quote(-batch)?\b", section):
             out.append("does not run price_book.py quote")
         if not re.search(r"(?i)source", section) or not re.search(r"24 hours|age_hours|\bTTL\b", section):
@@ -494,6 +539,153 @@ class TestPaidGenerationIsQuotedThenWaitsForGo(unittest.TestCase):
         for p in dispatchers:
             with self.subTest(file=p.relative_to(ROOT).as_posix()):
                 self.assertIn("approved quote", p.read_text(encoding="utf-8").lower())
+
+
+class TestEverySpendingFilePassesThroughAQuote(unittest.TestCase):
+    """1.29.3: a smoke test of the installed plugin found three more commands that could spend with no quote (edit-image,
+    reactive-post, revision) and one whose quote section did not use the standard words (generate-all). The guard above
+    lists the paid paths by hand, which is how they were missed. This one DISCOVERS every skill, command and agent file
+    that can spend (it names a paid script, dispatches the image-compositor, or says to generate or regenerate a creative)
+    and requires, for each, its own "Quote, then go" section or a named hand-off to a file that has one and says it quotes."""
+
+    PAID_SCRIPT = re.compile(r"\b(?:generate_image|generate_video|edit_image)\.py")
+    COMPOSITOR = re.compile(r"image-compositor")
+    INTENT = re.compile(r"(?i)\bgenerate (?:the |a |new |an |all )?(?:creative|image|images|video|visuals?|keyframe\w*)"
+                        r"|\bregenerat\w*|re-?run (?:the )?(?:affected )?pipeline steps?")
+    # Files the detector flags that spend nothing, each with the reason. A file named here is not checked.
+    EXEMPT = {
+        "agents/image-compositor.md": "refuses a paid call without an approved quote (its own guard, below)",
+        "skills/c2pa-sign/SKILL.md": "names generate_image.py only to describe its signing post-step; runs no paid script",
+        "skills/brand-manager/SKILL.md": "says generation needs credentials; generates nothing",
+        "skills/setup/SKILL.md": "credential setup; 'regenerate' there means rotating an API key",
+    }
+
+    @classmethod
+    def files(cls) -> dict:
+        paths = sorted(SKILLS.glob("*/SKILL.md")) + sorted(COMMANDS.glob("*.md")) + sorted((ROOT / "agents").glob("*.md"))
+        return {p.relative_to(ROOT).as_posix(): p.read_text(encoding="utf-8") for p in paths}
+
+    @staticmethod
+    def body(text: str) -> str:
+        return re.sub(r"\A---\n.*?\n---\n", "", text, count=1, flags=re.S)
+
+    @classmethod
+    def spends(cls, text: str) -> bool:
+        b = cls.body(text)
+        return bool(cls.PAID_SCRIPT.search(b) or cls.COMPOSITOR.search(b) or cls.INTENT.search(b))
+
+    @staticmethod
+    def name_of(rel: str) -> str:
+        parts = rel.split("/")
+        return parts[1] if parts[-1] == "SKILL.md" else parts[-1][:-3]
+
+    @classmethod
+    def own_section(cls, text: str):
+        m = re.search(r"(?m)^#{2,4} Quote, then go\b.*$", text)
+        if not m:
+            return None
+        nxt = re.search(r"(?m)^#{1,4} (?!Quote, then go)", text[m.end():])
+        return text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
+
+    @classmethod
+    def problems(cls, files: dict, exempt: dict = None, ordered: set = None) -> list:
+        exempt = cls.EXEMPT if exempt is None else exempt
+        if ordered is None:
+            ordered = {v[0] for v in TestPaidGenerationIsQuotedThenWaitsForGo.PAID.values()}
+        spending = {rel: t for rel, t in files.items() if rel not in exempt and cls.spends(t)}
+        out, compliant, pending = [], set(), {}
+        for rel, t in spending.items():
+            section = cls.own_section(t)
+            if section is None:
+                pending[rel] = t
+                continue
+            bad = TestPaidGenerationIsQuotedThenWaitsForGo.section_problems(section)
+            if bad:
+                out.append("%s: %s" % (rel, "; ".join(bad)))
+            elif rel not in ordered:
+                out.append("%s: has a quote section but no ordering marker in TestPaidGenerationIsQuotedThenWaitsForGo.PAID" % rel)
+            else:
+                compliant.add(rel)
+        changed = True
+        while changed:   # a hand-off may point at another hand-off, so settle to a fixed point
+            changed = False
+            for rel, t in list(pending.items()):
+                b = cls.body(t)
+                if not re.search(r"(?i)\bquote", b):
+                    continue
+                for c in sorted(compliant):
+                    if c != rel and re.search(r"(?<![\w-])" + re.escape(cls.name_of(c)) + r"(?![\w-])", b):
+                        compliant.add(rel)
+                        del pending[rel]
+                        changed = True
+                        break
+        for rel in sorted(pending):
+            out.append("%s: can spend but has no 'Quote, then go' section and no named hand-off to a file that has one" % rel)
+        return out
+
+    def test_every_file_that_can_spend_is_quoted_or_hands_off_to_a_file_that_quotes(self):
+        files = self.files()
+        self.assertGreaterEqual(sum(1 for t in files.values() if self.spends(t)), 10, "the discovery found too little; the guard is vacuous")
+        self.assertEqual(self.problems(files), [])
+
+    def test_every_exemption_is_a_real_file_with_a_reason(self):
+        files = self.files()
+        for rel, why in self.EXEMPT.items():
+            with self.subTest(file=rel):
+                self.assertIn(rel, files)
+                self.assertGreater(len(why), 20)
+
+    CARRIER = ("---\nname: compose-creative\ndescription: x\n---\n# c\n\n## Quote, then go (before any paid call)\n\n"
+               "Run `price_book.py --action quote-batch ...`. Show the total, the source URL and the age (valid for 24 hours). "
+               "Type \"go\" to generate. Anything else cancels. Continue only on an explicit `go`.\n\n"
+               "## Process\n\nRun generate_image.py and dispatch the image-compositor.\n")
+
+    def planted(self, rel: str, text: str) -> list:
+        files = {"skills/compose-creative/SKILL.md": self.CARRIER, rel: text}
+        return self.problems(files, exempt={}, ordered={"skills/compose-creative/SKILL.md"})
+
+    def test_plant_the_1_29_2_edit_image_is_flagged(self):
+        """The command ran edit_image.py (a paid call) at step 4 with no quote; the only approval came after the edit."""
+        old = ("---\ndescription: Edit a generated image\n---\n# Edit Image\n\nSend an AI edit instruction.\n\n## Process\n"
+               "1. Load the current image\n3. Accept edit instruction\n4. Call the editor with the instruction plus any style references:\n"
+               "   ```bash\n   python \"${CLAUDE_PLUGIN_ROOT}/scripts/edit_image.py\" --image <current> --instruction \"<text>\" --output <new>\n   ```\n"
+               "5. Show edited result for approval\n")
+        found = self.planted("commands/edit-image.md", old)
+        self.assertEqual(len(found), 1)
+        self.assertIn("commands/edit-image.md", found[0])
+
+    def test_plant_the_1_29_2_generate_all_is_flagged(self):
+        """It had a Step 0 quote, but not the standard section: no 'Quote, then go' heading, no `Type "go"`, no 'anything else cancels'."""
+        old = ("---\ndescription: Generate creative\n---\n# Generate All\n\n## Step 0 \u2014 Price the run and get a go (required)\n\n"
+               "```bash\npython \"${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py\" --action quote-batch --items @/tmp/run-plan.json\n```\n\n"
+               "- A clean quote still returns `approved_to_run: false`. Show the user the total and wait for an explicit go.\n\n"
+               "## Process\n2. For each post:\n   - Generate image(s) via image-compositor agent\n")
+        found = self.planted("commands/generate-all.md", old)
+        self.assertEqual(len(found), 1)
+        self.assertIn("commands/generate-all.md", found[0])
+
+    def test_plant_the_two_commands_that_regenerated_with_no_quote_are_flagged(self):
+        reactive = "---\ndescription: React\n---\n# Reactive Post\n\n## Process\n5. Generate creative using STYLE_REFERENCED or PURE_CREATIVE mode\n"
+        revision = "---\ndescription: Revise\n---\n# Revision\n\n## Process\n4. Re-run affected pipeline steps\n"
+        for rel, text in (("commands/reactive-post.md", reactive), ("commands/revision.md", revision)):
+            with self.subTest(file=rel):
+                self.assertEqual(len(self.planted(rel, text)), 1)
+
+    def test_plant_a_hand_off_must_name_the_file_and_say_it_quotes(self):
+        named = "# R\n\n## Process\n5. Generate the creative with `/socialforge:compose-creative`, which quotes first.\n"
+        self.assertEqual(self.planted("commands/reactive-post.md", named), [])
+        no_quote_word = "# R\n\n## Process\n5. Generate the creative with `/socialforge:compose-creative`.\n"
+        self.assertEqual(len(self.planted("commands/reactive-post.md", no_quote_word)), 1)
+        unnamed = "# R\n\n## Process\n5. Generate the creative. The user is told the price first.\n"
+        self.assertEqual(len(self.planted("commands/reactive-post.md", unnamed)), 1)
+
+    def test_plant_a_quote_section_missing_a_required_part_is_flagged(self):
+        broken = self.CARRIER.replace('Type "go" to generate.', "Generating now.")
+        found = self.problems({"skills/compose-creative/SKILL.md": broken}, exempt={}, ordered={"skills/compose-creative/SKILL.md"})
+        self.assertEqual(len(found), 1)
+        self.assertIn('"go"', found[0])
+        self.assertEqual(self.problems({"skills/compose-creative/SKILL.md": self.CARRIER}, exempt={}, ordered=set())[0].split(":")[0],
+                         "skills/compose-creative/SKILL.md")
 
 
 class TestImageCompositorRefusesWithoutAnApprovedQuote(unittest.TestCase):

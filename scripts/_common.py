@@ -16,12 +16,17 @@ from pathlib import Path
 
 
 def script_command(script: str, *args: str) -> str:
-    """The exact command that runs one of this plugin's scripts: the interpreter that is running now and the script's
-    absolute path, quoted when either contains a space. A printed `python scripts/x.py` is relative to the host's working
-    folder (the user's project), which is the wrong place, so every command a script tells someone to run comes from here."""
-    def quote(part: str) -> str:
-        return '"%s"' % part if " " in part else part
-    return " ".join([quote(sys.executable), quote(str(Path(__file__).resolve().parent / script)), *args])
+    """The exact command that runs one of this plugin's scripts, ready to paste into Git Bash or PowerShell: the interpreter that
+    is running now and the script's absolute path, with FORWARD slashes (bash drops a backslash, so `C:\\Python313\\python.exe`
+    arrives as `C:Python313python.exe`) and the script path always double-quoted. The interpreter is quoted only when its path
+    has a space, because a quoted first token is a string literal in PowerShell; then the command ends with a note to put `&`
+    before it. A printed `python scripts/x.py` is relative to the host's working folder (the user's project), which is the
+    wrong place, so every command a script tells someone to run comes from here."""
+    exe = sys.executable.replace("\\", "/")
+    path = str(Path(__file__).resolve().parent / script).replace("\\", "/")
+    spaced = " " in exe
+    command = " ".join(['"%s"' % exe if spaced else exe, '"%s"' % path, *args])
+    return command + " (in PowerShell, put & before it)" if spaced else command
 
 
 def is_single_component(name) -> bool:

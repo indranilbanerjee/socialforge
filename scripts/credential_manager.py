@@ -346,6 +346,8 @@ def main():
         parser.print_help()
         return
     print(json.dumps(result, indent=2))
+    if isinstance(result, dict) and result.get("error"):   # a setup that failed must not look like one that worked
+        sys.exit(1)
 
 
 if __name__ == "__main__":

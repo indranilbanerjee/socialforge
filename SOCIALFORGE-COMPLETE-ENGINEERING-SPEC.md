@@ -1,5 +1,7 @@
 # SOCIALFORGE — COMPLETE ENGINEERING SPECIFICATION
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 > ## ⚠ HISTORICAL DOCUMENT — NOT THE SHIPPED ARCHITECTURE
 >
 > This is the **original v1.0.0 engineering design record**, retained for provenance. It describes what SocialForge was designed to be in March 2026, not what it is today.
@@ -2113,7 +2115,7 @@ Compliance report per post with:
         "hooks": [
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action load-session",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py" --action load-session",
             "timeout": 10
           }
         ]
@@ -2126,7 +2128,7 @@ Compliance report per post with:
         "hooks": [
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/validate_brand_config.py --check-active",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/validate_brand_config.py" --check-active",
             "timeout": 5
           }
         ]
@@ -2136,7 +2138,7 @@ Compliance report per post with:
         "hooks": [
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/guard_output_path.py",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/guard_output_path.py"",
             "timeout": 5
           }
         ]
@@ -2149,12 +2151,12 @@ Compliance report per post with:
         "hooks": [
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/cost_tracker.py --log-if-api-call",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/cost_tracker.py" --log-if-api-call",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/compliance_check.py --check-last-output-if-copy",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/compliance_check.py" --check-last-output-if-copy",
             "timeout": 10
           }
         ]
@@ -2166,7 +2168,7 @@ Compliance report per post with:
         "hooks": [
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action update-from-subagent",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py" --action update-from-subagent",
             "timeout": 5
           }
         ]
@@ -2178,7 +2180,7 @@ Compliance report per post with:
         "hooks": [
           {
             "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/notify_team.py",
+            "command": "python "${CLAUDE_PLUGIN_ROOT}/scripts/notify_team.py"",
             "timeout": 10
           }
         ]
@@ -2928,7 +2930,7 @@ OUTPUT: .docx file
 
 ### Text Limits
 
-> Design-time table. The limits `adapt_copy.py` enforces now live in `scripts/platform_limits.json`, each with a source URL, a check date and a status (`python scripts/adapt_copy.py --sources`). Where this table differs from that file (Instagram's hashtag cap is now 5, Pinterest's description limit is 800, TikTok's 4,000 is unconfirmed and the script keeps 2,200), the data file is current. X is counted by weight (every URL 23, emoji and CJK 2).
+> Design-time table. The limits `adapt_copy.py` enforces now live in `scripts/platform_limits.json`, each with a source URL, a check date and a status (`python "${CLAUDE_PLUGIN_ROOT}/scripts/adapt_copy.py" --sources`). Where this table differs from that file (Instagram's hashtag cap is now 5, Pinterest's description limit is 800, TikTok's 4,000 is unconfirmed and the script keeps 2,200), the data file is current. X is counted by weight (every URL 23, emoji and CJK 2).
 
 | Platform | Max Characters | Truncation Point | Hashtag Best Practice | Link Behavior |
 |---|---|---|---|---|

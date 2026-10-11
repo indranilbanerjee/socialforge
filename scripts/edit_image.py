@@ -133,6 +133,8 @@ def main():
     model_id = _negotiate_model(args.model)
     result = edit_with_gemini(args.image, args.instruction, args.output, args.references, model=model_id)
     print(json.dumps(result, indent=2))
+    # Exit codes are a contract: an `&&` chain, a CI step or a batch loop must not read a failed edit as a finished one.
+    sys.exit(1 if result.get("error") or result.get("status") == "FAILED" else 0)
 
 
 if __name__ == "__main__":

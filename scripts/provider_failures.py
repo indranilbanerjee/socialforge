@@ -50,7 +50,7 @@ def download_https(url, dest):
 NEXT_STEPS = {
     "no-credentials": "Run /socialforge:setup to add credentials for this provider, or skip it.",
     "dependency-missing": "Install the named package (see detail) and retry.",
-    "unresolved-model": "Run `" + _common.script_command("refresh_models.py") + "` to update the model registry, then retry.",
+    "unresolved-model": "Update the model registry with: " + _common.script_command("refresh_models.py") + " , then retry.",
     "request-error": "Transient or configuration error — check the detail; retry may succeed.",
     "bad-response": "The provider answered without a usable asset — retry, or try another provider.",
     "content-rejected": "The provider refused this prompt — rephrase it; no retry will succeed unchanged.",

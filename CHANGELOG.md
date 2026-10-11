@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.6] - 2026-10-12
+
+### A printed command works pasted into Git Bash and PowerShell, and a failed script no longer exits 0
+
+Found by a fresh-install smoke test (its re-check).
+
+**Fixed**
+
+- `_common.script_command()`, which builds the command twelve scripts print, used backslashes and left the script path
+  unquoted. Pasted into Git Bash (Claude Code's Bash tool on Windows) bash dropped the backslashes
+  (`C:Python313python.exe: command not found`, exit 127). It now prints forward slashes, the script path always
+  double-quoted, and the interpreter unquoted unless its path has a space (then quoted, and the command ends with
+  "(in PowerShell, put & before it)", because a quoted first token is a string literal in PowerShell). Two hints that
+  wrapped the command in backticks were reworded so the note cannot land inside them.
+- Four scripts printed an error result and exited 0, which an `&&` chain, a CI step or a batch loop reads as success:
+  `render_carousel.py` (a missing Playwright: the Tester's finding), `edit_image.py` (any failed edit),
+  `adapt_copy.py` (an unknown platform) and the `credential_manager.py` setup actions (a missing key file). They exit 1.
+  Found by running every offline script with input that must fail; every other script probed already refused with a non-zero code.
+- `SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md` ran seven scripts through an unquoted `${CLAUDE_PLUGIN_ROOT}` and one by a
+  relative path; they are quoted, and the file carries the "Script location" line.
+
+**Added - tests**
+
+- `script_command` shape in both cases, and the produced command run through real Git Bash and PowerShell from another
+  folder (skipped where the shell is not installed).
+- The invocation guard discovers every markdown file outside contributor docs (`docs/`, `README*`, `CONTRIBUTING`,
+  `TESTING-GUIDE`, `SUBMISSION`, `UPGRADE-GUIDE`, `CHANGELOG`, `.github/`, `tests/`), so a new folder is covered by
+  default; `docs/` must quote the plugin-root script path.
+- `TestErrorResultsExitNonZero` (5 tests): the four scripts exit 1 on an error and 0 on success. Planted against the
+  1.29.5 scripts: edit_image, adapt_copy and credential_manager exit 0 on the same input. Tests 544 -> 553.
+
 ## [1.29.5] - 2026-10-12
 
 ### Printed commands are absolute, and a byte-order mark no longer breaks an agent- or user-written input

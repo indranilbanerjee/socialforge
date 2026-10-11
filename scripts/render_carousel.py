@@ -181,6 +181,8 @@ def main():
 
     result = render_slides(args.template, slides_data, args.brand, args.output_dir, args.width, args.height)
     print(json.dumps(result, indent=2))
+    # Exit codes are a contract (a missing Playwright printed its error and exited 0): 0 rendered, 1 refused.
+    sys.exit(1 if result.get("error") else 0)
 
 
 if __name__ == "__main__":

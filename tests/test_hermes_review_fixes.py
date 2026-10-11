@@ -410,11 +410,27 @@ class TestScriptInvocationsAreRobust(unittest.TestCase):
         "references/c2pa-production-cert.md": "a guide for the person setting up a production certificate: its commands are run from the plugin folder in a terminal",
     }
 
+    # Discovery is inverted: every markdown file is covered unless it is contributor documentation that runs from a repository
+    # clone (where a relative `python scripts/x.py` is right). A folder added tomorrow (the way utils/ was missed) is covered by default.
+    EXCLUDED_DIRS = {"docs", "tests", "research", "evals", "node_modules", "hermes", "heroes", "__pycache__"}
+    EXCLUDED_FILES = {"CHANGELOG.md", "CONTRIBUTING.md", "TESTING-GUIDE.md", "TESTING.md", "SUBMISSION.md", "UPGRADE-GUIDE.md"}
+
     @classmethod
     def files(cls) -> dict:
-        paths = (sorted(ROOT.glob("skills/**/*.md")) + sorted(ROOT.glob("commands/*.md"))
-                 + sorted(ROOT.glob("agents/*.md")) + sorted(ROOT.glob("references/**/*.md")))
-        return {p.relative_to(ROOT).as_posix(): p.read_text(encoding="utf-8", errors="replace") for p in paths}
+        out = {}
+        for dirpath, dirs, names in os.walk(ROOT):
+            dirs[:] = [d for d in dirs if d not in cls.EXCLUDED_DIRS and not d.startswith(".")]
+            for name in sorted(names):
+                if name.endswith(".md") and name not in cls.EXCLUDED_FILES and not name.startswith("README"):
+                    p = Path(dirpath) / name
+                    out[p.relative_to(ROOT).as_posix()] = p.read_text(encoding="utf-8", errors="replace")
+        return out
+
+    @classmethod
+    def docs_files(cls) -> dict:
+        """docs/ is excluded above (maintainer scripts run from a clone), but a command a person or a model copies from it must still
+        survive a plugin folder with a space in its name."""
+        return {p.relative_to(ROOT).as_posix(): p.read_text(encoding="utf-8", errors="replace") for p in sorted((ROOT / "docs").glob("**/*.md"))}
 
     @classmethod
     def problems(cls, files: dict, exempt: dict = None) -> list:
@@ -446,6 +462,13 @@ class TestScriptInvocationsAreRobust(unittest.TestCase):
                 self.assertIn(rel, files)
                 self.assertGreater(len(why), 20)
 
+    def test_docs_quote_the_plugin_root_script_path(self):
+        bad = ["%s:%d" % (rel, n) for rel, text in self.docs_files().items() for n, line in enumerate(text.splitlines(), 1)
+               if self.UNQUOTED.search(line)]
+        self.assertEqual(bad, [])
+        self.assertTrue(self.UNQUOTED.search("python ${CLAUDE_PLUGIN_ROOT}/scripts/x.py --a"))   # the plant
+        self.assertFalse(self.UNQUOTED.search('python "${CLAUDE_PLUGIN_ROOT}/scripts/x.py" --a'))
+
     def test_plant_each_of_the_three_defects_is_flagged(self):
         line = "> **Script location.** " + TestScriptRootFallback.SENTENCE
         good = "# T\n\n" + line + "\n\n```bash\npython \"${CLAUDE_PLUGIN_ROOT}/scripts/x.py\" --a 1\n```\n"
@@ -467,6 +490,11 @@ class TestScriptInvocationsAreRobust(unittest.TestCase):
         rel = "skills/render-carousels/prerequisites-and-output.md"
         self.assertIn(rel, self.files())
         old = "# Prerequisites\n\n- `render_carousel.py` returns the same pointer: `python scripts/install_deps.py --groups carousel`.\n"
+        files = self.files()   # inverted discovery: the repository root and any new folder are scanned
+        self.assertIn("AGENTS.md", files)
+        self.assertIn("SOCIALFORGE-COMPLETE-ENGINEERING-SPEC.md", files)
+        self.assertNotIn("CHANGELOG.md", files)
+        self.assertFalse(any(rel.startswith("docs/") for rel in files))
         found = self.problems({rel: old}, exempt={})
         self.assertTrue(any("relative path" in f for f in found) and any("no script-location line" in f for f in found), found)
 
@@ -509,13 +537,56 @@ class TestScriptsPrintAbsoluteCommands(unittest.TestCase):
     def test_script_command_is_the_running_interpreter_and_the_absolute_script(self):
         sys.path.insert(0, str(SCRIPTS))
         import _common
-        cmd = _common.script_command("install_deps.py", "--groups", "carousel")
-        target = SCRIPTS / "install_deps.py"
-        self.assertTrue(target.exists())
-        self.assertIn(str(target), cmd)
-        self.assertIn(sys.executable, cmd)
-        self.assertTrue(cmd.endswith("--groups carousel"))
+        cmd = _common.script_command("price_book.py", "--action", "providers")
+        self.assertTrue((SCRIPTS / "price_book.py").exists())
+        self.assertIn('"%s"' % (SCRIPTS / "price_book.py").as_posix(), cmd)   # forward slashes, double-quoted
+        self.assertNotIn("\\", cmd)                                         # bash drops a backslash
         self.assertNotIn("python scripts/", cmd)
+
+    def test_the_command_shape_without_and_with_a_space_in_the_interpreter_path(self):
+        """Pasted into Git Bash a backslash path arrived as `C:Python313python.exe` (exit 127), and a quoted first token is a string
+        literal in PowerShell: forward slashes, the script always double-quoted, the interpreter quoted only when it has a space."""
+        sys.path.insert(0, str(SCRIPTS))
+        import _common
+        from unittest import mock
+        with mock.patch.object(sys, "executable", "C:\\Python313\\python.exe"):
+            plain = _common.script_command("x.py", "--a", "1")
+        self.assertTrue(plain.startswith('C:/Python313/python.exe "'), plain)
+        self.assertTrue(plain.endswith('/scripts/x.py" --a 1'), plain)
+        self.assertNotIn("PowerShell", plain)
+        with mock.patch.object(sys, "executable", "C:\\Program Files\\Python313\\python.exe"):
+            spaced = _common.script_command("x.py", "--a", "1")
+        self.assertTrue(spaced.startswith('"C:/Program Files/Python313/python.exe" "'), spaced)
+        self.assertTrue(spaced.endswith("--a 1 (in PowerShell, put & before it)"), spaced)
+        self.assertNotIn("\\", plain + spaced)
+
+    def _runnable(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import _common
+        return _common.script_command("price_book.py", "--action", "providers").split(" (in PowerShell")[0]
+
+    def test_the_command_runs_pasted_into_git_bash_from_another_folder(self):
+        import shutil
+        bash = shutil.which("bash")
+        if not bash:
+            self.skipTest("no bash on PATH")
+        kernel = subprocess.run([bash, "-c", "uname -s"], capture_output=True, text=True).stdout
+        if sys.platform == "win32" and not any(k in kernel for k in ("MINGW", "MSYS", "CYGWIN")):
+            self.skipTest("this bash is not Git Bash (WSL cannot run a Windows interpreter path)")
+        with tempfile.TemporaryDirectory() as d:
+            r = subprocess.run([bash, "-c", self._runnable()], capture_output=True, text=True, cwd=d, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("wavespeed", r.stdout)
+
+    def test_the_command_runs_pasted_into_powershell_from_another_folder(self):
+        import shutil
+        ps = shutil.which("powershell") or shutil.which("pwsh")
+        if not ps:
+            self.skipTest("no PowerShell on PATH")
+        with tempfile.TemporaryDirectory() as d:
+            r = subprocess.run([ps, "-NoProfile", "-NonInteractive", "-Command", self._runnable()], capture_output=True, text=True, cwd=d, timeout=180)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("wavespeed", r.stdout)
 
 
 class TestAgentWrittenInputsAcceptABom(unittest.TestCase):
@@ -546,6 +617,55 @@ class TestAgentWrittenInputsAcceptABom(unittest.TestCase):
             bom.write_bytes(b"\xef\xbb\xbf" + body.encode("utf-8"))
             self.assertIsNotNone(delivery_audit._json(plain))
             self.assertEqual(delivery_audit._json(bom), delivery_audit._json(plain))
+
+
+class TestErrorResultsExitNonZero(unittest.TestCase):
+    """1.29.6: edit_image.py, adapt_copy.py, the credential_manager.py setup actions and render_carousel.py printed {"error": ...} and exited 0,
+    so an `&&` chain, a CI step or a batch loop read the failure as success. Offline: every credential-like variable is stripped, so no
+    provider is called."""
+
+    def _run(self, script, *args):
+        with tempfile.TemporaryDirectory() as home:
+            env = {k: v for k, v in os.environ.items() if not any(w in k.upper() for w in ("KEY", "SECRET", "TOKEN", "CRED", "PASSWORD"))}
+            env.update(HOME=home, USERPROFILE=home, APPDATA=home, CLAUDE_PLUGIN_DATA=home)
+            return subprocess.run([sys.executable, str(SCRIPTS / script), *args], capture_output=True, text=True, env=env, cwd=home, timeout=120)
+
+    def test_a_failed_image_edit_exits_1(self):
+        r = self._run("edit_image.py", "--image", str(ROOT / "no-such.png"), "--instruction", "x", "--output", str(ROOT / "o.png"))
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("error", json.loads(r.stdout))
+
+    def test_an_unknown_platform_exits_1(self):
+        r = self._run("adapt_copy.py", "--text", "hello", "--platform", "no-such-platform")
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("error", json.loads(r.stdout))
+
+    def test_a_missing_service_account_file_exits_1(self):
+        r = self._run("credential_manager.py", "setup-vertex", "--json-path", str(ROOT / "no-such-key.json"))
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("error", json.loads(r.stdout))
+
+    def test_the_success_paths_still_exit_0(self):
+        a = self._run("adapt_copy.py", "--text", "hello", "--platform", "linkedin")
+        self.assertEqual(a.returncode, 0, a.stdout + a.stderr)
+        self.assertNotIn("error", json.loads(a.stdout))
+        b = self._run("credential_manager.py", "status")
+        self.assertEqual(b.returncode, 0, b.stdout + b.stderr)
+
+    def test_render_carousel_exits_1_when_the_render_reports_an_error_and_0_when_it_does_not(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import render_carousel
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            slides = Path(d) / "slides.json"
+            slides.write_text('[{"title": "t"}]', encoding="utf-8")
+            argv = ["render_carousel.py", "--template", "generic", "--slides", str(slides), "--brand", "b", "--output-dir", d]
+            for result, code in (({"error": "Playwright is not installed. Run: python x.py"}, 1), ({"status": "success", "slides": []}, 0)):
+                with self.subTest(result=result), mock.patch.object(sys, "argv", argv), \
+                        mock.patch.object(render_carousel, "render_slides", return_value=result), \
+                        mock.patch("builtins.print"), self.assertRaises(SystemExit) as cm:
+                    render_carousel.main()
+                self.assertEqual(cm.exception.code, code)
 
 
 class TestNoTmpPathsInInstructions(unittest.TestCase):

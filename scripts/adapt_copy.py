@@ -420,6 +420,8 @@ def main():
         )
 
     print(json.dumps(result, indent=2))
+    if "error" in result:   # an unknown platform or unusable text is a refusal, not a success
+        sys.exit(1)
 
 
 if __name__ == "__main__":

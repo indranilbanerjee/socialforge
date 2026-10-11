@@ -6,16 +6,16 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.29.5-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.29.6-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-544%2F544%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1295)
+[![Tests](https://img.shields.io/badge/tests-553%2F553%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1296)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.5 (October 12, 2026): printed commands are absolute, and a byte-order mark no longer breaks an input an agent or a user writes.** [Current release](#current-release-v1295) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v1.29.6 (October 12, 2026): a printed command works pasted into Git Bash and PowerShell, and a failed script no longer exits 0.** [Current release](#current-release-v1296) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code:
@@ -83,7 +83,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
    /plugin install socialforge@neels-plugins
    ```
 
-   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1295).
+   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1296).
 2. **Connect image and video generation (one time).** Run `/socialforge:setup`. Your admin gives you a Google Cloud service-account JSON key file (Vertex AI, images) and a WaveSpeed API key (video). Setup lists any missing Python packages with the exact pinned install command and installs only after you say `yes`; you point it at the key file and set `WAVESPEED_API_KEY` in your environment, and never paste a key into the chat. It stores the credentials in `${CLAUDE_PLUGIN_DATA}`, so they last across sessions. Without this step image and video generation will not work; everything else (calendar parsing, copy adaptation, review galleries) runs normally. Check it with `/socialforge:status`. No accounts yet? See [Admin Setup](#admin-setup-one-time).
 3. `/socialforge:brand-setup [brand-name]` configures the brand (5-10 min).
 4. `/socialforge:index-assets [brand-name]` indexes the brand photo library.
@@ -120,7 +120,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
 
-## Supported surfaces (v1.29.5)
+## Supported surfaces (v1.29.6)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -145,7 +145,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **30 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1295) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1296) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Updating to Latest Version
@@ -258,7 +258,9 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.29.5)
+## Current Release (v1.29.6)
+
+**v1.29.6:** a printed command works pasted into Git Bash and PowerShell, and a failed script no longer exits 0. Found by a fresh-install smoke test. The command twelve scripts print now uses forward slashes, a double-quoted script path and an interpreter quoted only when its path has a space (Git Bash dropped the backslashes: exit 127); `render_carousel`, `edit_image`, `adapt_copy` and the `credential_manager` setup actions exit 1 on an error instead of 0; the invocation guard covers every markdown file outside contributor docs.
 
 **v1.29.5:** printed commands are absolute, and a byte-order mark no longer breaks an input an agent or a user writes. Found by a fresh-install smoke test. A quote plan written by PowerShell 5.1 (it starts with a byte-order mark) stopped `generate-all`; `price_book.py` and every script that reads a calendar, brand config, slides or key file an agent or a user wrote now read it as `utf-8-sig` (plain UTF-8 reads the same). Twelve scripts that printed "Run: python scripts/..." now print the running interpreter and the script's absolute path, and the invocation guard scans every markdown file under `skills/`, which caught a supporting file in the carousel skill.
 
@@ -267,8 +269,6 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 **v1.29.3:** every command that can spend now quotes first, and the scripts run as `python`. `edit-image` quotes before the paid edit (the approval after the edit stays), `reactive-post`, `revision` and `review`'s regenerate action go through `compose-creative` and its quote, and `generate-all` uses the standard "Quote, then go" wording; a guard finds every file that can spend and requires a quote or a named hand-off. The 28 `python3` calls in skills, commands and the compositor agent say `python`, and the script-location line names the interpreter. Found by a fresh-install smoke test.
 
 **v1.29.2:** every paid path is quoted, and previews say what they are. `generate-post` and the pipeline's interactive mode now quote and wait for `go`; the image-compositor agent refuses a paid call without an approved quote; previews are one card per platform (no realistic mockups are claimed) with the badge in the header, not over the image; the README's pipeline row and `--force` note are exact; the Cursor and Copilot manifests drop a `mcpServers` path to a file that never ships.
-
-**v1.29.1:** previews show the image (every preview had shown a broken-image icon while reporting success), line breaks are kept, a non-image file is refused, and the copy adapter counts inline hashtags against the limit and returns `post_text`.
 
 Older releases are in [CHANGELOG.md](CHANGELOG.md).
 

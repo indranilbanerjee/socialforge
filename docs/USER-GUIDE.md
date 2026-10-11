@@ -491,7 +491,7 @@ For posts where you trust the defaults, type "auto" to skip interactive stages.
 
 Production complete: 28/28 posts generated
   Average quality: 8.1/10
-  API cost: $2.87
+  Generation cost: <total from /socialforge:cost-report>
   Time: 42 minutes
 ```
 
@@ -666,7 +666,7 @@ SocialForge Status — GreenLeaf Organics / April 2026
 Posts: 28 total | 28 generated | 22 approved | 4 pending client | 2 in revision
 Quality: Avg 8.1/10 | Lowest: P14 (7.0)
 Compliance: 27 passed | 1 flagged (P09: needs "non-GMO" disclaimer)
-Cost: $2.87 total
+Generation cost: <total from /socialforge:cost-report>
 
 By Tier:
   HERO: 4 generated, 2 approved-internal, 2 pending-client
@@ -913,9 +913,11 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 ### Effort Levels
 
 - **low** — Looks something up (a price, a model); nothing is generated
-- **medium** — Completes in seconds, minimal API cost
-- **high** — May take 1-5 minutes, moderate API cost
-- **max** — Extended operation (10-45 minutes for full pipeline), highest API cost
+- **medium** — Completes in seconds, light model usage
+- **high** — May take 1-5 minutes, moderate model usage
+- **max** — Extended operation (10-45 minutes for full pipeline), the heaviest model usage
+
+Effort levels describe the model's own usage (your plan's allowance, or tokens on an API key). Paid image and video generation is separate: the provider bills it, and it is quoted before it runs.
 
 ---
 
@@ -1007,7 +1009,7 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ## 18. FAQ
 
 **Q: How much does it cost per month?**
-A: It depends on the models you use and how many images and clips the month needs. Carousels and previews are free (local rendering via Playwright). Image and video generation are billed by the provider at prices that change, so SocialForge quotes the planned run from live pricing before it spends anything and waits for your `go` (`/socialforge:price-check` shows the quote on its own). Run `/socialforge:cost-report` for what a month actually cost.
+A: It depends on the models you use and how many images and clips the month needs. Carousels and previews are free (local rendering via Playwright). Image and video generation are billed by the provider at prices that change, so SocialForge quotes the planned run from live pricing before it spends anything and waits for your `go` (`/socialforge:price-check` shows the quote on its own). Run `/socialforge:cost-report` for what a month actually cost. That covers the third-party generation only: SocialForge's own model usage counts against your Claude, ChatGPT or Cursor plan's usage limits on a subscription, and is billed per token only on a pay-as-you-go API key.
 
 **Q: Can I use my own images instead of AI generation?**
 A: Yes. Upload your pre-made image and it bypasses all generation — just gets resized, overlaid with logo, and adapted per platform. Set the post's creative mode to ANCHOR_COMPOSE and provide the image directly.

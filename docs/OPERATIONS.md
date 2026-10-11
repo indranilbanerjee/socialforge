@@ -231,7 +231,7 @@ Each asset entry contains approximately 30 fields. The most critical for downstr
 
 ### Rate Limiting
 
-Gemini Vision free tier allows approximately 500 requests/day. For large libraries (200+ images), `index_assets.py` enforces a 2-second delay between API calls. The `--new-only` flag ensures re-indexing only processes new files, avoiding unnecessary API costs.
+The provider limits how many requests a key may make per day, and those limits change. For large libraries (200+ images), `index_assets.py` enforces a 2-second delay between API calls. The `--new-only` flag ensures re-indexing only processes new files, avoiding unnecessary API costs.
 
 ---
 

@@ -18,7 +18,7 @@ Start monthly content calendar production. Initializes the output directory, loa
    - **Structured text** — Paste or describe the calendar content
 5. Parse calendar → `/socialforge:parse-calendar`
 6. Match assets → `/socialforge:match-assets`
-7. Show production plan and estimated API costs
+7. Show the production plan (paid generation is quoted separately, with a live price, before anything is generated)
 8. Begin creative production on approval
 
 ## After Initialization

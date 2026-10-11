@@ -69,6 +69,12 @@ Install, run the one-time setup, then ask in plain words. Each of these kinds of
 - **Connect a service you did not set up.** No MCP server ships enabled and no hooks run.
 - **Remove or hide AI watermarks.** AI involvement is disclosed, with C2PA provenance.
 
+### What it costs
+
+- **The plugin is free** (MIT-licensed).
+- **Model usage (tokens).** On a subscription (Claude Pro, Max, Team or Enterprise in Claude Code or Cowork; a ChatGPT plan in Codex; a Cursor or Copilot plan; the same goes for other hosts' plans) the tokens count against your plan's usage limits instead of being billed per token; check your plan for any optional extra-usage billing. Only pay-as-you-go API-key users pay per token. Context (the skill listing, a skill's instructions, the images it reads) uses context window and usage allowance for everyone, and money only for API users.
+- **Image and video generation is billed by the provider you connect with your own key** (Vertex AI, WaveSpeed, HiggsField), whatever Claude, ChatGPT or Cursor plan you are on. That is what the price quote before "go" is for: it shows each paid item's live price, its source and its age before anything is generated.
+
 ## Core Principle
 
 **Brand assets are sacred. AI is the creative layer around them.**

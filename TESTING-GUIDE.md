@@ -32,8 +32,8 @@
 ### Post-Install Verification
 - [ ] No welcome banner appears on session start | Correct — the 4 global hooks were removed in v1.5.0
 - [ ] `/socialforge:status` reports credential state on demand | Shows "No active brand" or brand status, plus Vertex AI / WaveSpeed credential state
-- [ ] Commands appear in Customize panel | Count matches expected 25
-- [ ] Skills appear in Skills section | Count matches expected 16
+- [ ] Commands appear in Customize panel | Count matches expected 18
+- [ ] Skills appear in Skills section | Count matches expected 21
 - [ ] No `.mcp.json` ships and zero MCP servers are active | no MCP initialization errors in logs. The 12-connector catalog lives in `.mcp.json.connectors-reference` and is opt-in.
 
 ---

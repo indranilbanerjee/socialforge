@@ -103,7 +103,7 @@ Check status anytime: `/socialforge:setup --status`
 ### Recommended: From Marketplace
 
 ```
-/plugin marketplace add github:indranilbanerjee/neels-plugins
+/plugin marketplace add indranilbanerjee/neels-plugins
 /plugin install socialforge@neels-plugins
 ```
 

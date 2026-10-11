@@ -557,13 +557,13 @@ class TestScriptsPrintAbsoluteCommands(unittest.TestCase):
         with mock.patch.object(sys, "executable", "C:\\Program Files\\Python313\\python.exe"):
             spaced = _common.script_command("x.py", "--a", "1")
         self.assertTrue(spaced.startswith('"C:/Program Files/Python313/python.exe" "'), spaced)
-        self.assertTrue(spaced.endswith("--a 1 (in PowerShell, put & before it)"), spaced)
+        self.assertTrue(spaced.endswith("--a 1  # in PowerShell, put & before it"), spaced)
         self.assertNotIn("\\", plain + spaced)
 
     def _runnable(self):
         sys.path.insert(0, str(SCRIPTS))
         import _common
-        return _common.script_command("price_book.py", "--action", "providers").split(" (in PowerShell")[0]
+        return _common.script_command("price_book.py", "--action", "providers").split("  # in PowerShell")[0]
 
     def test_the_command_runs_pasted_into_git_bash_from_another_folder(self):
         import shutil
@@ -587,6 +587,54 @@ class TestScriptsPrintAbsoluteCommands(unittest.TestCase):
             r = subprocess.run([ps, "-NoProfile", "-NonInteractive", "-Command", self._runnable()], capture_output=True, text=True, cwd=d, timeout=180)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("wavespeed", r.stdout)
+
+    def _spaced_line(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import _common
+        from unittest import mock
+        with mock.patch.object(sys, "executable", "C:\\Program Files\\Python313\\python.exe"):
+            return _common.script_command("price_book.py", "--action", "providers")
+
+    def test_the_space_case_line_parses_in_git_bash(self):
+        """The note was first a parenthetical after the arguments, which bash rejects (`syntax error near unexpected token '('`).
+        A trailing comment is ignored by bash and by PowerShell."""
+        import shutil
+        bash = shutil.which("bash")
+        if not bash:
+            self.skipTest("no bash on PATH")
+        kernel = subprocess.run([bash, "-c", "uname -s"], capture_output=True, text=True).stdout
+        if sys.platform == "win32" and not any(k in kernel for k in ("MINGW", "MSYS", "CYGWIN")):
+            self.skipTest("this bash is not Git Bash (WSL cannot parse a Windows interpreter path)")
+        line = self._spaced_line()
+        self.assertTrue(line.startswith('"C:/Program Files/'), line)
+        ok = subprocess.run([bash, "-n", "-c", line], capture_output=True, text=True)
+        self.assertEqual(ok.returncode, 0, line + "\n" + ok.stderr)
+        parenthetical = line.split("  # in PowerShell")[0] + " (in PowerShell, put & before it)"
+        bad = subprocess.run([bash, "-n", "-c", parenthetical], capture_output=True, text=True)
+        self.assertNotEqual(bad.returncode, 0, "the parenthetical form must fail `bash -n`, or this guard proves nothing")
+
+    def test_the_space_case_line_runs_in_powershell_with_an_ampersand_and_not_without_one(self):
+        import shutil
+        ps = shutil.which("powershell") or shutil.which("pwsh")
+        if not ps or sys.platform != "win32":
+            self.skipTest("needs Windows PowerShell (the interpreter stand-in is a .cmd file in a folder with a space)")
+        sys.path.insert(0, str(SCRIPTS))
+        import _common
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            shim_dir = Path(d) / "dir with space"
+            shim_dir.mkdir()
+            shim = shim_dir / "pyshim.cmd"
+            shim.write_text('@echo off\r\n"%s" %%*\r\n' % sys.executable, encoding="ascii")
+            with mock.patch.object(sys, "executable", str(shim).replace("\\", "/")):
+                line = _common.script_command("price_book.py", "--action", "providers")
+            self.assertTrue(line.startswith('"'), line)
+            run = lambda command: subprocess.run([ps, "-NoProfile", "-NonInteractive", "-Command", command],
+                                                 capture_output=True, text=True, cwd=d, timeout=180)
+            with_amp, without = run("& " + line), run(line)
+        self.assertEqual(with_amp.returncode, 0, with_amp.stdout + with_amp.stderr)
+        self.assertIn("wavespeed", with_amp.stdout)
+        self.assertNotEqual(without.returncode, 0, "without `&` PowerShell reads the quoted path as a string")
 
 
 class TestAgentWrittenInputsAcceptABom(unittest.TestCase):

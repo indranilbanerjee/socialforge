@@ -9,7 +9,7 @@ Open-source agency-grade social media production engine — **21 skills · 18 co
 [![Version](https://img.shields.io/badge/version-1.29.6-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-553%2F553%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-555%2F555%20passing-brightgreen.svg)](tests/)
 [![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1296)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 

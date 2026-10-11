@@ -28,9 +28,24 @@ Found by a fresh-install smoke test (its re-check).
   run an argv list, and the printed line comes from `_common.printed_command`, shared with `script_command`: forward
   slashes, the interpreter quoted only when its path has a space, and a trailing comment saying to put `&` before it.
 
+- The test suite wrote to the user's REAL failure log. Every run of `test_provider_failures.py` appended four entries
+  (a probe, an image chain and two video chains, all "All providers failed - no-credentials") to
+  `~/socialforge-workspace/socialforge/shared/failure-log.jsonl`: the test isolated the credential store but not the
+  folder `provider_failures.persist()` writes to, and with no data folder set that falls back to the home folder. 516
+  entries over 129 runs since 2026-08-14 sat in the file that holds the plugin's durable failure records (each written
+  with `action_required: true`, and read by `delivery_audit.py`). Nothing a customer runs was affected; the noise came
+  from running the suite on a machine that also uses the plugin. Two layers now: `tests/_isolation.py` points HOME,
+  USERPROFILE and every plugin-data variable at a temporary folder before any test is imported (pytest through
+  `tests/__init__.py` and `conftest.py`, the stdlib runner through `run_all.py`, a direct run through an exit hook),
+  and snapshots the real `~/socialforge-workspace` (and any real plugin-data folder the environment names) so a single
+  added, changed or removed file there fails the whole session. `test_provider_failures.py` also owns a temporary data
+  folder and home of its own.
+
 **Checked, not changed**
 
 - No other SocialForge script reads stdin or prompts: a static sweep finds none outside `credential_manager.py`.
+- Run one test file at a time against a temporary home: `test_provider_failures.py` was the only file that wrote
+  anywhere in it.
 
 **Added - tests**
 
@@ -41,7 +56,12 @@ Found by a fresh-install smoke test (its re-check).
   script: it is still waiting after 12 seconds, with an open pipe and with NUL.
 - `TestNoImplicitStdinReads` (an AST check of every script, with each kind of read as a plant),
   `TestPrintedCommandsAreLastOnTheLine` and `TestInstallHintsUseThePrintedShape` (both interpreter cases, `bash -n`, and
-  the printed line run through both shells). Tests 555 -> 565.
+  the printed line run through both shells).
+- `tests/test_test_isolation.py` (9 tests): the session is redirected (and survives the older tests that pop
+  `CLAUDE_PLUGIN_DATA`), the snapshot sees added, changed, removed, new-folder and appearing-root changes, and three
+  plants run the real failure writer in a child process against a FAKE home: with no fixture it reaches the home
+  folder (the 1.29.6 behaviour), with only the guard the leak is reported as `added: ...failure-log.jsonl`, with only
+  the redirect it stays out, and an unwrapped run exits 1. Tests 555 -> 574.
 
 ## [1.29.6] - 2026-10-12
 

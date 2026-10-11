@@ -15,6 +15,10 @@ from pathlib import Path
 TESTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(TESTS_DIR))
 
+import _isolation  # noqa: E402  (before any test module is imported: keeps the suite out of the user's real folders)
+
+_isolation.start()
+
 
 def main() -> int:
     loader = unittest.TestLoader()
@@ -23,7 +27,10 @@ def main() -> int:
     verbosity = 2 if "-v" in sys.argv else 1
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)
-    return 0 if result.wasSuccessful() else 1
+    problems = _isolation.finish()
+    if problems:
+        sys.stderr.write(_isolation.report(problems))
+    return 0 if result.wasSuccessful() and not problems else 1
 
 
 if __name__ == "__main__":

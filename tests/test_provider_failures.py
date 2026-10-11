@@ -43,6 +43,24 @@ def _isolated_creds():
     cm.GCP_KEY_FILE = tmp / "gcp-credentials.json"
 
 
+_ENV_PATCH = _DATA_DIR = None
+
+
+def setUpModule():
+    """Every failing chain below calls failure_payload(), which WRITES a record to <data>/socialforge/shared/failure-log.jsonl and, with no
+    data folder set, to ~/socialforge-workspace. _isolated_creds() only isolated the credential store, so each run appended four entries to
+    the real failure log (516 over 129 runs, shown to customers as "action required"). This module now owns a temporary data folder and home."""
+    global _ENV_PATCH, _DATA_DIR
+    _DATA_DIR = tempfile.TemporaryDirectory()
+    _ENV_PATCH = patch.dict(os.environ, {"CLAUDE_PLUGIN_DATA": _DATA_DIR.name, "HOME": _DATA_DIR.name, "USERPROFILE": _DATA_DIR.name})
+    _ENV_PATCH.start()
+
+
+def tearDownModule():
+    _ENV_PATCH.stop()
+    _DATA_DIR.cleanup()
+
+
 class TestFailureRecordContract(unittest.TestCase):
     def test_record_appends_and_is_none_safe(self):
         attempts = []

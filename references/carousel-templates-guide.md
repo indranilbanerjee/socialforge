@@ -1,5 +1,7 @@
 # Carousel Templates Guide
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 How SocialForge builds carousels — template selection, brand theming via placeholder substitution, slide content structure, custom templates, and the Playwright rendering pipeline.
 
 `scripts/render_carousel.py` is the renderer and the source of truth for everything below.
@@ -24,7 +26,7 @@ If the brand override exists it wins; otherwise the shipped template is used.
 
 ## Available Templates
 
-The eight keys below are the complete set — they are the `--template` choices in `render_carousel.py` and the keys of its `TEMPLATE_MAP`. Run `python scripts/render_carousel.py --list-templates` to print the mapping.
+The eight keys below are the complete set — they are the `--template` choices in `render_carousel.py` and the keys of its `TEMPLATE_MAP`. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/render_carousel.py" --list-templates` to print the mapping.
 
 | Key | File | Design slide count | Best For |
 |-----|------|--------------------|----------|

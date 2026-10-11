@@ -396,6 +396,90 @@ class TestNoPython3AsTheCommand(unittest.TestCase):
         self.assertFalse(self.COMMAND.search(TestScriptRootFallback.SENTENCE))
 
 
+class TestScriptInvocationsAreRobust(unittest.TestCase):
+    """A fresh-install smoke test found files that run scripts by a path that only works from one folder: `python scripts/x.py`
+    resolves against the host's working directory (the user's project, not the plugin), and an unquoted
+    `python ${CLAUDE_PLUGIN_ROOT}/scripts/x.py` breaks when the plugin is installed under a path with a space. This guard
+    DISCOVERS every skill, command, agent and reference file that runs a script and requires (1) the script-location line,
+    (2) no relative `scripts/` invocation, (3) every `${CLAUDE_PLUGIN_ROOT}` script path quoted."""
+
+    RUN = re.compile(r"(?<![\w/.-])python\s+(?:-\w+\s+)*[\"']?(?:\./)?(?:\$\{CLAUDE_PLUGIN_ROOT\}/)?scripts/[\w./-]+")
+    RELATIVE = re.compile(r"(?<![\w/.-])python\s+(?:-\w+\s+)*[\"']?(?:\./)?scripts/")
+    UNQUOTED = re.compile(r"(?<![\w/.-])python\s+(?:-\w+\s+)*\$\{CLAUDE_PLUGIN_ROOT\}/")
+    EXEMPT = {
+        "references/c2pa-production-cert.md": "a guide for the person setting up a production certificate: its commands are run from the plugin folder in a terminal",
+    }
+
+    @classmethod
+    def files(cls) -> dict:
+        paths = (sorted(ROOT.glob("skills/*/SKILL.md")) + sorted(ROOT.glob("skills/*/references/**/*.md"))
+                 + sorted(ROOT.glob("commands/*.md")) + sorted(ROOT.glob("agents/*.md")) + sorted(ROOT.glob("references/**/*.md")))
+        return {p.relative_to(ROOT).as_posix(): p.read_text(encoding="utf-8", errors="replace") for p in paths}
+
+    @classmethod
+    def problems(cls, files: dict, exempt: dict = None) -> list:
+        exempt = cls.EXEMPT if exempt is None else exempt
+        out = []
+        for rel, text in files.items():
+            if rel in exempt:
+                continue
+            lines = text.splitlines()
+            if any(cls.RUN.search(l) for l in lines) and TestScriptRootFallback.SENTENCE not in text:
+                out.append(rel + ": runs a script but has no script-location line")
+            for n, l in enumerate(lines, 1):
+                if cls.RELATIVE.search(l):
+                    out.append("%s:%d: runs a script by a relative path" % (rel, n))
+                if cls.UNQUOTED.search(l):
+                    out.append("%s:%d: the ${CLAUDE_PLUGIN_ROOT} script path is not quoted" % (rel, n))
+        return out
+
+    def test_every_file_that_runs_a_script_invokes_it_robustly(self):
+        files = self.files()
+        running = [r for r, t in files.items() if any(self.RUN.search(l) for l in t.splitlines())]
+        self.assertGreaterEqual(len(running), 10, "the discovery found too few files; the guard is vacuous")
+        self.assertEqual(self.problems(files), [])
+
+    def test_every_exemption_is_a_real_file_with_a_reason(self):
+        files = self.files()
+        for rel, why in self.EXEMPT.items():
+            with self.subTest(file=rel):
+                self.assertIn(rel, files)
+                self.assertGreater(len(why), 20)
+
+    def test_plant_each_of_the_three_defects_is_flagged(self):
+        line = "> **Script location.** " + TestScriptRootFallback.SENTENCE
+        good = "# T\n\n" + line + "\n\n```bash\npython \"${CLAUDE_PLUGIN_ROOT}/scripts/x.py\" --a 1\n```\n"
+        self.assertEqual(self.problems({"skills/t/SKILL.md": good}, exempt={}), [])
+        call = 'python "${CLAUDE_PLUGIN_ROOT}/scripts/x.py"'
+        planted = {
+            "relative": (good.replace(call, "python scripts/x.py"), "relative path"),
+            "unquoted": (good.replace(call, "python ${CLAUDE_PLUGIN_ROOT}/scripts/x.py"), "not quoted"),
+            "no line": (good.replace(line, ""), "no script-location line"),
+        }
+        for name, (text, needle) in planted.items():
+            with self.subTest(defect=name):
+                found = self.problems({"skills/t/SKILL.md": text}, exempt={})
+                self.assertTrue(any(needle in f for f in found), found)
+
+
+class TestNoTmpPathsInInstructions(unittest.TestCase):
+    """/tmp is not one folder on Windows: Git Bash maps it to the user's temp folder while Python resolves it elsewhere, so a
+    file the shell wrote was not found by the script and the command stopped. Instructions use a folder the plugin knows."""
+    TMP = re.compile(r"(?<![\w.-])/tmp/")
+
+    def test_no_skill_command_agent_or_reference_uses_a_tmp_path(self):
+        files = TestScriptInvocationsAreRobust.files()
+        self.assertGreater(len(files), 20, "the scan found too few files; the guard is vacuous")
+        bad = ["%s:%d" % (rel, n) for rel, text in files.items() for n, l in enumerate(text.splitlines(), 1) if self.TMP.search(l)]
+        self.assertEqual(bad, [])
+
+    def test_plant_the_old_path_is_flagged_and_the_replacement_is_not(self):
+        self.assertTrue(self.TMP.search("--action quote-batch --items @/tmp/run-plan.json"))
+        self.assertTrue(self.TMP.search("write the plan to /tmp/plan.json"))
+        self.assertFalse(self.TMP.search("write run-plan.json in the month's output folder, not in /tmp"))
+        self.assertFalse(self.TMP.search("--output {tmp}/harvest.json"))
+
+
 # ── F1: keys never in the chat or on the command line ──────────────────
 
 class TestSetupNeverTakesKeysThroughTheChat(unittest.TestCase):

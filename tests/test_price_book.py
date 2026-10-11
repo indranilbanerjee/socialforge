@@ -215,6 +215,36 @@ class TestCliContract(PriceBookCase):
                       '[{"model":"nope","provider":"wavespeed","units":5}]')
         self.assertEqual(r.returncode, 3)
 
+    def test_an_unreadable_or_invalid_items_file_is_a_clean_refusal(self):
+        """1.29.4: a missing plan file ended in an uncaught FileNotFoundError traceback (exit 1). Every way the file can fail
+        is now the usual JSON error with exit 2, and nothing is quoted."""
+        d = Path(self._tmp.name)
+        empty, malformed, binary = d / "empty.json", d / "malformed.json", d / "binary.json"
+        empty.write_text("", encoding="utf-8")
+        malformed.write_text('[{"model": "x",', encoding="utf-8")
+        binary.write_bytes(b"\xff\xfe\x00[\x80")
+        cases = {
+            "missing file": ("@" + str(d / "no-such-plan.json"), "cannot be read"),
+            "a folder": ("@" + str(d), "cannot be read"),
+            "a bare @": ("@", "cannot be read"),
+            "empty file": ("@" + str(empty), "not valid JSON"),
+            "malformed JSON": ("@" + str(malformed), "not valid JSON"),
+            "not UTF-8": ("@" + str(binary), "codec"),
+        }
+        for name, (items, needle) in cases.items():
+            with self.subTest(case=name):
+                r = self._run("--action", "quote-batch", "--items", items)
+                self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+                self.assertNotIn("Traceback", r.stderr)
+                self.assertIn(needle, json.loads(r.stdout)["error"])
+
+    def test_an_items_file_is_read_and_quoted(self):
+        plan = Path(self._tmp.name) / "run-plan.json"
+        plan.write_text('[{"model":"nope","provider":"wavespeed","units":5}]', encoding="utf-8")
+        r = self._run("--action", "quote-batch", "--items", "@" + str(plan))
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)   # read, parsed, and refused as unpriced: not a crash
+        self.assertTrue(json.loads(r.stdout)["blocked"])
+
     def test_providers_action_lists_auth_shape_per_provider(self):
         """Three providers, three different auth headers — the single thing that
         most often breaks a first integration."""

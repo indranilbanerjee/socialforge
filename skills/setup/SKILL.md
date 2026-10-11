@@ -225,7 +225,7 @@ Share the downloaded JSON file with your team via:
 
 NEVER commit this file to Git. NEVER share it publicly.
 
-**Cost:** this skill does not state a price. Per-image cost depends on model and resolution and changes without notice, so quoting one here would be a number nobody looked up. Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py --action lookup --model <model> --provider <provider>`; it returns a recorded price or refuses with the vendor's own pricing URL. All costs go to the admin's billing account.
+**Cost:** this skill does not state a price. Per-image cost depends on model and resolution and changes without notice, so quoting one here would be a number nobody looked up. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action lookup --model <model> --provider <provider>`; it returns a recorded price or refuses with the vendor's own pricing URL. All costs go to the admin's billing account.
 
 ### WaveSpeed (Video Generation)
 

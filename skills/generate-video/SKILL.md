@@ -21,7 +21,7 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 - Credentials must be configured via `/socialforge:setup`:
   - **Vertex AI** (registry alias `latest-image-google`) — used for first-frame and last-frame keyframe generation
   - **WaveSpeed API** (registry alias `latest-video-wavespeed`) — used for image-to-video generation
-- Models are never named in this skill: each alias above is resolved to a current model id when the script runs. To see what they resolve to today, run `python scripts/generate_video.py --list-models` (video) or `python scripts/resolve_model.py --aliases` (every alias).
+- Models are never named in this skill: each alias above is resolved to a current model id when the script runs. To see what they resolve to today, run `python "${CLAUDE_PLUGIN_ROOT}/scripts/generate_video.py" --list-models` (video) or `python "${CLAUDE_PLUGIN_ROOT}/scripts/resolve_model.py" --aliases` (every alias).
 - Brand profile must be active (`/socialforge:switch-brand` if needed)
 - Calendar must be parsed (`/socialforge:parse-calendar`) with video posts identified
 

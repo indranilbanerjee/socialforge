@@ -17,13 +17,13 @@ month, and video is billed by the second.
 Generation spends provider credits, so the first paid call waits for a quote and an explicit go. This command states no price: `price_book.py` is the only source, and it refuses rather than guesses.
 
 1. List what is about to be generated: one entry per paid generation, with the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images for stills, seconds for video, plus any option that changes the price, such as synchronised audio). Build the list after any filter is applied: a total for 28 posts is not the price of the 6 you run.
-2. Quote it:
+2. Write that list as a JSON array to `run-plan.json` in the month's output folder (`${CLAUDE_PLUGIN_DATA}/socialforge/output/{brand}/{YYYY-MM}/`, or `~/socialforge-workspace/output/{brand}/{YYYY-MM}/` when `${CLAUDE_PLUGIN_DATA}` is unset), not in a shared temp folder: on Windows the shell and Python do not resolve the same `/tmp`. Then quote it, passing the absolute path:
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items @/tmp/run-plan.json
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote-batch --items "@<month folder>/run-plan.json"
 ```
 
-   If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again.
+   If the quote exits non-zero or lists a blocked item, stop: run `/socialforge:price-check` to look the missing price up, then quote again. A JSON `error` about the plan file (exit 2: missing, unreadable or not valid JSON) means the path or the contents are wrong: fix the file and quote again.
 3. Show the user the total, each line, its **source URL**, and how old the price is (a price older than 24 hours is stale and is refused; it must be looked up again):
 
 ```

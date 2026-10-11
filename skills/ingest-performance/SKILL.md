@@ -29,7 +29,7 @@ map back to the topics and pillars that produced them.
 ## Step 2 — Ingest
 
 ```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py --action ingest \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py" --action ingest \
     --brand {brand} --month {YYYY-MM} --csv {export.csv} --source "{platform} export"
 ```
 
@@ -56,7 +56,7 @@ python ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py --action ingest \
 ## Step 3 — Rank the wins
 
 ```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py --action wins \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py" --action wins \
     --brand {brand} --month {YYYY-MM}
 ```
 

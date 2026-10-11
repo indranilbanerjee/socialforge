@@ -6,6 +6,8 @@ effort: medium
 
 # /socialforge:c2pa-sign — Embed Content Authenticity Provenance
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 ## Purpose
 
 ## Context efficiency
@@ -104,7 +106,7 @@ Reference: [opensource.contentauthenticity.org/docs/manifest/signing-manifests/]
 - `c2pa-python==0.38.0` (the version the script was tested against)
 - `cryptography==46.0.6` — only required for the dev self-signed cert path
 
-Neither is installed for you. If `c2pa-python` is missing, the script stops with the exact pinned command (`python scripts/install_deps.py --groups c2pa` prints it; add `--install` to have the script run it, or set `SOCIALFORGE_INSTALL_DEPS=1` for one run). `cryptography` is not installed for you either: without it the dev self-signed path fails with an error, so install it first.
+Neither is installed for you. If `c2pa-python` is missing, the script stops with the exact pinned command (`python "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py" --groups c2pa` prints it; add `--install` to have the script run it, or set `SOCIALFORGE_INSTALL_DEPS=1` for one run). `cryptography` is not installed for you either: without it the dev self-signed path fails with an error, so install it first.
 
 ## Output
 

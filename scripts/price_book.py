@@ -456,7 +456,12 @@ def main() -> int:
             need("items")
             raw = args.items
             if raw.startswith("@"):
-                raw = Path(raw[1:]).read_text(encoding="utf-8")
+                plan = Path(raw[1:])
+                try:
+                    raw = plan.read_text(encoding="utf-8")
+                except OSError as exc:  # missing file, a folder, no permission: a refusal, not a traceback
+                    print(json.dumps({"error": f"--items file {str(plan)!r} cannot be read: {exc.strerror or exc}"}))
+                    return 2
             try:
                 items = json.loads(raw)
             except json.JSONDecodeError as exc:

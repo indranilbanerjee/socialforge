@@ -1,5 +1,7 @@
 # Conversational commerce — Meta Business Agent and the WhatsApp Business MCP
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 **Checked 2026-10-04.** Source grades, as in `references/content-credentials-by-platform.md`:
 
 - **[P] Primary** — the vendor's own page, opened and read on 2026-10-04.
@@ -47,7 +49,7 @@ The post's job is to earn a first message. The conversation's job is to get one 
 7. **Outside the window, use a template.** One purpose per template, written for someone who has not just messaged you, with the opt-out route visible. Meta approves templates and sets their category rules — read its current template guidelines before drafting, and treat approval as outside SocialForge's control.
 8. **Say it is automated.** First message: who is replying and how to reach a person. Same honesty rule as the AI-assistance note on delivery manifests.
 9. **Sourced or absent.** Every claim in a canned reply, template or agent instruction follows the same rule as post copy. Run them through the compliance check before they go to Meta or an agent:
-   `python ${CLAUDE_PLUGIN_ROOT}/scripts/compliance_check.py --brand <brand> --text "<reply or template body>" --platform <platform>`
+   `python "${CLAUDE_PLUGIN_ROOT}/scripts/compliance_check.py" --brand <brand> --text "<reply or template body>" --platform <platform>`
 
 ## What this file does not claim
 

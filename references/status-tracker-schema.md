@@ -1,5 +1,7 @@
 # Status Tracker Schema Reference
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 JSON schema for `status-tracker.json` — the per-month production ledger: coarse progress markers, per-post state, and full transition history.
 
 `scripts/status_manager.py` writes and validates this file and is the source of truth for everything below.
@@ -16,7 +18,7 @@ When `CLAUDE_PLUGIN_DATA` is unset, the script falls back to:
 ~/socialforge-workspace/output/<brand-slug>/<month>/status-tracker.json
 ```
 
-Created by `python scripts/status_manager.py --action init-month --brand <slug> --month <YYYY-MM>`.
+Created by `python "${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py" --action init-month --brand <slug> --month <YYYY-MM>`.
 
 ## Top-Level Fields
 

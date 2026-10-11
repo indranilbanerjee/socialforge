@@ -6,16 +6,16 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.29.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.29.4-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-529%2F529%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1293)
+[![Tests](https://img.shields.io/badge/tests-536%2F536%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1294)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.3 (October 12, 2026): every command that can spend now quotes first, and the scripts run as `python`.** [Current release](#current-release-v1293) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v1.29.4 (October 12, 2026): every script runs from any folder, and the quote plan does not live in /tmp.** [Current release](#current-release-v1294) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code:
@@ -83,7 +83,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
    /plugin install socialforge@neels-plugins
    ```
 
-   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1293).
+   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1294).
 2. **Connect image and video generation (one time).** Run `/socialforge:setup`. Your admin gives you a Google Cloud service-account JSON key file (Vertex AI, images) and a WaveSpeed API key (video). Setup lists any missing Python packages with the exact pinned install command and installs only after you say `yes`; you point it at the key file and set `WAVESPEED_API_KEY` in your environment, and never paste a key into the chat. It stores the credentials in `${CLAUDE_PLUGIN_DATA}`, so they last across sessions. Without this step image and video generation will not work; everything else (calendar parsing, copy adaptation, review galleries) runs normally. Check it with `/socialforge:status`. No accounts yet? See [Admin Setup](#admin-setup-one-time).
 3. `/socialforge:brand-setup [brand-name]` configures the brand (5-10 min).
 4. `/socialforge:index-assets [brand-name]` indexes the brand photo library.
@@ -120,7 +120,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
 
-## Supported surfaces (v1.29.3)
+## Supported surfaces (v1.29.4)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -145,7 +145,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **30 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1293) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1294) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Updating to Latest Version
@@ -258,7 +258,9 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.29.3)
+## Current Release (v1.29.4)
+
+**v1.29.4:** every script runs from any folder, and the quote plan does not live in /tmp. Found by a fresh-install smoke test. `generate-all` wrote the item list to `/tmp/run-plan.json`, which PowerShell and Python resolve to different folders (it is now `run-plan.json` in the month's output folder); `price_book.py` answers a missing or unreadable `--items @file` with a JSON error and exit 2 instead of a traceback; the c2pa-sign skill, the compositor agent and the reference files call scripts as `python "${CLAUDE_PLUGIN_ROOT}/scripts/..."` (never relative to the working folder, always quoted), and a guard requires that of every file that runs a script.
 
 **v1.29.3:** every command that can spend now quotes first, and the scripts run as `python`. `edit-image` quotes before the paid edit (the approval after the edit stays), `reactive-post`, `revision` and `review`'s regenerate action go through `compose-creative` and its quote, and `generate-all` uses the standard "Quote, then go" wording; a guard finds every file that can spend and requires a quote or a named hand-off. The 28 `python3` calls in skills, commands and the compositor agent say `python`, and the script-location line names the interpreter. Found by a fresh-install smoke test.
 
@@ -267,8 +269,6 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 **v1.29.1:** previews show the image (every preview had shown a broken-image icon while reporting success), line breaks are kept, a non-image file is refused, and the copy adapter counts inline hashtags against the limit and returns `post_text`.
 
 **v1.29.0:** nothing installs itself, keys stay out of the chat, paid generation waits for a quote. Fixes every point of a Hermes Agent catalog review: `install_deps.py` reports by default and installs only with `--install` (exact pins; the optional packages left the defaults); setup asks before installing and takes keys from the environment; c2pa signing raises a clear error instead of installing mid-run or exiting after a paid call; `compose-creative`, `generate-video` and batch `full-pipeline` quote with `price_book.py` and wait for `go`; `status_manager.py` refuses a path as `--brand` / `--month`; provider downloads are https only; slide text is escaped; the throwaway signing key and the README byte-order mark are gone; skills say where the scripts are when `${CLAUDE_PLUGIN_ROOT}` is unset; PRIVACY.md lists the timestamp request, the opt-in install and the other endpoints.
-
-**v1.28.1:** the listing figures now count the workflow. v1.28.0 left `month-copy-preview` out of its figures: corrected, 10,525 → 4,965 as 1.28.0 shipped → 4,927 now (5,800 ceiling). The workflow's 185-character description is rewritten to the rule (147 characters, one review sheet for the month, pointer to `adapt-copy`), and `tests/test_description_density.py` now reads `workflows/*.js`, with a planted test that puts the old text back. Near-miss evals for the pair: 5/5 and 5/5 before and after.
 
 Older releases are in [CHANGELOG.md](CHANGELOG.md).
 

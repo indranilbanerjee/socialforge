@@ -47,7 +47,7 @@ No brand profile → stop and run `/socialforge:brand-setup` first.
 ## Step 1 — Outlier posts versus the account's own baseline
 
 ```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/research_month.py --action outliers \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/research_month.py" --action outliers \
     --csv {posts.csv} --source "{whose export}" [--group-by content_type]
 ```
 
@@ -80,7 +80,7 @@ A bad input exits 1 and prints `seen_headers`; fix the column, never guess.
 ## Step 2 — Recurring customer language
 
 ```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/research_month.py --action language \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/research_month.py" --action language \
     --csv {comments.csv} [--column {header}] [--min-count 3]
 ```
 

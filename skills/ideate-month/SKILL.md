@@ -31,7 +31,7 @@ so an approved plan flows into production with zero re-typing.
    dropped and listed as dropped, with the reason.
 4. **Last month's results** (optional) — measured first, anecdote second:
    - **Measured**: run
-     `python ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py --action wins --brand {brand} --month {last-month}`.
+     `python "${CLAUDE_PLUGIN_ROOT}/scripts/ingest_performance.py" --action wins --brand {brand} --month {last-month}`.
      If a `performance.json` exists (built by `/socialforge:ingest-performance`
      from the platform's own analytics export), this returns winners ranked
      with a sample floor and a margin over the month's median engagement rate —

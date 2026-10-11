@@ -33,7 +33,7 @@ Create the final delivery manifest — a structured JSON file describing the com
 
 Read `ai_disclosure` from brand-config.json (missing block = `{"mode": "claude-surfaces", "text": null}`) and decide whether the manifest carries the AI-assistance note:
 
-1. Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/detect_surface.py --mode {mode}` — its `disclosure_applies` field IS the decision. Fail-safe: an `uncertain` surface applies the note in claude-surfaces mode; skipping requires an AFFIRMATIVE non-Claude fingerprint. Never override the script's answer.
+1. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/detect_surface.py" --mode {mode}` — its `disclosure_applies` field IS the decision. Fail-safe: an `uncertain` surface applies the note in claude-surfaces mode; skipping requires an AFFIRMATIVE non-Claude fingerprint. Never override the script's answer.
 2. When it applies, add to the manifest metadata: `"ai_assistance_note": "Creative produced with AI assistance under human review and brand approval gates."` (or the brand's custom `text` verbatim). The default wording is vendor-neutral and claims only the review this pipeline actually performs — every post passed the approval chain.
 3. Record the decision either way: `"disclosure": {"applied": true|false, "mode": ..., "surface": ...}` in the manifest — an unapplied note is a recorded choice, not an omission.
 4. Remind the user at handoff: platform-native AI-content labels (Instagram/TikTok/YouTube toggles) are the right place for per-post disclosure — flag which posts used AI generation so whoever publishes can set them.

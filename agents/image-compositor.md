@@ -41,7 +41,7 @@ The post folder is created automatically by `status_manager.init_post_folder()`.
 
 To get the post folder path:
 ```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py --action get-post-folder --brand "{brand}" --month "{month}" --post-id "{post_id}"
+python "${CLAUDE_PLUGIN_ROOT}/scripts/status_manager.py" --action get-post-folder --brand "{brand}" --month "{month}" --post-id "{post_id}"
 ```
 
 ---
@@ -140,7 +140,7 @@ After user picks the final video:
 
 1. **Watermark:** Add brand logo overlay to the video
    ```bash
-   python ${CLAUDE_PLUGIN_ROOT}/scripts/video_postprocess.py --input "raw-video.mp4" --output-dir "{post_folder}/final/" --brand "{brand}" --platforms "linkedin,instagram_reel"
+   python "${CLAUDE_PLUGIN_ROOT}/scripts/video_postprocess.py" --input "raw-video.mp4" --output-dir "{post_folder}/final/" --brand "{brand}" --platforms "linkedin,instagram_reel"
    ```
 
 2. **Subtitles:** Ask the user: "Do you want subtitles burned into the video? (yes/no)"

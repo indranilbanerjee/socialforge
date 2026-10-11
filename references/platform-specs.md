@@ -1,5 +1,7 @@
 # Platform Specifications Reference
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 Complete dimension, character limit, and format specs for all supported social media platforms.
 
 ## Image Dimensions
@@ -24,7 +26,7 @@ Complete dimension, character limit, and format specs for all supported social m
 
 ## Character Limits
 
-The numbers `adapt_copy.py` enforces live in `scripts/platform_limits.json`, each with a source URL, the date it was checked and a status; `python scripts/adapt_copy.py --sources` prints the record. Status below is as of 2026-10-04: **confirmed** means a primary platform page says it, **unsourced** means SocialForge's working value with no readable primary page. Optimal and Fold At are working guidance, not platform rules.
+The numbers `adapt_copy.py` enforces live in `scripts/platform_limits.json`, each with a source URL, the date it was checked and a status; `python "${CLAUDE_PLUGIN_ROOT}/scripts/adapt_copy.py" --sources` prints the record. Status below is as of 2026-10-04: **confirmed** means a primary platform page says it, **unsourced** means SocialForge's working value with no readable primary page. Optimal and Fold At are working guidance, not platform rules.
 
 | Platform | Max Length | Status | Optimal | Fold At | Notes |
 |----------|-----------|--------|---------|---------|-------|

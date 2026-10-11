@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.4] - 2026-10-12
+
+### Every script runs from any folder, and the quote plan does not live in /tmp
+
+Found by a fresh-install smoke test (its re-test).
+
+**Fixed**
+
+- `/socialforge:generate-all` wrote the quote's item list to `/tmp/run-plan.json`. From PowerShell, and from Git Bash
+  with `MSYS_NO_PATHCONV=1`, the shell and Python do not resolve `/tmp` to the same folder, so the quote could not find
+  the plan and the command stopped. (Git Bash rewrites the path before Python sees it, so it worked there.) The plan is
+  now `run-plan.json` in the month's output folder, passed by absolute path, and the command says what to do when the
+  plan file is the problem.
+- `price_book.py --items @file`: a missing file, a folder or a file the user cannot read ended in an uncaught
+  `FileNotFoundError` traceback with exit 1. It now returns the script's usual JSON error with exit 2, and nothing is
+  quoted. (A file that is empty, malformed or not UTF-8 already reached the JSON error path; all are tested now.)
+- `skills/c2pa-sign` ran `python scripts/install_deps.py` by a relative path, which resolves against the host's working
+  directory (the user's project) and not the plugin. Seven more relative invocations (`compose-creative`,
+  `generate-video` and four reference files) and ten that used `${CLAUDE_PLUGIN_ROOT}` unquoted (which breaks under a
+  plugin folder with a space in its name) in skills, the compositor agent and `references/` are now
+  `python "${CLAUDE_PLUGIN_ROOT}/scripts/..."`.
+- Every file that runs a script carries the "Script location" line: the c2pa-sign skill and five reference files
+  gained it. `references/c2pa-production-cert.md`, a terminal guide for the person setting up a production
+  certificate, is exempt and keeps `python scripts/...`.
+
+**Added - tests**
+
+- `TestScriptInvocationsAreRobust` (3 tests): discovery of every skill, command, agent and reference file that runs a
+  script; the line, no relative path, every path quoted. Planted with the 1.29.3 text: 7 relative, 10 unquoted and 6
+  missing-line findings.
+- `TestNoTmpPathsInInstructions` (2 tests): no skill, command, agent or reference uses a `/tmp/` path; the old
+  generate-all text is the plant.
+- `test_price_book.py` (2 tests): six ways the items file can fail are a clean exit 2 with no traceback, and a valid
+  file is read and quoted. Planted against the 1.29.3 script: the missing-file, folder and bare-`@` cases end in a
+  traceback with exit 1.
+
+**Not changed**
+
+- `price_book.py` does not read the items from stdin (`@-`); the documented route is the plan file in the month's
+  folder, which works the same from every shell.
+
 ## [1.29.3] - 2026-10-12
 
 ### Every command that can spend now quotes first, and the scripts run as `python`

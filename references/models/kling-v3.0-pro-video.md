@@ -1,5 +1,7 @@
 # Kling v3.0 Pro (image-to-video)
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 SocialForge's primary video path on WaveSpeed. Highest fidelity in the V3.0
 family, takes a start frame and optionally an end frame, and can generate
 synchronised audio.
@@ -50,7 +52,7 @@ clip by about half a dollar, and a 28-post month by roughly fifteen.
 Quote it explicitly:
 
 ```bash
-python scripts/price_book.py --action quote \
+python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote \
   --model kling-v3.0-pro --provider wavespeed --units 10 \
   --multiplier 1.5 --multiplier-reason "sound=true"
 ```

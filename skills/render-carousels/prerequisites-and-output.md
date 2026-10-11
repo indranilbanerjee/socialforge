@@ -1,5 +1,7 @@
 # render-carousels — prerequisites and output files
 
+> **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
+
 Supplementary to `SKILL.md`. Read this when a render fails before the first slide, or the
 user asks what files a render leaves behind. Everything below is read from
 `scripts/render_carousel.py` and `scripts/install_deps.py`.
@@ -12,7 +14,7 @@ user asks what files a render leaves behind. Everything below is read from
   `scripts/install_deps.py`, which reports what is missing and prints the pinned commands; its
   `carousel` group is `playwright` plus `python -m playwright install chromium` (a large browser
   download), and it installs only when the user says yes (`--install`). If the import fails,
-  `render_carousel.py` returns the same pointer: `python scripts/install_deps.py --groups carousel`.
+  `render_carousel.py` returns the same pointer: `python "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py" --groups carousel`.
 - Brand colors and fonts set in `brand-config.json`. Missing keys fall back to the
   renderer's built-in default palette and fonts rather than failing, so a half-configured
   brand renders in the wrong colors instead of erroring — confirm the first slide before

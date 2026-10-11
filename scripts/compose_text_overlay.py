@@ -45,7 +45,7 @@ def add_text_overlay(image_path, output_path, text, brand=None, position="bottom
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
-        return {"error": "Pillow is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}
+        return {"error": "Pillow is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)"}
 
     img = Image.open(image_path).convert("RGBA")
 
@@ -54,7 +54,7 @@ def add_text_overlay(image_path, output_path, text, brand=None, position="bottom
     if brand:
         config_path = WORKSPACE / "brands" / brand / "brand-config.json"
         if config_path.exists():
-            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config = json.loads(config_path.read_text(encoding="utf-8-sig"))
             fonts = config.get("fonts", {})
             heading_font = fonts.get("heading", "")
             if heading_font:

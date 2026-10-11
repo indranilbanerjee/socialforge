@@ -112,7 +112,7 @@ def _load_calendar_ids(brand, month):
     if not calendar_path.exists():
         return None, {}
     try:
-        calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+        calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
     except (json.JSONDecodeError, OSError) as e:
         print(f"WARNING: calendar-data.json unreadable ({type(e).__name__}) — "
               "rows cannot be matched to posts", file=sys.stderr)

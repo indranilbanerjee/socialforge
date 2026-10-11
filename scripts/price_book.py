@@ -458,9 +458,13 @@ def main() -> int:
             if raw.startswith("@"):
                 plan = Path(raw[1:])
                 try:
-                    raw = plan.read_text(encoding="utf-8")
+                    # utf-8-sig: PowerShell 5.1 writes a BOM by default (Out-File, Set-Content -Encoding utf8); plain UTF-8 reads the same
+                    raw = plan.read_text(encoding="utf-8-sig")
                 except OSError as exc:  # missing file, a folder, no permission: a refusal, not a traceback
-                    print(json.dumps({"error": f"--items file {str(plan)!r} cannot be read: {exc.strerror or exc}"}))
+                    print(json.dumps({"error": f'--items file "{plan}" cannot be read: {exc.strerror or exc}'}))
+                    return 2
+                except UnicodeDecodeError as exc:
+                    print(json.dumps({"error": f'--items file "{plan}" is not valid UTF-8: {exc.reason} at byte {exc.start}'}))
                     return 2
             try:
                 items = json.loads(raw)

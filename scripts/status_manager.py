@@ -105,7 +105,7 @@ def update_status(brand, month, post_id, new_status, actor="system", notes="", f
         calendar_ids = set()
         if calendar_path.exists():
             try:
-                calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+                calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
                 calendar_ids = {str(p.get("post_id")) for p in calendar.get("posts", [])}
             except (json.JSONDecodeError, OSError):
                 pass
@@ -257,7 +257,7 @@ def init_month(brand, month, force=False):
     # Create post-specific folders if calendar exists
     calendar_path = month_dir / "calendar-data.json"
     if calendar_path.exists():
-        calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+        calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
         for post in calendar.get("posts", []):
             init_post_folder(brand, month, post)
 
@@ -352,7 +352,7 @@ def main():
         if not calendar_path.exists():
             print(json.dumps({"error": "Calendar not found"}))
             sys.exit(1)
-        calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+        calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
         post = next((p for p in calendar.get("posts", []) if str(p.get("post_id")) == str(args.post_id)), None)
         if not post:
             print(json.dumps({"error": f"Post {args.post_id} not found"}))

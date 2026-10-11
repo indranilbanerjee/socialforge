@@ -77,7 +77,7 @@ def render_slides(template_type, slides_data, brand, output_dir, width=1080, hei
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        return {"error": "Playwright is not installed. Run: python scripts/install_deps.py --groups carousel (it prints the pinned pip command and the browser command)"}
+        return {"error": "Playwright is not installed. Run: " + _common.script_command("install_deps.py", "--groups", "carousel") + " (it prints the pinned pip command and the browser command)"}
 
     # Load template
     template_file = TEMPLATE_MAP.get(template_type)
@@ -100,7 +100,7 @@ def render_slides(template_type, slides_data, brand, output_dir, width=1080, hei
     config_path = WORKSPACE / "brands" / brand / "brand-config.json"
     brand_config = {}
     if config_path.exists():
-        brand_config = json.loads(config_path.read_text(encoding="utf-8"))
+        brand_config = json.loads(config_path.read_text(encoding="utf-8-sig"))
 
     html_content = inject_brand_vars(html_content, brand_config)
 
@@ -177,7 +177,7 @@ def main():
         print(json.dumps({"error": f"Slides data file not found: {args.slides}"}))
         sys.exit(1)
 
-    slides_data = json.loads(slides_path.read_text(encoding="utf-8"))
+    slides_data = json.loads(slides_path.read_text(encoding="utf-8-sig"))
 
     result = render_slides(args.template, slides_data, args.brand, args.output_dir, args.width, args.height)
     print(json.dumps(result, indent=2))

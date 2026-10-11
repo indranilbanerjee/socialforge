@@ -160,11 +160,11 @@ def generate_video_kling(prompt, output_path, first_frame_path, last_frame_path=
                 import wavespeed  # noqa: F401
             else:
                 record(attempts, "wavespeed-kling", "dependencies", "dependency-missing",
-                       "wavespeed is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)")
+                       "wavespeed is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)")
                 return None
         except Exception as exc:
             record(attempts, "wavespeed-kling", "dependencies", "dependency-missing",
-                   f"wavespeed is not installed ({exc}). Run: python scripts/install_deps.py (it prints the pinned install command)")
+                   f"wavespeed is not installed ({exc}). Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)")
             return None
     os.environ["WAVESPEED_API_KEY"] = ws_key
     from wavespeed import Client as WsClient
@@ -326,11 +326,11 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                 from google.genai import types
             else:
                 record(attempts, "veo", "dependencies", "dependency-missing",
-                       "google-genai is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)")
+                       "google-genai is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)")
                 return None
         except Exception as exc:
             record(attempts, "veo", "dependencies", "dependency-missing",
-                   f"google-genai is not installed ({exc}). Run: python scripts/install_deps.py (it prints the pinned install command)")
+                   f"google-genai is not installed ({exc}). Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)")
             return None
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -743,7 +743,7 @@ def main():
         print(json.dumps({"error": "Calendar not found", "path": str(calendar_path)}))
         sys.exit(1)
 
-    calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+    calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
     post = next((p for p in calendar.get("posts", []) if str(p.get("post_id")) == str(args.post_id)), None)
     if not post:
         print(json.dumps({"error": f"Post {args.post_id} not found"}))
@@ -751,7 +751,7 @@ def main():
 
     # Load brand config
     config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
-    brand_config = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+    brand_config = json.loads(config_path.read_text(encoding="utf-8-sig")) if config_path.exists() else {}
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)

@@ -473,7 +473,7 @@ def main():
     parser.add_argument("--references", nargs="*", default=None, help="Style reference image paths (max 14)")
     parser.add_argument("--model", default=None,
                         help=f"Image model id (default: registry alias `latest-image-balanced-google` -> {DEFAULT_MODEL}). "
-                             f"Run `python scripts/resolve_model.py --list --modality image-gen` to see options. "
+                             f"Run `{_common.script_command('resolve_model.py', '--list', '--modality', 'image-gen')}` to see options. "
                              f"Deprecated ids auto-fall-forward to their replacement.")
     parser.add_argument("--list-models", action="store_true",
                         help="Print the curated image-generation models and exit")

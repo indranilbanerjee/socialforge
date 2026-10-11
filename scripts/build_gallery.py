@@ -131,7 +131,7 @@ def build_gallery(brand, month, inline_video=True):
         sys.exit(1)
 
     tracker = json.loads(tracker_path.read_text(encoding="utf-8"))
-    calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+    calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
 
     posts_data = []
     for post in calendar.get("posts", []):

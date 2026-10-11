@@ -412,8 +412,8 @@ class TestScriptInvocationsAreRobust(unittest.TestCase):
 
     @classmethod
     def files(cls) -> dict:
-        paths = (sorted(ROOT.glob("skills/*/SKILL.md")) + sorted(ROOT.glob("skills/*/references/**/*.md"))
-                 + sorted(ROOT.glob("commands/*.md")) + sorted(ROOT.glob("agents/*.md")) + sorted(ROOT.glob("references/**/*.md")))
+        paths = (sorted(ROOT.glob("skills/**/*.md")) + sorted(ROOT.glob("commands/*.md"))
+                 + sorted(ROOT.glob("agents/*.md")) + sorted(ROOT.glob("references/**/*.md")))
         return {p.relative_to(ROOT).as_posix(): p.read_text(encoding="utf-8", errors="replace") for p in paths}
 
     @classmethod
@@ -460,6 +460,92 @@ class TestScriptInvocationsAreRobust(unittest.TestCase):
             with self.subTest(defect=name):
                 found = self.problems({"skills/t/SKILL.md": text}, exempt={})
                 self.assertTrue(any(needle in f for f in found), found)
+
+    def test_discovery_reaches_a_supporting_file_inside_a_skill_folder(self):
+        """1.29.5: skills/render-carousels/prerequisites-and-output.md ran `python scripts/install_deps.py` by a relative path with no
+        location line, and the scan (SKILL.md and skills/*/references only) could not see it."""
+        rel = "skills/render-carousels/prerequisites-and-output.md"
+        self.assertIn(rel, self.files())
+        old = "# Prerequisites\n\n- `render_carousel.py` returns the same pointer: `python scripts/install_deps.py --groups carousel`.\n"
+        found = self.problems({rel: old}, exempt={})
+        self.assertTrue(any("relative path" in f for f in found) and any("no script-location line" in f for f in found), found)
+
+
+class TestScriptsPrintAbsoluteCommands(unittest.TestCase):
+    """1.29.5: render_carousel.py (and eleven more scripts) printed "Run: python scripts/install_deps.py ...", which is relative to
+    the host's working folder, not the plugin. A command a script tells someone to run comes from _common.script_command: the
+    running interpreter and the script's absolute path. Docstrings (usage text) are not output and are left alone."""
+    HINT = re.compile(r"\bpython3?\s+(?:\./)?scripts/")
+
+    @classmethod
+    def findings(cls, source: str, name: str = "x.py") -> list:
+        import ast
+        tree = ast.parse(source)
+        docstrings = set()
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.body:
+                first = node.body[0]
+                if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+                    docstrings.add(id(first.value))
+        return ["%s:%d" % (name, n.lineno) for n in ast.walk(tree)
+                if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in docstrings and cls.HINT.search(n.value)]
+
+    def test_no_script_prints_a_relative_python_scripts_command(self):
+        scripts = sorted((ROOT / "scripts").glob("*.py"))
+        self.assertGreater(len(scripts), 20, "the scan found too few scripts; the guard is vacuous")
+        bad = [f for p in scripts for f in self.findings(p.read_text(encoding="utf-8"), p.name)]
+        self.assertEqual(bad, [])
+
+    def test_plant_the_old_hints_are_flagged_and_usage_text_and_the_helper_are_not(self):
+        old = 'def f():\n    return {"error": "Pillow is not installed. Run: python scripts/install_deps.py (pinned)"}\n'
+        old_fstring = 'def g(exc):\n    return f"wavespeed is not installed ({exc}). Run: python scripts/install_deps.py"\n'
+        usage = '"""Usage:\n    python scripts/install_deps.py --groups image\n"""\n\ndef h():\n    """Run python scripts/x.py"""\n    return 1\n'
+        fixed = 'def f():\n    return {"error": "Run: " + _common.script_command("install_deps.py")}\n'
+        self.assertEqual(len(self.findings(old)), 1)
+        self.assertEqual(len(self.findings(old_fstring)), 1)
+        self.assertEqual(self.findings(usage), [])
+        self.assertEqual(self.findings(fixed), [])
+
+    def test_script_command_is_the_running_interpreter_and_the_absolute_script(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import _common
+        cmd = _common.script_command("install_deps.py", "--groups", "carousel")
+        target = SCRIPTS / "install_deps.py"
+        self.assertTrue(target.exists())
+        self.assertIn(str(target), cmd)
+        self.assertIn(sys.executable, cmd)
+        self.assertTrue(cmd.endswith("--groups carousel"))
+        self.assertNotIn("python scripts/", cmd)
+
+
+class TestAgentWrittenInputsAcceptABom(unittest.TestCase):
+    """1.29.5: PowerShell 5.1 writes a UTF-8 byte-order mark by default (Out-File, Set-Content -Encoding utf8). A plan file written
+    that way was refused, and a calendar or brand config written that way would not have parsed. Inputs an agent or a user writes are
+    read with utf-8-sig, which reads plain UTF-8 unchanged. Files the plugin writes and reads itself are not touched."""
+    EXTERNAL = re.compile(r"\b(?:calendar_path|config_path|slides_path|json_path|source_file|rules_path)\.read_text\(encoding=\"utf-8\"\)")
+
+    def test_no_script_reads_an_agent_or_user_written_input_without_allowing_a_bom(self):
+        scripts = sorted((ROOT / "scripts").glob("*.py"))
+        bad = ["%s:%d" % (p.name, n) for p in scripts for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)
+               if self.EXTERNAL.search(line)]
+        self.assertEqual(bad, [])
+
+    def test_plant_the_old_reads_are_flagged_and_the_fix_is_not(self):
+        self.assertTrue(self.EXTERNAL.search('calendar = json.loads(calendar_path.read_text(encoding="utf-8"))'))
+        self.assertTrue(self.EXTERNAL.search('config = json.loads(config_path.read_text(encoding="utf-8"))'))
+        self.assertFalse(self.EXTERNAL.search('calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))'))
+        self.assertFalse(self.EXTERNAL.search('tracker = json.loads(tracker_path.read_text(encoding="utf-8"))'))
+
+    def test_a_file_with_a_bom_reads_like_the_plain_file(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import delivery_audit
+        body = '{"posts": [{"id": "P01", "platforms": ["linkedin"]}]}'
+        with tempfile.TemporaryDirectory() as d:
+            plain, bom = Path(d) / "plain.json", Path(d) / "bom.json"
+            plain.write_text(body, encoding="utf-8")
+            bom.write_bytes(b"\xef\xbb\xbf" + body.encode("utf-8"))
+            self.assertIsNotNone(delivery_audit._json(plain))
+            self.assertEqual(delivery_audit._json(bom), delivery_audit._json(plain))
 
 
 class TestNoTmpPathsInInstructions(unittest.TestCase):

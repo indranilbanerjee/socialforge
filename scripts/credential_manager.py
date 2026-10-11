@@ -16,6 +16,9 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
 _plugin_data = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("PLUGIN_DATA") or ""
 if _plugin_data and Path(_plugin_data).exists():
     CRED_DIR = Path(_plugin_data) / "socialforge"
@@ -86,7 +89,7 @@ def setup_vertex_ai(json_path):
     if not json_path.exists():
         return {"status": "FAILED", "error": f"File not found: {json_path}"}
     try:
-        sa_data = json.loads(json_path.read_text(encoding="utf-8"))
+        sa_data = json.loads(json_path.read_text(encoding="utf-8-sig"))
     except (json.JSONDecodeError, OSError) as e:
         return {"status": "FAILED", "error": f"Invalid JSON file: {e}"}
     project_id = sa_data.get("project_id")
@@ -144,7 +147,7 @@ def get_gemini_client():
     try:
         from google import genai
     except ImportError:
-        return None, "google-genai is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"
+        return None, "google-genai is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)"
 
     tried = []
 

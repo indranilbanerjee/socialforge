@@ -199,7 +199,7 @@ def stored_source(brand):
     source_file = brand_dir / "asset-source.json"
     if source_file.exists():
         try:
-            config = json.loads(source_file.read_text(encoding="utf-8"))
+            config = json.loads(source_file.read_text(encoding="utf-8-sig"))
             return config.get("path") or config.get("url") or None
         except (json.JSONDecodeError, OSError):
             pass

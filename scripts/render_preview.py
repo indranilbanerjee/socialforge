@@ -51,13 +51,13 @@ def render_preview(image_path, copy_text, platform, brand, output_path,
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        return {"error": "Playwright is not installed. Run: python scripts/install_deps.py --groups carousel (it prints the pinned pip command and the browser command)"}
+        return {"error": "Playwright is not installed. Run: " + _common.script_command("install_deps.py", "--groups", "carousel") + " (it prints the pinned pip command and the browser command)"}
 
     # Load brand config for profile info
     config_path = WORKSPACE / "brands" / brand / "brand-config.json"
     profile = {"name": brand, "handle": f"@{brand}", "avatar": "", "headline": ""}
     if config_path.exists():
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config = json.loads(config_path.read_text(encoding="utf-8-sig"))
         profiles = config.get("social_profiles", {})
         if platform in profiles:
             profile = profiles[platform]

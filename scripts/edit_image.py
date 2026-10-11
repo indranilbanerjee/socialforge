@@ -17,6 +17,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
 # Add scripts dir to path for credential_manager + curator imports
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -57,7 +60,7 @@ def edit_with_gemini(image_path, instruction, output_path, reference_images=None
         try:
             from google import genai
         except ImportError:
-            return {"status": "FAILED", "error": "google-genai is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}
+            return {"status": "FAILED", "error": "google-genai is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)"}
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             return {"status": "FAILED", "error": "No credentials. Run /socialforge:setup"}

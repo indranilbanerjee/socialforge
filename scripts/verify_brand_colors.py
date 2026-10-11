@@ -39,7 +39,7 @@ def verify_colors(image_path, brand, threshold=50, min_percentage=15):
     try:
         from PIL import Image
     except ImportError:
-        print(json.dumps({"error": "Pillow is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}))
+        print(json.dumps({"error": "Pillow is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)"}))
         sys.exit(1)
 
     config_path = WORKSPACE / "brands" / brand / "brand-config.json"
@@ -47,7 +47,7 @@ def verify_colors(image_path, brand, threshold=50, min_percentage=15):
         print(json.dumps({"error": f"Brand config not found: {brand}"}))
         sys.exit(1)
 
-    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config = json.loads(config_path.read_text(encoding="utf-8-sig"))
     brand_colors = []
     colors_config = config.get("colors", {})
     for key in ["primary", "secondary", "accent"]:

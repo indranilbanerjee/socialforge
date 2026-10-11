@@ -171,7 +171,7 @@ def match_all(brand, month):
         print(json.dumps({"error": "Assets not indexed. Run index-assets first."}))
         sys.exit(1)
 
-    calendar = json.loads(calendar_path.read_text(encoding="utf-8"))
+    calendar = json.loads(calendar_path.read_text(encoding="utf-8-sig"))
     index = json.loads(index_path.read_text(encoding="utf-8"))
     assets = index.get("assets", [])
 

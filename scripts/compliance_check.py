@@ -135,7 +135,7 @@ def check_compliance(brand, text, platform=None):
         return "SKIPPED"
 
     try:
-        rules = json.loads(rules_path.read_text(encoding="utf-8"))
+        rules = json.loads(rules_path.read_text(encoding="utf-8-sig"))
     except (json.JSONDecodeError, OSError) as e:
         print(json.dumps({
             "status": "FAILED",

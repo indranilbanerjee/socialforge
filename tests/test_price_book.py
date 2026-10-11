@@ -229,14 +229,29 @@ class TestCliContract(PriceBookCase):
             "a bare @": ("@", "cannot be read"),
             "empty file": ("@" + str(empty), "not valid JSON"),
             "malformed JSON": ("@" + str(malformed), "not valid JSON"),
-            "not UTF-8": ("@" + str(binary), "codec"),
+            "not UTF-8": ("@" + str(binary), "not valid UTF-8"),
         }
         for name, (items, needle) in cases.items():
             with self.subTest(case=name):
                 r = self._run("--action", "quote-batch", "--items", items)
                 self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
                 self.assertNotIn("Traceback", r.stderr)
-                self.assertIn(needle, json.loads(r.stdout)["error"])
+                err = json.loads(r.stdout)["error"]
+                self.assertIn(needle, err)
+                self.assertIn("--items", err)   # every case names the option, including the UTF-8 one
+                if len(items) > 1 and needle != "not valid JSON":   # the JSON message describes the content, not the file
+                    self.assertIn('"' + items[1:] + '"', err)   # the plain path in quotes, not a doubled-backslash repr
+
+    def test_a_plan_written_with_a_byte_order_mark_reads_like_the_plain_one(self):
+        """1.29.5: PowerShell 5.1 Out-File and Set-Content -Encoding utf8 write EF BB BF; the plan was refused with exit 2."""
+        body = '[{"model":"nope","provider":"wavespeed","units":5}]'
+        plain, bom = Path(self._tmp.name) / "plain-plan.json", Path(self._tmp.name) / "bom-plan.json"
+        plain.write_text(body, encoding="utf-8")
+        bom.write_bytes(b"\xef\xbb\xbf" + body.encode("utf-8"))
+        a = self._run("--action", "quote-batch", "--items", "@" + str(plain))
+        b = self._run("--action", "quote-batch", "--items", "@" + str(bom))
+        self.assertEqual((b.returncode, b.stdout), (a.returncode, a.stdout), b.stdout + b.stderr)
+        self.assertEqual(b.returncode, 3)   # read, parsed, refused as unpriced; not "Unexpected UTF-8 BOM"
 
     def test_an_items_file_is_read_and_quoted(self):
         plan = Path(self._tmp.name) / "run-plan.json"

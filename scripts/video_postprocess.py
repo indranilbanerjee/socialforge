@@ -593,7 +593,7 @@ def main():
 
     config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
     if config_path.exists():
-        brand_config = json.loads(config_path.read_text(encoding="utf-8"))
+        brand_config = json.loads(config_path.read_text(encoding="utf-8-sig"))
         brand_config["_brand_dir"] = str(config_path.parent)
     else:
         print(json.dumps({

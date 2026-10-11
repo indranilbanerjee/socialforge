@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.5] - 2026-10-12
+
+### Printed commands are absolute, and a byte-order mark no longer breaks an agent- or user-written input
+
+Found by a fresh-install smoke test (its final pass).
+
+**Fixed**
+
+- `skills/render-carousels/prerequisites-and-output.md` ran `python scripts/install_deps.py --groups carousel` by a
+  relative path, with no location line. The invocation guard scanned only `SKILL.md` and `skills/*/references/`, so a
+  supporting file sitting in a skill folder was invisible to it; it scans `skills/**/*.md` now.
+- `render_carousel.py` and eleven more scripts printed relative hints ("Run: python scripts/install_deps.py ...", 15 in
+  all), which resolve against the host's working folder (the user's project), not the plugin. They print the running
+  interpreter and the script's absolute path (`_common.script_command`).
+- A file written by PowerShell 5.1 (`Out-File` and `Set-Content -Encoding utf8` both start with a byte-order mark) was
+  refused: a quote plan for `generate-all` stopped with "Unexpected UTF-8 BOM". `price_book.py --items @file` and every
+  other script that reads something an agent or a user writes (calendar-data.json, brand-config.json, slides, the
+  asset-source and compliance-rules files, a service-account key: 19 reads in 14 scripts, plus the delivery audit's
+  JSON reader) read it as `utf-8-sig`, which reads plain UTF-8 unchanged. A mark is never written, and files the plugin
+  writes and reads itself are untouched.
+- `price_book.py` error messages: a missing plan file shows its plain path in quotes (not a doubled-backslash repr), and
+  a plan that is not UTF-8 says "--items file ... is not valid UTF-8" instead of the bare codec error.
+
+**Added - tests**
+
+- `TestScriptsPrintAbsoluteCommands` (3 tests): an AST scan finds no printed `python scripts/...` command in any
+  script (docstrings are usage text and are skipped); `script_command` returns the interpreter and the absolute path.
+  Planted with the 1.29.4 scripts: 15 printed hints flagged.
+- `TestAgentWrittenInputsAcceptABom` (3 tests): a source guard keeps those reads on `utf-8-sig` (19 flagged in the
+  1.29.4 scripts) and a BOM file reads like the plain one.
+- `test_price_book.py`: a BOM plan reads like the plain plan (exit 3, unpriced, not exit 2); every error case names
+  `--items`. Planted against the 1.29.4 script: the BOM plan exits 2 "Unexpected UTF-8 BOM".
+- Discovery in `TestScriptInvocationsAreRobust` is recursive and a test plants the render-carousels file. Tests 536 -> 544.
+
 ## [1.29.4] - 2026-10-12
 
 ### Every script runs from any folder, and the quote plan does not live in /tmp

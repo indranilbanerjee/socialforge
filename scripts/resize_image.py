@@ -9,6 +9,9 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
 # Platform dimension specs.
 #
 # Every platform adapt_copy.py can write copy for must have at least one entry
@@ -55,7 +58,7 @@ def resize_image(input_path, output_path, platform, mode="cover"):
     try:
         from PIL import Image
     except ImportError:
-        print(json.dumps({"error": "Pillow is not installed. Run: python scripts/install_deps.py (it prints the pinned install command)"}))
+        print(json.dumps({"error": "Pillow is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)"}))
         sys.exit(1)
 
     if platform not in PLATFORM_SPECS:

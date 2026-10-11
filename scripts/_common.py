@@ -11,7 +11,17 @@ value through `path_component` as its argparse `type`; a guard test enforces it.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+
+def script_command(script: str, *args: str) -> str:
+    """The exact command that runs one of this plugin's scripts: the interpreter that is running now and the script's
+    absolute path, quoted when either contains a space. A printed `python scripts/x.py` is relative to the host's working
+    folder (the user's project), which is the wrong place, so every command a script tells someone to run comes from here."""
+    def quote(part: str) -> str:
+        return '"%s"' % part if " " in part else part
+    return " ".join([quote(sys.executable), quote(str(Path(__file__).resolve().parent / script)), *args])
 
 
 def is_single_component(name) -> bool:

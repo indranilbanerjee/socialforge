@@ -28,6 +28,12 @@ Reasons are kebab-case and stable — tests and docs may pin them.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
+
 
 def download_https(url, dest):
     """Download a provider-returned URL to `dest`. https only: `urlretrieve` also opens file:// and
@@ -44,7 +50,7 @@ def download_https(url, dest):
 NEXT_STEPS = {
     "no-credentials": "Run /socialforge:setup to add credentials for this provider, or skip it.",
     "dependency-missing": "Install the named package (see detail) and retry.",
-    "unresolved-model": "Run `python scripts/refresh_models.py` to update the model registry, then retry.",
+    "unresolved-model": "Run `" + _common.script_command("refresh_models.py") + "` to update the model registry, then retry.",
     "request-error": "Transient or configuration error — check the detail; retry may succeed.",
     "bad-response": "The provider answered without a usable asset — retry, or try another provider.",
     "content-rejected": "The provider refused this prompt — rephrase it; no retry will succeed unchanged.",

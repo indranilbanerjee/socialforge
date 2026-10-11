@@ -393,7 +393,7 @@ def main():
     if args.brand:
         config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
         if config_path.exists():
-            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config = json.loads(config_path.read_text(encoding="utf-8-sig"))
             brand_hashtags = _always_include_hashtags(config.get("brand_hashtags"))
             if not cta_keyword:
                 value = config.get("cta_keyword")
@@ -411,7 +411,7 @@ def main():
         if args.brand:
             config_path = WORKSPACE / "brands" / args.brand / "brand-config.json"
             if config_path.exists():
-                config = json.loads(config_path.read_text(encoding="utf-8"))
+                config = json.loads(config_path.read_text(encoding="utf-8-sig"))
                 languages = config.get("languages") or []
                 if languages:
                     primary_lang = languages[0]

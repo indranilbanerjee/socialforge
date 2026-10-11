@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200" viewBox="0 0 1200 200" role="img" aria-label="SocialForge is built and maintained by Indranil 'Neel' Banerjee — creator of the Neelverse Marketing Suite. Sponsor the project on GitHub.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <style>
+      .name { font: 800 34px 'Segoe UI', Arial, sans-serif; fill: #ffffff; }
+      .role { font: 400 16px 'Segoe UI', Arial, sans-serif; fill: #cbd5e1; }
+      .suite{ font: 600 14px 'Segoe UI', Arial, sans-serif; fill: #93c5fd; }
+      .cta  { font: 700 15px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .ctasub { font: 400 12.5px 'Segoe UI', Arial, sans-serif; fill: #94a3b8; }
+      .mono { font: 600 13px 'Consolas', 'Courier New', monospace; fill: #fdba74; }
+    </style>
+  </defs>
+  <rect width="1200" height="200" rx="14" fill="url(#bg)"/>
+  <rect x="0" y="0" width="6" height="200" fill="#f97316"/>
+
+  <!-- Monogram chip -->
+  <circle cx="92" cy="100" r="44" fill="#f97316"/>
+  <text x="92" y="114" text-anchor="middle" style="font: 800 40px 'Segoe UI', Arial, sans-serif; fill: #0f172a;">N</text>
+
+  <!-- Name + roles -->
+  <text x="164" y="88" class="name">Indranil &#8220;Neel&#8221; Banerjee</text>
+  <text x="164" y="116" class="role">Builder of SocialForge &#183; systems thinker across security, growth marketing, and AI transformation</text>
+  <text x="164" y="142" class="suite">Neelverse Marketing Suite &#8212; open-source marketing systems for agencies and in-house teams</text>
+  <text x="164" y="166" class="mono">indranil.in &#183; github.com/indranilbanerjee &#183; x.com/askneelnow</text>
+
+  <!-- Sponsor CTA -->
+  <rect x="960" y="70" width="200" height="42" rx="21" fill="#fdba74"/>
+  <text x="1060" y="97" text-anchor="middle" class="cta">&#10084; Sponsor this project</text>
+  <text x="1060" y="132" text-anchor="middle" class="ctasub">github.com/sponsors/indranilbanerjee</text>
+</svg>

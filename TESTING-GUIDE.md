@@ -26,11 +26,8 @@
 - [ ] `claude plugin marketplace add indranilbanerjee/neels-plugins` succeeds | No errors
 - [ ] `claude plugin install socialforge@neels-plugins` succeeds | Plugin appears in installed list
 
-### GitHub Install
-- [ ] `claude plugin install github:indranilbanerjee/socialforge` succeeds | Plugin appears in installed list
-
-### Local Install
-- [ ] `claude plugins add /path/to/socialforge` succeeds | Plugin appears in installed list
+### Local Install (from a clone)
+- [ ] `claude --plugin-dir /path/to/socialforge` loads the plugin | Its skills and commands appear
 
 ### Post-Install Verification
 - [ ] No welcome banner appears on session start | Correct — the 4 global hooks were removed in v1.5.0

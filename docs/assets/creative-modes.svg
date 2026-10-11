@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 590" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>The four SocialForge creative modes: how much of the brand asset survives</title>
+  <desc>Four panels, each showing what goes in and what comes out. ANCHOR_COMPOSE: the brand photo is the centerpiece and stays pixel-faithful while the AI generates the scene around it. ENHANCE_EXTEND: the brand photo is the base, the AI extends and enhances its periphery, and the core stays faithful. STYLE_REFERENCED: no asset is composited; the brand's style reference photos guide the AI, so only the style is kept. PURE_CREATIVE: the AI generates from a text prompt and the brand colors and mood, so none of an asset is kept.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6577"/>
+    </marker>
+    <pattern id="ai" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#e3eefb"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#9db8dd" stroke-width="3"/>
+    </pattern>
+  </defs>
+
+  <text x="590" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#8a94a4">The four creative modes — how much of the brand photo survives</text>
+
+  <!-- 1 · ANCHOR_COMPOSE -->
+  <g transform="translate(20,52)">
+    <rect width="560" height="214" rx="12" fill="#f4f6f9" stroke="#c9d1dc"/>
+    <rect x="20" y="67" width="56" height="56" rx="4" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <text x="48" y="99" text-anchor="middle" font-size="11" fill="#1f2733">asset</text>
+    <text x="48" y="142" text-anchor="middle" font-size="10.5" fill="#5a6577">brand photo</text>
+    <line x1="84" y1="95" x2="106" y2="95" stroke="#5a6577" stroke-width="1.6" marker-end="url(#arr)"/>
+    <rect x="112" y="20" width="150" height="150" rx="8" fill="url(#ai)" stroke="#8a94a4"/>
+    <rect x="155" y="53" width="64" height="84" rx="3" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <text x="187" y="99" text-anchor="middle" font-size="11" fill="#1f2733">asset</text>
+    <text x="187" y="190" text-anchor="middle" font-size="10.5" fill="#5a6577">scene generated around it</text>
+    <g font-size="12.5">
+      <text x="292" y="38" font-size="15" font-weight="700" fill="#1f2733">ANCHOR_COMPOSE</text>
+      <text x="292" y="58" font-size="11.5" fill="#5a6577">The brand photo is the centerpiece</text>
+      <text x="292" y="88" fill="#1f2733">AI generates the scene around</text>
+      <text x="292" y="106" fill="#1f2733">the untouched asset</text>
+      <text x="292" y="138" font-size="11.5" fill="#5a6577">The asset keeps</text>
+      <text x="292" y="162" font-size="18" font-weight="700" fill="#1f2733">Pixel-faithful</text>
+      <text x="292" y="192" font-size="11" fill="#5a6577">cut out, composited back, shadow added</text>
+    </g>
+  </g>
+
+  <!-- 2 · ENHANCE_EXTEND -->
+  <g transform="translate(600,52)">
+    <rect width="560" height="214" rx="12" fill="#f4f6f9" stroke="#c9d1dc"/>
+    <rect x="20" y="67" width="56" height="56" rx="4" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <text x="48" y="99" text-anchor="middle" font-size="11" fill="#1f2733">asset</text>
+    <text x="48" y="142" text-anchor="middle" font-size="10.5" fill="#5a6577">brand photo</text>
+    <line x1="84" y1="95" x2="106" y2="95" stroke="#5a6577" stroke-width="1.6" marker-end="url(#arr)"/>
+    <rect x="112" y="20" width="150" height="150" rx="8" fill="url(#ai)" stroke="#8a94a4"/>
+    <rect x="135" y="43" width="104" height="104" rx="4" fill="#cfe6df" fill-opacity="0.55" stroke="#4f8f80" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <rect x="155" y="63" width="64" height="64" rx="3" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <text x="187" y="99" text-anchor="middle" font-size="11" fill="#1f2733">core</text>
+    <text x="187" y="190" text-anchor="middle" font-size="10.5" fill="#5a6577">edges extended by the AI</text>
+    <g font-size="12.5">
+      <text x="292" y="38" font-size="15" font-weight="700" fill="#1f2733">ENHANCE_EXTEND</text>
+      <text x="292" y="58" font-size="11.5" fill="#5a6577">The brand photo is the base</text>
+      <text x="292" y="88" fill="#1f2733">AI extends and enhances the</text>
+      <text x="292" y="106" fill="#1f2733">periphery; the core stays put</text>
+      <text x="292" y="138" font-size="11.5" fill="#5a6577">The asset keeps</text>
+      <text x="292" y="162" font-size="18" font-weight="700" fill="#1f2733">Core faithful</text>
+      <text x="292" y="192" font-size="11" fill="#5a6577">core subject preservation is checked after the edit</text>
+    </g>
+  </g>
+
+  <!-- 3 · STYLE_REFERENCED -->
+  <g transform="translate(20,286)">
+    <rect width="560" height="214" rx="12" fill="#f4f6f9" stroke="#c9d1dc"/>
+    <rect x="30" y="28" width="38" height="38" rx="4" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <rect x="30" y="76" width="38" height="38" rx="4" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <rect x="30" y="124" width="38" height="38" rx="4" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <text x="48" y="182" text-anchor="middle" font-size="10.5" fill="#5a6577">style photos</text>
+    <line x1="84" y1="95" x2="106" y2="95" stroke="#5a6577" stroke-width="1.6" marker-end="url(#arr)"/>
+    <rect x="112" y="20" width="150" height="150" rx="8" fill="url(#ai)" stroke="#8a94a4"/>
+    <text x="187" y="190" text-anchor="middle" font-size="10.5" fill="#5a6577">all AI-generated</text>
+    <g font-size="12.5">
+      <text x="292" y="38" font-size="15" font-weight="700" fill="#1f2733">STYLE_REFERENCED</text>
+      <text x="292" y="58" font-size="11.5" fill="#5a6577">No specific asset is needed</text>
+      <text x="292" y="88" fill="#1f2733">AI generates with the brand's</text>
+      <text x="292" y="106" fill="#1f2733">style photos as visual DNA</text>
+      <text x="292" y="138" font-size="11.5" fill="#5a6577">The asset keeps</text>
+      <text x="292" y="162" font-size="18" font-weight="700" fill="#1f2733">Style only</text>
+      <text x="292" y="192" font-size="11" fill="#5a6577">2–8 reference photos steer the AI; none is composited</text>
+    </g>
+  </g>
+
+  <!-- 4 · PURE_CREATIVE -->
+  <g transform="translate(600,286)">
+    <rect width="560" height="214" rx="12" fill="#f4f6f9" stroke="#c9d1dc"/>
+    <rect x="12" y="66" width="72" height="58" rx="6" fill="none" stroke="#8a94a4" stroke-dasharray="5 4"/>
+    <g font-size="10.5" fill="#1f2733" text-anchor="middle">
+      <text x="48" y="84">text prompt</text>
+      <text x="48" y="99">+ brand colors</text>
+      <text x="48" y="114">+ mood</text>
+    </g>
+    <line x1="88" y1="95" x2="106" y2="95" stroke="#5a6577" stroke-width="1.6" marker-end="url(#arr)"/>
+    <rect x="112" y="20" width="150" height="150" rx="8" fill="url(#ai)" stroke="#8a94a4"/>
+    <text x="187" y="190" text-anchor="middle" font-size="10.5" fill="#5a6577">all AI-generated</text>
+    <g font-size="12.5">
+      <text x="292" y="38" font-size="15" font-weight="700" fill="#1f2733">PURE_CREATIVE</text>
+      <text x="292" y="58" font-size="11.5" fill="#5a6577">Generic or abstract content</text>
+      <text x="292" y="88" fill="#1f2733">AI generates from a text prompt</text>
+      <text x="292" y="106" fill="#1f2733">plus the brand's colors and mood</text>
+      <text x="292" y="138" font-size="11.5" fill="#5a6577">The asset keeps</text>
+      <text x="292" y="162" font-size="18" font-weight="700" fill="#1f2733">None</text>
+      <text x="292" y="192" font-size="11" fill="#5a6577">text only; no reference images are sent</text>
+    </g>
+  </g>
+
+  <!-- legend -->
+  <g font-size="11.5" fill="#8a94a4">
+    <rect x="212" y="522" width="16" height="16" rx="3" fill="#cfe6df" stroke="#4f8f80" stroke-width="2"/>
+    <text x="236" y="535">the brand asset, kept as it is</text>
+    <rect x="456" y="522" width="16" height="16" rx="3" fill="#e2efea" stroke="#4f8f80" stroke-dasharray="3 2"/>
+    <text x="480" y="535">edges the AI may extend (ENHANCE_EXTEND)</text>
+    <rect x="782" y="522" width="16" height="16" rx="3" fill="url(#ai)" stroke="#8a94a4"/>
+    <text x="806" y="535">the AI-generated layer</text>
+  </g>
+  <text x="590" y="568" text-anchor="middle" font-size="11.5" fill="#8a94a4">match-assets proposes a mode for each post from how well a brand photo fits it; you can change any of them before anything is generated</text>
+</svg>

@@ -253,11 +253,21 @@ class TestCriticalReadmeSections(unittest.TestCase):
     def test_architecture_section(self):
         self.assertIn("## Architecture", self.text)
 
-    def test_installation_section(self):
-        self.assertIn("## Installation", self.text)
+    def test_quick_start_carries_install_and_setup(self):
+        # "## Installation" and "## First-Time Setup" were merged into one numbered Quick Start
+        # (2026-10-11); the install command and the setup step must still be in it.
+        start = self.text.index("## Quick Start")
+        section = self.text[start:self.text.index("\n## ", start + 1)]
+        self.assertIn("/plugin install socialforge@neels-plugins", section)
+        self.assertIn("/socialforge:setup", section)
+        for step in ("brand-setup", "index-assets", "new-month", "generate-all", "review", "finalize"):
+            self.assertIn("/socialforge:" + step, section, step + " is missing from the Quick Start")
 
-    def test_first_time_setup_section(self):
-        self.assertIn("## First-Time Setup", self.text)
+    def test_admin_setup_section_points_at_its_page(self):
+        # The click-by-click steps live in docs/ADMIN-SETUP.md; the README keeps a short summary.
+        self.assertIn("## Admin Setup (One-Time)", self.text)
+        self.assertIn("docs/ADMIN-SETUP.md", self.text)
+        self.assertTrue((PLUGIN_ROOT / "docs" / "ADMIN-SETUP.md").exists())
 
     def test_video_generation_section(self):
         self.assertIn("## Video Generation", self.text)
@@ -278,6 +288,35 @@ class TestCriticalReadmeSections(unittest.TestCase):
                          "Copilot CLI", "Antigravity", "Hermes", "OpenClaw", "Grok"):
             self.assertIn(platform, self.text,
                           f"README missing '{platform}' coverage")
+
+
+class TestReadmeCanonicalOrder(unittest.TestCase):
+    """The suite's README order (2026-10-11): a short first screen, then everything a newcomer
+    needs before the long reference tables."""
+
+    ORDER = ["## Try this first", "## How it works", "## Quick Start", "## Who this is for", "## Supported surfaces"]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.text = README.read_text(encoding="utf-8")
+
+    def test_sections_come_in_the_canonical_order(self):
+        positions = [self.text.find(h) for h in self.ORDER]
+        self.assertNotIn(-1, positions, "a canonical section heading is missing: %s" % self.ORDER)
+        self.assertEqual(positions, sorted(positions), "README sections are out of the canonical order: %s" % self.ORDER)
+
+    def test_first_screen_is_short(self):
+        head = self.text.split("## Try this first", 1)[0]
+        self.assertLessEqual(head.count("img.shields.io"), 6, "more than six badges on the first screen")
+        self.assertIn("docs/assets/author-banner.svg", head)
+        self.assertEqual(head.count("Just shipped"), 1, "the release note is one callout")
+        self.assertLess(head.index("author-banner.svg"), head.index("Just shipped"))
+        self.assertLess(head.index("Just shipped"), head.index("```bash"))
+
+    def test_the_schematic_and_the_banner_ship_and_are_linked(self):
+        for rel in ("docs/assets/creative-modes.svg", "docs/assets/author-banner.svg"):
+            self.assertTrue((PLUGIN_ROOT / rel).exists(), rel + " does not ship")
+            self.assertIn(rel, self.text, rel + " is not linked from the README")
 
 
 class TestHooksManifestSchemaClean(unittest.TestCase):

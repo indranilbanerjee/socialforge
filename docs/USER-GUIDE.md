@@ -15,7 +15,7 @@ Before you start, make sure you have:
 - **Python 3.10 or newer** (3.11 or newer for the optional background-removal extra)
 - **Python packages:** `/socialforge:setup` lists what is missing and prints the exact pinned install command for each; it installs only after you say yes (`python scripts/install_deps.py` prints the same report)
 
-Get both credentials from your admin. If you ARE the admin, see the [Admin Setup (One-Time) section of the README](../README.md#admin-setup-one-time).
+Get both credentials from your admin. If you ARE the admin, see the [Admin Setup guide](ADMIN-SETUP.md).
 
 ---
 
@@ -40,7 +40,7 @@ Get both credentials from your admin. If you ARE the admin, see the [Admin Setup
 16. [Connectors](#16-connectors)
 17. [Troubleshooting](#17-troubleshooting)
 18. [FAQ](#18-faq)
-19. [Admin Setup Guide — see the README](../README.md#admin-setup-one-time)
+19. [Admin Setup Guide](ADMIN-SETUP.md)
 
 ---
 
@@ -107,10 +107,13 @@ Check status anytime: `/socialforge:setup --status`
 /plugin install socialforge@neels-plugins
 ```
 
-### Alternative: Direct from GitHub
+### Alternative: from a local copy
+
+Clone the repository and load it from that folder:
 
 ```
-/plugin install github:indranilbanerjee/socialforge
+git clone https://github.com/indranilbanerjee/socialforge
+claude --plugin-dir ./socialforge
 ```
 
 ### Verify Installation

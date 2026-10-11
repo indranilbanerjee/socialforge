@@ -9,22 +9,13 @@ Open-source agency-grade social media production engine — **21 skills · 18 co
 [![Version](https://img.shields.io/badge/version-1.29.2-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Forks](https://img.shields.io/github/forks/indranilbanerjee/socialforge?style=flat&logo=github&color=blue)](https://github.com/indranilbanerjee/socialforge/network/members)
-[![Issues](https://img.shields.io/github/issues/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/issues)
-[![Last commit](https://img.shields.io/github/last-commit/indranilbanerjee/socialforge?logo=github)](https://github.com/indranilbanerjee/socialforge/commits/main)
-[![Tests](https://img.shields.io/badge/tests-516%2F516%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-519%2F519%20passing-brightgreen.svg)](tests/)
 [![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1292)
-[![Cowork](https://img.shields.io/badge/cowork-compatible-purple.svg)](#supported-surfaces-v1292)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
-[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.2 (October 10, 2026): every paid path is quoted, and previews say what they are.** Checking the README's new claims against the code found a real spend gap: `/socialforge:generate-post` and the pipeline's interactive mode generated with no price quote. Both now quote and wait for `go`, and the image-compositor agent refuses a paid call unless the skill that dispatched it passes an approved quote. Previews are described as what they are, one preview card per platform to check copy and crop (no per-platform layouts ship), and the platform badge no longer covers the artwork. The Cursor and Copilot manifests no longer point at a `.mcp.json` that never ships.
->
-> Previously — **v1.29.1 (October 10, 2026): previews show the image, and a post's length includes its hashtags.** Every platform preview had been showing a broken-image icon while reporting success; the image is now embedded and the script checks it was drawn, line breaks are kept, and a file that is not an image is refused. The copy adapter now counts inline hashtags against the platform limit (an X post had been reported within 280 and published at 282) and returns `post_text`, exactly what to publish. Found by rendering the real preview below.
->
-> Previously — **v1.29.0 (October 10, 2026): nothing installs itself, keys stay out of the chat, and paid generation waits for a quote.** Reviewed for the Hermes Agent plugin catalog, SocialForge now never installs a Python package or a browser on its own (`scripts/install_deps.py` reports and prints pinned commands; `--install` is your go-ahead), setup takes API keys from your environment instead of the chat or the command line, `compose-creative`, `generate-video` and batch `full-pipeline` quote the run with `price_book.py` and wait for an explicit `go` before any paid call, and `--brand` / `--month`, provider URLs and slide text can no longer reach a path, a `file://` download or the page markup. **If you relied on the automatic install, run `python scripts/install_deps.py --install` once.**
->
-> Older releases: [CHANGELOG.md](CHANGELOG.md)
+[![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
+
+> 🆕 **Just shipped — v1.29.2 (October 10, 2026): every paid path is quoted, and previews say what they are.** [Current release](#current-release-v1292) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code:
@@ -42,10 +33,6 @@ grok plugin install indranilbanerjee/socialforge
 ```
 
 > If SocialForge saves your team time, [give it a star ⭐](https://github.com/indranilbanerjee/socialforge/stargazers) — it's the single thing that helps other agencies find it.
-
-**Status:** Production Ready · 21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks
-
-Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery.
 
 ## Try this first
 
@@ -75,13 +62,9 @@ Install, run the one-time setup, then ask in plain words. Each of these kinds of
 - **Model usage (tokens).** On a subscription (Claude Pro, Max, Team or Enterprise in Claude Code or Cowork; a ChatGPT plan in Codex; a Cursor or Copilot plan; the same goes for other hosts' plans) the tokens count against your plan's usage limits instead of being billed per token; check your plan for any optional extra-usage billing. Only pay-as-you-go API-key users pay per token. Context (the skill listing, a skill's instructions, the images it reads) uses context window and usage allowance for everyone, and money only for API users.
 - **Image and video generation is billed by the provider you connect with your own key** (Vertex AI, WaveSpeed, HiggsField), whatever Claude, ChatGPT or Cursor plan you are on. That is what the price quote before "go" is for: it shows each paid item's live price, its source and its age before anything is generated.
 
-## Core Principle
+## How it works
 
-**Brand assets are sacred. AI is the creative layer around them.**
-
-Product photos, headshots, screenshots — these are the brand’s real visual identity. AI generates backgrounds, mood, and context around them. The brand asset stays pixel-faithful in every composition.
-
-## How a month runs
+Agency-grade social media calendar automation with asset-first compositing and AI video generation. Takes monthly content calendars, matches brand assets, generates AI-composed creative, renders carousels, produces AI-generated video clips, adapts copy per platform, produces review galleries and delivery documents — with C2PA content provenance signed into every AI-generated image/video before delivery.
 
 ![A SocialForge month: optional research and ideation, then parse the calendar, match brand assets (you confirm), quote the paid generation and wait for go, compose the creative, adapt the copy per platform with a compliance check, render previews, build the review gallery, pause for client review, and finalize with a delivery audit](docs/assets/month-pipeline.svg)
 
@@ -91,7 +74,44 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 
 ![A LinkedIn preview card rendered by SocialForge: a bar chart of four link-rot benchmarks (70% of web-citing science articles, 66.5% of outbound links, 38% of 2013 webpages, 25% of 2013-2023 webpages), then the post copy with its line breaks, the call to action and two hashtags](docs/assets/real-run/linkedin-preview.png)
 
+## Quick Start
+
+1. **Install.** In Claude Code:
+
+   ```
+   /plugin marketplace add indranilbanerjee/neels-plugins
+   /plugin install socialforge@neels-plugins
+   ```
+
+   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1292).
+2. **Connect image and video generation (one time).** Run `/socialforge:setup`. Your admin gives you a Google Cloud service-account JSON key file (Vertex AI, images) and a WaveSpeed API key (video). Setup lists any missing Python packages with the exact pinned install command and installs only after you say `yes`; you point it at the key file and set `WAVESPEED_API_KEY` in your environment, and never paste a key into the chat. It stores the credentials in `${CLAUDE_PLUGIN_DATA}`, so they last across sessions. Without this step image and video generation will not work; everything else (calendar parsing, copy adaptation, review galleries) runs normally. Check it with `/socialforge:status`. No accounts yet? See [Admin Setup](#admin-setup-one-time).
+3. `/socialforge:brand-setup [brand-name]` configures the brand (5-10 min).
+4. `/socialforge:index-assets [brand-name]` indexes the brand photo library.
+5. `/socialforge:new-month [brand] [YYYY-MM]` starts the monthly production.
+6. `/socialforge:generate-all` produces all the creative; paid generation is quoted first and waits for your `go`.
+7. `/socialforge:review` is where you review and approve.
+8. `/socialforge:finalize` packages the month for delivery.
+
+> **Claude answers in chat instead of using a SocialForge skill?** Claude Code lists every installed skill in a budget of 1% of the context window. On a 200k window with several plugins installed, only skill names fit, so Claude can't see what each skill does. Add `"skillListingBudgetFraction": 0.05` to your Claude Code `settings.json`, or start a skill by name, e.g. `/socialforge:full-pipeline`.
+
+## Who this is for
+
+| If you're a... | Run this | What you get |
+|---|---|---|
+| **Agency producing monthly calendars for clients** | `/socialforge:brand-setup` per brand, then `/socialforge:new-month [brand] [YYYY-MM]` | The month's posts parsed, brand photos matched, creative composed, copy adapted per platform and previews rendered; a review gallery for the client, then a delivery folder with a manifest after a delivery audit |
+| **In-house social team with a brand photo library** | `/socialforge:index-assets`, then `/socialforge:generate-post` for one post at a time | Your photos matched to posts and kept faithful; AI image or video only where a post needs it, quoted before any paid call |
+| **Creative lead or brand manager reviewing the work** | `/socialforge:review`, `/socialforge:swap-asset`, `/socialforge:revision` | The review gallery to approve from, a different brand photo for a post on request, and client feedback applied by regenerating only what changed |
+| **Community manager reacting to the news** | `/socialforge:reactive-post` | A quick off-calendar post that reacts to a trend or news event |
+
+## Core Principle
+
+**Brand assets are sacred. AI is the creative layer around them.**
+
+Product photos, headshots, screenshots — these are the brand’s real visual identity. AI generates backgrounds, mood, and context around them. The brand asset stays pixel-faithful in every composition.
+
 ## The Four Creative Modes
+
+![The four creative modes. ANCHOR_COMPOSE: the brand photo is the centerpiece and stays pixel-faithful while the AI generates the scene around it. ENHANCE_EXTEND: the brand photo is the base, the AI extends and enhances its periphery, and the core stays faithful. STYLE_REFERENCED: no asset is composited; the brand's style reference photos guide the AI, so only the style is kept. PURE_CREATIVE: the AI generates from a text prompt and the brand colors and mood, so none of an asset is kept.](docs/assets/creative-modes.svg)
 
 | Mode | When | What Happens |
 |------|------|-------------|
@@ -99,19 +119,6 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 | ENHANCE_EXTEND | Brand photo is the base | AI extends/enhances periphery, core stays faithful |
 | STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
-
-## Quick Start
-
-```
-1. /socialforge:brand-setup [brand-name]    — Configure brand (5-10 min)
-2. /socialforge:index-assets [brand-name]   — Index brand photo library
-3. /socialforge:new-month [brand] [YYYY-MM] — Start monthly production
-4. /socialforge:generate-all                — Produce all creative
-5. /socialforge:review                      — Review and approve
-6. /socialforge:finalize                    — Package for delivery
-```
-
-> **Claude answers in chat instead of using a SocialForge skill?** Claude Code lists every installed skill in a budget of 1% of the context window. On a 200k window with several plugins installed, only skill names fit, so Claude can't see what each skill does. Add `"skillListingBudgetFraction": 0.05` to your Claude Code `settings.json`, or start a skill by name, e.g. `/socialforge:full-pipeline`.
 
 ## Supported surfaces (v1.29.2)
 
@@ -141,46 +148,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
 - **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1292) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
-## Installation
-
-### Option A: From Marketplace (recommended)
-```
-/plugin marketplace add indranilbanerjee/neels-plugins
-/plugin install socialforge@neels-plugins
-```
-
-### Option B: Direct from GitHub
-```
-claude plugins add github:indranilbanerjee/socialforge
-```
-
-### Option C: From Local Directory
-```
-claude plugins add /path/to/socialforge
-```
-
-## First-Time Setup (Required)
-
-After installing the plugin, run the setup command in Claude Code:
-
-```
-/socialforge:setup
-```
-
-This configures two external API services that power SocialForge’s image and video generation:
-
-1. **Google Cloud Vertex AI** — Used for AI image generation (the current Google image model, resolved live through the `latest-image-google` alias)
-2. **WaveSpeed** — Used for AI video generation (the current Kling image-to-video model, resolved live through the `latest-video-wavespeed` alias)
-
-Your admin provides you with:
-- A **Google Cloud service account JSON key file** (for Vertex AI image generation)
-- A **WaveSpeed API key** (for video generation)
-
-`/socialforge:setup` copies these credentials to persistent storage (`${CLAUDE_PLUGIN_DATA}`), so they work across all sessions automatically. You only need to run it once.
-
-**Without running `/socialforge:setup`, image and video generation will not work.** All other SocialForge features (calendar parsing, copy adaptation, review galleries, etc.) function normally without it.
-
-### Updating to Latest Version
+## Updating to Latest Version
 
 > **If you see "/plugin isn't available in this environment"** — you're in the standard **Claude chat app** (browser OR installed desktop app). The `/plugin` slash command is **only** supported in two environments: **Claude Code** (the developer CLI / IDE at [claude.com/code](https://claude.com/code), `npm install -g @anthropic-ai/claude-code`) and **Anthropic Cowork**. Everywhere else — `claude.ai` web chat, the Claude Desktop app, mobile — plugins are managed through the UI, not slash commands.
 >
@@ -215,152 +183,20 @@ Open `/plugin`, go to the **Marketplaces** tab, find `neels-plugins`, and toggle
 /reload-plugins
 ```
 
-### Installs in Cowork
+## Installs in Cowork
 
 Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 30 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 12 catalog connectors are all HTTP and fully Cowork-compatible.
 
-### Pre-Requisites for Image Generation
-
-SocialForge uses **Google Cloud Vertex AI** for image generation. Without it, image generation will fail (it will NOT silently create placeholders).
-
-**Setup via /socialforge:setup (recommended):**
-1. Your admin provides a Google Cloud service account JSON key file with Vertex AI access
-2. Run `/socialforge:setup` and point it to the JSON key file
-3. Credentials are stored persistently — no need to set environment variables manually
-
-**Alternative — Direct environment variable:**
-If you prefer manual configuration, set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account JSON file:
-```
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-```
-
-**Alternative — fal.ai or Replicate:** Connect via Connectors panel after installation for third-party image generation.
-
-Run `/socialforge:status` to verify image and video generation credentials are configured. (As of v1.5.0, credential status is reported on demand instead of via a SessionStart banner that fired on every Claude Code launch in every project.)
-
 ## Admin Setup (One-Time)
 
-Admins configure the cloud accounts once. Team members then just run `/socialforge:setup` with the credentials the admin shares.
+An admin creates the provider accounts once and shares the credentials; team members then run `/socialforge:setup` and need no cloud accounts of their own.
 
-### Google Cloud (Vertex AI — Image Generation)
+- **Google Cloud (Vertex AI, images):** a project with billing, the Vertex AI API enabled and a service account with the "Vertex AI User" role. Share its JSON key file.
+- **WaveSpeed (video):** an account with credits and an API key.
+- **HiggsField (optional fallback, image and video):** an API key and secret.
+- **Sharing:** a password manager or a restricted channel; never commit a key to Git.
 
-#### Step 1: Create a Google Cloud Project
-1. Open https://console.cloud.google.com/
-2. If you don’t have an account, click "Get started for free" and follow registration
-3. Click the project dropdown at the top of the page (next to "Google Cloud")
-4. Click "NEW PROJECT"
-5. Enter a project name (e.g., "socialforge-production")
-6. Click "CREATE"
-7. Wait for the project to be created (30 seconds), then select it from the dropdown
-
-#### Step 2: Enable Billing
-1. Go to https://console.cloud.google.com/billing
-2. Click "LINK A BILLING ACCOUNT"
-3. If you don’t have a billing account, click "CREATE BILLING ACCOUNT"
-4. Add a payment method (credit card)
-
-#### Step 3: Enable Vertex AI API
-1. Go to https://console.cloud.google.com/apis/library
-2. Search for "Vertex AI API"
-3. Click on it, then click "ENABLE"
-4. Wait for it to activate (takes a few seconds)
-
-#### Step 4: Create a Service Account
-1. Go to https://console.cloud.google.com/iam-admin/serviceaccounts
-2. Click "+ CREATE SERVICE ACCOUNT"
-3. Service account name: `socialforge-image-gen`
-4. Description: `SocialForge AI image generation`
-5. Click "CREATE AND CONTINUE"
-6. In "Grant this service account access to project":
-   - Click the "Select a role" dropdown
-   - Type "Vertex AI User" in the search box
-   - Select "Vertex AI User"
-7. Click "CONTINUE", then "DONE"
-
-#### Step 5: Download the JSON Key File
-1. In the service accounts list, click on `socialforge-image-gen`
-2. Go to the "KEYS" tab
-3. Click "ADD KEY" then "Create new key"
-4. Select "JSON" and click "CREATE"
-5. A .json file downloads automatically — this is your credential file
-6. Save it somewhere safe on your computer
-
-#### Step 6: Share with Your Team
-Share the downloaded JSON file with your team via:
-- Slack DM (not in a public channel)
-- Email (encrypted if possible)
-- Shared company drive (restricted access)
-
-NEVER commit this file to Git. NEVER share it publicly.
-
-**Cost:** Image generation is billed per image to the admin’s Google Cloud account. The price depends on the model and resolution and changes over time, so SocialForge stores no prices: before any paid run it quotes the planned generations from a live lookup (with the source URL and the price’s age) and waits for your `go`.
-
-### WaveSpeed (Video Generation)
-
-#### Step 1: Create a WaveSpeed Account
-1. Open https://wavespeed.ai
-2. Click "Sign Up" and create an account
-3. Verify your email
-
-#### Step 2: Add Credits
-1. After logging in, go to your dashboard
-2. Click "Top Up" or navigate to billing
-3. Add credits (minimum top-up required to activate API access)
-4. Pricing: WaveSpeed bills per second of video and the rate depends on the model. SocialForge quotes it from a live lookup (source URL and the price’s age shown) before every paid run and waits for your `go`.
-
-#### Step 3: Create an API Key
-1. Go to https://wavespeed.ai/accesskey
-2. Click "Create API Key"
-3. Copy the key (it’s a long string of letters and numbers)
-4. Save it somewhere safe
-
-#### Step 4: Share with Your Team
-Share the API key string with your team via:
-- Slack DM
-- Password manager (recommended)
-- Email (encrypted if possible)
-
-NEVER commit this key to Git or paste it in public forums.
-
-**Cost:** All video generation costs go to the admin’s WaveSpeed account. Monitor usage at https://wavespeed.ai/dashboard
-
-### HiggsField (Optional Fallback — Video + Image)
-
-HiggsField provides additional resilience. If both Vertex AI and WaveSpeed are down, HiggsField can generate images and videos.
-
-#### Step 1: Create a HiggsField Account
-1. Open https://higgsfield.ai
-2. Click "Sign Up" and create an account
-
-#### Step 2: Get API Credentials
-1. Log in at https://cloud.higgsfield.ai and open the API / Developer section of your dashboard
-2. Create a new API key pair — you'll get an API Key AND an API Secret
-3. Save both values
-
-#### Step 3: Share with Your Team
-Share both the API key AND secret with your team. Both are needed for authentication.
-
-### What Team Members Do
-
-Team members do NOT need any cloud accounts. The admin shares credentials, and the team member runs:
-
-```
-/socialforge:setup
-```
-
-The setup wizard first lists the Python packages that are missing and the exact pinned install command for each; it installs them only after you say `yes`. Then it asks for:
-1. Path to the Google Cloud JSON file (for images) — give the file path
-2. WaveSpeed API key (for video) — set `WAVESPEED_API_KEY` in your environment and say when it is set; never paste the key into the chat
-3. HiggsField credentials (optional) — set `HF_API_KEY` and `HF_API_SECRET` the same way
-
-Credentials are stored in the plugin’s persistent data directory. They survive across sessions, restarts, and plugin updates.
-
-**Where credentials are stored per platform:**
-- Windows: `%APPDATA%\Claude\plugins\data\socialforge-neels-plugins\socialforge\`
-- macOS: `~/Library/Application Support/Claude/plugins/data/socialforge-neels-plugins/socialforge/`
-- Linux: `~/.config/Claude/plugins/data/socialforge-neels-plugins/socialforge/`
-
-Or if using the fallback workspace: `~/socialforge-workspace/`
+Click-by-click steps, who pays, and where credentials are stored: [docs/ADMIN-SETUP.md](docs/ADMIN-SETUP.md).
 
 ## Video Generation
 
@@ -440,6 +276,7 @@ Older releases are in [CHANGELOG.md](CHANGELOG.md).
 
 - **[User Guide](docs/USER-GUIDE.md)** — Complete walkthrough from setup to delivery (with real agency examples)
 - **[Technical Operations](docs/OPERATIONS.md)** — Pipeline logic, scoring algorithms, AI models, folder structures, cost tracking
+- **[Admin Setup](docs/ADMIN-SETUP.md)** — Cloud accounts and credentials, click by click: Google Cloud (Vertex AI), WaveSpeed, HiggsField
 - **[Connectors](CONNECTORS.md)** — All 12 MCP connectors + storage architecture
 - **[Testing Guide](TESTING-GUIDE.md)** — Full test plan with checklists
 - **[X/Twitter Research Intake](references/x-twitter-research-intake.md)** - Optional, vendor-neutral evidence workflow for reactive posts and X copy — uses the harness's own web tools, any research tool the user has connected, or pasted threads

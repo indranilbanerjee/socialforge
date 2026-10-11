@@ -292,24 +292,52 @@ def get_status():
     }
 
 
-def _read_secret(value, env_var, label):
-    """Resolve a secret without requiring it on the command line.
+class NoSecret(Exception):
+    """A secret was not supplied in any way the caller asked for."""
 
-    Precedence: explicit flag > environment variable > stdin. Passing a secret as a
-    CLI argument leaks it into shell history and the process table, so the flag is
-    optional and the env-var / stdin forms are preferred.
+
+def _has_real_console() -> bool:
+    """True only when a person can type at this process. On Windows `isatty()` is True for the NUL device and the Bash tool's
+    stdin is an open pipe, so GetConsoleMode is the honest test: it succeeds only for a real console."""
+    if os.name == "nt":
+        try:
+            import ctypes
+            from ctypes import wintypes
+            kernel32 = ctypes.windll.kernel32
+            mode = wintypes.DWORD()
+            return bool(kernel32.GetConsoleMode(kernel32.GetStdHandle(-10), ctypes.byref(mode)))
+        except Exception:
+            return False
+    return sys.stdin.isatty()
+
+
+def _read_secret(value, env_var, label, flag="--api-key", stdin_lines=None, prompt=False):
+    """Resolve a secret WITHOUT ever blocking on a stream nobody is feeding.
+
+    Precedence: the flag > the environment variable > a line from stdin, ONLY when --api-key-stdin was given (`stdin_lines` is then
+    an iterator over its lines) > a hidden prompt, ONLY when --prompt was given AND a real console is attached. Anything else is
+    NoSecret, so a missing key fails at once. Before 1.29.7 this read stdin whenever it was not a console: an agent running
+    setup in a shell whose stdin is an open pipe waited forever, and the NUL device (isatty() True on Windows) blocked getpass.
+    A secret on the command line leaks into shell history and the process table, so the environment variable is preferred.
     """
     if value:
         return value
     from_env = os.environ.get(env_var)
     if from_env:
         return from_env
-    if not sys.stdin.isatty():
-        # Non-interactive (agent/CI harness): never fall through to getpass —
-        # it would block on a closed stdin. An empty pipe means no secret,
-        # and the setup function will report the invalid/missing key.
-        return sys.stdin.readline().strip() or None
-    return getpass.getpass(f"{label}: ").strip()
+    if stdin_lines is not None:
+        line = next(stdin_lines, "").strip()
+        if line:
+            return line
+        raise NoSecret(f"no {label}: --api-key-stdin was given but stdin held no line for it")
+    if prompt:
+        if not _has_real_console():
+            raise NoSecret(f"no {label}: --prompt needs a real console (a terminal) and this process has none: "
+                           f"set {env_var}, pass {flag}, or use --api-key-stdin")
+        secret = getpass.getpass(f"{label}: ").strip()
+        if secret:
+            return secret
+    raise NoSecret(f"no {label}: pass {flag}, set {env_var}, or use --api-key-stdin")
 
 
 def main():
@@ -320,24 +348,35 @@ def main():
     va_p.add_argument("--json-path", required=True, help="Path to GCP service account JSON")
     ws_p = sub.add_parser("setup-wavespeed", help="Configure WaveSpeed")
     ws_p.add_argument("--api-key", default=None,
-                      help="WaveSpeed API key (omit to read from WAVESPEED_API_KEY or stdin — avoids shell-history leaks)")
+                      help="WaveSpeed API key (prefer the WAVESPEED_API_KEY environment variable: a key on the command line leaks into shell history)")
+    ws_p.add_argument("--api-key-stdin", action="store_true", help="read the key from the first line of stdin (never read implicitly)")
+    ws_p.add_argument("--prompt", action="store_true", help="ask for the key at a hidden prompt (needs a real terminal)")
     hf_p = sub.add_parser("setup-higgsfield", help="Configure HiggsField")
     hf_p.add_argument("--api-key", default=None,
-                      help="HiggsField API key (omit to read from HF_API_KEY or stdin)")
+                      help="HiggsField API key (prefer the HF_API_KEY environment variable)")
     hf_p.add_argument("--api-secret", default=None,
-                      help="HiggsField API secret (omit to read from HF_API_SECRET or stdin)")
+                      help="HiggsField API secret (prefer the HF_API_SECRET environment variable)")
+    hf_p.add_argument("--api-key-stdin", action="store_true",
+                      help="read the key from the first line of stdin and the secret from the second (never read implicitly)")
+    hf_p.add_argument("--prompt", action="store_true", help="ask for the key and secret at a hidden prompt (needs a real terminal)")
     sub.add_parser("status", help="Show credential status")
     sub.add_parser("validate", help="Validate all credentials")
     args = parser.parse_args()
     if args.action == "setup-vertex":
         result = setup_vertex_ai(args.json_path)
-    elif args.action == "setup-wavespeed":
-        result = setup_wavespeed(_read_secret(args.api_key, "WAVESPEED_API_KEY", "WaveSpeed API key"))
-    elif args.action == "setup-higgsfield":
-        result = setup_higgsfield(
-            _read_secret(args.api_key, "HF_API_KEY", "HiggsField API key"),
-            _read_secret(args.api_secret, "HF_API_SECRET", "HiggsField API secret"),
-        )
+    elif args.action in ("setup-wavespeed", "setup-higgsfield"):
+        stdin_lines = iter(sys.stdin.readline, "") if args.api_key_stdin else None   # explicit only; one line per secret
+        try:
+            if args.action == "setup-wavespeed":
+                result = setup_wavespeed(_read_secret(args.api_key, "WAVESPEED_API_KEY", "key", "--api-key", stdin_lines, args.prompt))
+            else:
+                result = setup_higgsfield(
+                    _read_secret(args.api_key, "HF_API_KEY", "HiggsField API key", "--api-key", stdin_lines, args.prompt),
+                    _read_secret(args.api_secret, "HF_API_SECRET", "HiggsField API secret", "--api-secret", stdin_lines, args.prompt),
+                )
+        except NoSecret as exc:
+            print(json.dumps({"status": "FAILED", "error": str(exc)}, indent=2))
+            sys.exit(2)
     elif args.action == "status":
         result = get_status()
     elif args.action == "validate":

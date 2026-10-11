@@ -25,6 +25,10 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
+import _common  # noqa: E402
 
 # Exact versions the scripts were tested against. Change a pin only together with a test run.
 PINNED = {
@@ -75,18 +79,14 @@ def pin(package_name):
     return f"{package_name}=={PINNED[package_name]}"
 
 
-def _exe():
-    exe = sys.executable
-    return f'"{exe}"' if " " in exe else exe
-
-
 def install_command(packages):
-    """The exact pinned pip command for `packages`."""
-    return f"{_exe()} -m pip install {' '.join(pin(p) for p in packages)}"
+    """The exact pinned pip command for `packages`, in the printed shape (forward slashes, the interpreter quoted only when its
+    path has a space, a trailing PowerShell note then). It is only PRINTED: the install functions below run an argv list."""
+    return _common.printed_command("-m", "pip", "install", *(pin(p) for p in packages))
 
 
 def browser_command():
-    return f"{_exe()} -m playwright install chromium"
+    return _common.printed_command("-m", "playwright", "install", "chromium")
 
 
 def check_package(package_name):
@@ -184,7 +184,8 @@ def main():
         print("Nothing was installed. To install them yourself, run:")
         print("  " + install_command(missing))
         if "playwright" in missing:
-            print("  " + browser_command() + "   (downloads a browser)")
+            print("  Then the browser it drives (a large download):")
+            print("  " + browser_command())
         print("Or re-run this script with --install to have it run those commands.")
         sys.exit(1)
     if missing:

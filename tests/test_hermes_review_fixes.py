@@ -716,6 +716,240 @@ class TestErrorResultsExitNonZero(unittest.TestCase):
                 self.assertEqual(cm.exception.code, code)
 
 
+class TestSecretsNeverBlock(unittest.TestCase):
+    """1.29.7: setup-wavespeed / setup-higgsfield with no key waited forever on Windows (an open non-TTY pipe for stdin, or NUL, which
+    reports isatty() True). A key is read from stdin only with --api-key-stdin and prompted for only with --prompt on a real console;
+    otherwise the script stops at once with exit 2. Every run is bounded: a child still alive after TIMEOUT fails the test, and is
+    killed in a finally block so none is left behind. Each run uses a temporary home AND data folder (the credentials folder is the
+    data folder only when it exists, else ~/socialforge-workspace), and a test refuses to continue if a key would land outside it."""
+    TIMEOUT = 30
+    WS_ERROR = "no key: pass --api-key, set WAVESPEED_API_KEY, or use --api-key-stdin"
+
+    def _run(self, args, stdin, env_extra=None):
+        """stdin is "open-pipe" (a pipe nobody closes, like the Bash tool), "devnull" (NUL), or bytes that are written and closed."""
+        with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as logs:
+            env = {k: v for k, v in os.environ.items() if not any(w in k.upper() for w in ("KEY", "SECRET", "TOKEN", "CRED", "PASSWORD"))}
+            env.update(HOME=home, USERPROFILE=home, APPDATA=home, LOCALAPPDATA=home, CLAUDE_PLUGIN_DATA=home, PLUGIN_DATA=home)
+            env.update(env_extra or {})
+            out_path, err_path = Path(logs) / "out.txt", Path(logs) / "err.txt"
+            with open(out_path, "wb") as out, open(err_path, "wb") as err:
+                proc = subprocess.Popen([sys.executable, str(SCRIPTS / "credential_manager.py"), *args],
+                                        stdin=subprocess.DEVNULL if stdin == "devnull" else subprocess.PIPE,
+                                        stdout=out, stderr=err, env=env, cwd=home)
+                try:
+                    if isinstance(stdin, bytes):
+                        proc.stdin.write(stdin)
+                        proc.stdin.close()
+                    try:
+                        proc.wait(timeout=self.TIMEOUT)
+                    except subprocess.TimeoutExpired:
+                        self.fail("credential_manager.py was still waiting after %d s: it reads a stream nobody is feeding" % self.TIMEOUT)
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    if proc.stdin and not proc.stdin.closed:
+                        proc.stdin.close()
+            text = out_path.read_text(encoding="utf-8", errors="replace")
+            try:
+                payload = json.loads(text)
+            except ValueError:
+                payload = {"_stdout": text, "_stderr": err_path.read_text(encoding="utf-8", errors="replace")}
+            stored = payload.get("stored_at", "")
+            if stored:
+                self.assertTrue(os.path.normcase(os.path.abspath(stored)).startswith(os.path.normcase(os.path.abspath(home))),
+                                "a key was stored outside the temporary folder: " + stored)
+            return proc.returncode, payload
+
+    def test_no_key_stops_at_once_with_exit_2_whatever_stdin_is(self):
+        cases = {
+            "wavespeed, open pipe": (["setup-wavespeed"], "open-pipe", self.WS_ERROR),
+            "wavespeed, NUL": (["setup-wavespeed"], "devnull", self.WS_ERROR),
+            "higgsfield, open pipe": (["setup-higgsfield"], "open-pipe", "no HiggsField API key: pass --api-key, set HF_API_KEY, or use --api-key-stdin"),
+            "higgsfield, NUL": (["setup-higgsfield"], "devnull", "no HiggsField API key: pass --api-key, set HF_API_KEY, or use --api-key-stdin"),
+        }
+        for name, (args, stdin, message) in cases.items():
+            with self.subTest(case=name):
+                code, payload = self._run(args, stdin)
+                self.assertEqual(code, 2, payload)
+                self.assertEqual(payload.get("error"), message)
+
+    def test_a_key_in_the_environment_is_stored_and_stdin_is_never_read(self):
+        code, payload = self._run(["setup-wavespeed"], "open-pipe", {"WAVESPEED_API_KEY": "k" * 24})
+        self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+        code, payload = self._run(["setup-higgsfield"], "open-pipe", {"HF_API_KEY": "a" * 24, "HF_API_SECRET": "b" * 24})
+        self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+
+    def test_api_key_stdin_reads_exactly_what_it_is_given(self):
+        code, payload = self._run(["setup-wavespeed", "--api-key-stdin"], ("k" * 24 + "\n").encode())
+        self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+        code, payload = self._run(["setup-higgsfield", "--api-key-stdin"], ("a" * 24 + "\n" + "b" * 24 + "\n").encode())
+        self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+        code, payload = self._run(["setup-wavespeed", "--api-key-stdin"], b"")
+        self.assertEqual(code, 2, payload)
+        self.assertIn("stdin held no line", payload.get("error", ""))
+        code, payload = self._run(["setup-higgsfield", "--api-key-stdin"], ("a" * 24 + "\n").encode())
+        self.assertEqual(code, 2, payload)      # the secret line is missing
+        self.assertIn("HiggsField API secret", payload.get("error", ""))
+
+    def test_prompt_needs_a_real_console_and_otherwise_stops_with_exit_2(self):
+        for stdin in ("open-pipe", "devnull"):
+            with self.subTest(stdin=stdin):
+                code, payload = self._run(["setup-wavespeed", "--prompt"], stdin)
+                self.assertEqual(code, 2, payload)
+                self.assertIn("real console", payload.get("error", ""))
+
+
+class TestNoImplicitStdinReads(unittest.TestCase):
+    """1.29.7: `credential_manager.py setup-wavespeed` with no key blocked forever on Windows. The Bash tool's stdin is an open pipe, so
+    readline() never returns, and `stdin < NUL` reports isatty() True, so getpass blocks on the console. A script never reads stdin or
+    prompts unless the caller passed an explicit flag; `getpass.getuser()` (the user NAME) is not a read."""
+    CALLS = {"input", "getpass.getpass"}
+    ATTRS = {"sys.stdin.read", "sys.stdin.readline", "sys.stdin.readlines", "sys.stdin.buffer.read", "sys.stdin.buffer.readline"}
+    # Where an explicit flag gates the read; every other script has none.
+    ALLOWED = {"credential_manager.py"}
+
+    @classmethod
+    def findings(cls, source: str, name: str = "x.py") -> list:
+        import ast
+        out = []
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.Call) and ast.unparse(node.func) in cls.CALLS:
+                out.append("%s:%d: %s()" % (name, node.lineno, ast.unparse(node.func)))
+            if isinstance(node, ast.Attribute) and ast.unparse(node) in cls.ATTRS:
+                out.append("%s:%d: %s" % (name, node.lineno, ast.unparse(node)))
+        return out
+
+    def test_only_the_flag_gated_readers_touch_stdin_or_prompt(self):
+        scripts = sorted((ROOT / "scripts").glob("*.py"))
+        self.assertGreater(len(scripts), 20, "the scan found too few scripts; the guard is vacuous")
+        bad = [f for p in scripts if p.name not in self.ALLOWED for f in self.findings(p.read_text(encoding="utf-8"), p.name)]
+        self.assertEqual(bad, [])
+        for name in self.ALLOWED:
+            self.assertIn(name, [p.name for p in scripts])
+
+    def test_plant_each_kind_of_implicit_read_is_flagged_and_getuser_is_not(self):
+        for source in ("x = input('key: ')\n", "import getpass\nk = getpass.getpass('k')\n", "import sys\nk = sys.stdin.readline()\n",
+                       "import sys\nk = sys.stdin.read()\n", "import sys\nit = iter(sys.stdin.readline, '')\n"):
+            with self.subTest(source=source):
+                self.assertTrue(self.findings(source), source)
+        self.assertEqual(self.findings("import getpass\nuser = getpass.getuser()\n"), [])
+
+
+class TestPrintedCommandsAreLastOnTheLine(unittest.TestCase):
+    """4.5.6 / 1.29.6 as first built: three recovery messages did `script_command("run-audit.py") + " --brand ..."`. With an interpreter
+    path that has a space the command ends in a trailing comment, so those arguments became part of the comment and the pasted command
+    ran with none (exit 2). A printed command is built with every argument as a token and nothing is appended after it."""
+    FUNCS = {"script_command", "install_command", "browser_command", "printed_command"}
+
+    @classmethod
+    def _is_command(cls, node) -> bool:
+        import ast
+        return isinstance(node, ast.Call) and (getattr(node.func, "attr", None) or getattr(node.func, "id", None)) in cls.FUNCS
+
+    @classmethod
+    def _flag_text(cls, node) -> bool:
+        import ast
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value.startswith(" -")
+        if isinstance(node, ast.JoinedStr) and node.values and isinstance(node.values[0], ast.Constant):
+            return str(node.values[0].value).startswith(" -")
+        return False
+
+    @classmethod
+    def findings(cls, source: str, name: str = "x.py") -> list:
+        import ast
+        out = []
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+                left = node.left
+                while isinstance(left, ast.BinOp) and isinstance(left.op, ast.Add):
+                    left = left.right
+                if cls._is_command(left) and cls._flag_text(node.right):
+                    out.append("%s:%d" % (name, node.lineno))
+            if isinstance(node, ast.JoinedStr):
+                for here, after in zip(node.values, node.values[1:]):
+                    if isinstance(here, ast.FormattedValue) and cls._is_command(here.value) and cls._flag_text(after):
+                        out.append("%s:%d" % (name, node.lineno))
+        return out
+
+    def test_no_script_appends_arguments_after_a_printed_command(self):
+        scripts = sorted((ROOT / "scripts").glob("*.py"))
+        self.assertGreater(len(scripts), 20, "the scan found too few scripts; the guard is vacuous")
+        bad = [f for p in scripts for f in self.findings(p.read_text(encoding="utf-8"), p.name)]
+        self.assertEqual(bad, [])
+
+    def test_plant_the_old_forms_are_flagged_and_the_good_forms_are_not(self):
+        concat = '_common.script_command("run-audit.py") + " --brand " + brand\n'
+        chained = '"Run: " + _common.script_command("run-audit.py") + " --brand " f"{brand} --run-id {rid}" "  then finalize"\n'
+        fstring = 'm = f"{_common.script_command(\'run-audit.py\')} --brand {brand}"\n'
+        for source in (concat, chained, fstring):
+            with self.subTest(source=source):
+                self.assertEqual(len(self.findings(source)), 1, source)
+        good = '"Re-run the audit: " + _common.script_command("run-audit.py", "--brand", brand, "--run-id", rid)\n'
+        prose_after = '"Run: " + install_command(["Pillow"]) + " (it prints the pinned command)"\n'
+        self.assertEqual(self.findings(good), [])
+        self.assertEqual(self.findings(prose_after), [])   # prose after a command is harmless (a comment); an argument is not
+
+
+class TestInstallHintsUseThePrintedShape(unittest.TestCase):
+    """What is PRINTED for someone to paste is a shell line in the printed shape; what is EXECUTED is an argv list and never a string."""
+
+    def _both(self, make):
+        from unittest import mock
+        with mock.patch.object(sys, "executable", "C:\\Python313\\python.exe"):
+            plain = make()
+        with mock.patch.object(sys, "executable", "C:\\Program Files\\Python313\\python.exe"):
+            spaced = make()
+        return plain, spaced
+
+    def test_the_pip_hint_has_forward_slashes_and_the_note_only_when_the_path_has_a_space(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import install_deps
+        plain, spaced = self._both(lambda: install_deps.install_command(["Pillow"]))
+        self.assertTrue(plain.startswith("C:/Python313/python.exe -m pip install "), plain)
+        self.assertNotIn("PowerShell", plain)
+        self.assertTrue(spaced.startswith('"C:/Program Files/Python313/python.exe" -m pip install '), spaced)
+        self.assertTrue(spaced.endswith("  # in PowerShell, put & before it"), spaced)
+        self.assertNotIn("\\", plain + spaced)
+
+    def test_the_printed_install_line_works_in_both_shells(self):
+        """Git Bash gave exit 127 for the backslash form, and PowerShell a parse error for a quoted first token."""
+        import shutil
+        sys.path.insert(0, str(SCRIPTS))
+        import _common
+        from unittest import mock
+        bash = shutil.which("bash")
+        if bash and (sys.platform != "win32" or any(k in subprocess.run([bash, "-c", "uname -s"], capture_output=True, text=True).stdout
+                                                     for k in ("MINGW", "MSYS", "CYGWIN"))):
+            line = _common.printed_command("-m", "pip", "--version")
+            with tempfile.TemporaryDirectory() as d:
+                r = subprocess.run([bash, "-c", line], capture_output=True, text=True, cwd=d, timeout=120)
+            self.assertEqual(r.returncode, 0, line + "\n" + r.stdout + r.stderr)
+            self.assertIn("pip", r.stdout)
+            with mock.patch.object(sys, "executable", "C:\\Program Files\\Python313\\python.exe"):
+                spaced = _common.printed_command("-m", "pip", "install", "x==1")
+            self.assertEqual(subprocess.run([bash, "-n", "-c", spaced], capture_output=True, text=True).returncode, 0, spaced)
+        ps = shutil.which("powershell") or shutil.which("pwsh")
+        if ps and sys.platform == "win32":
+            line = _common.printed_command("-m", "pip", "--version")
+            with tempfile.TemporaryDirectory() as d:
+                shim_dir = Path(d) / "dir with space"
+                shim_dir.mkdir()
+                shim = shim_dir / "pyshim.cmd"
+                shim.write_text('@echo off\r\n"%s" %%*\r\n' % sys.executable, encoding="ascii")
+                with mock.patch.object(sys, "executable", str(shim).replace("\\", "/")):
+                    spaced = _common.printed_command("-m", "pip", "--version")
+                run = lambda command: subprocess.run([ps, "-NoProfile", "-NonInteractive", "-Command", command],
+                                                     capture_output=True, text=True, cwd=d, timeout=180)
+                plain_run, with_amp, without = run(line), run("& " + spaced), run(spaced)
+            self.assertEqual(plain_run.returncode, 0, plain_run.stdout + plain_run.stderr)
+            self.assertEqual(with_amp.returncode, 0, with_amp.stdout + with_amp.stderr)
+            self.assertNotEqual(without.returncode, 0, "without `&` PowerShell reads the quoted path as a string")
+        if not bash and not ps:
+            self.skipTest("neither bash nor PowerShell is installed")
+
+
 class TestNoTmpPathsInInstructions(unittest.TestCase):
     """/tmp is not one folder on Windows: Git Bash maps it to the user's temp folder while Python resolves it elsewhere, so a
     file the shell wrote was not found by the script and the command stopped. Instructions use a folder the plugin knows."""

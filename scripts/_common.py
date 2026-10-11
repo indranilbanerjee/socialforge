@@ -15,18 +15,30 @@ import sys
 from pathlib import Path
 
 
-def script_command(script: str, *args: str) -> str:
-    """The exact command that runs one of this plugin's scripts, ready to paste into Git Bash or PowerShell: the interpreter that
-    is running now and the script's absolute path, with FORWARD slashes (bash drops a backslash, so `C:\\Python313\\python.exe`
-    arrives as `C:Python313python.exe`) and the script path always double-quoted. The interpreter is quoted only when its path
-    has a space, because a quoted first token is a string literal in PowerShell; then the command ends with a trailing comment (bash
-    and PowerShell both ignore it) saying to put `&` before it. A parenthetical there is a syntax error in bash. A printed `python scripts/x.py` is relative to the host's working folder (the user's project), which is the
-    wrong place, so every command a script tells someone to run comes from here."""
+def printed_command(*tokens: str) -> str:
+    """A command to PRINT, ready to paste into Git Bash or PowerShell: the interpreter that is running now, then `tokens`. The
+    interpreter path uses FORWARD slashes (bash drops a backslash, so `C:\\Python313\\python.exe` arrives as `C:Python313python.exe`)
+    and is quoted only when it has a space, because a quoted first token is a string literal in PowerShell; then the line ends with
+    a trailing comment (bash and PowerShell both ignore it) saying to put `&` before it. A parenthetical there is a syntax error in
+    bash, and anything appended after the line lands inside the comment, so a caller puts prose BEFORE the command and passes every
+    argument as a token. Code that RUNS something passes an argv list to subprocess instead and never uses this."""
     exe = sys.executable.replace("\\", "/")
-    path = str(Path(__file__).resolve().parent / script).replace("\\", "/")
     spaced = " " in exe
-    command = " ".join(['"%s"' % exe if spaced else exe, '"%s"' % path, *args])
-    return command + "  # in PowerShell, put & before it" if spaced else command
+    line = " ".join(['"%s"' % exe if spaced else exe, *tokens])
+    return line + "  # in PowerShell, put & before it" if spaced else line
+
+
+def _quote_arg(arg: str) -> str:
+    return '"%s"' % arg if any(c.isspace() for c in arg) and '"' not in arg else arg
+
+
+def script_command(script: str, *args: str) -> str:
+    """The exact command that runs one of this plugin's scripts (see printed_command): the script's absolute path with forward
+    slashes, always double-quoted, then the arguments (quoted when they contain a space). A printed `python scripts/x.py` is relative
+    to the host's working folder (the user's project), which is the wrong place, so every command a script tells someone to run
+    comes from here."""
+    path = str(Path(__file__).resolve().parent / script).replace("\\", "/")
+    return printed_command('"%s"' % path, *[_quote_arg(a) for a in args])
 
 
 def is_single_component(name) -> bool:

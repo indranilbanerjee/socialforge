@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.7] - 2026-10-12
+
+### A missing key no longer hangs the shell, and the install hints paste into Git Bash and PowerShell
+
+Found by a fresh-install smoke test (its re-check).
+
+**Fixed**
+
+- `credential_manager.py setup-wavespeed` and `setup-higgsfield` with no key waited forever on Windows, hanging the
+  shell of an agent that ran `/socialforge:setup` without one. The Bash tool's stdin is an open pipe that never ends, so
+  `readline()` blocked, and `stdin < NUL` reports `isatty()` True, so `getpass` blocked on the console. A script now
+  never reads stdin on its own. A key comes from `--api-key`, the environment (`WAVESPEED_API_KEY`; `HF_API_KEY` and
+  `HF_API_SECRET`), a line of stdin only with an explicit `--api-key-stdin` (HiggsField: the key on the first line, the
+  secret on the second), or a hidden prompt only with an explicit `--prompt` on a real console (checked with
+  `GetConsoleMode` on Windows). With none of them the script stops at once with exit 2: `no key: pass --api-key, set
+  WAVESPEED_API_KEY, or use --api-key-stdin`. The `/socialforge:setup` skill says so.
+- `install_deps.py` printed the pip and browser install commands with backslashes (Git Bash: exit 127) and, for an
+  interpreter path with a space, no PowerShell note. Printing and executing are separate: the install functions still
+  run an argv list, and the printed line comes from `_common.printed_command`, shared with `script_command`: forward
+  slashes, the interpreter quoted only when its path has a space, and a trailing comment saying to put `&` before it.
+
+**Checked, not changed**
+
+- No other SocialForge script reads stdin or prompts: a static sweep finds none outside `credential_manager.py`.
+
+**Added - tests**
+
+- `TestSecretsNeverBlock` (4 tests): every no-key case (WaveSpeed and HiggsField, an open pipe and NUL) exits 2 within
+  30 seconds, a key in the environment is stored without reading stdin, `--api-key-stdin` reads exactly one or two lines,
+  and `--prompt` without a console exits 2. Each child is bounded by a timeout and killed in a `finally`; each run uses a
+  temporary home and data folder and a test refuses to continue if a key lands outside it. Planted against the 1.29.6
+  script: it is still waiting after 12 seconds, with an open pipe and with NUL.
+- `TestNoImplicitStdinReads` (an AST check of every script, with each kind of read as a plant),
+  `TestPrintedCommandsAreLastOnTheLine` and `TestInstallHintsUseThePrintedShape` (both interpreter cases, `bash -n`, and
+  the printed line run through both shells). Tests 555 -> 565.
+
 ## [1.29.6] - 2026-10-12
 
 ### A printed command works pasted into Git Bash and PowerShell, and a failed script no longer exits 0

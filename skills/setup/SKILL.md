@@ -107,7 +107,7 @@ Do you have a WaveSpeed API key?
 Or type "skip" to configure later (video generation will not work).
 ```
 
-When the user says it is set, run this WITHOUT `--api-key` (the script reads `WAVESPEED_API_KEY`, or one line from stdin; a key on the command line lands in shell history and the process table):
+When the user says it is set, run this WITHOUT `--api-key` (the script reads `WAVESPEED_API_KEY`; a key on the command line lands in shell history and the process table). The script never reads stdin on its own, so with no key it stops at once with exit 2 (`no key: pass --api-key, set WAVESPEED_API_KEY, or use --api-key-stdin`) instead of waiting: tell the user the variable is not visible to this shell and ask them to set it where the host can see it. `--api-key-stdin` (one line on stdin) and `--prompt` (a hidden prompt, real terminal only) are explicit alternatives:
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed
 ```
@@ -131,7 +131,7 @@ Do you have a HiggsField API key and secret?
 Or type "skip" (HiggsField is optional — Vertex AI and WaveSpeed are sufficient).
 ```
 
-When the user says both are set, run this WITHOUT `--api-key` or `--api-secret` (the script reads `HF_API_KEY` and `HF_API_SECRET`, or stdin):
+When the user says both are set, run this WITHOUT `--api-key` or `--api-secret` (the script reads `HF_API_KEY` and `HF_API_SECRET`; it never reads stdin on its own, so with either missing it stops at once with exit 2; `--api-key-stdin` reads the key from the first stdin line and the secret from the second):
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-higgsfield
 ```
@@ -278,6 +278,6 @@ Share both the API key AND secret with your team. Both are needed for authentica
 - Credentials are stored in the plugin persistent data directory
 - The GCP JSON file is copied (not linked) to ensure it survives if the original is deleted
 - WaveSpeed API key is stored in credentials.json within plugin data
-- Keys are never taken through the chat or the command line: only from environment variables or stdin
+- Keys are never taken through the chat or the command line: only from environment variables or, with an explicit `--api-key-stdin`, from stdin. A script never reads stdin on its own, so a missing key fails at once instead of hanging the shell
 - No credentials are committed to git or shared outside the local machine
 - To revoke access: rotate the service account key in GCP Console or regenerate the WaveSpeed API key

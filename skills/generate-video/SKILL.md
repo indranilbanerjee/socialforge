@@ -29,7 +29,7 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 
 Generation spends provider credits, so the first paid call waits for a quote and an explicit go. This skill states no price and the model registry stores none: `price_book.py` is the only source, and it refuses rather than guesses.
 
-1. List what is about to be generated: for each paid call, the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images, or seconds of video, plus any option that changes the price, such as synchronised audio). The first paid call is Stage 2, so quote the whole chain (the keyframes of Stages 2 and 3 and the clip of Stage 4) once, before Stage 2.
+1. List what is about to be generated: for each paid call, the registry alias (`resolve_model.py --alias <alias>` gives the current model id), the provider, and the units (images, or seconds of video, plus any option that changes the price, such as synchronised audio). The first paid call is Stage 2, so quote the whole chain (the keyframes of Stages 2 and 3 and the clip of Stage 4) once, before Stage 2. Quote only providers that can run here: run `generate_video.py` without `--generate-video` first and read its `routing` block. `provider` is the one to quote; `unavailable` lists the providers that cannot run on this setup and why (Veo needs Vertex AI, so a Gemini API key alone cannot make Veo clips); `fallbacks_if_quoted` lists the others that could run. A fallback you want available is quoted as its own line, and the total you show is the worst case.
 2. Quote it:
 
 ```bash
@@ -45,6 +45,7 @@ Type "go" to generate. Anything else cancels.
 ```
 
 4. Continue only on an explicit `go` for exactly this list. Anything else, including silence, cancels and nothing is generated. If the list changes (more posts, another model, an added option), quote again and ask again. A quote is never approval (`approved_to_run` is always `false`).
+5. Pass exactly the providers that were quoted: `--quoted-providers kling` (or `kling,veo`). Only those can run. If the first provider fails and the next one was not quoted, the run ends with `video.status: NEEDS_REQUOTE` and **nothing was spent** on it: show the user the new line and total, wait for a new `go`, and never widen the list yourself.
 
 ## The 5-Stage Pipeline
 
@@ -98,7 +99,7 @@ Generate **2 last-frame options** that complete the visual narrative arc, matchi
 
 ### Stage 4: Video Generation (WaveSpeed, `latest-video-wavespeed`)
 
-Using the approved first and last frames, generate **2 video versions** through `generate_video.py --generate-video --image <first-frame> --last-image <last-frame>` (the WaveSpeed image-to-video endpoint, 3-15 seconds). The first frame goes to every provider in the chain; the last frame goes to the `kling` rung only, as the clip's end image. After each run, read `video.last_frame_used` before presenting a clip as landing on the approved last frame — see "Keyframe and reference inputs" below.
+Using the approved first and last frames, generate **2 video versions** through `generate_video.py --generate-video --image <first-frame> --last-image <last-frame> --quoted-providers <quoted>` (the WaveSpeed image-to-video endpoint, 3-15 seconds; Veo clips are 4, 6 or 8 seconds and a length between is rounded up, which the result's `duration_note` says). The first frame goes to every provider in the chain; the last frame goes to the `kling` rung only, as the clip's end image. After each run, read `video.last_frame_used` before presenting a clip as landing on the approved last frame — see "Keyframe and reference inputs" below. If the result has `video.provider_notice` (or `fallback_from` and `earlier_attempts`), tell the user in one sentence which provider made the clip and why the first one did not; never present a fallback clip as if the first provider made it.
 
 - A **video gallery is opened in the browser** for side-by-side comparison
 - User selects the final version or requests a regeneration
@@ -127,7 +128,7 @@ Read from `scripts/generate_video.py`. Never describe the video as doing more th
 | Last frame | `--last-image <path>` (requires `--generate-video`) | Sent to the `kling` rung as the clip's end image (the WaveSpeed image-to-video API's `end_image`, documented there as the end frame for guided transitions), so the clip is guided toward it. **Only that rung takes one:** the `veo` and `higgsfield` rungs have no end-frame input. A clip made by either of them (because `--provider` named one of them, or because `kling` had no key or failed and the chain fell through) carries `last_frame_used: false` and a `last_frame_note`; it was **not** steered to the approved last frame. A `--last-image` path that does not exist is an input error (exit 1), never dropped quietly. Use a PNG or JPEG. |
 | Reference images for video | none | Not implemented. |
 
-Practical consequence: Stage 3's approved last frame is a real model input on the `kling` rung only. Under `--provider auto`, a supplied `--last-image` makes the chain try `kling` first (without one, auto sends clips of 8 seconds or less to `veo` whenever Google credentials exist, and `veo` cannot take an end frame). Passing `--provider kling` says the same thing explicitly; an explicit `--provider veo` or `higgsfield` still wins and leaves the frame unused. Then read `video.last_frame_used` in the result. `true` means the end image was sent. `false` means it was not, and `last_frame_note` says which rung made the clip: tell the user, put the intended ending into the motion prompt in words, and do not describe the clip as landing on the approved frame. Even when it was sent, the model is *guided toward* the frame rather than guaranteed to reach it — look at the clip's final seconds before the user approves it.
+Practical consequence: Stage 3's approved last frame is a real model input on the `kling` rung only. Under `--provider auto`, a supplied `--last-image` makes the chain try `kling` first (without one, auto sends clips of 8 seconds or less to `veo` whenever Vertex AI is set up, and `veo` cannot take an end frame; a Gemini API key alone does not count). Passing `--provider kling` says the same thing explicitly; an explicit `--provider veo` or `higgsfield` still wins and leaves the frame unused. Then read `video.last_frame_used` in the result. `true` means the end image was sent. `false` means it was not, and `last_frame_note` says which rung made the clip: tell the user, put the intended ending into the motion prompt in words, and do not describe the clip as landing on the approved frame. Even when it was sent, the model is *guided toward* the frame rather than guaranteed to reach it — look at the clip's final seconds before the user approves it.
 
 ## Output Per Video Post
 

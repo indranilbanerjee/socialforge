@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.8] - 2026-10-27
+
+### A quote names only providers that can run, and nothing is spent on a provider you were not quoted
+
+Found by a freshness review on 2026-10-27, which read Google's model pages and SocialForge's video chain together.
+
+**Fixed**
+
+- Veo 3.1 is a Vertex AI model. Google's Gemini API stopped serving the Veo 3.1 previews on 2026-10-22 and does not list
+  `veo-3.1-generate-001`, yet a bare `GEMINI_API_KEY` counted as "Google available". For that setup `route_video_provider`
+  and the quote named Veo for a clip that could only fail, and the chain then fell through to Kling or HiggsField, each with
+  its own price, without the user having been quoted for it. Availability is now per backend: `generate_video.py` without
+  `--generate-video` prints `routing.unavailable` (each provider that cannot run and why) next to the provider to quote, and
+  the Veo rung uses Vertex AI only (a stored service-account profile, or `GOOGLE_CLOUD_PROJECT`). A key-only setup is told to
+  set up Vertex AI or use another provider.
+- A fallback now runs only if the user was quoted for it. `generate_video.py` and `generate_image.py` take
+  `--quoted-providers a,b` (the providers the approved quote covered); the default covers only the first provider that can
+  run. When that one fails and the next was not quoted, the result is `NEEDS_REQUOTE`, `action_required` is true, nothing was
+  spent on the next one, and the next steps say what to re-quote. A provider with no credentials spends nothing and is skipped
+  with its reason recorded. `generate-video`, `compose-creative` and the image-compositor agent pass the quoted list and
+  return `needs_quote` for the rest.
+- A fallback that did run is no longer silent. The result carries `provider_notice` (which provider made it, why the first did
+  not, that it was in the approved quote) next to `fallback_from` and `earlier_attempts`, and the skills and the agent say it
+  to the user.
+- Veo 3.1 takes clips of 4, 6 or 8 seconds only; `min(duration, 8)` sent 3, 5 or 7. The rung now rounds up to the next
+  allowed length (capped at 8) and the result carries `requested_duration` and `duration_note`.
+
+**Changed**
+
+- `references/models/veo-3.1.md` describes the GA Vertex model (`veo-3.1-generate-001`, retirement "2026-11-17 or later" per
+  Google's model-versions page, read 2026-10-27), says it is Vertex only, and notes that the `prompt=` and `image=` arguments of
+  `generate_videos` are deprecated from google-genai 2.14.0.
+- `references/eu-ai-act-article50.md` says who owes what (marking is the provider duty in 50(2); disclosure of a deepfake is the
+  deployer duty in 50(4)) and records the grace period to 2 December 2026 for the 50(2) duty. C2PA wording follows spec 2.5
+  (October 2026); the `c2pa.ai-disclosure` assertion is described as introduced in 2.4.
+- Install is one command on Claude Code 2.1.292 or newer: `claude plugin install socialforge --marketplace
+  indranilbanerjee/neels-plugins`; the two-step form stays for older versions and for use inside a session.
+- Python 3.10 reached end-of-life on 2026-10-01. `install_deps.py` and `credential_manager.py` now warn when run on it that
+  SocialForge will require Python 3.11 from the next minor release. Nothing stops working yet.
+- `docs/OPERATIONS.md`, `docs/USER-GUIDE.md`, `SUBMISSION.md` and `CONNECTORS.md` follow: Veo needs Vertex AI, a fallback
+  needs its own quote, and SocialForge ships no npx package.
+
+**Checked, not changed**
+
+- The five agent descriptions are already 100-146 characters; a guard now keeps them in 60-150.
+- No SocialForge file names an npm package to run with `npx`; only the `CONNECTORS.md` wording was loose.
+
+**Added - tests**
+
+- `tests/test_quote_honesty.py` (28 tests): a Gemini-key-only setup is not routed or quoted Veo (planted with the old routing);
+  a key plus a WaveSpeed key quotes Kling; Vertex makes Veo available and lists the other runnable providers as quotable
+  fallbacks; the Veo rung on a key-only setup builds no client and records `unavailable-backend`; an unquoted fallback is
+  withheld and its function is never called; a quoted fallback runs and is reported; a provider that cannot run is skipped
+  with its reason and is not a reason to re-quote; the image chain follows the same rule; Veo lengths; the CLI refuses a
+  provider name it does not know; every file that runs the paid video chain names `--quoted-providers`; agent descriptions;
+  the doc facts; the Python warning. Run against the 1.29.7 scripts from git, 34 of its checks fail. Tests 574 -> 602.
+
 ## [1.29.7] - 2026-10-12
 
 ### A missing key no longer hangs the shell, and the install hints paste into Git Bash and PowerShell

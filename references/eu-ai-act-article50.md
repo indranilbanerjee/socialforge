@@ -3,6 +3,8 @@
 **Status as of October 2026:** Applicable — and enforced by the Commission — since **2 August 2026**. The final Code of Practice on Transparency of AI-Generated Content was published **10 June 2026**, superseding the earlier drafts, and the standardized EU disclosure icons were published alongside it. The initial-signatory window closed **22 July 2026**.
 **Plugin coverage:** v1.6.0+ via the C2PA signing path (see `scripts/c2pa_sign.py` and `skills/c2pa-sign/SKILL.md`).
 
+**Who owes what, and the grace period** (Commission FAQ, last updated 24 July 2026; read 2026-10-27): marking AI-generated audio, image, video and text in a machine-readable, detectable form is the **provider** duty in Article 50(2). The **deployer** duty in Article 50(4) is different: disclose a deepfake clearly at first exposure at the latest (the provider's embedded marking is not enough on its own), and label AI-generated text published to inform the public on matters of public interest unless a person has reviewed it and holds editorial responsibility. A **grace period to 2 December 2026** covers the 50(2) marking duty only, and only for systems placed on the market before 2 August 2026; every other duty applied from 2 August 2026, and content generated before that date does not have to be labelled retroactively. Signing a file with C2PA does not replace the visible label a deepfake needs. Source: https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act
+
 ## What Article 50 actually requires
 
 Article 50 of [Regulation (EU) 2024/1689](https://artificialintelligenceact.eu/article/50/) imposes transparency obligations on providers AND deployers of certain AI systems. For SocialForge users, the deployer-side obligations are:
@@ -73,7 +75,7 @@ Source: [EU icons for labelling AI-generated content](https://digital-strategy.e
 ## Related references
 
 - [EU AI Act Article 50 official text](https://artificialintelligenceact.eu/article/50/)
-- [C2PA Specification v2.0](https://c2pa.org/specifications/specifications/2.0/specs/C2PA_Specification.html)
+- [C2PA Specification 2.5](https://spec.c2pa.org/specifications/specifications/2.5/specs/C2PA_Specification.html) (published October 2026)
 - [Content Authenticity Initiative — Signing manifests](https://opensource.contentauthenticity.org/docs/manifest/signing-manifests/)
 - [Bria.ai — Article 50 enterprise guide](https://bria.ai/blog/article-50-of-the-eu-ai-act-what-enterprises-need-to-change-before-august-2-2026)
 - `references/c2pa-production-cert.md` — production signing certificates, key management, verification testing

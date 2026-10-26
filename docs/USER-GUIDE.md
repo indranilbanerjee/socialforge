@@ -12,7 +12,7 @@ Before you start, make sure you have:
 - **API credentials configured via `/socialforge:setup`** (one-time setup):
   - **Google Cloud service account JSON file** -- for Vertex AI image generation
   - **WaveSpeed API key** -- for image-to-video generation (kept in an environment variable, never pasted into the chat)
-- **Python 3.10 or newer** (3.11 or newer for the optional background-removal extra)
+- **Python 3.10 or newer today** (3.11 or newer for the optional background-removal extra). Python 3.10 reached end-of-life on 2026-10-01, and SocialForge will require 3.11 from the next minor release; setup warns when it runs on 3.10
 - **Python packages:** `/socialforge:setup` lists what is missing and prints the exact pinned install command for each; it installs only after you say yes (`python scripts/install_deps.py` prints the same report)
 
 Get both credentials from your admin. If you ARE the admin, see the [Admin Setup guide](ADMIN-SETUP.md).
@@ -101,6 +101,14 @@ Check status anytime: `/socialforge:setup --status`
 ## 2. Installation
 
 ### Recommended: From Marketplace
+
+Claude Code 2.1.292 or newer, one command in your terminal:
+
+```
+claude plugin install socialforge --marketplace indranilbanerjee/neels-plugins
+```
+
+Older versions, or inside a session:
 
 ```
 /plugin marketplace add indranilbanerjee/neels-plugins
@@ -573,7 +581,7 @@ Video posts (Reels, Shorts, TikTok) run through the same calendar, but the creat
 1. **Post context** — the calendar post's theme, copy, and visual direction seed the clip
 2. **Script + storyboard** — a short script with scene descriptions, which you approve
 3. **Keyframes** — the image model (Vertex AI, registry alias `latest-image-google`) generates the first and last frame as images, which you approve
-4. **Video generation** — WaveSpeed (registry alias `latest-video-wavespeed`) animates the approved first frame into a 3-15 second clip and sends the approved last frame as the clip's end image, so the clip is guided toward it. Only that provider can take a last frame: if a fallback provider made your clip (a missing key, a failure, or `--provider auto` routing a short clip to Veo), the result says `last_frame_used: false` and the clip was not steered to it. To see which model each alias resolves to today, run `python scripts/generate_video.py --list-models`.
+4. **Video generation** — WaveSpeed (registry alias `latest-video-wavespeed`) animates the approved first frame into a 3-15 second clip and sends the approved last frame as the clip's end image, so the clip is guided toward it. Only that provider can take a last frame: if a fallback provider made your clip (a failure of the first provider, or `--provider auto` routing a short clip to Veo when Vertex AI is set up), the result says `last_frame_used: false` and the clip was not steered to it. A fallback provider only runs if you were quoted for it; otherwise the run stops with `NEEDS_REQUOTE` and nothing is spent, and when a quoted fallback does run the result says which provider made the clip and why. To see which model each alias resolves to today, run `python scripts/generate_video.py --list-models`.
 5. **Delivery** — the clip is post-processed and enters the same review gallery as image posts
 
 Every stage is human-in-the-loop. Nothing renders to delivery without your sign-off.

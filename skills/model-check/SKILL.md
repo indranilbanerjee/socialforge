@@ -93,7 +93,7 @@ releases while prices move without announcement.
 2. **The shipped registry alias** → used, but always with a warning naming its
    age. This rung exists so a first run works before anything is discovered, not
    so anyone can rely on it.
-3. **Nothing** → the generation refuses and falls through to the next provider,
+3. **Nothing** → the generation refuses and moves on only to a provider the user was quoted for,
    rather than calling an id that may have been retired.
 
 If you see the rung-2 warning during a real run, that is the signal to do a

@@ -56,6 +56,7 @@ NEXT_STEPS = {
     "content-rejected": "The provider refused this prompt — rephrase it; no retry will succeed unchanged.",
     "timeout": "The provider did not finish in time — retry, or try a faster model.",
     "bad-input": "A required input was missing or unusable (see detail) — supply it and retry.",
+    "unavailable-backend": "This provider cannot serve the request on the account that is set up (see detail) — set up the backend it needs with /socialforge:setup, or use another provider.",
 }
 
 
@@ -104,6 +105,68 @@ def failure_payload(attempts, context=""):
     }
     persist(payload)
     return payload
+
+
+def parse_quoted(value, allowed):
+    """`--quoted-providers kling,veo` -> ["kling", "veo"]; None when the flag was not given.
+
+    The list is the providers the user was shown a price for and said "go" to. A typo raises ValueError
+    (naming the choices) so it can neither widen nor silently narrow what the user approved."""
+    if value is None:
+        return None
+    names = []
+    for raw in str(value).split(","):
+        name = raw.strip().lower()
+        if not name:
+            continue
+        if name not in allowed:
+            raise ValueError(f"unknown provider {raw.strip()!r} in --quoted-providers (choose from {', '.join(allowed)})")
+        if name not in names:
+            names.append(name)
+    if not names:
+        raise ValueError("--quoted-providers is empty: name the providers the user was quoted")
+    return names
+
+
+def requote_payload(attempts, quoted, withheld, context=""):
+    """Terminal payload when a fallback exists but the approved quote does not cover it.
+
+    A fallback provider has its own price. Running it because the first one failed would spend money the user
+    was never shown, so the chain stops here, says what it did not do, and says what to re-quote. Nothing was
+    spent on a withheld provider."""
+    attempts = attempts or []
+    tried = []
+    for a in attempts:
+        if a["provider"] not in tried:
+            tried.append(a["provider"])
+    summary = "; ".join(f"{a['provider']}: {a['reason']} ({a['stage']})" for a in attempts) or "nothing was attempted"
+    error = (f"{context}: " if context else "") + (
+        f"stopped before spending on {', '.join(withheld)}: the approved quote covers {', '.join(quoted)} only ({summary})")
+    steps = [f"Nothing was spent on {', '.join(withheld)}. Quote it with price_book.py, show the user the new line and total, "
+             f"and re-run with --quoted-providers {','.join(list(quoted) + list(withheld))} only after a new explicit go."]
+    for a in attempts:
+        step = NEXT_STEPS.get(a["reason"])
+        if step and step not in steps:
+            steps.append(step)
+    return {
+        "status": "NEEDS_REQUOTE",
+        "error": error,
+        "attempts": attempts,
+        "providers_tried": tried,
+        "quoted_providers": list(quoted),
+        "withheld_providers": list(withheld),
+        "next_steps": steps,
+        "action_required": True,
+    }
+
+
+def fallback_notice(attempts, used):
+    """One sentence for the user when the result came from a later provider than the first one tried, else None."""
+    if not attempts:
+        return None
+    first = attempts[0]
+    return (f"{first['provider']} did not make this ({first['reason']}: {first['detail'][:140] or 'no detail'}); "
+            f"{used} did, and {used} was in the approved quote. Tell the user which provider ran and why.")
 
 
 def _failure_log_path():

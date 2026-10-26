@@ -128,7 +128,7 @@ def build_manifest(brand, generator, ai_claim, created, prompt, platform, asset_
                    ai_disclosure=True, reviewed_by=None, reviewed_at=None, model_id=None):
     """Build the C2PA manifest for a generated asset.
 
-    `ai_disclosure` adds the C2PA 2.4 `c2pa.ai-disclosure` assertion — the
+    `ai_disclosure` adds the `c2pa.ai-disclosure` assertion (introduced in C2PA spec 2.4, April 2026; spec 2.5 is current, October 2026) — the
     explicit, machine-readable AI-generation disclosure that EU AI Act Article 50
     tooling reads. Article 50 has been enforceable since 2 August 2026, so this
     defaults to ON — an obligation that is already live is the wrong thing to
@@ -382,7 +382,7 @@ def main():
     parser.add_argument("--signing-cert", help="PEM cert (omit for dev self-signed)")
     parser.add_argument("--signing-key", help="PEM key (must accompany --signing-cert)")
     parser.add_argument("--no-ai-disclosure", action="store_true",
-                        help="Omit the C2PA 2.4 c2pa.ai-disclosure assertion. Off by default: "
+                        help="Omit the c2pa.ai-disclosure assertion (C2PA spec 2.4+). Off by default: "
                              "EU AI Act Article 50 has been enforceable since 2026-08-02 and the "
                              "assertion is the machine-readable marking it expects.")
     parser.add_argument("--reviewed-by",

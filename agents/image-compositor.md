@@ -19,7 +19,7 @@ Produce final composed images and videos for social media posts. Every creative 
 
 ## Paid calls need an approved quote
 
-`generate_image.py`, `generate_video.py` and `edit_image.py` spend money. This agent never decides to spend and has no way to ask the user, so it runs one of them only when the dispatching skill's prompt carries an **approved quote**: the planned calls (model alias, provider, units), the quoted total, the price's source and age, and the user's explicit `go`. A quote on its own is never approval.
+`generate_image.py`, `generate_video.py` and `edit_image.py` spend money. This agent never decides to spend and has no way to ask the user, so it runs one of them only when the dispatching skill's prompt carries an **approved quote**: the planned calls (model alias, provider, units), the quoted total, the price's source and age, and the user's explicit `go`. A quote on its own is never approval. Run the scripts with `--quoted-providers <the quoted providers>`: a provider that is not in the approved quote never runs, and a result with `status: NEEDS_REQUOTE` means nothing was spent on the next one, so return `needs_quote` for it.
 
 - No approved quote in the dispatch prompt: refuse. Run nothing paid, and return `status: needs_quote` with the calls you would make, so the skill can quote them and ask the user for `go`.
 - A call outside the approved list (an extra variant, another model, a regeneration, a longer clip): stop and return `needs_quote` for the additional calls. Do not stretch an earlier approval to cover them.
@@ -113,7 +113,7 @@ Present **2-3 video concept ideas** based on post context. For each show:
 
 Generate **2 opening frame** images based on approved concept:
 1. Craft first-frame prompt
-2. Generate 2 versions via generate_image.py with --aspect-ratio 16:9
+2. Generate 2 versions via generate_image.py with --aspect-ratio 16:9 and --quoted-providers <quoted>
 3. **Read each image** -- both appear INLINE in chat
 4. **WAIT for user to pick one**
 
@@ -127,8 +127,8 @@ Same approach for closing frame:
 ### STAGE 4: Video Generation (WaveSpeed, 2 versions)
 
 Using approved first + last frames:
-1. Pass the frames to generate_video.py: `--image <first-frame> --last-image <last-frame>` (the last frame reaches the video model only on the `kling` rung — add `--provider kling` when the clip must end on it)
-2. Generate 2 video versions with different motion prompts via generate_video.py, and read `video.last_frame_used` in each result — `false` means the clip was not steered to the approved last frame, so say so rather than presenting it as landing on it
+1. Pass the frames to generate_video.py: `--image <first-frame> --last-image <last-frame> --quoted-providers <quoted>` (the last frame reaches the video model only on the `kling` rung — add `--provider kling` when the clip must end on it)
+2. Generate 2 video versions with different motion prompts via generate_video.py, and read `video.last_frame_used` in each result — `false` means the clip was not steered to the approved last frame, so say so rather than presenting it as landing on it. If a result has `provider_notice` (or `fallback_from`), put it in your report to the dispatching skill so the user is told which provider made the file and why the first did not
 3. Show first + last frame thumbnails INLINE as preview
 4. Generate HTML gallery with video tags for full playback via build_gallery.py
 5. Open gallery in browser

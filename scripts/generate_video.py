@@ -99,6 +99,22 @@ if _plugin_data and Path(_plugin_data).exists():
 else:
     WORKSPACE = Path.home() / "socialforge-workspace"
 
+# Veo 3.1 accepts clips of 4, 6 or 8 seconds only (Vertex AI model page, read 2026-10-27). Anything else is rounded UP to the next
+# allowed length (capped at 8) and the result says so, rather than sending a length the API rejects.
+VEO_DURATIONS = (4, 6, 8)
+
+VEO_KEY_ONLY = ("Veo 3.1 is served by Vertex AI only: the Gemini API stopped serving the Veo 3.1 previews on 2026-10-22 and does not "
+                "list veo-3.1-generate-001, so a GEMINI_API_KEY cannot make a Veo clip. Set up Vertex AI (a service account via "
+                "/socialforge:setup, or GOOGLE_CLOUD_PROJECT) or use another video provider.")
+VEO_NO_VERTEX = "no Vertex AI profile and no GOOGLE_CLOUD_PROJECT: run /socialforge:setup to add a service account, or set GOOGLE_CLOUD_PROJECT"
+VIDEO_RUNGS = ("kling", "veo", "higgsfield")
+
+
+def veo_duration(requested):
+    """The Veo clip length to ask for: the smallest allowed length that covers `requested`, capped at 8 seconds."""
+    return next((d for d in VEO_DURATIONS if d >= (requested or 0)), VEO_DURATIONS[-1])
+
+
 VIDEO_TYPES = {
     "hero_video": {"duration": "30-90s", "production": "Script + storyboard (needs filming)"},
     "mini_case_study": {"duration": "30-60s", "production": "Script + AI animation"},
@@ -333,31 +349,19 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
                    f"google-genai is not installed ({exc}). Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)")
             return None
 
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-
-    if not project:
-        # Try AI Studio fallback
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if api_key:
-            try:
-                client = genai.Client(api_key=api_key)
-                backend = "aistudio"
-            except Exception as e:
-                record(attempts, "veo", "request", "request-error",
-                       f"AI Studio init failed: {e}")
-                return None
+    # Vertex AI only. This rung used to fall back to an AI Studio client when only GEMINI_API_KEY was set, but the Gemini API
+    # no longer serves Veo 3.1 (previews shut down 2026-10-22), so that path could only fail after being quoted and routed to.
+    from credential_manager import get_vertex_client
+    client, backend = get_vertex_client()
+    if client is None:
+        if os.environ.get("GEMINI_API_KEY") and "no Vertex AI profile" in str(backend):
+            record(attempts, "veo", "credentials", "unavailable-backend", VEO_KEY_ONLY)
+        elif "no Vertex AI profile" in str(backend):
+            record(attempts, "veo", "credentials", "no-credentials", VEO_NO_VERTEX)
         else:
-            record(attempts, "veo", "credentials", "no-credentials",
-                   "GOOGLE_CLOUD_PROJECT not set and no GEMINI_API_KEY for the AI Studio fallback")
-            return None
-    else:
-        try:
-            client = genai.Client(vertexai=True, project=project, location=location)
-            backend = "vertex"
-        except Exception as e:
-            record(attempts, "veo", "request", "request-error", f"Vertex AI init failed: {e}")
-            return None
+            record(attempts, "veo", "request", "request-error", backend)
+        return None
+    seconds = veo_duration(duration)
 
     try:
         # Build generation config. NOTE: `prompt` is a direct argument of
@@ -365,7 +369,7 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
         # a validation error (caught live by the chain's attempt records).
         gen_config = types.GenerateVideosConfig(
             number_of_videos=1,
-            duration_seconds=min(duration, 8),  # Veo max 8s
+            duration_seconds=seconds,  # Veo 3.1 takes 4, 6 or 8 seconds only
             aspect_ratio=aspect_ratio,
         )
 
@@ -405,14 +409,18 @@ def generate_video_veo(prompt, output_path, image_path=None, duration=5, aspect_
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "wb") as f:
                 f.write(video_bytes)
-            return {
+            made = {
                 "status": "success",
                 "provider": f"veo-{backend}",
                 "model": model,
                 "output": str(output_path),
-                "duration": min(duration, 8),
+                "duration": seconds,
                 "mode": "image-to-video" if image_path else "text-to-video",
             }
+            if seconds != duration:
+                made["requested_duration"] = duration
+                made["duration_note"] = (f"Veo 3.1 takes 4, 6 or 8 seconds only, so {duration}s was rounded to {seconds}s")
+            return made
         record(attempts, "veo", "response", "bad-response",
                "Veo returned no video (possibly safety-filtered)")
         return None
@@ -433,7 +441,7 @@ def preferred_provider(provider_arg, routed, last_image):
 
 def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio="16:9",
                          kling_model=None, veo_model=None, sound=False, preferred=None,
-                         last_image_path=None):
+                         last_image_path=None, quoted=None):
     """Try every configured video provider in order, recording every failed
     attempt. The preferred provider (from routing or --provider) goes first;
     the others remain as fallbacks.
@@ -450,14 +458,28 @@ def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio
     the caller asked for a clip that lands on an approved frame, and a fallback
     rung that cannot do that must say so rather than hand back an unsteered
     clip as if it were the one that was asked for.
+
+    `quoted` is the list of providers the user was shown a price for and approved. A rung runs only if it is in that
+    list (default: the first rung only). A fallback that exists but was not quoted is NEVER run: the chain stops with
+    status NEEDS_REQUOTE and nothing is spent on it. A rung that cannot run at all (no credentials, or Veo without
+    Vertex) spends nothing and is skipped with its reason recorded.
     """
-    from provider_failures import failure_payload
+    from provider_failures import failure_payload, requote_payload, fallback_notice, record
     attempts = []
-    order = ["kling", "veo", "higgsfield"]
+    order = list(VIDEO_RUNGS)
     if preferred in order:
         order.remove(preferred)
         order.insert(0, preferred)
+    covered = list(quoted) if quoted else [order[0]]
+    withheld = []
     for prov in order:
+        if prov not in covered:
+            can_run, reason, code = _rung_status(prov)
+            if can_run:
+                withheld.append(prov)
+            else:
+                record(attempts, prov, "credentials", code, reason)
+            continue
         if prov == "kling":
             result = generate_video_kling(prompt, output_path, image_path, last_image_path,
                                           duration, model=kling_model, sound=sound,
@@ -472,6 +494,9 @@ def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio
             if attempts:
                 result["fallback_from"] = ", ".join(dict.fromkeys(a["provider"] for a in attempts))
                 result["earlier_attempts"] = attempts
+                result["provider_notice"] = fallback_notice(attempts, prov)
+            if withheld:
+                result["not_run_unquoted"] = withheld
             if last_image_path and result.get("last_frame_used") is not True:
                 result["last_frame_used"] = False
                 result["last_frame_note"] = (
@@ -479,6 +504,8 @@ def generate_video_chain(prompt, output_path, image_path, duration, aspect_ratio
                     "to the approved last frame (only the kling rung takes one). Do not "
                     "present it as landing on that frame.")
             return result
+    if withheld:
+        return requote_payload(attempts, covered, withheld, context="video generation")
     return failure_payload(attempts, context="video generation")
 
 
@@ -627,12 +654,33 @@ def _provider_availability():
         ws_key = os.environ.get("WAVESPEED_API_KEY")
         hf_key = os.environ.get("HF_API_KEY")
         hf_secret = os.environ.get("HF_API_SECRET")
+    gemini_key = bool(os.environ.get("GEMINI_API_KEY"))
+    # Availability is per BACKEND, not per vendor. "google" (any Google credential, used for images) is kept for callers,
+    # but Veo needs Vertex AI: a bare GEMINI_API_KEY used to make routing and the quote name Veo for a clip that could
+    # only fail (the Gemini API stopped serving Veo 3.1 on 2026-10-22).
+    veo_ok = bool(google_stored or os.environ.get("GOOGLE_CLOUD_PROJECT"))
+    unavailable = {}
+    if not ws_key:
+        unavailable["kling"] = "no WaveSpeed API key: run /socialforge:setup or set WAVESPEED_API_KEY"
+    if not veo_ok:
+        unavailable["veo"] = VEO_KEY_ONLY if gemini_key else VEO_NO_VERTEX
+    if not (hf_key and hf_secret):
+        unavailable["higgsfield"] = "no HiggsField API key and secret: run /socialforge:setup or set HF_API_KEY and HF_API_SECRET"
     return {
         "wavespeed": bool(ws_key),
-        "google": bool(google_stored or os.environ.get("GOOGLE_CLOUD_PROJECT")
-                       or os.environ.get("GEMINI_API_KEY")),
+        "google": bool(google_stored or os.environ.get("GOOGLE_CLOUD_PROJECT") or gemini_key),
+        "veo": veo_ok,
         "higgsfield": bool(hf_key and hf_secret),
+        "unavailable": unavailable,
     }
+
+
+def _rung_status(rung):
+    """(can_run, reason, reason_code) for a video rung, from credentials alone (no spend, no network)."""
+    avail = _provider_availability()
+    ok = {"kling": avail["wavespeed"], "veo": avail["veo"], "higgsfield": avail["higgsfield"]}[rung]
+    reason = avail["unavailable"].get(rung, "")
+    return ok, reason, ("unavailable-backend" if reason == VEO_KEY_ONLY else "no-credentials")
 
 
 def route_video_provider(duration_seconds, video_type):
@@ -647,26 +695,31 @@ def route_video_provider(duration_seconds, video_type):
         }
 
     avail = _provider_availability()
-    if duration_seconds <= 8 and avail["google"]:
-        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8,
-                "credentials_found": avail}
+    unavailable = avail.pop("unavailable")
+    can_run = [r for r, ok in (("kling", avail["wavespeed"]), ("veo", avail["veo"]), ("higgsfield", avail["higgsfield"])) if ok]
+    # What the quote must name: the provider routing picked. Every other rung that could run is listed so the agent can
+    # quote it as a fallback line too, but it only ever runs if it was quoted (see generate_video_chain).
+    common = {"credentials_found": avail, "unavailable": unavailable}
+    if duration_seconds <= 8 and avail["veo"]:
+        chosen = {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
     elif avail["wavespeed"]:
-        return {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15,
-                "credentials_found": avail}
-    elif avail["google"]:
-        return {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8,
-                "credentials_found": avail}
+        chosen = {"provider": "kling", "model": DEFAULT_KLING_MODEL, "max_duration": 15}
+    elif avail["veo"]:
+        chosen = {"provider": "veo", "model": DEFAULT_VEO_MODEL, "max_duration": 8}
     elif avail["higgsfield"]:
-        return {"provider": "higgsfield", "max_duration": 15, "credentials_found": avail}
+        chosen = {"provider": "higgsfield", "max_duration": 15}
     else:
         return {
             "provider": "none",
-            "error": ("No video provider credentials found — checked the stored credential "
-                      "profile and env vars for WaveSpeed, Google (Vertex/AI Studio), and HiggsField. "
-                      "Run /socialforge:setup --video or set WAVESPEED_API_KEY / GOOGLE_CLOUD_PROJECT."),
-            "credentials_found": avail,
+            "error": ("No video provider can run here. " + " ".join(f"{r}: {why}." for r, why in unavailable.items())
+                      + " Run /socialforge:setup --video, or set WAVESPEED_API_KEY, or set up Vertex AI for Veo."),
             "fallback": "script_and_storyboard_only",
+            **common,
         }
+    chosen.update(common)
+    chosen["quote_providers"] = [chosen["provider"]]
+    chosen["fallbacks_if_quoted"] = [r for r in can_run if r != chosen["provider"]]
+    return chosen
 
 
 # ---------------------------------------------------------------------------
@@ -686,8 +739,11 @@ def main():
                              "only rung that takes one); a clip from any other rung reports "
                              "last_frame_used: false. Requires --generate-video.")
     parser.add_argument("--provider", default="auto", choices=["auto", "kling", "veo", "higgsfield"],
-                        help="Preferred video provider (auto routes by duration and available "
-                             "credentials; the others stay as fallbacks in the chain)")
+                        help="Preferred video provider (auto routes by duration and the backends that can run here)")
+    parser.add_argument("--quoted-providers", default=None,
+                        help="Comma-separated providers the user was QUOTED and approved (kling, veo, higgsfield). "
+                             "A provider outside this list never runs: if the first one fails and the next was not quoted, "
+                             "the result is NEEDS_REQUOTE and nothing is spent. Default: only the first provider tried.")
     parser.add_argument("--duration", type=int, default=None, help="Override video duration (seconds)")
     parser.add_argument("--aspect-ratio", default="16:9", help="Video aspect ratio")
     parser.add_argument("--srt", action="store_true", help="Generate SRT subtitle file")
@@ -718,6 +774,11 @@ def main():
 
     if not (args.brand and args.month and args.post_id and args.output_dir):
         parser.error("--brand, --month, --post-id, and --output-dir are required (unless --list-models is set)")
+    from provider_failures import parse_quoted
+    try:
+        quoted_providers = parse_quoted(args.quoted_providers, VIDEO_RUNGS)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     # A last frame that was asked for is either used or reported as unused, and
     # a path that does not exist is an input error — never a silent drop.
@@ -789,7 +850,7 @@ def main():
         video_result = generate_video_chain(prompt, str(video_path), args.image, duration,
                                             args.aspect_ratio, kling_model=chosen_kling,
                                             veo_model=chosen_veo, preferred=preferred,
-                                            last_image_path=args.last_image)
+                                            last_image_path=args.last_image, quoted=quoted_providers)
     elif args.generate_video and routing["provider"] == "none":
         video_result = {"status": "FAILED", "error": routing["error"],
                         "credentials_found": routing.get("credentials_found"),
@@ -839,8 +900,8 @@ def main():
     # "success" unconditionally, so a caller grepping the top level sailed
     # past a fully-failed video generation.
     overall = "success"
-    if video_result and video_result.get("status") == "FAILED":
-        overall = "FAILED"
+    if video_result and video_result.get("status") in ("FAILED", "NEEDS_REQUOTE"):
+        overall = video_result["status"]
     elif postprocess_result and postprocess_result.get("status") == "FAILED":
         overall = "partial"
 
@@ -857,7 +918,7 @@ def main():
         "video": video_result or {"status": "not_requested", "note": "Use --generate-video to create AI video"},
         "postprocess": postprocess_result,
     }, indent=2))
-    if overall == "FAILED":
+    if overall in ("FAILED", "NEEDS_REQUOTE"):
         sys.exit(4)  # script/storyboard artifacts exist, but the requested video does not
 
 

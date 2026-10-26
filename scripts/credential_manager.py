@@ -135,6 +135,38 @@ def validate_vertex_ai():
     }
 
 
+def get_vertex_client():
+    """Return (client, backend_name) for Vertex AI ONLY, or (None, reason).
+
+    Veo 3.1 is a Vertex AI model: the Gemini API stopped serving the Veo 3.1 previews on 2026-10-22 and does not
+    list veo-3.1-generate-001, so an AI Studio client cannot make a Veo clip and is never returned here. A stored
+    service-account profile wins, then GOOGLE_CLOUD_PROJECT (application-default credentials)."""
+    try:
+        from google import genai
+    except ImportError:
+        return None, "google-genai is not installed. Run: " + _common.script_command("install_deps.py") + " (it prints the pinned install command)"
+    creds, load_error = _load_creds_checked()
+    va = creds.get("vertex_ai")
+    if va and Path(va.get("credentials_file", "")).exists():
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = va["credentials_file"]
+        try:
+            return genai.Client(vertexai=True, project=va.get("project_id"),
+                                location=va.get("location", "us-central1")), "vertex-ai"
+        except Exception as e:
+            return None, f"Vertex AI client from the stored profile failed: {e}"
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if project:
+        try:
+            return genai.Client(vertexai=True, project=project,
+                                location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")), "vertex-env"
+        except Exception as e:
+            return None, f"Vertex AI client for project {project} failed: {e}"
+    reason = "no Vertex AI profile and no GOOGLE_CLOUD_PROJECT"
+    if load_error:
+        reason += f" ({load_error})"
+    return None, reason
+
+
 def get_gemini_client():
     """Return a configured google-genai Client for Vertex AI image generation.
     Returns: (client, backend_name) or (None, error_message).
@@ -384,6 +416,9 @@ def main():
     else:
         parser.print_help()
         return
+    warning = _common.python_floor_warning()
+    if warning and isinstance(result, dict):
+        result["python_warning"] = warning
     print(json.dumps(result, indent=2))
     if isinstance(result, dict) and result.get("error"):   # a setup that failed must not look like one that worked
         sys.exit(1)

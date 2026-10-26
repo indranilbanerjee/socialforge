@@ -174,6 +174,9 @@ def main():
     if args.check and args.install:
         parser.error("--check and --install cannot be combined")
 
+    warning = _common.python_floor_warning()
+    if warning:
+        print("WARNING: " + warning, file=sys.stderr)
     groups = args.groups or DEFAULT_GROUPS
     results = check_and_install(groups, install=args.install)
     print(json.dumps(results, indent=2))

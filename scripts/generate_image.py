@@ -155,7 +155,33 @@ def _flag_dropped_references(result, reference_images):
     return result
 
 
-def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1", model=DEFAULT_MODEL):
+IMAGE_RUNGS = ("gemini", "wavespeed", "higgsfield")
+
+
+def _image_rung_status(rung):
+    """(can_run, reason) for an image rung, from credentials alone: no spend, no network."""
+    if rung == "gemini":
+        client, _backend, error = create_client()
+        return (client is not None), (error or "")
+    try:
+        from credential_manager import get_wavespeed_key, get_higgsfield_auth
+        ws_key = get_wavespeed_key()
+        hf_key, hf_secret = get_higgsfield_auth()
+    except ImportError:
+        ws_key = os.environ.get("WAVESPEED_API_KEY")
+        hf_key, hf_secret = os.environ.get("HF_API_KEY"), os.environ.get("HF_API_SECRET")
+    if rung == "wavespeed":
+        return bool(ws_key), ("" if ws_key else "no WaveSpeed API key: run /socialforge:setup or set WAVESPEED_API_KEY")
+    return bool(hf_key and hf_secret), ("" if hf_key and hf_secret else
+                                        "no HiggsField API key and secret: run /socialforge:setup or set HF_API_KEY and HF_API_SECRET")
+
+
+def first_image_rung():
+    """The rung that would run first: the first one with credentials (gemini when none has any)."""
+    return next((r for r in IMAGE_RUNGS if _image_rung_status(r)[0]), IMAGE_RUNGS[0])
+
+
+def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1", model=DEFAULT_MODEL, quoted=None):
     """Generate an image via the provider chain: Gemini -> WaveSpeed -> HiggsField.
 
     Every rung that cannot run records WHY into `attempts` — a fully-failed
@@ -168,11 +194,27 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
     `references_missing`; and an image made by a fallback rung (which takes no
     references) says `references_used: 0` plus `references_dropped` and a note.
     """
-    from provider_failures import record, failure_payload
+    from provider_failures import record, failure_payload, requote_payload, fallback_notice
     attempts = []
+    # `quoted` = the providers the user was shown a price for and approved. Default: the first rung that can run. A
+    # fallback rung that was not quoted is never run; if it could have run, the chain stops with NEEDS_REQUOTE.
+    covered = list(quoted) if quoted else [first_image_rung()]
+    withheld = []
 
-    client, backend, error = create_client()
-    if error:
+    def may_run(rung):
+        if rung in covered:
+            return True
+        can_run, why = _image_rung_status(rung)
+        if can_run:
+            withheld.append(rung)
+        else:
+            record(attempts, rung, "credentials", "no-credentials", why)
+        return False
+
+    client, backend, error = (None, None, None) if "gemini" not in covered else create_client()
+    if "gemini" not in covered:
+        may_run("gemini")  # not quoted: counted as withheld if it could run, never called
+    elif error:
         record(attempts, "gemini", "credentials", "no-credentials", error)
     elif model is None:
         record(attempts, "gemini", "model-resolution", "unresolved-model",
@@ -245,17 +287,23 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
         except Exception as e:
             record(attempts, f"gemini-{backend}", "request", "request-error", str(e))
 
-    ws_result = generate_image_wavespeed(prompt, output_path, reference_images, aspect_ratio,
-                                         attempts=attempts)
-    if ws_result:
-        ws_result["fallback_from"] = "vertex-ai"
-        ws_result["earlier_attempts"] = attempts
-        return _flag_dropped_references(ws_result, reference_images)
-    hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio, attempts=attempts)
-    if hf_result:
-        hf_result["fallback_from"] = "vertex-ai+wavespeed"
-        hf_result["earlier_attempts"] = attempts
-        return _flag_dropped_references(hf_result, reference_images)
+    if may_run("wavespeed"):
+        ws_result = generate_image_wavespeed(prompt, output_path, reference_images, aspect_ratio,
+                                             attempts=attempts)
+        if ws_result:
+            ws_result["fallback_from"] = "vertex-ai"
+            ws_result["earlier_attempts"] = attempts
+            ws_result["provider_notice"] = fallback_notice(attempts, "wavespeed")
+            return _flag_dropped_references(ws_result, reference_images)
+    if may_run("higgsfield"):
+        hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio, attempts=attempts)
+        if hf_result:
+            hf_result["fallback_from"] = "vertex-ai+wavespeed"
+            hf_result["earlier_attempts"] = attempts
+            hf_result["provider_notice"] = fallback_notice(attempts, "higgsfield")
+            return _flag_dropped_references(hf_result, reference_images)
+    if withheld:
+        return requote_payload(attempts, covered, withheld, context="image generation")
     return failure_payload(attempts, context="image generation")
 
 
@@ -471,6 +519,10 @@ def main():
     parser.add_argument("--prompt", required=False, default="", help="Text prompt for image generation (required unless --list-models)")
     parser.add_argument("--output", required=False, default="", help="Output file path (required unless --list-models)")
     parser.add_argument("--references", nargs="*", default=None, help="Style reference image paths (max 14)")
+    parser.add_argument("--quoted-providers", default=None,
+                        help="Comma-separated providers the user was QUOTED and approved (gemini, wavespeed, higgsfield). "
+                             "A provider outside this list never runs: if the first fails and the next was not quoted, the "
+                             "result is NEEDS_REQUOTE and nothing is spent. Default: only the first provider that can run.")
     parser.add_argument("--model", default=None,
                         help=f"Image model id (default: registry alias `latest-image-balanced-google` -> {DEFAULT_MODEL}). "
                              f"To see options run: {_common.script_command('resolve_model.py', '--list', '--modality', 'image-gen')} . "
@@ -528,7 +580,13 @@ def main():
     elif args.edit:
         result = edit_image(args.edit, args.prompt, args.output, model_id)
     else:
-        result = generate_image(args.prompt, args.output, args.references, args.aspect_ratio, model_id)
+        from provider_failures import parse_quoted
+        try:
+            quoted_providers = parse_quoted(args.quoted_providers, IMAGE_RUNGS)
+        except ValueError as exc:
+            parser.error(str(exc))
+        result = generate_image(args.prompt, args.output, args.references, args.aspect_ratio, model_id,
+                                quoted=quoted_providers)
 
     # Optional: embed C2PA provenance manifest (EU AI Act Article 50)
     # Pass the resolved model_id back through args so _maybe_c2pa_sign records the real id
@@ -538,7 +596,7 @@ def main():
     # Log
     log_dir = WORKSPACE / "shared" / "prompt-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
-    failed = str(result.get("status", "")).upper() == "FAILED"
+    failed = str(result.get("status", "")).upper() in ("FAILED", "NEEDS_REQUOTE")
     log_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "prompt": args.prompt,

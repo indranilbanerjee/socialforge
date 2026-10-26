@@ -181,12 +181,15 @@ class TestImageReferences(unittest.TestCase):
         no_gemini = (None, None, "no credentials")
         with patch.object(gi, "create_client", return_value=no_gemini):
             with patch.object(gi, "generate_image_wavespeed", side_effect=lambda *a, **k: ok()):
-                via_wavespeed = gi.generate_image("p", "o.png", reference_images=refs, model="m")
+                via_wavespeed = gi.generate_image("p", "o.png", reference_images=refs, model="m",
+                                                  quoted=["gemini", "wavespeed"])
             with patch.object(gi, "generate_image_wavespeed", return_value=None), \
                     patch.object(gi, "generate_image_higgsfield", side_effect=lambda *a, **k: ok()):
-                via_higgsfield = gi.generate_image("p", "o.png", reference_images=refs, model="m")
+                via_higgsfield = gi.generate_image("p", "o.png", reference_images=refs, model="m",
+                                                   quoted=["gemini", "wavespeed", "higgsfield"])
             with patch.object(gi, "generate_image_wavespeed", side_effect=lambda *a, **k: ok()):
-                no_refs = gi.generate_image("p", "o.png", reference_images=None, model="m")
+                no_refs = gi.generate_image("p", "o.png", reference_images=None, model="m",
+                                            quoted=["gemini", "wavespeed"])
         for name, result in (("wavespeed", via_wavespeed), ("higgsfield", via_higgsfield)):
             with self.subTest(rung=name):
                 self.assertEqual(result["references_used"], 0)
@@ -309,14 +312,16 @@ class TestVideoFrames(unittest.TestCase):
                 patch.object(gv, "generate_video_veo",
                              return_value=other_rung_result("veo-vertex")):
             via_veo = gv.generate_video_chain("p", "o.mp4", "first.png", 5,
-                                              last_image_path="last.png", preferred="kling")
+                                              last_image_path="last.png", preferred="kling",
+                                              quoted=["kling", "veo"])
         # everything before higgsfield unavailable
         with patch.object(gv, "generate_video_kling", return_value=None), \
                 patch.object(gv, "generate_video_veo", return_value=None), \
                 patch.object(gv, "generate_video_higgsfield",
                              return_value=other_rung_result("higgsfield-kling")):
             via_higgs = gv.generate_video_chain("p", "o.mp4", "first.png", 5,
-                                                last_image_path="last.png")
+                                                last_image_path="last.png",
+                                                quoted=["kling", "veo", "higgsfield"])
         # veo preferred and succeeds: kling is never even tried
         with patch.object(gv, "generate_video_kling") as kling, \
                 patch.object(gv, "generate_video_veo",
@@ -336,7 +341,7 @@ class TestVideoFrames(unittest.TestCase):
         with patch.object(gv, "generate_video_kling", return_value=None), \
                 patch.object(gv, "generate_video_veo",
                              return_value=other_rung_result("veo-vertex")):
-            plain = gv.generate_video_chain("p", "o.mp4", "first.png", 5)
+            plain = gv.generate_video_chain("p", "o.mp4", "first.png", 5, quoted=["kling", "veo"])
         self.assertNotIn("last_frame_used", plain)
         self.assertNotIn("last_frame_note", plain)
 

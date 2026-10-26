@@ -439,7 +439,7 @@ The model column names a registry alias (a capability kind), not a model id. Whi
 | **fal.ai / Replicate (HTTP MCP connectors)** | the models the connector offers | Alternatives you choose in the conversation; not part of the script chain |
 | **Placeholder (Pillow)** | None (local rendering) | Only when you pass `--placeholder`; marked "not a real image" |
 
-The script's fallback chain is Gemini -> WaveSpeed -> HiggsField. Each transition is automatic when the previous provider returns an error or has no credentials, and every rung that cannot run records why. If none works, the run reports FAILED with each attempt and what to do next, and the post is flagged for manual image creation; no placeholder is made unless you ask for one.
+The script's chain is Gemini -> WaveSpeed -> HiggsField, **but a provider only runs if you were quoted for it**. `--quoted-providers gemini,wavespeed` lists the providers the approved quote covers; without the flag only the first provider that can run is covered. If it fails and the next provider was not quoted, the run ends as `NEEDS_REQUOTE` and nothing is spent on that provider: quote the new line, get a new `go`, and re-run. A provider with no credentials spends nothing and is skipped with its reason recorded. When a quoted fallback does run, the result carries `provider_notice` (plus `fallback_from` and `earlier_attempts`) and the skill tells you which provider made the image. If none works, the run reports FAILED with each attempt and what to do next, and the post is flagged for manual image creation; no placeholder is made unless you ask for one.
 
 ### Image Editing
 
@@ -461,10 +461,12 @@ This is a different model from the image generator. Flash is used because vision
 
 | Provider | Model (registry alias) | When Used | Duration |
 |----------|----------|-----------|----------|
-| **Google (Vertex AI)** | `latest-video-google` | Clips of 8 seconds or less, when Google credentials exist | up to 8 seconds |
-| **WaveSpeed** | `latest-video-wavespeed` | Longer clips, and any clip when there are no Google credentials; the only rung that takes an approved last frame | up to 15 seconds |
-| **HiggsField** | its video endpoint | Further fallback when the others fail or are not configured | up to 15 seconds |
+| **Google (Vertex AI)** | `latest-video-google` | Clips of 8 seconds or less, when Vertex AI is set up. A Gemini API key alone cannot make Veo clips: the Gemini API stopped serving Veo 3.1 on 2026-10-22 | 4, 6 or 8 seconds (anything else is rounded up, capped at 8) |
+| **WaveSpeed** | `latest-video-wavespeed` | Longer clips, and any clip when Vertex AI is not set up; the only rung that takes an approved last frame | up to 15 seconds |
+| **HiggsField** | its video endpoint | Further fallback, only if it was quoted, when the others fail or are not configured | up to 15 seconds |
 | **Manual** | None | Live-action video types, or no provider configured | Script + storyboard only |
+
+Routing and the quote only ever name a provider that can run on this setup: `generate_video.py` without `--generate-video` prints `routing` with the provider to quote, `unavailable` (each provider that cannot run and why) and `fallbacks_if_quoted`. As with images, `--quoted-providers kling,veo` is the list the approved quote covers; a fallback outside it never runs (`NEEDS_REQUOTE`, nothing spent), and a fallback that ran is reported with `provider_notice`.
 
 ### When API Keys Are Checked
 

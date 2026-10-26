@@ -13,7 +13,7 @@ Plugins are **tool-agnostic** — they describe workflows in terms of categories
 | Calendar | `~~calendar` | Google Calendar | Notion, Asana | Posting schedule, content calendar sync |
 | Knowledge base | `~~knowledge base` | Notion | Confluence, Google Drive | Calendar databases, brand guidelines, asset library |
 | Design | `~~design` | Canva, Figma | Adobe Creative Cloud | Brand templates, design assets, carousel generation |
-| Image generation | `~~image gen` | fal.ai, Replicate | Stability AI (npx), Gemini (npx) | AI-composed creative for all 4 modes |
+| Image generation | `~~image gen` | fal.ai, Replicate | (none shipped: SocialForge's own scripts call Gemini and WaveSpeed directly) | AI-composed creative for all 4 modes |
 | Chat | `~~chat` | Slack | Microsoft Teams | Approval notifications, review requests, delivery alerts |
 | Email | `~~email` | Gmail | Outlook | Finalized document delivery, approval reminders |
 | Project management | `~~project` | Asana | Monday.com, Linear | Post status tracking, publishing schedule |
@@ -60,8 +60,8 @@ Some services are connected at the **Claude platform level** rather than through
 
 | Service | Platform integration | MCP alternative |
 |---------|---------------------|-----------------|
-| Google Drive | Yes — connect in Settings → Integrations | Also available via npx |
-| Google Docs | Yes — connect in Settings → Integrations | Also available via npx |
+| Google Drive | Yes — connect in Settings → Integrations | HTTP connector from your host or an aggregator; SocialForge gives no npx command |
+| Google Docs | Yes — connect in Settings → Integrations | HTTP connector from your host or an aggregator; SocialForge gives no npx command |
 
 ## Managing connectors
 
@@ -78,4 +78,4 @@ For Claude Code CLI users who want to customize the MCP configuration:
 cp .mcp.json.example .mcp.json
 ```
 
-Edit `.mcp.json` to add, remove, or reconfigure connectors. All servers use HTTP transport (no npx required).
+Edit `.mcp.json` to add, remove, or reconfigure connectors. All servers use HTTP transport (no npx required). SocialForge ships no npx package and gives no `npx -y` command for any service: `npx -y <name>` runs whatever is published under that name with your API keys in its environment, so a package that is not the service vendor's own is never offered.

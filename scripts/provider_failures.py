@@ -160,6 +160,30 @@ def requote_payload(attempts, quoted, withheld, context=""):
     }
 
 
+# An attempt with one of these reasons never started: no credentials, or a backend that cannot run the model. Nothing
+# was spent on it, so it is "skipped", not "tried and failed".
+SKIPPED_REASONS = ("no-credentials", "unavailable-backend")
+
+
+def fallback_fields(attempts, used):
+    """The result fields for something made by a later provider than the first one tried, derived from what was recorded.
+
+    `fallback_from` names the providers that were TRIED AND FAILED (a request error, a bad response, a missing package),
+    as the attempts name them ("gemini-aistudio" on an API-key setup, "gemini-vertex" on Vertex AI), never a guess.
+    A rung that could not start (no credentials, or Veo without Vertex) is listed apart, in `skipped_unavailable`.
+    """
+    tried = list(dict.fromkeys(a["provider"] for a in attempts if a["reason"] not in SKIPPED_REASONS))
+    skipped = [p for p in dict.fromkeys(a["provider"] for a in attempts if a["reason"] in SKIPPED_REASONS) if p not in tried]
+    fields = {
+        "fallback_from": ", ".join(tried),
+        "earlier_attempts": attempts,
+        "provider_notice": fallback_notice(attempts, used),
+    }
+    if skipped:
+        fields["skipped_unavailable"] = skipped
+    return fields
+
+
 def fallback_notice(attempts, used):
     """One sentence for the user when the result came from a later provider than the first one tried, else None."""
     if not attempts:

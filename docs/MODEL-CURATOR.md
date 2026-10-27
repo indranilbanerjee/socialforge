@@ -54,13 +54,17 @@ An alias names a capability kind, never a model id: `latest-<kind>-<vendor>`. Th
 
 ---
 
-## ⚠ Parameter compatibility — Claude Opus 4.7 and later
+## ⚠ Parameter compatibility — every Anthropic model (API version 2026-10-21)
 
-**Claude Opus 4.7 and Opus 4.8 reject `temperature`, `top_p`, and `top_k` with HTTP 400** when set to a non-default value. The Anthropic SDK still accepts these parameters in request types (for type-check compatibility), but the runtime returns a 400.
+**From Anthropic API version 2026-10-21, `temperature`, `top_p` and `top_k` are removed for every model:** a request that sends any of them returns HTTP 400, even at the default value. On the older 2023-06-01 version, Claude 4.7 and later already reject a non-default value (see the registry's `param_compatibility_notes.anthropic_sampling_parameters`).
 
-If your script calls Opus 4.7+ via the SDK, **omit** these parameters entirely — let the system default apply. Use prompting to guide model behavior instead.
+Omit all three on every Anthropic call; use prompting to guide behaviour. Plugins call Anthropic models through aliases such as `resolve_model("latest-text-anthropic")`. Scan a file before shipping it:
 
-Plugins call Opus 4.7+ via `resolve_model("latest-text-anthropic")`. Run `python scripts/resolve_model.py --check-params script.py` to scan a file for unsafe param use before shipping — it exits 1 if any call passes `temperature` / `top_p` / `top_k` alongside an Opus 4.7+ target.
+```bash
+python scripts/resolve_model.py --check-params scripts/some_script.py
+```
+
+The scan is textual, not AST-based: it triggers when a file references any `claude-…` model id or a `latest-*-anthropic` alias, then flags every `temperature` / `top_p` / `top_k` assignment in that file. It exits 1 on any finding, so it drops straight into a pre-commit check. Expect occasional false positives when the model target is computed dynamically — that's deliberate, one extra review beats a 400 in production.
 
 Source: [Claude model deprecations — API parameter deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
 

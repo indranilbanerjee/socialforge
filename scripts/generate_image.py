@@ -194,7 +194,7 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
     `references_missing`; and an image made by a fallback rung (which takes no
     references) says `references_used: 0` plus `references_dropped` and a note.
     """
-    from provider_failures import record, failure_payload, requote_payload, fallback_notice
+    from provider_failures import record, failure_payload, requote_payload, fallback_fields
     attempts = []
     # `quoted` = the providers the user was shown a price for and approved. Default: the first rung that can run. A
     # fallback rung that was not quoted is never run; if it could have run, the chain stops with NEEDS_REQUOTE.
@@ -291,16 +291,12 @@ def generate_image(prompt, output_path, reference_images=None, aspect_ratio="1:1
         ws_result = generate_image_wavespeed(prompt, output_path, reference_images, aspect_ratio,
                                              attempts=attempts)
         if ws_result:
-            ws_result["fallback_from"] = "vertex-ai"
-            ws_result["earlier_attempts"] = attempts
-            ws_result["provider_notice"] = fallback_notice(attempts, "wavespeed")
+            ws_result.update(fallback_fields(attempts, "wavespeed"))
             return _flag_dropped_references(ws_result, reference_images)
     if may_run("higgsfield"):
         hf_result = generate_image_higgsfield(prompt, output_path, aspect_ratio, attempts=attempts)
         if hf_result:
-            hf_result["fallback_from"] = "vertex-ai+wavespeed"
-            hf_result["earlier_attempts"] = attempts
-            hf_result["provider_notice"] = fallback_notice(attempts, "higgsfield")
+            hf_result.update(fallback_fields(attempts, "higgsfield"))
             return _flag_dropped_references(hf_result, reference_images)
     if withheld:
         return requote_payload(attempts, covered, withheld, context="image generation")

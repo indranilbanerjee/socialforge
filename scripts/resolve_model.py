@@ -9,7 +9,7 @@ and deprecated IDs surface as warnings instead of silent 404s.
 
 Usage (CLI):
     python resolve_model.py --alias latest-fast-anthropic
-    python resolve_model.py --check gemini-2.0-flash
+    python resolve_model.py --check gpt-4o
     python resolve_model.py --list
     python resolve_model.py --list --vendor anthropic
     python resolve_model.py --list --modality image-gen --status current
@@ -19,7 +19,7 @@ Usage (CLI):
 Usage (Python):
     from resolve_model import resolve, check, list_models, get_registry
     model_id = resolve("latest-fast-anthropic")
-    status, replacement = check("gemini-2.0-flash")
+    status, replacement = check("gpt-4o")
     for m in list_models(vendor="google", modality="image-gen"):
         print(m["id"], m["status"])
 
@@ -205,13 +205,15 @@ def _print(obj: Any, as_json: bool) -> None:
 
 
 def _cmd_check_params(path_str: str, *, as_json: bool = False) -> int:
-    """Scan a Python file for unsafe Anthropic SDK calls.
+    """Scan a Python file for Anthropic calls that pass temperature/top_p/top_k.
 
-    Claude Opus 4.7 and Opus 4.8 reject `temperature`, `top_p`, and `top_k` with
-    HTTP 400 when set to a non-default value. This scanner does a textual sweep
-    — it's not an AST analyser, so it will produce false positives if the model
-    target is computed dynamically. It's intentionally noisy on the side of
-    caution: better one extra review than a 400 in production.
+    From Anthropic API version 2026-10-21, temperature, top_p and top_k are removed for
+    EVERY model: sending any of them returns HTTP 400, even at the default value. On the
+    older 2023-06-01 version, Claude 4.7 and later already reject a non-default value (see
+    the registry's param_compatibility_notes.anthropic_sampling_parameters). So the scan
+    triggers on any Claude model id literal or any latest-*-anthropic alias in the file.
+    It is a textual sweep, not an AST analyser: intentionally noisy, because one extra
+    review beats a 400 in production.
 
     Returns 1 if any unsafe call is detected, 0 if clean, 2 if the path is bad.
     """
@@ -225,26 +227,15 @@ def _cmd_check_params(path_str: str, *, as_json: bool = False) -> int:
             print(msg, file=sys.stderr)
         return 2
 
-    text = path.read_text(encoding="utf-8", errors="replace")
-    # Look for opus-4-7 or opus-4-8 string anywhere in the file (rough — but the
-    # whole resolver pattern is alias-first, so an explicit string hit is the
-    # one to catch).
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
     import re as _re
-    # Opus 4.7/4.8 and the whole Claude 5 family reject sampling params
-    risky_model_pat = _re.compile(r"claude-opus-4-[78]|claude-(?:opus|sonnet|fable)-5")
+    claude_ids = sorted(set(_re.findall(r"claude-[a-z0-9][a-z0-9.\-]*", text)))
+    aliases = sorted(set(_re.findall(r"latest-[a-z]+-anthropic", text)))
     unsafe_params = ("temperature", "top_p", "top_k")
     findings = []
-    has_opus_47_plus = bool(risky_model_pat.search(text))
-    # Resolve the alias live rather than assuming what it points at
-    try:
-        _alias_target = resolve("latest-text-anthropic")
-    except (KeyError, ValueError, OSError):
-        _alias_target = None
-    has_alias_call = "latest-text-anthropic" in text and bool(
-        _alias_target is None or risky_model_pat.search(_alias_target))
-    targets_47_plus = has_opus_47_plus or has_alias_call
+    targets_anthropic = bool(claude_ids or aliases)
 
-    if targets_47_plus:
+    if targets_anthropic:
         for lineno, line in enumerate(text.splitlines(), start=1):
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
@@ -260,28 +251,26 @@ def _cmd_check_params(path_str: str, *, as_json: bool = False) -> int:
 
     payload = {
         "path": path_str,
-        "targets_opus_47_plus": targets_47_plus,
-        "explicit_opus_47_plus_ref": has_opus_47_plus,
-        "uses_latest_text_anthropic_alias": has_alias_call,
-        "latest_text_anthropic_resolves_to": _alias_target,
+        "targets_anthropic": targets_anthropic,
+        "claude_ids": claude_ids,
+        "anthropic_aliases": aliases,
         "findings_count": len(findings),
         "findings": findings,
     }
     if as_json:
         print(json.dumps(payload, indent=2))
     else:
-        if not targets_47_plus:
-            print(f"{path_str}: no Opus 4.7+ target detected — skipped")
+        if not targets_anthropic:
+            print(f"{path_str}: no Anthropic model or alias referenced — skipped")
         elif not findings:
-            print(f"{path_str}: clean (no temperature/top_p/top_k near an Opus 4.7+ target)")
+            print(f"{path_str}: clean (no temperature/top_p/top_k near an Anthropic target)")
         else:
-            print(f"{path_str}: {len(findings)} unsafe param uses found near an Opus 4.7+ target:")
+            print(f"{path_str}: {len(findings)} unsafe param uses found near an Anthropic target:")
             for f in findings:
                 print(f"  L{f['line']:>4}  {f['param']:11s}  {f['code']}")
-            print("\nClaude Opus 4.7 / 4.8 return HTTP 400 when these are set. Omit them — "
-                  "see docs/MODEL-CURATOR.md § Parameter compatibility.")
+            print("\nAnthropic API version 2026-10-21 rejects temperature, top_p and top_k on every "
+                  "model (HTTP 400). Omit them — see docs/MODEL-CURATOR.md § Parameter compatibility.")
     return 1 if findings else 0
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -295,7 +284,7 @@ def main() -> int:
     group.add_argument("--registry-path", action="store_true", help="Print path to the loaded registry file")
     group.add_argument("--aliases", action="store_true", help="Print all aliases and their resolutions")
     group.add_argument("--check-params", metavar="PATH",
-                       help="Scan a Python file for calls that pass temperature/top_p/top_k alongside a Claude Opus 4.7+ target. Exits 1 if any unsafe call is found.")
+                       help="Scan a Python file for temperature/top_p/top_k alongside any Claude model or latest-*-anthropic alias (API 2026-10-21 rejects them on every model). Exits 1 if any unsafe use is found.")
 
     parser.add_argument("--vendor")
     parser.add_argument("--modality")

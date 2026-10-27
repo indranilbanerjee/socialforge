@@ -9,13 +9,13 @@ Open-source agency-grade social media production engine — **21 skills · 18 co
 [![Version](https://img.shields.io/badge/version-1.29.9-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-633%2F633%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-656%2F656%20passing-brightgreen.svg)](tests/)
 [![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1299)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.9 (October 27, 2026): SocialForge is checked against the plugin directory's own rules, and two stray helper files are gone.** [Current release](#current-release-v1299) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v1.29.9 (October 27, 2026): the model registry is current, a fallback names the provider that failed, and SocialForge is checked against the plugin directory's own rules.** [Current release](#current-release-v1299) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code 2.1.292 or newer (one command, run in your terminal):
@@ -273,7 +273,7 @@ Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DAT
 
 ## Current Release (v1.29.9)
 
-**v1.29.9:** SocialForge is checked against the plugin directory's own rules, and two stray helper files are gone. Found while preparing the directory submission. Two base64 files (`.tmp/*.b64`) had shipped since 1.5.0, each decoding to a script that named a folder on the author's own computer; the directory holds a version for a reviewer when it finds a file like that, so they are removed. Seven files told a reader to run an unpinned `pip install`; they now point at `install_deps.py`, which prints the pinned commands. `tests/test_directory_readiness.py` runs the checklist's file-level rules on the repository (system files, file names, size and type limits, launchers, credentials, paths from the author's machine) and fails on 1.29.8 in ten places. The README gains a section on what the plugin runs and what leaves your machine, and the submission bundle is rewritten for the portal. `claude plugin validate --strict --profile directory` passes.
+**v1.29.9:** the model registry is current, a fallback names the provider that failed, and SocialForge is checked against the plugin directory's own rules. The registry is now a copy of the canonical one (72 models, 20 aliases; vendor pages read 2026-10-27) and `resolve_model.py --check-params` flags any Claude model, because Anthropic API version 2026-10-21 rejects `temperature`, `top_p` and `top_k` on every model. `fallback_from` used to say `vertex-ai` whatever the setup was; it now lists only the providers that were tried and failed (`gemini-aistudio`, `wavespeed-kling`), and a rung that could not start is listed in `skipped_unavailable`. Preparing the directory submission found two base64 files (`.tmp/*.b64`) that had shipped since 1.5.0, each decoding to a script that named a folder on the author's own computer; they are removed. Seven files told a reader to run an unpinned `pip install` and now point at `install_deps.py`, `tests/test_directory_readiness.py` runs the checklist's file-level rules on the repository, the README gains a section on what the plugin runs and what leaves your machine, and the submission bundle is rewritten for the portal. `claude plugin validate --strict --profile directory` passes.
 
 **v1.29.8:** a quote names only providers that can run, and nothing is spent on a provider you were not quoted. Veo 3.1 is a Vertex AI model (Google's Gemini API stopped serving its previews on 2026-10-22), but a Gemini API key alone counted as "Google available", so for that setup routing and the quote named Veo for a clip that could only fail, and the chain then fell through to another provider with its own price. Routing now lists `unavailable` providers and why, `--quoted-providers` limits a run to the providers the quote covered (an unquoted fallback ends as `NEEDS_REQUOTE` and spends nothing), and a fallback that did run says which provider made the file and why. Veo is asked for 4, 6 or 8 seconds only. The veo-3.1 reference, the EU Article 50(2) grace period (to 2 December 2026) and the C2PA 2.5 wording are updated, the install is one command on Claude Code 2.1.292 or newer, and setup warns on Python 3.10, which stopped receiving security fixes on 2026-10-01.
 

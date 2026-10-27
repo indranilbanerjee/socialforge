@@ -163,7 +163,7 @@ User picks a concept before any generation begins.
 
 ### Stage 4: Video Generation (WaveSpeed, `latest-video-wavespeed`)
 - Generate 2 video versions from the approved frames (`generate_video.py --generate-video --image <first-frame> --last-image <last-frame> --quoted-providers <quoted>`). The last frame reaches the video model only on the `kling` rung — pass `--provider kling` when the clip must end on it, and read `video.last_frame_used` in the result before presenting a clip as landing on it (see "Reference images and keyframes" above).
-- Use the video provider chain via generate_video.py. If a result carries `provider_notice` (or `fallback_from`), tell the user which provider made it and why the first did not.
+- Use the video provider chain via generate_video.py. If a result carries `provider_notice` (or `fallback_from`), tell the user which provider made it and why the first did not; a rung listed in `skipped_unavailable` never started (no credentials, or Veo without Vertex AI) and cost nothing, so do not report it as a failure.
 - Show both versions for user review
 - User picks their preferred video (or requests another round)
 - Max 3 generation rounds before escalating

@@ -46,7 +46,7 @@ NOW = datetime(2026, 10, 27, 12, 0, tzinfo=timezone.utc)
 KEY = "g-test-0000-not-a-real-google-key"
 CRED = "GEMINI_API_KEY"
 JOB = "index-assets.vision.google"
-ROUTER_SHA256 = "9e179aef1a78647897129584744b5e013713b546aab512dd7cfac376d78ed547"  # the canonical file, LF as git stores it
+ROUTER_SHA256 = "3ea211769a04783ceb02175b22b69b77d51d5951dbfeb95034b1ba92a29ed1a1"  # the canonical file, LF as git stores it
 
 
 def committed_bytes(path: Path) -> bytes:

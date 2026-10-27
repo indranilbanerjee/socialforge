@@ -88,3 +88,15 @@ def safe_child(base, name) -> Path:
     if child.parent != base_resolved:
         raise ValueError(f"path escapes its directory: {name!r}")
     return child
+
+
+def genai_http_options():
+    """HttpOptions for a google-genai client built with an API key: the client never follows a redirect.
+
+    The SDK's own httpx client follows redirects, httpx drops only `Authorization` when one leaves the origin, and an API key
+    travels as `x-goog-api-key`, so a 30x answer would carry the key to whatever host it names. `follow_redirects=False` keeps
+    it on the host it was sent to (the SDK still adds its TLS context to these arguments). A Vertex AI client sends an OAuth
+    `Authorization` header, which httpx and `requests` both drop, and does not need this.
+    """
+    from google.genai import types
+    return types.HttpOptions(client_args={"follow_redirects": False}, async_client_args={"follow_redirects": False})

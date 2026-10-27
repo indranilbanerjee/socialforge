@@ -64,7 +64,7 @@ def edit_with_gemini(image_path, instruction, output_path, reference_images=None
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             return {"status": "FAILED", "error": "No credentials. Run /socialforge:setup"}
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(api_key=api_key, http_options=_common.genai_http_options())
         backend = "ai-studio-fallback"
 
     from google.genai import types

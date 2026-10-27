@@ -22,10 +22,10 @@ Every script that calls a provider model accepts `--model` (or `--openai-model` 
 
 - **Current id** → pass it through unchanged.
 - **Deprecated id** → print a `WARNING` to stderr and silently substitute the registered `replacement_id`.
-
-**A replacement can depend on the service.** `veo-3.1-generate-preview` was shut down on the Gemini API on 2026-10-22; its replacement there is `gemini-omni-1.1-flash`, and on Vertex AI it is `veo-3.1-generate-001`, which the Gemini API does not serve. An entry like that carries `replacement_by_backend` (`{"gemini-api": "...", "vertex": "..."}`) beside `replacement_id` (the default for readers of one id). Resolve it with `--backend gemini-api` or `--backend vertex` (`backend=` in Python): the id is only ever forwarded to the named service's replacement. With no backend, or one the entry does not list, a retired or deprecated id is refused with exit 2 and both replacements are named, so a caller never lands on another service's id. SocialForge's Veo rung only runs on Vertex AI, so `generate_video.py` passes `backend="vertex"`; asset indexing passes `gemini-api` or `vertex` to the router for the service its run is served by.
 - **Unknown id** → print a `WARNING` and pass the id through (the call may still work; you just lose the deprecation safety net).
 - **No `--model`** → resolve via the script's default alias (e.g. `latest-balanced-anthropic`).
+
+**A replacement can depend on the service.** `veo-3.1-generate-preview` was shut down on the Gemini API on 2026-10-22; its replacement there is `gemini-omni-1.1-flash`, and on Vertex AI it is `veo-3.1-generate-001`, which the Gemini API does not serve. An entry like that carries `replacement_by_backend` (`{"gemini-api": "...", "vertex": "..."}`) beside `replacement_id` (the default for readers of one id). Resolve it with `--backend gemini-api` or `--backend vertex` (`backend=` in Python): the id is only ever forwarded to the named service's replacement. With no backend, or one the entry does not list, a retired or deprecated id is refused with exit 2 and both replacements are named, so a caller never lands on another service's id. SocialForge's Veo rung only runs on Vertex AI, so `generate_video.py` passes `backend="vertex"`; asset indexing passes `gemini-api` or `vertex` to the router for the service its run is served by.
 
 ```bash
 # Default — generate_image.py resolves the latest-image-balanced-google alias

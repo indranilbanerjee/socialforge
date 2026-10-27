@@ -238,7 +238,7 @@ def open_client():
         api_key = os.environ.get(VISION_CREDENTIAL)
         if not api_key:
             return None, None, f"no-credentials: {VISION_CREDENTIAL} not set"
-        return genai.Client(api_key=api_key), GEMINI_API_BACKEND, None
+        return genai.Client(api_key=api_key, http_options=_common.genai_http_options()), GEMINI_API_BACKEND, None
 
 
 def scan_images(source_path):

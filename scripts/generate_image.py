@@ -126,7 +126,7 @@ def create_client():
                 pass
         if api_key:
             try:
-                return genai.Client(api_key=api_key), "aistudio", None
+                return genai.Client(api_key=api_key, http_options=_common.genai_http_options()), "aistudio", None
             except Exception as e:
                 return None, None, f"AI Studio init failed: {e}"
 

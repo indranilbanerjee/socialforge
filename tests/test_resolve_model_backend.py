@@ -132,6 +132,22 @@ class TestTheCommandLine(RegistryCase):
         self.assertEqual(out.returncode, 1)  # retired ids keep exiting 1 under --check
 
 
+class TestUtf8Output(RegistryCase):
+    """A registry note in a script outside Windows-1252 (an arrow, Devanagari) must print, not end in UnicodeEncodeError,
+    when PYTHONUTF8 is unset and stdout is a pipe (the default for a customer on Windows)."""
+
+    def test_list_json_prints_non_latin_notes_with_python_utf8_unset(self):
+        reg = registry()
+        reg["models"][1]["display_name"] = "Veo → नमस्ते 😀"
+        self.path.write_text(json.dumps(reg), encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if k not in ("PYTHONUTF8", "PYTHONIOENCODING")}
+        env.update(MODEL_REGISTRY=str(self.path), HOME=self._tmp.name, USERPROFILE=self._tmp.name)
+        out = subprocess.run([sys.executable, str(SCRIPTS / "resolve_model.py"), "--list", "--json"],
+                             capture_output=True, env=env, timeout=60)
+        self.assertEqual(out.returncode, 0, out.stderr.decode("utf-8", "replace"))
+        self.assertIn("नमस्ते", out.stdout.decode("utf-8"))
+
+
 class TestTheShippedRegistry(unittest.TestCase):
     """The mirrored registry carries the split, so the behaviour above reaches real callers."""
 

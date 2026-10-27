@@ -213,7 +213,7 @@ def get_gemini_client():
     api_key = os.environ.get("GEMINI_API_KEY")
     if api_key:
         try:
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=api_key, http_options=_common.genai_http_options())
             return client, "ai-studio-fallback"
         except Exception as e:
             tried.append(f"ai-studio (GEMINI_API_KEY): {type(e).__name__}: {str(e)[:120]}")

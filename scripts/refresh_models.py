@@ -44,8 +44,14 @@ def _http_get(url: str, headers: dict[str, str], timeout: int = 15) -> tuple[dic
     """Fetch JSON, returning (data, error). The error string names the actual
     cause — a 401 bad key, a 429 rate limit, and a DNS failure are three
     different problems, and a drift report that conflates them cannot be
-    acted on."""
-    req = urllib.request.Request(url, headers=headers)
+    acted on.
+
+    Every header goes in with add_unredirected_header. urllib copies a request's
+    ordinary headers (the key's among them) to whatever host a 30x answer names,
+    so a key set the usual way would follow a redirect off the vendor."""
+    req = urllib.request.Request(url)
+    for name, value in headers.items():
+        req.add_unredirected_header(name, value)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8")), None

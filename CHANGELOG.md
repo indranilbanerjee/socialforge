@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.30.2] - 2026-10-28
+
+### A retired Veo id is replaced by the model of the service that serves it, the registry and the deprecations record must agree, no key follows a redirect to another host, and a session's data folder no longer leaks into the price-book tests
+
+Found while the 1.30.1 router and registry were audited against their sources. The registry's `veo-3.1-generate-preview` entry named one `replacement_id` for everyone, `veo-3.1-generate-001`, which is Vertex AI's replacement. The Gemini API's deprecations record names `gemini-omni-1.1-flash` for the same model, so the two files disagreed, and a reader on the Gemini API was handed a model that service does not list.
+
+**Changed**
+
+- `scripts/model_router.py` is re-copied from Digital Marketing Pro 3.40.0 (git blob `ca8518e8`, sha256 `3ea21176…`, 47,101 bytes). `route()` takes `backend`, the service the request goes to when it is not the provider's own API (`google` means the Gemini API unless told otherwise), and a registry entry's `replacement_by_backend` picks the replacement for that service. The CLI gains `--backend`. Its three list calls send their credential headers with `add_unredirected_header`, so a key stays on the host it was sent to.
+- `scripts/model_registry.json` is mirrored from Digital Marketing Pro 3.40.0: `veo-3.1-generate-preview` carries `replacement_by_backend` (`gemini-api` -> `gemini-omni-1.1-flash`, `vertex` -> `veo-3.1-generate-001`) next to the default `replacement_id`, and a `gpt-6-sol` entry joins the OpenAI models, so a pin on the replacement OpenAI's deprecations page names is known.
+- `scripts/resolve_model.py` takes `--backend` (and `backend=` in Python for `resolve` and `check`). An entry with `replacement_by_backend` is never forwarded to one service's id without a backend named: `resolve_model.py --alias veo-3.1-generate-preview` exits 2 and names both replacements, and `--backend vertex` returns `veo-3.1-generate-001`.
+- `scripts/generate_video.py` names its service (`VEO_BACKEND = "vertex"`, the only service that serves Veo here), so a retired Veo id is replaced by `veo-3.1-generate-001` and never by the Gemini API's `gemini-omni-1.1-flash`. Kling, which goes through WaveSpeed, has no backend split and is unchanged.
+- `scripts/index_assets.py` names the service it routes to (`gemini-api`, or `vertex` with the deprecations record and the registry's Gemini lifecycle fields still switched off), so the default model and a retired pin's replacement are the ones that service serves.
+- `docs/MODEL-CURATOR.md` says a replacement can depend on the service, and names the guard that keeps the registry and the record in agreement.
+
+**Fixed**
+
+- A key could follow a redirect to another host. urllib copies a request's ordinary headers (the key's among them) to whatever host a 30x answer names, and `refresh_models.py` and the model router sent theirs that way; both use `add_unredirected_header` now. The google-genai client built with an API key was exposed in a second way: the SDK's own httpx client follows redirects, httpx drops only `Authorization`, and the key travels as `x-goog-api-key`. The four clients that use an API key (`credential_manager.py`, `edit_image.py`, `generate_image.py`, `index_assets.py`) take `_common.genai_http_options()`, which turns redirects off; a Vertex AI client sends an OAuth `Authorization` header that httpx drops, and a test shows it. The Higgsfield calls and the WaveSpeed SDK use `requests`, which drops `Authorization` on a redirect to another host, and those calls send no other credential header, so they did not change; a test pins both facts. `tests/test_keys_stay_on_the_vendor.py` answers each vendor call with a 302 to another host (no network, no real key), shows that host every header it receives and fails if a key is among them, after proving the stub can see a key sent the old way. A scan of every shipped Python file fails on a urllib request that carries a credential header outside `add_unredirected_header`, and on a Gemini API-key client built without the option; planted cases show both fire.
+
+- `tests/test_price_book.py` set only `CLAUDE_PLUGIN_DATA_DIR`. Claude Code names its own data folder in `CLAUDE_PLUGIN_DATA`, and that one wins, so the class passed in the full suite (which redirects every variable) and read or wrote the session's real price book when it was run on its own. It sets all three variables, restores them afterwards, and a test fails if a session's folder wins.
+
+- `scripts/resolve_model.py` printed through the console's code page. On Windows, with `PYTHONUTF8` unset and the output piped, a registry note or display name outside Windows-1252 (an arrow, Devanagari) ended in `UnicodeEncodeError`; it prints UTF-8 whatever the console is, and a test runs it that way.
+
+**Added**
+
+- `tests/test_registry_record_agreement.py`: when the hint book's deprecations record says a model is deprecated or shut down, the registry entry for it must say `deprecated` or `retired` (never `current` or `supported`), with the record's shutdown date and the replacement for the service the record describes (the Gemini API's entry, for a model with `replacement_by_backend`). A model in only one of the two files is not checked, a planted `current` entry for a record-deprecated id fails it, and there is no exemption list.
+- `tests/test_resolve_model_backend.py` and `tests/test_veo_backend.py`: the exit code, the message and the Vertex and Gemini API answers for a backend-dependent replacement, and that the Veo script asks for its own.
+- `SECURITY.md` named 1.13.x as the supported line while the product was on 1.30.x; it names the current minor, and `tests/test_security_policy.py` fails the day the manifest version moves without it.
+- `tests/test_skill_names.py`: no skill, command or agent name carries a hidden, direction-changing or blank-like character, or `<` or `>` (Claude Code 2.1.252 to 2.1.311 stops offering such a skill). Dots stay allowed.
+- `.github/workflows/release.yml`: the GitHub release is created when the manifest version changes. Releases had stopped at v1.14.0 in July.
+
 ## [1.30.1] - 2026-10-27
 
 ### An offline run checks a named model against the Gemini API's deprecations record, and a Vertex run is never refused by it

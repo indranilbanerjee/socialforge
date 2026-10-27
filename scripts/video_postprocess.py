@@ -2,7 +2,7 @@
 """
 video_postprocess.py -- Video post-processing using ffmpeg (bundled via imageio-ffmpeg).
 
-Uses imageio-ffmpeg (pip install imageio-ffmpeg) which bundles the ffmpeg binary,
+Uses imageio-ffmpeg (pinned by install_deps.py) which bundles the ffmpeg binary,
 so no system-level ffmpeg install is needed. The bundled binary is located
 automatically via imageio_ffmpeg.get_ffmpeg_exe().
 

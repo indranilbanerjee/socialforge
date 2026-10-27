@@ -157,7 +157,7 @@ Carousels are rendered to images using Playwright (headless Chromium):
 
 ### Playwright Requirements
 
-- Playwright must be installed: `pip install playwright && playwright install chromium`
+- Playwright and Chromium must be installed: `install_deps.py` (the plugin's `scripts` folder; it prints exact pinned commands and installs only when you pass `--install`) with `--groups carousel` prints the pinned commands
 - Fonts must be installed on the system or loaded via `@font-face` in the template — the injected font names are resolved by the browser, not bundled.
 - Rendering timeout: 10 seconds per slide (increase for complex templates).
 

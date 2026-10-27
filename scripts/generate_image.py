@@ -16,11 +16,11 @@ Setup (Vertex AI — recommended):
     2. gcloud auth application-default login
     3. export GOOGLE_CLOUD_PROJECT=your-project-id
     4. export GOOGLE_CLOUD_LOCATION=us-central1
-    5. pip install google-genai Pillow
+    5. python install_deps.py --groups core image   (prints the pinned commands)
 
 Setup (AI Studio — fallback):
     export GEMINI_API_KEY=your-key
-    pip install google-genai Pillow
+    python install_deps.py --groups core image   (prints the pinned commands)
 """
 
 import argparse

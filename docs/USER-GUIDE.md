@@ -993,7 +993,7 @@ Most connectors activate through the Connectors panel in Claude's settings. For 
 ### "Playwright not installed"
 
 **Cause:** Carousel rendering and gallery builds require Playwright with Chromium.
-**Fix:** `pip install playwright && playwright install chromium`. In restricted environments, also run `playwright install-deps`.
+**Fix:** run `install_deps.py` (the plugin's `scripts` folder; it prints exact pinned commands and installs only when you pass `--install`) with `--groups carousel`: it prints the pinned Playwright and Chromium commands. In restricted environments, also run `playwright install-deps`.
 
 ### "Quality score below 7.0"
 

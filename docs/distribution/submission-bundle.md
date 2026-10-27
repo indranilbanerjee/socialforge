@@ -1,15 +1,60 @@
 # SocialForge — Directory Submission Bundle
 
-Prepared 2026-08-16. Items marked **[owner action]** need the account holder.
+Prepared 2026-08-16; checked again on 2026-10-27 against Anthropic's plugin pre-submission checklist (claude.com/docs/directory). Items marked **[owner action]** need the account holder.
 
 ## Targets
 
 | Directory | Route | Status |
 |---|---|---|
-| Anthropic official plugin directory | [developer portal](https://claude.ai/directory/manage) ([how to publish](https://claude.com/docs/directory/publish); the old Console form is retired) | bundle ready — **[owner action]** submit (one plugin per submission; README ≥ 40 words + LICENSE; no `.DS_Store`; every file < 5 MiB) (182 tracked files — under the 512-file review-hold threshold) |
+| Anthropic official plugin directory | [developer portal](https://claude.ai/directory/manage) ([how to publish](https://claude.com/docs/directory/publish); the old Console form is retired) | bundle ready: **[owner action]** Submit new → Plugin bundle → repository `indranilbanerjee/socialforge`, plugin path empty (the plugin is the repository root), tracked branch `main`. One plugin per submission. |
 | OpenAI universal Plugins Directory (ChatGPT + Codex) | [submission portal](https://developers.openai.com/plugins/deploy/submission) | bundle ready — **[owner action]** verified identity, then submit as **skills-only** |
 
 **Name (immutable once listed):** `socialforge`.
+
+## Before you press Validate (checked 2026-10-27)
+
+From the repository root, on Claude Code 2.1.308:
+
+1. `claude plugin validate . --strict --profile directory` passes. The command runs a subset of the portal's checks.
+2. `python -m pytest tests/test_directory_readiness.py` runs the file-level rules the command cannot, each one also planted so it is shown to fail.
+
+| Directory check | If missed | SocialForge |
+|---|---|---|
+| The folder holds `.claude-plugin/plugin.json`; one plugin per submission | Blocks | At the repository root. The `.codex-plugin`, `.cursor-plugin`, `.github/plugin` and `.grok-plugin` manifests are other hosts' files, not other plugin folders |
+| No `.DS_Store`, `Thumbs.db`, `desktop.ini`, `__MACOSX`; names valid on Windows and macOS; no case collisions | Blocks / validation stops | None (tested) |
+| Regular files only: no symbolic links, submodules or LFS pointers | Blocks | None (tested on the git index) |
+| No `.gitattributes` that rewrites contents | Validation stops | No `.gitattributes` ships |
+| At most 512 files; every non-image file under 256 KiB; every file under 5 MiB | Held / stops | Within all three (tested; the file count is deliberately not restated here) |
+| Only text, complete PNG/JPEG/GIF/WebP images and fonts | Held | Text plus two PNGs (`assets/icon.png`, one README screenshot). 1.29.9 removed two stray base64 helper scripts (`.tmp/*.b64`, shipped since 1.5.0) that a reviewer would have held and that named a path on the author's machine |
+| `name` lowercase letters, digits, hyphens; `displayName` and `author.name` in one writing system; `description`, `author`, `version` set | Blocks / Warning | `socialforge`, `SocialForge`, Indranil Banerjee; all set (tested) |
+| README of at least 40 words outside code blocks; a LICENSE | Blocks | README of several thousand words; MIT, in `license` and in `LICENSE` |
+| Pinned package launchers; no package-manager config; no lockfile install | Blocks / held | No launcher anywhere, no `.npmrc`/`bunfig.toml`/`uv.toml`, `package.json` has no dependencies and no lockfile (tested) |
+| No real credential in any file | Blocks | None (tested with a pattern scan) |
+| `.mcp.json` valid; remote servers https | Blocks | No `.mcp.json` ships; the opt-in connector catalog is `.mcp.json.connectors-reference` |
+| `hooks/hooks.json` valid, not named in `plugin.json` | Blocks / Warning | `{"hooks": {}}`; not named |
+| Front matter parses and `description` is one text value | Blocks | Every skill, command and agent (tested) |
+| README says what the plugin runs, sends and fetches | Security scan | README section "What it runs and what leaves your machine" plus the endpoint table in `PRIVACY.md` |
+| Readable source, not compiled or minified | Held | All scripts, templates and workflows are plain source |
+
+## Data handling answers (portal step 4, draft for the owner to confirm)
+
+- **Reads or stores personal data:** only what the user supplies: brand configs, calendars, an asset index, generated creative and the approval ledger. They live in the host's plugin data folder or `~/socialforge-workspace/` on the user's machine. Nothing is stored by the author.
+- **Sends data to services other than declared connectors:** only to the image and video providers the user connects and approves per call (Google Gemini or Vertex AI, WaveSpeed, HiggsField), Gemini image analysis when the user indexes a photo library, the model-list endpoints of Anthropic, OpenAI and Google, and an RFC 3161 timestamp request carrying a hash when the user signs an asset. No telemetry. The full table is `PRIVACY.md`.
+- **Retention:** the author keeps nothing. Local files stay until the user deletes them.
+- **Intended for people under 18:** no. It is a professional marketing tool.
+
+## Compliance step and publishing (portal steps 5 and 6)
+
+- **[owner action]** The contact email, and all four acknowledgements (read the Anthropic Software Directory Terms and Policy first).
+- Choose **GitHub push webhook** for updates (it needs admin on the repository; the directory also polls on a schedule). Raise `version` in `.claude-plugin/plugin.json` with every release; the release ritual already does.
+- A reviewer publishes the first version by default. Later versions that pass go live on their own once the setting changes.
+
+## What a reviewer may hold, disclosed up front
+
+1. **"Uses a credential from the user's machine".** The generation scripts read a provider key from the user's environment or from a profile they stored with `credential_manager.py`, and send it only to that provider's own API. Nothing is sent anywhere else, and `PRIVACY.md` names each endpoint. If a reviewer asks for `userConfig` entries with `sensitive: true` instead, that is a change to how credentials reach the scripts, so it needs the owner's decision.
+2. **Name look-alike.** `socialforge` cannot be checked against other listings offline. The portal reports "Name may be confused with an existing listing" if it is held. The name is immutable once listed.
+3. **Scripts.** The Python scripts run on the user's machine when a skill tells Claude to run them. No hook or MCP server runs them, so the "scripts the validator couldn't follow" hold, which is about programs a hook or server starts, does not apply.
+4. **Output quality.** The checklist asks for a with-and-without comparison (`claude plugin eval`). SocialForge's trigger cases are in `evals/`; the paid comparison run was not made for this bundle.
 
 ## Listing metadata
 

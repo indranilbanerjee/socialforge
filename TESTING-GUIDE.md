@@ -12,7 +12,6 @@
 - [ ] Node.js 18+ available | `node --version` returns 18+
 - [ ] Playwright installed | `python -c "from playwright.sync_api import sync_playwright; print('OK')"` prints OK
 - [ ] Chromium binary installed | `playwright install chromium` completes without error
-- [ ] python-docx installed | `python -c "import docx; print('OK')"` prints OK
 - [ ] Pillow installed | `python -c "from PIL import Image; print('OK')"` prints OK
 - [ ] At least one AI image API key set in `.env` | `FAL_KEY`, `REPLICATE_API_TOKEN`, or `GEMINI_API_KEY`
 - [ ] Test brand asset folder prepared | Minimum 10 images (JPG/PNG/WEBP, 800x800+)
@@ -287,7 +286,7 @@ Test each of the 8 templates renders correctly.
 
 - [ ] Plugin installs in Cowork VM | No SSH errors (HTTPS source used)
 - [ ] Python 3.10 available in Cowork | `python --version` confirms 3.10+
-- [ ] `pip install` works for dependencies | playwright, python-docx, Pillow, gspread install
+- [ ] `install_deps.py --install` works for dependencies | the pinned Playwright, Pillow, google-genai and wavespeed install
 - [ ] Playwright Chromium runs in Cowork | Carousel rendering works (may need `--no-sandbox`)
 - [ ] `.mcp.json` HTTP connectors load in Cowork | No npx/node dependency issues
 - [ ] File paths use forward slashes | No Windows backslash errors in Cowork (Linux VM)

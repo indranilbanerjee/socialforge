@@ -53,8 +53,8 @@ Common SocialForge errors with causes and fixes.
 **Cause:** Playwright or its Chromium browser binary is not installed.
 
 **Fix:**
-1. Install Playwright: `pip install playwright`
-2. Install browser binaries: `playwright install chromium`
+1. Install Playwright and its browser with the pinned commands that `install_deps.py` (the plugin's `scripts` folder; it prints exact pinned commands and installs only when you pass `--install`) prints for `--groups carousel`
+2. Re-run the failed step
 3. If in a restricted environment (Cowork VM), check that Chromium dependencies are available. Run `playwright install-deps` for system-level dependencies.
 4. Verify installation: `python -c "from playwright.sync_api import sync_playwright; print('OK')"`
 
@@ -108,11 +108,11 @@ Common SocialForge errors with causes and fixes.
 
 **When:** Phase 8 (Export) when generating the content calendar DOCX.
 
-**Cause:** Missing Python dependency (`python-docx`), or template file not found.
+**Cause:** `assemble_docx.js` does not write a `.docx` file: it emits the calendar document as structured JSON (`docx_output` says so) for you or Claude to convert. A missing template or incomplete post data is the usual failure.
 
 **Fix:**
-1. Install the dependency: `pip install python-docx`
-2. Verify the DOCX template exists in the expected location.
+1. Check the JSON structure the script wrote; convert it to `.docx` with your own tool if you need that format.
+2. Verify the template exists in the expected location.
 3. Check that all posts referenced in the export have complete data (copy, visual paths, metadata).
 4. If a specific post causes failure, check its entry in `status-tracker.json` for missing fields.
 5. Try exporting without the problematic post by setting its status to `"blocked"`.
@@ -124,7 +124,7 @@ Common SocialForge errors with causes and fixes.
 1. **Check status tracker** — `status-tracker.json` shows exactly where the pipeline stopped.
 2. **Check brand config** — Most errors trace back to missing or malformed `brand-config.json`.
 3. **Check file paths** — Use forward slashes. Verify files exist at referenced paths.
-4. **Check dependencies** — `pip install playwright python-docx gspread pillow` covers most needs.
+4. **Check dependencies** — `install_deps.py` (the plugin's `scripts` folder; it prints exact pinned commands and installs only when you pass `--install`) reports what is present and what is missing.
 5. **Resume, don't restart** — The pipeline is designed to resume from the last successful phase. You rarely need to start over.
 
 ---
@@ -136,4 +136,4 @@ Common SocialForge errors with causes and fixes.
 **Fix:**
 1. **Automatic fallback:** Script falls back to basic white-background removal (threshold-based). Works for product-on-white images.
 2. **Manual:** Upload pre-masked images (PNG with alpha channel) — skip background removal entirely
-3. **Claude Code:** `pip install rembg` works in full Claude Code environments
+3. **Claude Code:** `install_deps.py --groups background-removal` prints the pinned `rembg` command for full Claude Code environments

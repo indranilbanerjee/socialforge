@@ -702,11 +702,7 @@ Same brand config + same slide content = same output every time. No AI involved.
 
 ### Dependencies
 
-Requires `playwright` Python package and Chromium browser binary:
-```
-pip install playwright
-playwright install chromium
-```
+Requires the `playwright` Python package and the Chromium browser binary. Run `install_deps.py` (the plugin's `scripts` folder; it prints exact pinned commands and installs only when you pass `--install`) with `--groups carousel` to see the pinned commands for both.
 
 If Playwright is not installed, the skill prompts the user to install it. There is no AI fallback for carousel rendering -- it is local-only.
 
@@ -1027,7 +1023,7 @@ SocialForge is designed so that non-deterministic steps are always sandwiched be
 | Asset matching (`/socialforge:generate-all` phase 1) | None | Uses existing index, pure math scoring |
 | Copy adaptation | None | Claude handles text transformation |
 | Compliance checking | None | Regex/string matching against local rules |
-| Carousel rendering | None | Playwright is local (requires pip install) |
+| Carousel rendering | None | Playwright is local (pinned install via `install_deps.py`) |
 | Preview rendering | None | Playwright is local |
 | Gallery building | None | Local HTML generation |
 | Finalization | None | File organization only |
@@ -1099,8 +1095,8 @@ The primary cost driver is the number of image generations, then video clips, wh
 | Asset source: Cloudinary | Yes (HTTP MCP) | Yes (HTTP MCP) |
 | Image generation (Gemini) | Yes (API call) | Yes (API call) |
 | Image generation (fal.ai/Replicate) | Yes (HTTP MCP) | Yes (HTTP MCP) |
-| Background removal (rembg) | Partial (may fail on C-extension deps) | Yes (pip install rembg) |
-| Carousel rendering (Playwright) | Partial (requires chromium install in VM) | Yes (pip install playwright) |
+| Background removal (rembg) | Partial (may fail on C-extension deps) | Yes (`install_deps.py --groups background-removal`) |
+| Carousel rendering (Playwright) | Partial (requires chromium install in VM) | Yes (`install_deps.py --groups carousel`) |
 | Copy adaptation | Yes | Yes |
 | Compliance checking | Yes | Yes |
 | Preview rendering (Playwright) | Partial (same as carousel) | Yes |

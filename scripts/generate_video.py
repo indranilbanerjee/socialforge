@@ -15,12 +15,12 @@ Override per-call with --video-model.
 
 Setup (WaveSpeed — for Kling):
     export WAVESPEED_API_KEY=your-key (get at https://wavespeed.ai/accesskey)
-    pip install wavespeed
+    python install_deps.py --groups video   (prints the pinned commands)
 
 Setup (Vertex AI — for Veo):
     export GOOGLE_CLOUD_PROJECT=your-project-id
     gcloud auth application-default login
-    pip install google-genai
+    python install_deps.py --groups image   (pins google-genai)
 """
 
 import argparse

@@ -8,3 +8,6 @@ node_modules/
 
 # claude plugin eval output
 evals/results/
+
+# scratch space for one-off helper scripts; never part of the plugin
+.tmp/

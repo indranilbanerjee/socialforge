@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.9] - 2026-10-27
+
+### SocialForge is checked against the plugin directory's own rules, and two stray helper files are gone
+
+Found while preparing the directory submission on 2026-10-27, by reading Anthropic's plugin pre-submission checklist against the repository.
+
+**Fixed**
+
+- Two base64 files, `.tmp/gen_readme.b64` and `.tmp/script.b64`, had been tracked since April 2026 (first shipped in 1.5.0). They were scaffolding that regenerated an early README, and each one decoded to a script naming a folder on the author's own computer. The directory holds a version for a reviewer when it finds a binary-looking file or code the scanner cannot read, so a submission would have stopped on them. Both are removed and `.tmp/` is now ignored.
+- Seven files (four guides and three script docstrings) told a reader to run an unpinned `pip install` (for example `playwright`, `rembg`, `google-genai`, `wavespeed`). The plugin's rule since 1.29.0 is that a script prints an exact pinned command and installs only on request, so those lines contradicted it. They now point at `install_deps.py`, which prints the pinned commands. `python-docx` and `gspread` are gone from the troubleshooting guide and the testing guide: no script imports either, and the DOCX entry now says what `assemble_docx.js` does (it writes the calendar document as structured JSON; it never wrote a `.docx`).
+- `PRIVACY.md` listed Google Veo among the video providers without saying it runs on Vertex AI only (1.29.8). The row now says so and names the credentials Veo needs.
+
+**Added**
+
+- `tests/test_directory_readiness.py` runs the checklist's file-level rules on the repository: no system files, valid file names on Windows and macOS, no symbolic links or submodules, no `.gitattributes` that rewrites contents, at most 512 files, every file that is not an image or font under 256 KiB, only text and complete PNG, JPEG, GIF or WebP images, no base64 blob, a complete icon inside the plugin, https listing URLs, a README of at least 40 words, a LICENSE, no package launcher or lockfile install, no credential pattern, no path from the author's machine, and no unpinned `pip install`. Each rule is also planted on a synthetic tree and shown to fail. Run against the 1.29.8 tree it reports ten problems (the two blobs, seven unpinned installs and a stale file count); it reports none now.
+- README: a section, "What it runs and what leaves your machine", for the directory's security scan, which reads the README for everything a plugin runs, sends or fetches. It summarises and links the endpoint table in `PRIVACY.md`.
+- `docs/distribution/submission-bundle.md` is rewritten for the portal as it works today: the checklist mapped to this repository, the data-handling answers for the owner to confirm, the compliance and publishing steps, and the holds a reviewer may place (provider keys read from the environment, a possible name look-alike), disclosed up front. It no longer states a file count.
+
+**Checked, no change needed**
+
+- `claude plugin validate . --strict --profile directory` passes on Claude Code 2.1.308. The listing fields (`displayName`, a 512 x 512 PNG `icon`, `documentationUrl`, `supportUrl`, `privacyPolicyUrl`, `termsOfServiceUrl`) were already in `.claude-plugin/plugin.json`, the only place the directory reads them.
+- No package launcher, no `.mcp.json`, no hook command and no lockfile ships, so the launcher, MCP and script-following checks do not apply.
+
 ## [1.29.8] - 2026-10-27
 
 ### A quote names only providers that can run, and nothing is spent on a provider you were not quoted

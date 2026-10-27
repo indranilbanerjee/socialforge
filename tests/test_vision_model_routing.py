@@ -46,7 +46,7 @@ NOW = datetime(2026, 10, 27, 12, 0, tzinfo=timezone.utc)
 KEY = "g-test-0000-not-a-real-google-key"
 CRED = "GEMINI_API_KEY"
 JOB = "index-assets.vision.google"
-ROUTER_SHA256 = "8e97f19a06d37c85556909ee7b15978309d94860a037d68e2f9fd966cd5fcab1"  # the canonical file, LF as git stores it
+ROUTER_SHA256 = "9e179aef1a78647897129584744b5e013713b546aab512dd7cfac376d78ed547"  # the canonical file, LF as git stores it
 
 
 def committed_bytes(path: Path) -> bytes:
@@ -822,6 +822,41 @@ class TestDocsTruth(unittest.TestCase):
     def test_no_script_names_a_vision_model_literal(self):
         src = (SCRIPTS / "index_assets.py").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"""["']gemini-\d[^"']*["']""", src), [])
+
+
+class TestTheServiceIsNamed(VisionCase):
+    """1.30.2. A retired model's replacement can depend on the service the request goes to (the registry's
+    replacement_by_backend): veo-3.1-generate-preview's is gemini-omni-1.1-flash on the Gemini API and
+    veo-3.1-generate-001 on Vertex AI. The run knows which it is on, so it says so to the router."""
+
+    def test_the_router_is_told_the_service_each_run_goes_to(self):
+        import model_router
+        seen = {}
+        real = model_router.route
+
+        def spy(*args, **kwargs):
+            seen.clear()
+            seen.update(kwargs)
+            return real(*args, **kwargs)
+
+        for backend, service in (("ai-studio-fallback", "gemini-api"), ("vertex-ai", "vertex"), ("vertex-ai-env", "vertex")):
+            with self.subTest(backend=backend):
+                with mock.patch.object(model_router, "route", spy):
+                    self.pick(Fetch(), backend=backend, cache=False)
+                self.assertEqual(seen["backend"], service)
+
+    def test_offline_a_retired_veo_pin_names_the_gemini_apis_replacement_not_vertexs(self):
+        import model_router
+        with self.assertRaises(model_router.RouterError) as ctx:
+            self.pick(Fetch(), brand_config={"model_pins": {JOB: "veo-3.1-generate-preview"}}, env=OFFLINE)
+        reason = ctx.exception.reason
+        self.assertIn("gemini-omni-1.1-flash", reason)
+        self.assertNotIn("veo-3.1-generate-001", reason)
+
+    def test_on_vertex_the_same_pin_is_not_checked_against_the_gemini_apis_data(self):
+        got = self.pick(Fetch(), backend="vertex-ai", brand_config={"model_pins": {JOB: "veo-3.1-generate-preview"}})
+        self.assertEqual(got["model"], "veo-3.1-generate-preview")
+        self.assertTrue(any("not checked" in w for w in got["warnings"]), got["warnings"])
 
 
 if __name__ == "__main__":

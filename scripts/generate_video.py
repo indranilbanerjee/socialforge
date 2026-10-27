@@ -73,15 +73,19 @@ def _resolve_execution_model(kind, provider, registry_alias=None):
     return result.get("model_id")
 
 
-def _negotiate_video_model(user_value, alias):
-    """Resolve user-supplied --video-model or fall back to alias."""
+def _negotiate_video_model(user_value, alias, backend=None):
+    """Resolve user-supplied --video-model or fall back to alias.
+
+    `backend` names the service the clip is rendered on (Veo runs on Vertex AI here; Kling goes through WaveSpeed
+    and has no backend split). A retired id whose replacement depends on the backend is only forwarded to that
+    backend's replacement, never to another service's id."""
     if _check_model is None or _resolve_model is None:
         # Curator unavailable: honour an explicit user id, but never hand the
         # ALIAS STRING to an SDK as if it were a model id — that produced an
         # opaque provider error instead of a clear "unresolved model" record.
         return user_value or None
     if user_value:
-        status, replacement = _check_model(user_value)
+        status, replacement = _check_model(user_value, backend)
         if status in ("deprecated", "retired") and replacement:
             print(f"WARNING: video model {user_value!r} is {status}; using {replacement!r}", file=sys.stderr)
             return replacement
@@ -89,7 +93,7 @@ def _negotiate_video_model(user_value, alias):
             print(f"WARNING: video model {user_value!r} not in curated registry", file=sys.stderr)
         return user_value
     try:
-        return _resolve_model(alias)
+        return _resolve_model(alias, backend=backend)
     except (KeyError, ValueError):
         return None
 
@@ -102,6 +106,10 @@ else:
 # Veo 3.1 accepts clips of 4, 6 or 8 seconds only (Vertex AI model page, read 2026-10-27). Anything else is rounded UP to the next
 # allowed length (capped at 8) and the result says so, rather than sending a length the API rejects.
 VEO_DURATIONS = (4, 6, 8)
+
+# The service a Veo clip is rendered on. The registry's replacement for a retired Veo id depends on it (Vertex AI:
+# veo-3.1-generate-001; the Gemini API: gemini-omni-1.1-flash, which this script does not call), so it is named, not assumed.
+VEO_BACKEND = "vertex"
 
 VEO_KEY_ONLY = ("Veo 3.1 is served by Vertex AI only: the Gemini API stopped serving the Veo 3.1 previews on 2026-10-22 and does not "
                 "list veo-3.1-generate-001, so a GEMINI_API_KEY cannot make a Veo clip. Set up Vertex AI (a service account via "
@@ -794,7 +802,8 @@ def main():
 
     # Resolve --video-model via curator (kling uses wavespeed alias; veo uses google alias)
     chosen_kling = _negotiate_video_model(args.video_model, "latest-video-wavespeed") if args.provider in {"auto", "kling"} else None
-    chosen_veo = _negotiate_video_model(args.video_model, "latest-video-google") if args.provider in {"auto", "veo"} else None
+    chosen_veo = (_negotiate_video_model(args.video_model, "latest-video-google", backend=VEO_BACKEND)
+                  if args.provider in {"auto", "veo"} else None)
 
     # Load post data
     calendar_path = WORKSPACE / "output" / args.brand / args.month / "calendar-data.json"

@@ -29,17 +29,29 @@ sys.path.insert(0, str(SCRIPTS))
 SRC = "https://wavespeed.ai/pricing"
 
 
+# Every variable that can name the plugin's data folder. A session (Claude Code names CLAUDE_PLUGIN_DATA) may already set
+# one, and that one wins over CLAUDE_PLUGIN_DATA_DIR, so a test that sets only _DIR passes in the full suite (where the
+# suite's isolation has redirected all of them) and writes to the session's real folder when run on its own.
+DATA_VARS = ("CLAUDE_PLUGIN_DATA", "CLAUDE_PLUGIN_DATA_DIR", "PLUGIN_DATA")
+
+
 class PriceBookCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
-        os.environ["CLAUDE_PLUGIN_DATA_DIR"] = self._tmp.name
+        self._saved = {name: os.environ.get(name) for name in DATA_VARS}
+        for name in DATA_VARS:
+            os.environ[name] = self._tmp.name
         import price_book
         self.pb = importlib.reload(price_book)
         self.assertIn(self._tmp.name, str(self.pb.PRICE_BOOK),
                       "test would have written to the real workspace")
 
     def tearDown(self):
-        os.environ.pop("CLAUDE_PLUGIN_DATA_DIR", None)
+        for name, value in self._saved.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
         self._tmp.cleanup()
 
 
@@ -191,7 +203,7 @@ class TestBatchGate(PriceBookCase):
 
 class TestCliContract(PriceBookCase):
     def _run(self, *args):
-        env = dict(os.environ, CLAUDE_PLUGIN_DATA_DIR=self._tmp.name)
+        env = dict(os.environ, **{name: self._tmp.name for name in DATA_VARS})
         return subprocess.run(
             [sys.executable, str(SCRIPTS / "price_book.py"), *args],
             capture_output=True, text=True, env=env)
@@ -208,6 +220,17 @@ class TestCliContract(PriceBookCase):
         r = self._run("--action", "quote", "--model", "kling-3.0-std",
                       "--provider", "wavespeed", "--units", "5")
         self.assertEqual(r.returncode, 0)
+        self.assertTrue(json.loads(r.stdout)["quotable"])
+
+    def test_a_session_data_folder_does_not_win_over_the_test_folder(self):
+        """1.30.2: the class passed only after other tests had redirected CLAUDE_PLUGIN_DATA. Run alone in a session that
+        names its own data folder, the child process read that folder's price book, not the test's."""
+        self.pb.record("kling-3.0-std", "wavespeed", "second", 0.084, SRC)
+        with tempfile.TemporaryDirectory() as session:
+            os.environ["CLAUDE_PLUGIN_DATA"] = session  # tearDown puts the variable back
+            r = self._run("--action", "quote", "--model", "kling-3.0-std",
+                          "--provider", "wavespeed", "--units", "5")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertTrue(json.loads(r.stdout)["quotable"])
 
     def test_batch_with_blocked_items_exits_nonzero(self):

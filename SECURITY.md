@@ -6,9 +6,9 @@ The latest minor release of SocialForge receives security fixes. Older minor ver
 
 | Version | Supported |
 |---------|-----------|
-| 1.13.x  | ✅ |
-| 1.12.x  | ⚠️ Security fixes only when trivially backportable |
-| < 1.12  | ❌ Please upgrade |
+| 1.30.x  | ✅ |
+| 1.29.x  | ⚠️ Security fixes only when trivially backportable |
+| < 1.29  | ❌ Please upgrade |
 
 ## Reporting a Vulnerability
 

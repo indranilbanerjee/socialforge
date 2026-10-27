@@ -127,11 +127,12 @@ def brand_pin(config):
     return _plain(pin.strip())
 
 
-def _default_model(alias):
+def _default_model(alias, service=None):
+    """The registry's id for the alias, for the service the run goes to ("gemini-api" or "vertex")."""
     if _resolve_model is None:
         return None
     try:
-        return _resolve_model(alias)
+        return _resolve_model(alias, backend=service)
     except (KeyError, ValueError):
         return None
 
@@ -170,11 +171,12 @@ def choose_vision_model(brand_config, cli_model, *, backend, api_key="", fetch=N
     when = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     # The deprecations record and the registry's Gemini lifecycle fields describe the Gemini API. A Vertex run must not be
     # refused, or warned about a stale record, by data about another service.
+    service = "gemini-api" if gemini_api else "vertex"  # a retired id's replacement can depend on it (registry)
     routing = model_router.route(
         VISION_JOB, hints, provider="google", credential_name=VISION_CREDENTIAL, api_key=api_key,
-        default_model=_default_model(hints["jobs"][VISION_JOB]["default_alias"]), requested=requested, fetch=fetch,
-        cache_path=cache_path, now=when, env=environ, registry=_registry() if gemini_api else None,
-        record_applies=gemini_api)
+        default_model=_default_model(hints["jobs"][VISION_JOB]["default_alias"], service), requested=requested,
+        fetch=fetch, cache_path=cache_path, now=when, env=environ, registry=_registry() if gemini_api else None,
+        record_applies=gemini_api, backend=service)
     reason = routing["reason"]
     if not gemini_api:
         reason = (f"the run is served by {backend}, not the Gemini API (Vertex AI's model catalogue differs from the "

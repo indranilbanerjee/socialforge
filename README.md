@@ -6,16 +6,16 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.29.9-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.29.10-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-656%2F656%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1299)
+[![Tests](https://img.shields.io/badge/tests-659%2F659%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v12910)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.9 (October 27, 2026): the model registry is current, a fallback names the provider that failed, and SocialForge is checked against the plugin directory's own rules.** [Current release](#current-release-v1299) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v1.29.10 (October 27, 2026): the model registry gains the speech models, as pins that expire.** [Current release](#current-release-v12910) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code 2.1.292 or newer (one command, run in your terminal):
@@ -92,7 +92,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
    /plugin install socialforge@neels-plugins
    ```
 
-   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1299).
+   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v12910).
 2. **Connect image and video generation (one time).** Run `/socialforge:setup`. Your admin gives you a Google Cloud service-account JSON key file (Vertex AI, images) and a WaveSpeed API key (video). Setup lists any missing Python packages with the exact pinned install command and installs only after you say `yes`; you point it at the key file and set `WAVESPEED_API_KEY` in your environment, and never paste a key into the chat. It stores the credentials in `${CLAUDE_PLUGIN_DATA}`, so they last across sessions. Without this step image and video generation will not work; everything else (calendar parsing, copy adaptation, review galleries) runs normally. Check it with `/socialforge:status`. No accounts yet? See [Admin Setup](#admin-setup-one-time).
 3. `/socialforge:brand-setup [brand-name]` configures the brand (5-10 min).
 4. `/socialforge:index-assets [brand-name]` indexes the brand photo library.
@@ -129,7 +129,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
 
-## Supported surfaces (v1.29.9)
+## Supported surfaces (v1.29.10)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -154,7 +154,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **30 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1299) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v12910) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Updating to Latest Version
@@ -271,13 +271,13 @@ SocialForge sends nothing to its author and has no telemetry, no hooks and no au
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.29.9)
+## Current Release (v1.29.10)
+
+**v1.29.10:** The model registry gains the speech models, as pins that expire. 13 entries (OpenAI, ElevenLabs and Sarvam text-to-speech and speech-to-text), six `latest-tts-*` / `latest-stt-*` aliases and two new tiers, 85 models and 26 aliases in all. No vendor's model list tells a speech model from a chat model, so each entry carries `pinned_on` and `pin_expires`, and Digital Marketing Pro's weekly job fails when a pin expires. The registry is now a full mirror made by that repository's sync script, not a by-id update that left dropped entries behind.
 
 **v1.29.9:** the model registry is current, a fallback names the provider that failed, and SocialForge is checked against the plugin directory's own rules. The registry is now a copy of the canonical one (72 models, 20 aliases; vendor pages read 2026-10-27) and `resolve_model.py --check-params` flags any Claude model, because Anthropic API version 2026-10-21 rejects `temperature`, `top_p` and `top_k` on every model. `fallback_from` used to say `vertex-ai` whatever the setup was; it now lists only the providers that were tried and failed (`gemini-aistudio`, `wavespeed-kling`), and a rung that could not start is listed in `skipped_unavailable`. Preparing the directory submission found two base64 files (`.tmp/*.b64`) that had shipped since 1.5.0, each decoding to a script that named a folder on the author's own computer; they are removed. Seven files told a reader to run an unpinned `pip install` and now point at `install_deps.py`, `tests/test_directory_readiness.py` runs the checklist's file-level rules on the repository, the README gains a section on what the plugin runs and what leaves your machine, and the submission bundle is rewritten for the portal. `claude plugin validate --strict --profile directory` passes.
 
 **v1.29.8:** a quote names only providers that can run, and nothing is spent on a provider you were not quoted. Veo 3.1 is a Vertex AI model (Google's Gemini API stopped serving its previews on 2026-10-22), but a Gemini API key alone counted as "Google available", so for that setup routing and the quote named Veo for a clip that could only fail, and the chain then fell through to another provider with its own price. Routing now lists `unavailable` providers and why, `--quoted-providers` limits a run to the providers the quote covered (an unquoted fallback ends as `NEEDS_REQUOTE` and spends nothing), and a fallback that did run says which provider made the file and why. Veo is asked for 4, 6 or 8 seconds only. The veo-3.1 reference, the EU Article 50(2) grace period (to 2 December 2026) and the C2PA 2.5 wording are updated, the install is one command on Claude Code 2.1.292 or newer, and setup warns on Python 3.10, which stopped receiving security fixes on 2026-10-01.
-
-**v1.29.7:** a missing key no longer hangs the shell, and the install hints paste into Git Bash and PowerShell. Found by a fresh-install smoke test. `credential_manager.py setup-wavespeed` and `setup-higgsfield` with no key waited forever on Windows (stdin is an open pipe in the Bash tool, and NUL reports a terminal): a script now reads stdin only with `--api-key-stdin` and prompts only with `--prompt` on a real console, and otherwise stops at once with exit 2 and a message that names the three ways to give a key. The pip and browser install hints use the same printed shape as every other printed command.
 
 Older releases are in [CHANGELOG.md](CHANGELOG.md).
 

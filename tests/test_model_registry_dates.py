@@ -21,6 +21,9 @@ Rules (ISO date strings):
   4. Every deprecated/retired entry's `replacement_id` exists and is current or supported.
   5. A retired entry is dropped DROP_AFTER_DAYS after its shutdown date.
   6. `next_review_due` is not before the review day.
+  7. Kinds no vendor list endpoint can discover (text-to-speech, speech-to-text) are PINS: each entry carries `pinned_on` and
+     `pin_expires`, at most PIN_MAX_DAYS apart. An expired pin is a failure in Digital Marketing Pro's weekly job, so someone
+     re-reads the vendor page and re-pins; the pin dates ride in with the next registry sync.
 """
 from __future__ import annotations
 
@@ -41,6 +44,8 @@ RECHECK_DAYS = 30
 SHUTDOWN_WARN_DAYS = 30
 DROP_AFTER_DAYS = 120
 LIVE = {"current", "supported"}
+PINNED_TIERS = {"text-to-speech", "speech-to-text"}
+PIN_MAX_DAYS = 92
 
 
 def _d(value):
@@ -68,6 +73,13 @@ def registry_problems(reg: dict, on: date) -> list[str]:
                 out.append(f"{mid}: falls forward to {rep}, which is {models[rep].get('status')}")
         if status == "retired" and shut and (on - shut).days > DROP_AFTER_DAYS:
             out.append(f"{mid}: retired {shut}, over {DROP_AFTER_DAYS} days ago; drop it")
+        pinned, expires = _d(m.get("pinned_on")), _d(m.get("pin_expires"))
+        if m.get("tier") in PINNED_TIERS and not (pinned and expires):
+            out.append(f"{mid}: {m['tier']} is a pinned kind; give it pinned_on and pin_expires")
+        elif expires and expires < on:
+            out.append(f"{mid}: pin expired {expires}; re-read {m.get('docs_url', 'the vendor page')} and re-pin")
+        elif pinned and expires and (expires - pinned).days > PIN_MAX_DAYS:
+            out.append(f"{mid}: pin runs {(expires - pinned).days} days; at most {PIN_MAX_DAYS}")
     for alias, target in reg.get("aliases", {}).items():
         m = models.get(target)
         if m is None:
@@ -138,6 +150,38 @@ class TestRegistryDates(unittest.TestCase):
         self.assertIn("veo_backend", reg["param_compatibility_notes"])
         self.assertNotIn("claude_opus_4_7_and_later", reg["param_compatibility_notes"])
         self.assertTrue(any("shutdown_date" in m for m in reg["models"]))
+
+
+class TestSpeechPins(unittest.TestCase):
+    """The speech models are pins that expire: no list endpoint tells a speech model from a chat model, and three defaults
+    (a text-to-speech id, two transcription ids) were deprecated before anything in the suite said so."""
+
+    def setUp(self):
+        self.reg = json.loads(REGISTRY.read_text(encoding="utf-8"))
+
+    def test_every_speech_kind_has_an_alias_per_vendor(self):
+        for kind in ("tts", "stt"):
+            for vendor in ("openai", "elevenlabs", "sarvam"):
+                self.assertIn(f"latest-{kind}-{vendor}", self.reg["aliases"])
+
+    def test_speech_aliases_resolve_to_their_kind(self):
+        models = {m["id"]: m for m in self.reg["models"]}
+        tier = {"tts": "text-to-speech", "stt": "speech-to-text"}
+        for alias, target in self.reg["aliases"].items():
+            kind = alias.split("-")[1]
+            if kind in tier:
+                self.assertEqual(models[target]["tier"], tier[kind], alias)
+
+    def test_plants(self):
+        base = {"next_review_due": "2027-06-01", "aliases": {}}
+        unpinned = dict(base, models=[{"id": "t", "status": "current", "tier": "text-to-speech"}])
+        self.assertIn("t: text-to-speech is a pinned kind", "\n".join(registry_problems(unpinned, date(2026, 10, 27))))
+        pinned = dict(base, models=[{"id": "t", "status": "current", "tier": "speech-to-text",
+                                     "pinned_on": "2026-10-27", "pin_expires": "2027-01-25"}])
+        self.assertEqual(registry_problems(pinned, date(2027, 1, 25)), [])
+        self.assertIn("t: pin expired 2027-01-25", "\n".join(registry_problems(pinned, date(2027, 1, 26))))
+        forever = dict(base, models=[dict(pinned["models"][0], pin_expires="2099-01-01")])
+        self.assertIn("at most 92", "\n".join(registry_problems(forever, date(2026, 10, 27))))
 
 
 class TestCheckParamsScope(unittest.TestCase):

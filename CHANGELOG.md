@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.10] - 2026-10-27
+
+### The model registry gains the speech models, as pins that expire
+
+From the 2026-10-27 freshness review of the speech vendors' pages, which found three defaults in a sibling plugin that were deprecated with nothing in the suite to say so. SocialForge calls no speech model; its registry is one copy of a data set the three plugins share, so it carries them too.
+
+**Changed**
+
+- `scripts/model_registry.json` is now a full mirror of Digital Marketing Pro's canonical registry (3.37.2), made by that repository's `sync_model_registry.sh`: the canonical file minus the marketing-suite-only model families. It replaces the earlier by-id update, which left entries the canonical file had dropped and never added a new alias. 85 models and 26 aliases, up from 72 and 20. The file's `$comment` now says it is a distributed copy, as ContentForge's does, so a later sync keeps it.
+- The 13 new entries are speech models (OpenAI, ElevenLabs and Sarvam text-to-speech and speech-to-text) under two new tiers, `text-to-speech` and `speech-to-text`, with six aliases (`latest-tts-*` and `latest-stt-*` per vendor). No vendor's model-list endpoint tells a speech model from a chat model, so each is a pin: `pinned_on` and `pin_expires` (at most 92 days apart). When a pin expires, Digital Marketing Pro's weekly job fails until someone re-reads the vendor page and re-pins, and the new dates arrive with the next sync. Facts recorded as of 2026-10-27: OpenAI shuts every `/v1/audio/speech` model on 2027-01-06 and names a replacement that runs only on its Realtime API; its Whisper and GPT-4o transcription models shut on 2027-02-26 (replacement `gpt-transcribe`); Sarvam's `saarika:v2.5` is deprecated (`saaras:v4` is the default).
+
+**Added**
+
+- `tests/test_model_registry_dates.py` grows from 8 to 11: the speech-pin rule (a speech entry needs both dates, an expired pin and a pin longer than 92 days are caught, planted), and checks that each vendor has a `latest-tts-*` and `latest-stt-*` alias that resolves to a model of its own kind. Against the 1.29.9 registry the alias check fails.
+
 ## [1.29.9] - 2026-10-27
 
 ### The model registry is current, a fallback names the provider that failed, and SocialForge is checked against the directory's own rules

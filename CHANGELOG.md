@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.29.11] - 2026-10-27
+
+### The model registry no longer cites a file a reader cannot open, and a guard keeps public files that way
+
+The registry's `last_updated_by` field (shipped as data and copied between the plugins) pointed at a patch file in a folder outside the repository, so a reader had no way to open what it cited. Found while the registry was re-mirrored from Digital Marketing Pro 3.38.2.
+
+**Fixed**
+
+- `scripts/model_registry.json`: `last_updated_by` now names what a reader can open (the vendor pages, each entry's `docs_url` and `notes`, and `docs/MODEL-CURATOR.md`). It is the canonical wording from Digital Marketing Pro 3.38.2, mirrored by that repository's sync script; the file's own `$comment` is kept.
+
+**Added**
+
+- `tests/test_no_internal_references.py` (3): no shipped file names an internal work session or points into the folder where those sessions keep their notes. CHANGELOG entries dated before 2026-10-27 are history and stay as written. Planted, and run against the 1.29.10 registry it reports the cited path.
+
 ## [1.29.10] - 2026-10-27
 
 ### The model registry gains the speech models, as pins that expire

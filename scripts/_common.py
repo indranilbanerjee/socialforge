@@ -15,19 +15,19 @@ import sys
 from pathlib import Path
 
 
-PYTHON_FLOOR_NEXT = (3, 11)
+PYTHON_PREFERRED = (3, 11)
 
 
 def python_floor_warning(version=None):
-    """A warning when this interpreter is older than the floor planned for the next minor release, else None.
+    """A warning when this interpreter is older than 3.11, else None.
 
-    Python 3.10 reached end-of-life on 2026-10-01 (PEP 619). SocialForge still runs on it today; the floor moves to 3.11 in
-    the next minor release, and people on 3.10 should hear that before the update that stops working for them."""
+    Python 3.10 reached end of life on 2026-10-01 (PEP 619), but Claude's Cowork environment ran 3.10.12 when last checked,
+    so NO release is promised for the move: SocialForge still runs on 3.10 and will move to 3.11 once Cowork does. The warning says that,
+    conditionally, and asks for 3.11 or newer where the user can."""
     found = tuple((version or sys.version_info)[:2])
-    if found < PYTHON_FLOOR_NEXT:
-        return ("Python %d.%d is no longer supported upstream (3.10 reached end-of-life on 2026-10-01). SocialForge still runs on it "
-                "today but will require Python 3.11 or newer from the next minor release: install a newer Python before you update."
-                % found)
+    if found < PYTHON_PREFERRED:
+        return ("Python 3.10 reached end of life on 2026-10-01. SocialForge still runs on it, and will move to 3.11 once Claude's Cowork "
+                "environment does (it ran 3.10.12 when last checked). Use 3.11 or newer where you can.")
     return None
 
 

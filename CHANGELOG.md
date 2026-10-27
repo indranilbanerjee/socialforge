@@ -44,8 +44,9 @@ Found by a freshness review on 2026-10-27, which read Google's model pages and S
   (October 2026); the `c2pa.ai-disclosure` assertion is described as introduced in 2.4.
 - Install is one command on Claude Code 2.1.292 or newer: `claude plugin install socialforge --marketplace
   indranilbanerjee/neels-plugins`; the two-step form stays for older versions and for use inside a session.
-- Python 3.10 reached end-of-life on 2026-10-01. `install_deps.py` and `credential_manager.py` now warn when run on it that
-  SocialForge will require Python 3.11 from the next minor release. Nothing stops working yet.
+- Python 3.10 reached end of life on 2026-10-01. `install_deps.py` and `credential_manager.py` now warn when run on it that
+  SocialForge still runs on 3.10 and will move to 3.11 once Claude's Cowork environment does (it ran 3.10.12 when last checked),
+  so no release is promised. Use 3.11 or newer where you can. Nothing stops working.
 - `docs/OPERATIONS.md`, `docs/USER-GUIDE.md`, `SUBMISSION.md` and `CONNECTORS.md` follow: Veo needs Vertex AI, a fallback
   needs its own quote, and SocialForge ships no npx package.
 
@@ -56,13 +57,15 @@ Found by a freshness review on 2026-10-27, which read Google's model pages and S
 
 **Added - tests**
 
-- `tests/test_quote_honesty.py` (28 tests): a Gemini-key-only setup is not routed or quoted Veo (planted with the old routing);
+- `tests/test_quote_honesty.py` (31 tests): a Gemini-key-only setup is not routed or quoted Veo (planted with the old routing);
   a key plus a WaveSpeed key quotes Kling; Vertex makes Veo available and lists the other runnable providers as quotable
   fallbacks; the Veo rung on a key-only setup builds no client and records `unavailable-backend`; an unquoted fallback is
   withheld and its function is never called; a quoted fallback runs and is reported; a provider that cannot run is skipped
   with its reason and is not a reason to re-quote; the image chain follows the same rule; Veo lengths; the CLI refuses a
   provider name it does not know; every file that runs the paid video chain names `--quoted-providers`; agent descriptions;
-  the doc facts; the Python warning. Run against the 1.29.7 scripts from git, 34 of its checks fail. Tests 574 -> 602.
+  the doc facts; the Python warning, and a guard (planted with the old wording) that no text promises Python 3.11 from a release,
+  since Claude's Cowork environment ran 3.10.12 when last checked. Run against the 1.29.7 scripts from git, 34 of its checks fail.
+  Tests 574 -> 605.
 
 ## [1.29.7] - 2026-10-12
 

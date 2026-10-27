@@ -391,7 +391,7 @@ class TestPythonFloorWarning(unittest.TestCase):
         import _common
         warning = _common.python_floor_warning((3, 10, 12))
         self.assertIn("3.11", warning)
-        self.assertIn("end-of-life", warning)
+        self.assertIn("end of life", warning)
         self.assertIsNone(_common.python_floor_warning((3, 11, 0)))
         self.assertIsNone(_common.python_floor_warning((3, 13, 1)))
 
@@ -411,6 +411,50 @@ class TestPythonFloorWarning(unittest.TestCase):
                 patch("sys.stdout", out):
             credential_manager.main()
         self.assertEqual(json.loads(out.getvalue())["python_warning"], "WARN-TEXT")
+
+
+class TestNoPromisedPythonFloor(unittest.TestCase):
+    """Claude's Cowork environment ran Python 3.10.12 when last checked, so promising "3.11 from the next minor release" would break every
+    Cowork user. The wording is conditional everywhere: the plugin moves to 3.11 once Cowork does, and no release is named."""
+    PROMISE = re.compile(r"(?is)(?:will\s+(?:be\s+)?requires?d?|requires?d?)[^.]{0,60}\b3\.11\b[^.]{0,60}\bnext\s+(?:minor|release)"
+                         r"|\b3\.11\b[^.]{0,60}\bfrom\s+the\s+next\s+(?:minor|release)")
+
+    def test_no_shipped_text_promises_python_3_11_from_a_release(self):
+        skip_dirs = {".git", "node_modules", ".pytest_cache", "tests", "research", "heroes", ".superpowers"}
+        scanned, bad = 0, []
+        for path in ROOT.rglob("*"):
+            if not path.is_file() or skip_dirs & set(path.relative_to(ROOT).parts):
+                continue
+            if path.suffix.lower() not in {".md", ".py", ".json", ".yml", ".yaml", ".txt"}:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8-sig")
+            except (UnicodeDecodeError, OSError):
+                continue
+            scanned += 1
+            if self.PROMISE.search(text):
+                bad.append(path.relative_to(ROOT).as_posix())
+        self.assertGreater(scanned, 100, "the scan saw too few files; the guard is vacuous")
+        self.assertEqual(bad, [])
+
+    def test_plant_the_old_wordings_are_caught_and_the_conditional_one_is_not(self):
+        for old in ("SocialForge will require Python 3.11 from the next minor release.",
+                    "SocialForge will require Python 3.11 or newer from the next minor release: install a newer Python.",
+                    "Scripts require Python 3.10+ today (3.11 will be required from the next minor release, and setup warns on 3.10)",
+                    "(3.11 from the next minor release; setup warns on 3.10)",
+                    "will require\n  Python 3.11 from the next release"):
+            with self.subTest(old=old):
+                self.assertTrue(self.PROMISE.search(old), old)
+        new = ("Python 3.10 reached end of life on 2026-10-01. SocialForge still runs on it, and will move to 3.11 once Claude's Cowork "
+               "environment does (it ran 3.10.12 when last checked). Use 3.11 or newer where you can.")
+        self.assertFalse(self.PROMISE.search(new))
+
+    def test_the_warning_is_conditional_and_names_cowork(self):
+        import _common
+        warning = _common.python_floor_warning((3, 10, 12))
+        self.assertIn("once Claude's Cowork environment does", warning)
+        self.assertIn("3.10.12", warning)
+        self.assertNotIn("next minor", warning)
 
 
 if __name__ == "__main__":

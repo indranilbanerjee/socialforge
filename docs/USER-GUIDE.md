@@ -12,7 +12,7 @@ Before you start, make sure you have:
 - **API credentials configured via `/socialforge:setup`** (one-time setup):
   - **Google Cloud service account JSON file** -- for Vertex AI image generation
   - **WaveSpeed API key** -- for image-to-video generation (kept in an environment variable, never pasted into the chat)
-- **Python 3.10 or newer today** (3.11 or newer for the optional background-removal extra). Python 3.10 reached end-of-life on 2026-10-01, and SocialForge will require 3.11 from the next minor release; setup warns when it runs on 3.10
+- **Python 3.10 or newer today** (3.11 or newer for the optional background-removal extra). Python 3.10 reached end of life on 2026-10-01. SocialForge still runs on it, and will move to 3.11 once Claude's Cowork environment does (it ran 3.10.12 when last checked); setup warns when it runs on 3.10. Use 3.11 or newer where you can
 - **Python packages:** `/socialforge:setup` lists what is missing and prints the exact pinned install command for each; it installs only after you say yes (`python scripts/install_deps.py` prints the same report)
 
 Get both credentials from your admin. If you ARE the admin, see the [Admin Setup guide](ADMIN-SETUP.md).

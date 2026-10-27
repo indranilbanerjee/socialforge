@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.30.1] - 2026-10-27
+
+### An offline run checks a named model against the Gemini API's deprecations record, and a Vertex run is never refused by it
+
+Found while the installed 1.30.0 copy was checked. With no live list (`MODEL_ROUTER_OFFLINE=1`, a timeout, provider trouble), the router checked a model asked for by name only against the shipped registry. A pin on `gemini-2.0-flash`, which the hint book's record of Google's deprecations page marks as shut down on 2026-06-01, was sent with the warning that it was "not in the shipped registry", and every image then failed one by one. The fix is in the canonical router (Digital Marketing Pro 3.39.1), which this repository copies byte for byte.
+
+**Changed**
+
+- `scripts/model_router.py` is re-copied from Digital Marketing Pro 3.39.1 (git blob `630dadd2`, sha256 `8e97f19a…`, 45,530 bytes). Offline, a named model is now checked against the hint book's deprecations record as well as the registry, and the stricter source wins and is named: a model the record marks shut down is refused (exit 2, nothing sent) with the replacement, one the record says now routes to another model warns that the answer comes from that model, and a model in neither source warns that its lifecycle could not be checked. A model list that runs past 20 pages is no longer used as a partial list (the old loop returned what it had read): the run falls back offline and says why.
+- A Vertex AI run passes the router `record_applies=False` and no registry. The record and the registry's Gemini lifecycle fields describe the Gemini API, and Vertex retires Gemini models on its own schedule, so a pin or `--model` on a Vertex run is sent as asked and the run warns that it was not checked. There is no list call, no cache and no stale-record warning on a Vertex run.
+- `PRIVACY.md`, `docs/MODEL-CURATOR.md`, `docs/USER-GUIDE.md`, `skills/index-assets/SKILL.md`, `references/brand-config-schema.md`, `references/asset-index-schema.md` and the script's own header say what an offline run and a Vertex run check, and the 20-page rule. A test reads each of them for the facts.
+
+**Added**
+
+- 16 tests in `tests/test_vision_model_routing.py` (60 to 76), written before the change, with the pinned sha256 moved to the new file first. Run against the 1.30.0 code and the 3.39.0 router, 10 of the 14 behaviour tests fail or error (the other four pass either way, as regression guards), and the two parity tests fail until the router is copied. They cover an offline pin and `--model` on a shut-down model (refused, naming the record and the replacement), the same after a timeout or a 503, a redirected model, an unknown name, a list that never ends (through the real list function and a fake endpoint), a whole offline run that exits 2 with nothing sent and nothing written, and the same pin on a Vertex run (sent, exit 0, with the not-checked warning, no stale-record warning, and a registry-retired name also sent).
+
 ## [1.30.0] - 2026-10-27
 
 ### Asset indexing picks its vision model from your own Google key's model list, and the index records which model read each photo

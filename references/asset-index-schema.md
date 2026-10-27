@@ -35,7 +35,7 @@ The decision `index_assets.py` made once for the run, before the first image. A 
 | `model` | string or null | The id that was sent to the vision API; null when nothing could be analysed |
 | `model_requested` | string or null | The id asked for by name (the brand's pin or `--model`); null when the router chose |
 | `selected_by` | string or null | `"brand-pin"`, `"--model"`, `"router"` or `"registry-alias"` |
-| `basis` | string | `"live"` (read from the key's model list this run), `"cache"` (from a list read within the last 7 days), `"requested"` (a name asked for, checked against the list or the record), `"offline"` (the shipped registry alias: the list could not be read, `MODEL_ROUTER_OFFLINE=1` was set, or Vertex AI served the run) or `"unavailable"` (no client, so no image could be analysed) |
+| `basis` | string | `"live"` (read from the key's model list this run), `"cache"` (from a list read within the last 7 days), `"requested"` (a name asked for, checked against the key's list; offline, against the shipped registry and the hint book's record instead; not checked on Vertex AI), `"offline"` (the shipped registry alias: the list could not be read, `MODEL_ROUTER_OFFLINE=1` was set, or Vertex AI served the run) or `"unavailable"` (no client, so no image could be analysed) |
 | `source` | string or null | The list endpoint, or `"shipped-default"` for `"offline"` |
 | `discovered_at` | string or null | When the list was read (ISO 8601, UTC) |
 | `decided_at` | string | When this decision was made |

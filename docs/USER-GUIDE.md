@@ -309,7 +309,7 @@ Only analyzes new/changed images. Existing index preserved.
 
 ### Which vision model analyses your photos
 
-The model is chosen once per run, and the index records which one. In order: the brand's pin (`model_pins` in `brand-config.json`, see `references/brand-config-schema.md`), then `--model <id>`, then the newest generally available Flash on your own Google key's model list, then (when that list cannot be read, or Vertex AI serves the run) the shipped default, marked `offline`. A pinned or named model that is deprecated runs with a warning; one that is retired stops the run before anything is sent and names its replacement. To see the choice, and the model a cost quote must use, without analysing anything:
+The model is chosen once per run, and the index records which one. In order: the brand's pin (`model_pins` in `brand-config.json`, see `references/brand-config-schema.md`), then `--model <id>`, then the newest generally available Flash on your own Google key's model list, then (when that list cannot be read, or Vertex AI serves the run) the shipped default, marked `offline`. A pinned or named model that is deprecated runs with a warning; one that is retired stops the run before anything is sent and names its replacement, and that check still happens when the list cannot be read. On a Vertex AI run the name is sent as asked and the run says it was not checked, because Google's Gemini API deprecation data does not describe Vertex. To see the choice, and the model a cost quote must use, without analysing anything:
 
 ```
 python scripts/index_assets.py --brand GreenLeaf --show-model

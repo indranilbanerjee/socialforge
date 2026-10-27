@@ -46,7 +46,7 @@ NOW = datetime(2026, 10, 27, 12, 0, tzinfo=timezone.utc)
 KEY = "g-test-0000-not-a-real-google-key"
 CRED = "GEMINI_API_KEY"
 JOB = "index-assets.vision.google"
-ROUTER_SHA256 = "14d159f0df8603fca3fb92caade00456c0786a34a8f3f8de361274200efb65a5"  # the canonical file, LF as git stores it
+ROUTER_SHA256 = "8e97f19a06d37c85556909ee7b15978309d94860a037d68e2f9fd966cd5fcab1"  # the canonical file, LF as git stores it
 
 
 def committed_bytes(path: Path) -> bytes:
@@ -304,6 +304,107 @@ class TestChooseVisionModel(VisionCase):
         self.assertIn("unreadable", " ".join(got["warnings"]))
 
 
+OFFLINE = {"MODEL_ROUTER_OFFLINE": "1"}
+
+
+class TestOfflineAndVertexLifecycle(VisionCase):
+    """1.30.1. With no live list, a named model is checked against the hint book's Gemini API deprecations record as well as the
+    registry (1.30.0 checked only the registry, so a pin on a model the record says is shut down was sent with a warning that
+    it was 'not in the shipped registry'). The record describes the Gemini API; Vertex AI retires Gemini models on its own
+    schedule, so a Vertex run must not be refused by it, and the registry's Gemini lifecycle data is the same kind of claim."""
+
+    SHUT_DOWN = "gemini-2.0-flash"        # the record: shut_down, 2026-06-01, replacement gemini-3.6-flash; not in the registry
+    REGISTRY_RETIRED = "gemini-omni-flash-preview"   # the registry marks it retired (and so does the record)
+
+    def test_offline_a_pin_on_a_model_the_record_says_is_shut_down_is_refused_naming_the_record_and_the_replacement(self):
+        import model_router
+        with self.assertRaises(model_router.RouterError) as ctx:
+            self.pick(Fetch(), brand_config={"model_pins": {JOB: self.SHUT_DOWN}}, env=OFFLINE)
+        self.assertEqual(ctx.exception.exit_code, 2)
+        reason = ctx.exception.reason
+        self.assertIn(f"{self.SHUT_DOWN} is retired", reason)
+        self.assertIn("2026-06-01", reason)
+        self.assertIn("deprecations record", reason)
+        self.assertIn("gemini-3.6-flash", reason)
+
+    def test_offline_the_flag_is_checked_the_same_way(self):
+        import model_router
+        with self.assertRaises(model_router.RouterError):
+            self.pick(Fetch(), cli_model=self.SHUT_DOWN, env=OFFLINE)
+
+    def test_a_list_that_cannot_be_read_takes_the_same_check(self):
+        import model_router
+        for error in (model_router.FetchError("timeout", "timed out"), model_router.FetchError("unavailable", "HTTP 503", 503)):
+            with self.subTest(kind=error.kind), self.assertRaises(model_router.RouterError):
+                self.pick(Fetch(error=error), brand_config={"model_pins": {JOB: self.SHUT_DOWN}})
+
+    def test_a_list_longer_than_the_page_cap_is_not_used_and_the_run_falls_back_offline_with_the_reason(self):
+        import model_router
+
+        class Page(io.BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        def endless(req, timeout=None):
+            return Page(json.dumps({"models": [{"name": "models/gemini-3.8-flash",
+                                                "supportedGenerationMethods": ["generateContent"]}],
+                                    "nextPageToken": "more"}).encode("utf-8"))
+
+        from resolve_model import resolve
+        got = self.pick(lambda key, version: model_router.fetch_google(key, version, urlopen=endless))
+        self.assertEqual((got["model"], got["basis"], got["selected_by"]), (resolve("latest-vision-google"), "offline", "registry-alias"))
+        self.assertIn(f"more than {model_router.MAX_PAGES} pages", got["reason"])
+
+    def test_offline_a_redirected_model_asked_for_warns_that_the_answer_comes_from_another(self):
+        got = self.pick(Fetch(), cli_model="gemini-3.5-flash", env=OFFLINE)
+        self.assertEqual(got["model"], "gemini-3.5-flash")
+        self.assertIn("routes requests for it to gemini-3.6-flash", " ".join(got["warnings"]))
+
+    def test_offline_an_unknown_name_is_named_as_unchecked(self):
+        got = self.pick(Fetch(), cli_model="gemini-9.9-flash", env=OFFLINE)
+        self.assertEqual(got["model"], "gemini-9.9-flash")
+        self.assertIn("lifecycle could not be checked", " ".join(got["warnings"]))
+
+    def test_vertex_the_gemini_api_record_does_not_refuse_a_pin(self):
+        for backend in ("vertex-ai", "vertex-ai-env"):
+            with self.subTest(backend=backend):
+                fetch = Fetch()
+                got = self.pick(fetch, backend=backend, brand_config={"model_pins": {JOB: self.SHUT_DOWN}})
+                self.assertEqual((got["model"], got["selected_by"], got["basis"], fetch.calls),
+                                 (self.SHUT_DOWN, "brand-pin", "offline", 0))
+                self.assertNotIn("deprecations record", " ".join(got["warnings"] + [got["reason"] or ""]))
+
+    def test_vertex_the_registrys_gemini_lifecycle_data_does_not_refuse_either(self):
+        got = self.pick(Fetch(), backend="vertex-ai", cli_model=self.REGISTRY_RETIRED)
+        self.assertEqual(got["model"], self.REGISTRY_RETIRED)
+
+    def test_the_same_registry_retired_name_is_refused_offline_on_the_gemini_api(self):
+        import model_router
+        with self.assertRaises(model_router.RouterError):
+            self.pick(Fetch(), cli_model=self.REGISTRY_RETIRED, env=OFFLINE)
+
+    def test_vertex_says_a_name_asked_for_was_not_checked_against_the_gemini_apis_data(self):
+        got = self.pick(Fetch(), backend="vertex-ai", brand_config={"model_pins": {JOB: self.SHUT_DOWN}})
+        note = " ".join(got["warnings"])
+        self.assertIn("Vertex AI", note)
+        self.assertIn(self.SHUT_DOWN, note)
+        self.assertIn("not checked", note)
+
+    def test_vertex_with_no_name_asked_for_adds_no_such_note(self):
+        got = self.pick(Fetch(), backend="vertex-ai")
+        self.assertNotIn("not checked", " ".join(got["warnings"]))
+
+    def test_vertex_never_reports_a_stale_gemini_api_record(self):
+        late = datetime(2027, 1, 20, tzinfo=timezone.utc)
+        vertex = self.pick(Fetch(), backend="vertex-ai", now=late)
+        self.assertNotIn("deprecations record was read", " ".join(vertex["warnings"]))
+        api = self.pick(Fetch(), env=OFFLINE, now=late)
+        self.assertIn("deprecations record was read", " ".join(api["warnings"]))
+
+
 # --- a whole indexing run --------------------------------------------------------------------------------------------
 
 REPLY = json.dumps({"description": "A person at a desk.", "subjects": ["person"], "tags": ["desk", "office"],
@@ -431,6 +532,26 @@ class TestIndexRunRecordsTheChoice(IndexRunCase):
         self.assertIn(CRED, refusal["error"])
         # A rejected, denied or unpaid key fails every image the same way, so offline mode would only move the failure.
         self.assertNotIn("MODEL_ROUTER_OFFLINE", json.dumps(refusal), "offline mode does not fix a rejected key")
+
+    def test_an_offline_gemini_api_run_with_a_pin_on_a_shut_down_model_stops_and_sends_nothing(self):
+        self.write_config({"model_pins": {JOB: "gemini-2.0-flash"}})
+        with mock.patch.dict(os.environ, {"MODEL_ROUTER_OFFLINE": "1"}):
+            code, out, _ = self.run_index(Fetch())
+        self.assertEqual((code, self.client.sent), (2, []))
+        self.assertFalse((self.ws / "brands" / "acme" / "asset-index.json").exists())
+        error = json.loads(out)["error"]
+        self.assertIn("gemini-2.0-flash is retired", error)
+        self.assertIn("gemini-3.6-flash", error)
+
+    def test_the_same_pin_on_a_vertex_run_is_sent_because_the_gemini_api_record_does_not_apply(self):
+        self.backend = "vertex-ai"
+        self.write_config({"model_pins": {JOB: "gemini-2.0-flash"}})
+        fetch = Fetch()
+        code, out, err = self.run_index(fetch)
+        self.assertEqual((code, fetch.calls), (0, 0), out)
+        self.assertEqual(set(self.client.sent), {"gemini-2.0-flash"})
+        self.assertIn("not checked", err)
+        self.assertEqual(self.index()["vision_model"]["model"], "gemini-2.0-flash")
 
     def test_a_vertex_run_uses_the_registry_alias_and_makes_no_list_call(self):
         from resolve_model import resolve
@@ -670,6 +791,23 @@ class TestDocsTruth(unittest.TestCase):
         text = (REPO / "references" / "brand-config-schema.md").read_text(encoding="utf-8")
         self.assertIn("model_pins", text)
         self.assertIn(JOB, text)
+
+    def test_the_offline_check_and_the_vertex_exception_are_documented_where_users_read_them(self):
+        pages = {
+            "docs/MODEL-CURATOR.md": ("deprecations.google", "record_applies=False", "20 pages", "stricter"),
+            "skills/index-assets/SKILL.md": ("Vertex AI", "not checked", "deprecations page"),
+            "docs/USER-GUIDE.md": ("Vertex AI", "not checked"),
+            "references/brand-config-schema.md": ("Vertex AI", "not checked", "offline as well as online"),
+            "references/asset-index-schema.md": ("not checked on Vertex AI",),
+            "PRIVACY.md": ("20 pages", "local data only", "scripts/model_hints.json"),
+        }
+        for rel, facts in pages.items():
+            text = " ".join((REPO / rel).read_text(encoding="utf-8").split())
+            for fact in facts:
+                self.assertIn(fact, text, f"{rel} does not say {fact!r}")
+
+    def test_the_router_page_cap_the_privacy_text_names_is_the_routers(self):
+        self.assertEqual(self.router.MAX_PAGES, 20)
 
     def test_the_asset_index_schema_documents_the_provenance_fields(self):
         text = (REPO / "references" / "asset-index-schema.md").read_text(encoding="utf-8")

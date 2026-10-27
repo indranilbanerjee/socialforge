@@ -111,7 +111,7 @@ An object that maps a job name to a model id. Without a pin, each job takes its 
 "model_pins": { "index-assets.vision.google": "<a model id from your Google key's model list>" }
 ```
 
-A pin is a name asked for, not a promise it keeps working: a deprecated model runs with a warning that names its retirement date and replacement, and a retired one stops the run (exit 2, nothing sent) and names the replacement. Remove the pin to return to the run-time choice. A pin that is not a model id (a number, an empty string, a list) stops the run instead of being ignored. The pin beats `--model`.
+A pin is a name asked for, not a promise it keeps working: a deprecated model runs with a warning that names its retirement date and replacement, and a retired one stops the run (exit 2, nothing sent) and names the replacement, offline as well as online. On a Vertex AI run the pin is sent as asked and the run says it was not checked, because the Gemini API's deprecation data does not describe Vertex. Remove the pin to return to the run-time choice. A pin that is not a model id (a number, an empty string, a list) stops the run instead of being ignored. The pin beats `--model`.
 
 ## Example
 

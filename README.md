@@ -6,16 +6,16 @@ Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:r
 
 Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 31 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.30.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.30.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-725%2F725%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1300)
+[![Tests](https://img.shields.io/badge/tests-741%2F741%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1301)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.30.0 (October 27, 2026): Asset indexing picks its vision model from your own Google key's model list, and the index records which model read each photo.** [Current release](#current-release-v1300) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v1.30.1 (October 27, 2026): An offline asset-indexing run now checks a model you named against the Gemini API's deprecations record, and a Vertex AI run is never refused by it.** [Current release](#current-release-v1301) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code 2.1.292 or newer (one command, run in your terminal):
@@ -92,7 +92,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
    /plugin install socialforge@neels-plugins
    ```
 
-   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1300).
+   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1301).
 2. **Connect image and video generation (one time).** Run `/socialforge:setup`. Your admin gives you a Google Cloud service-account JSON key file (Vertex AI, images) and a WaveSpeed API key (video). Setup lists any missing Python packages with the exact pinned install command and installs only after you say `yes`; you point it at the key file and set `WAVESPEED_API_KEY` in your environment, and never paste a key into the chat. It stores the credentials in `${CLAUDE_PLUGIN_DATA}`, so they last across sessions. Without this step image and video generation will not work; everything else (calendar parsing, copy adaptation, review galleries) runs normally. Check it with `/socialforge:status`. No accounts yet? See [Admin Setup](#admin-setup-one-time).
 3. `/socialforge:brand-setup [brand-name]` configures the brand (5-10 min).
 4. `/socialforge:index-assets [brand-name]` indexes the brand photo library.
@@ -129,7 +129,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
 
-## Supported surfaces (v1.30.0)
+## Supported surfaces (v1.30.1)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -154,7 +154,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
 - **31 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1300) for the rationale.
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1301) for the rationale.
 - **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. Asset indexing is the exception: it takes its vision model from `scripts/model_router.py`, which reads the models your own Google key can use and keeps a deprecated model it was asked for with a warning instead of swapping it. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Updating to Latest Version
@@ -271,13 +271,13 @@ SocialForge sends nothing to its author and has no telemetry, no hooks and no au
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.30.0)
+## Current Release (v1.30.1)
+
+**v1.30.1:** An offline asset-indexing run now checks a model you named against the Gemini API's deprecations record, and a Vertex AI run is never refused by it. In 1.30.0 a pin on a model Google had shut down was sent, with only a note that it was not in the shipped registry, whenever the model list could not be read; now it stops the run before anything is sent and names the replacement. Vertex AI retires Gemini models on its own schedule, so on a Vertex run the Gemini API's data is not applied: the model you named is sent and the run says it was not checked. A model list longer than 20 pages is no longer used as a partial list. The router is re-copied from Digital Marketing Pro 3.39.1. [Changelog](CHANGELOG.md)
 
 **v1.30.0:** Asset indexing picks its vision model from your own Google key's model list, and the index records which model read each photo. Before, every photo went to whatever the registry alias named, and a hand-reviewed registry can be behind: it could name a model Google had shut down, or miss a newer one your key could already use. Now `scripts/model_router.py` (the suite's one router, copied byte for byte) lists the models your `GEMINI_API_KEY` can use, at most once a week, and takes the newest generally available Flash; previews, "latest" aliases, redirected and shut-down models are never picked. A brand can pin a model (`model_pins` in `brand-config.json`) so a photo library stays comparable, `index_assets.py --show-model` prints the choice before you quote the cost, and a deprecated model you name now runs with a warning instead of being swapped, while a retired one stops the run before anything is sent. `asset-index.json` keeps the decision and, per photo, the model that read it. The Gemini key in `refresh_models.py` also moved from the URL to a header, and its Anthropic and Google lists now read every page. [Changelog](CHANGELOG.md)
 
 **v1.29.11:** The model registry no longer cites a file a reader cannot open, and a guard keeps public files that way. The registry's `last_updated_by` field pointed at a patch file in a folder outside the repository; it now names the vendor pages, each entry's `docs_url` and `notes`, and `docs/MODEL-CURATOR.md`, and `tests/test_no_internal_references.py` fails if a shipped file names an internal work session or points into that folder again.
-
-**v1.29.10:** The model registry gains the speech models, as pins that expire. 13 entries (OpenAI, ElevenLabs and Sarvam text-to-speech and speech-to-text), six `latest-tts-*` / `latest-stt-*` aliases and two new tiers, 85 models and 26 aliases in all. No vendor's model list tells a speech model from a chat model, so each entry carries `pinned_on` and `pin_expires`, and Digital Marketing Pro's weekly job fails when a pin expires. The registry is now a full mirror made by that repository's sync script, not a by-id update that left dropped entries behind.
 
 Older releases are in [CHANGELOG.md](CHANGELOG.md).
 

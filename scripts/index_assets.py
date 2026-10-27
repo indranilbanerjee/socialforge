@@ -14,7 +14,11 @@ Model selection (decided once per run, recorded in asset-index.json as `vision_m
      cannot be read, MODEL_ROUTER_OFFLINE=1 is set, or Vertex AI serves the run
      (its catalogue is not the Gemini API's list)
 A pin or --model is a name asked for: kept with a warning if it is deprecated,
-refused (exit 2, nothing sent) if it is retired. Nothing is swapped silently.
+refused (exit 2, nothing sent) if it is retired. Nothing is swapped silently. With no
+list to read, the name is checked against the shipped registry and the hint book's
+Gemini API deprecations record, the stricter winning. A Vertex AI run is checked
+against neither (Vertex retires Gemini models on its own schedule): the name is sent
+and the run says it was not checked.
 --show-model prints the decision and stops, so a cost quote is for the model the
 run will use.
 """
@@ -159,11 +163,18 @@ def choose_vision_model(brand_config, cli_model, *, backend, api_key="", fetch=N
     gemini_api = backend == GEMINI_API_BACKEND
     if not gemini_api:
         environ[model_router.OFFLINE_ENV] = "1"
+        if requested:
+            notes.append(f"{requested} was asked for on a Vertex AI run and is not checked: Vertex retires Gemini models on its "
+                         f"own schedule, so the Gemini API's deprecation data (the hint book's record and the shipped "
+                         f"registry) does not apply to it")
     when = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    # The deprecations record and the registry's Gemini lifecycle fields describe the Gemini API. A Vertex run must not be
+    # refused, or warned about a stale record, by data about another service.
     routing = model_router.route(
         VISION_JOB, hints, provider="google", credential_name=VISION_CREDENTIAL, api_key=api_key,
         default_model=_default_model(hints["jobs"][VISION_JOB]["default_alias"]), requested=requested, fetch=fetch,
-        cache_path=cache_path, now=when, env=environ, registry=_registry())
+        cache_path=cache_path, now=when, env=environ, registry=_registry() if gemini_api else None,
+        record_applies=gemini_api)
     reason = routing["reason"]
     if not gemini_api:
         reason = (f"the run is served by {backend}, not the Gemini API (Vertex AI's model catalogue differs from the "

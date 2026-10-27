@@ -97,7 +97,7 @@ All 18 commands, plus seven further `/socialforge:` entries that are skills star
 
 ## 5. Script Tests
 
-Run each script from the command line to verify it executes without import errors. The repo ships **30 Python scripts plus `assemble_docx.js`**.
+Run each script from the command line to verify it executes without import errors. The repo ships **31 Python scripts plus `assemble_docx.js`**.
 
 | # | Script | CLI Test | Expected Result |
 |---|--------|---------|-----------------|
@@ -298,7 +298,7 @@ Test each of the 8 templates renders correctly.
 
 Run after any code change to verify nothing broke.
 
-- [ ] All 30 Python scripts (+ `assemble_docx.js`) pass `--help` without import errors
+- [ ] All 31 Python scripts (+ `assemble_docx.js`) pass `--help` without import errors
 - [ ] `python tests/run_all.py` passes | every test passes (the README badge carries the count)
 - [ ] Brand setup creates valid brand-config.json
 - [ ] Asset indexing produces valid asset-index.json
@@ -326,7 +326,7 @@ Run after any code change to verify nothing broke.
 - [ ] Skill count in README matches actual skill directories | 21 skills
 - [ ] Command count in README matches actual command files | 18 commands
 - [ ] Agent count in README matches actual agent files | 5 agents
-- [ ] Script count in README matches actual script files | 30 Python scripts (+ `assemble_docx.js`)
+- [ ] Script count in README matches actual script files | 31 Python scripts (+ `assemble_docx.js`)
 - [ ] Connector count in README matches `.mcp.json.connectors-reference` | 12 opt-in connectors; no `.mcp.json` ships
 - [ ] Carousel template count in README matches actual templates | 8 templates
 - [ ] All agents have valid YAML frontmatter (name + description) | No missing frontmatter

@@ -44,6 +44,8 @@ python scripts/resolve_model.py --registry-age
 python scripts/resolve_model.py --list --vendor google --status current
 ```
 
+Asset indexing (`index_assets.py`) is the exception, because it takes its model from the router described under "The model router" below: a deprecated id is kept with a warning, a retired one stops the run, and nothing is substituted silently.
+
 ---
 
 ## Aliases (the public API for "give me the latest X")
@@ -67,6 +69,20 @@ python scripts/resolve_model.py --check-params scripts/some_script.py
 The scan is textual, not AST-based: it triggers when a file references any `claude-…` model id or a `latest-*-anthropic` alias, then flags every `temperature` / `top_p` / `top_k` assignment in that file. It exits 1 on any finding, so it drops straight into a pre-commit check. Expect occasional false positives when the model target is computed dynamically — that's deliberate, one extra review beats a 400 in production.
 
 Source: [Claude model deprecations — API parameter deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
+
+---
+
+## The model router (asset indexing)
+
+The registry is reviewed by hand, so for a job that may float with the market the plugin no longer depends on it for the decision. `scripts/model_router.py` chooses a model by job from the provider's own list of the models a key can use, and the registry stays as the offline fallback.
+
+- **One job today:** `index-assets.vision.google` in `scripts/model_hints.json` (the vision model that describes brand photos). The job names a provider, a model family (a pattern over ids) and the generation method it calls, never an id. Creative generation (images, video) stays on `model_book.py` and the registry, because a new model changes how a brand's output looks.
+- **What the router picks:** from the models the key lists with `generateContent`, the newest in the job's family that is active (not shut down, not redirected), generally available (no preview, experimental, "latest" alias or dated snapshot) and at least 14 days old. The Gemini list reports no lifecycle and no release dates, so those come from the `deprecations.google` record in the hint book: what an agent read from Google's deprecations page, with its source and the date. A listed model the record does not know is held back, with a warning, until the record is re-read.
+- **Re-reading the record:** open the page named in the record's `source`, copy every model row (release date, the earliest shutdown date, whether the page marks it already shut down, its replacement or the model it now routes to), and update `read_on`. The router warns in its output after 30 days, and `tests/test_model_registry_dates.py` fails the record 45 days after `read_on`.
+- **Asked for by name** (a brand pin in `brand-config.json`, or `--model`): kept if active, kept with a warning if deprecated, refused with exit 2 if the page marks it shut down. The replacement is named either way.
+- **Offline:** when the list cannot be read, `MODEL_ROUTER_OFFLINE=1` is set, or Vertex AI serves the run, the model is the registry alias `latest-vision-google`, tagged `offline`, and a named model is checked against the registry's lifecycle fields.
+- **One file, many plugins:** `scripts/model_router.py` is the suite's canonical file copied byte for byte. `tests/test_vision_model_routing.py` keeps this copy identical to it; change the canonical file and copy it again, never edit this one.
+- **Privacy:** the list call, its header and its cache are described in [PRIVACY.md](../PRIVACY.md).
 
 ---
 

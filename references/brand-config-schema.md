@@ -28,6 +28,7 @@ Falls back to `~/socialforge-workspace/brands/<brand-slug>/brand-config.json` wh
 | `social_profiles` | object | No | Platform handle mapping (see below) |
 | `languages` | array | No | Supported languages, first is primary (e.g., `["en", "es"]`) |
 | `brand_hashtags` | array | No | Default hashtags appended to social posts |
+| `model_pins` | object | No | Model ids this brand pins for a named job, so the brand's output stays on one model (see below) |
 
 ## `logo_files`
 
@@ -97,6 +98,20 @@ All paths are relative to the brand directory.
   "youtube": "@AcmeCorp"
 }
 ```
+
+## `model_pins`
+
+An object that maps a job name to a model id. Without a pin, each job takes its model at run time (from the provider's own model list, falling back to the shipped registry). A pin keeps one brand's output on one model, for example so a photo library stays analysed by the same vision model and its tags stay comparable.
+
+| Job | Used by | What the pin names |
+|-----|---------|--------------------|
+| `index-assets.vision.google` | `scripts/index_assets.py` | the Google vision model that describes each photo |
+
+```json
+"model_pins": { "index-assets.vision.google": "<a model id from your Google key's model list>" }
+```
+
+A pin is a name asked for, not a promise it keeps working: a deprecated model runs with a warning that names its retirement date and replacement, and a retired one stops the run (exit 2, nothing sent) and names the replacement. Remove the pin to return to the run-time choice. A pin that is not a model id (a number, an empty string, a list) stops the run instead of being ignored. The pin beats `--model`.
 
 ## Example
 

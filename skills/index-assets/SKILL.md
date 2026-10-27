@@ -10,7 +10,7 @@ user-invocable: true
 
 > **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
-Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by a vision model (registry alias `latest-vision-google`) to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
+Scan a brand's photo library and create an AI-powered asset index. Each image is analyzed by a vision model, chosen from your Google key's own model list (see "Which model" below), to understand what's in it, what mood it conveys, what posts it's suitable for, and how it can be cropped for different platforms.
 
 ## Context efficiency
 
@@ -20,7 +20,7 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
 
 1. **Locate assets** — Read asset-source.json for the brand's photo library location
 2. **Scan files** — Find all .jpg, .jpeg, .png, .webp files in the source
-3. **AI analysis** — For each image, use the vision model (the registry alias `latest-vision-google`) to generate:
+3. **AI analysis** — For each image, use the vision model chosen for the run (decided once, before the first image) to generate:
    - Natural language description of the image
    - Tags (categories, subjects, setting, mood)
    - Dominant colors detected
@@ -30,6 +30,17 @@ Asset-heavy skill. **Grep before Read** the asset catalog (`${CLAUDE_PLUGIN_DATA
    - Platform crop feasibility (can this be cropped to 1:1, 4:5, 16:9 without losing key content?)
 4. **Build index** — Create asset-index.json with all analyzed assets
 5. **Identify style references** — Suggest 2-8 images as style reference candidates (best represent the brand's visual DNA)
+
+## Which model
+
+The script decides the model once per run and never swaps one silently. In order:
+
+1. **The brand's pin** — `model_pins["index-assets.vision.google"]` in the brand's `brand-config.json` (see `references/brand-config-schema.md`). Pin when a library must stay analysed by one model so its tags remain comparable.
+2. **`--model <id>`** — for one run.
+3. **The router** — `scripts/model_router.py` reads the models your `GEMINI_API_KEY` can use (one list call at most every 7 days) and takes the newest generally available Flash-class model. Previews, "latest" aliases, lite, image, speech and live variants, models shut down or redirected, and models younger than 14 days are never picked.
+4. **The registry alias `latest-vision-google`**, tagged `offline` — when the list cannot be read, `MODEL_ROUTER_OFFLINE=1` is set, or Vertex AI serves the run (its catalogue is not the Gemini API's list).
+
+A pin or `--model` is a name asked for: a deprecated model is kept with a warning that names its retirement date and replacement; a retired one stops the run (exit 2, nothing sent) and names the replacement. A rejected key stops the run the same way. `index_assets.py --brand <brand> --show-model` prints the decision and stops. `asset-index.json` then records `vision_model` (what was asked, what was sent, the basis `live`, `cache`, `requested` or `offline`, the source and the time) and, on each analysed asset, `analysis_model` and `analyzed_at`, so a refresh that mixes models says so.
 
 ## Pre-Flight Check
 
@@ -97,9 +108,9 @@ Where the index is written (including the fallback location when no plugin data 
 
 ## Cost Awareness
 
-Each image analysis is a billed call, and its rate depends on the vision model the alias resolves to today. This skill therefore states no price — it quotes one that was looked up:
+Each image analysis is a billed call, and its rate depends on the vision model the run will use. This skill therefore states no price — it quotes one that was looked up, for the model the run will actually use (which the router may have moved past the registry alias):
 
-1. Resolve the model id the alias points at: `python "${CLAUDE_PLUGIN_ROOT}/scripts/resolve_model.py" --alias latest-vision-google`
+1. Ask the script which model the run will use: `python "${CLAUDE_PLUGIN_ROOT}/scripts/index_assets.py" --brand <brand> --show-model` (it reads no image, sends nothing and writes no index; the `model` field of its answer is the id to quote, and its `warnings` are shown to the user)
 2. Quote the run: `python "${CLAUDE_PLUGIN_ROOT}/scripts/price_book.py" --action quote --model "<resolved model id>" --provider vertex --units <number of images to analyze>` (on `--refresh`, count only the new or modified images)
 
 If `price_book.py` answers `unknown` or `stale`, follow `/socialforge:price-check`: read the provider's pricing page, record the rate with its source URL, then quote. If the vendor bills by token rather than per image, or no price can be quoted at all, say so and give the pricing URL — never an estimate and never a per-image figure converted from memory.

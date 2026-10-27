@@ -192,7 +192,7 @@ Requires Notion MCP connector. Claude queries the Notion database and maps prope
 
 1. **Scan source directory** -- Recursively find all .jpg/.jpeg/.png/.webp files under the asset source path.
 2. **Incremental detection** -- Compare the file list against the existing asset-index.json. Only new or modified files (by modification timestamp) are sent for AI analysis. Already-indexed files are skipped.
-3. **For each new image** -- Call the Gemini vision model (registry alias `latest-vision-google`) with a structured prompt requesting JSON analysis:
+3. **For each new image** -- Call the Gemini vision model chosen once for the run (the brand's `model_pins` entry, else `--model`, else the newest generally available Flash on the key's own model list via `scripts/model_router.py`, else the registry alias `latest-vision-google` tagged `offline`) with a structured prompt requesting JSON analysis:
    - Description (2-3 sentences of what the image shows)
    - Subjects (person, product, office, event, nature, abstract, etc.)
    - Tags (15-20 descriptive keywords covering subject, setting, mood, style, colors, composition)
@@ -231,7 +231,7 @@ Each asset entry contains approximately 30 fields. The most critical for downstr
 
 ### Rate Limiting
 
-The provider limits how many requests a key may make per day, and those limits change. For large libraries (200+ images), `index_assets.py` enforces a 2-second delay between API calls. The `--new-only` flag ensures re-indexing only processes new files, avoiding unnecessary API costs.
+The provider limits how many requests a key may make per day, and those limits change. `index_assets.py` sends one request per image and does not pace them; a request the provider rejects is recorded against that image and the run goes on. For large libraries (200+ images), run `--refresh` so a re-index analyses only new files and spends nothing on the ones already indexed.
 
 ---
 
@@ -453,9 +453,9 @@ Image editing runs on the same Gemini image family as generation. The original i
 
 | Provider | Model ID | When Used |
 |----------|----------|-----------|
-| **Gemini** | `latest-vision-google` | Asset indexing (understanding what each photo contains) |
+| **Gemini** | the newest generally available Flash on the key's own model list (`scripts/model_router.py`, job `index-assets.vision.google`); the registry alias `latest-vision-google` when that list cannot be read | Asset indexing (understanding what each photo contains) |
 
-This is a different model from the image generator. Flash is used because vision analysis is a classification/description task, not a generation task.
+This is a different model from the image generator. Flash is used because vision analysis is a classification/description task, not a generation task. The index records which model analysed each image; `index_assets.py --show-model` prints the choice before a run.
 
 ### Video Generation
 

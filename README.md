@@ -4,18 +4,18 @@
 
 Run `/socialforge:new-month` → `/socialforge:generate-all` → `/socialforge:review`. Asset-first compositing keeps brand photos pixel-faithful while AI generates the scene around them. Per-platform copy adaptation handles Instagram + TikTok + LinkedIn + Threads + X + Facebook + YouTube Shorts in one pass. C2PA signing happens before review. No more "AI enhanced our logo into something else" disasters.
 
-Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 30 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
+Open-source agency-grade social media production engine — **21 skills · 18 commands · 5 agents · 31 scripts · an opt-in catalog of 12 HTTP connectors (zero auto-connected) · 0 global hooks**. AI image (Vertex AI) and AI video (WaveSpeed), with models resolved live rather than hardcoded, and human-in-the-loop review galleries. Built for agencies and in-house teams running monthly content calendars. Installs on **Claude Code** (CLI + IDE), **Anthropic Cowork**, **OpenAI Codex**, **Cursor 2.5+**, **GitHub Copilot CLI**, **Google Antigravity 2.0**, **Hermes Agent**, **OpenClaw**, and **Grok** + 35+ Agent Skills platforms. Created by [Indranil Banerjee](https://indranil.in) · [LinkedIn](https://www.linkedin.com/in/askneelnow/) · [X](https://x.com/askneelnow).
 
-[![Version](https://img.shields.io/badge/version-1.29.11-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.30.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/indranilbanerjee/socialforge?style=flat&logo=github&color=yellow)](https://github.com/indranilbanerjee/socialforge/stargazers)
-[![Tests](https://img.shields.io/badge/tests-662%2F662%20passing-brightgreen.svg)](tests/)
-[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v12911)
+[![Tests](https://img.shields.io/badge/tests-721%2F721%20passing-brightgreen.svg)](tests/)
+[![Platforms](https://img.shields.io/badge/platforms-9%20native%20%2B%2035%20Agent%20Skills-success.svg)](#supported-surfaces-v1300)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2050%20ready-darkred.svg)](references/c2pa-production-cert.md)
 
 [![Built by Indranil "Neel" Banerjee — Neelverse Marketing Suite — Sponsor this project](docs/assets/author-banner.svg)](https://github.com/sponsors/indranilbanerjee)
 
-> 🆕 **Just shipped — v1.29.11 (October 27, 2026): The model registry no longer cites a file a reader cannot open, and a guard keeps public files that way.** [Current release](#current-release-v12911) · [Changelog](CHANGELOG.md)
+> 🆕 **Just shipped — v1.30.0 (October 27, 2026): Asset indexing picks its vision model from your own Google key's model list, and the index records which model read each photo.** [Current release](#current-release-v1300) · [Changelog](CHANGELOG.md)
 
 ```bash
 # Install in Claude Code 2.1.292 or newer (one command, run in your terminal):
@@ -92,7 +92,7 @@ The amber steps are yours: nothing is spent before the quote is approved, and no
    /plugin install socialforge@neels-plugins
    ```
 
-   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v12911).
+   In Cowork, use the Plugins panel instead (Add marketplace, paste `indranilbanerjee/neels-plugins`, Install SocialForge); `/plugin` commands work only in Claude Code. Other hosts are under [Supported surfaces](#supported-surfaces-v1300).
 2. **Connect image and video generation (one time).** Run `/socialforge:setup`. Your admin gives you a Google Cloud service-account JSON key file (Vertex AI, images) and a WaveSpeed API key (video). Setup lists any missing Python packages with the exact pinned install command and installs only after you say `yes`; you point it at the key file and set `WAVESPEED_API_KEY` in your environment, and never paste a key into the chat. It stores the credentials in `${CLAUDE_PLUGIN_DATA}`, so they last across sessions. Without this step image and video generation will not work; everything else (calendar parsing, copy adaptation, review galleries) runs normally. Check it with `/socialforge:status`. No accounts yet? See [Admin Setup](#admin-setup-one-time).
 3. `/socialforge:brand-setup [brand-name]` configures the brand (5-10 min).
 4. `/socialforge:index-assets [brand-name]` indexes the brand photo library.
@@ -129,7 +129,7 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 | STYLE_REFERENCED | No specific asset needed | AI generates using brand’s style reference photos as visual DNA |
 | PURE_CREATIVE | Generic/abstract content | AI generates from text prompt + brand colors/mood |
 
-## Supported surfaces (v1.29.11)
+## Supported surfaces (v1.30.0)
 
 | Platform | Install command | Manifest path | Status |
 |---|---|---|---|
@@ -152,10 +152,10 @@ Product photos, headshots, screenshots — these are the brand’s real visual i
 - **21 skills** — Calendar parsing, asset indexing, creative composition, copy adaptation, review management, C2PA signing
 - **18 commands** — Monthly production, post generation, editing, review, approval, finalization
 - **5 agents** — Image compositor, carousel builder, copy adapter, quality reviewer, compliance checker
-- **30 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
+- **31 scripts** — Deterministic execution (compositing, rendering, resizing, video post-processing, compliance checking, C2PA signing)
 - **An opt-in catalog of 12 HTTP connectors** (zero auto-connected; enable from `.mcp.json.connectors-reference`) — Notion, Canva, Slack, Gmail, Google Calendar, Figma, fal.ai, Replicate, Asana, Cloudinary, Postiz (scheduler hand-off after finalize, only on your approval of the exact posts and times), and WhatsApp Business Tools (Meta beta, for development and testing)
-- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v12911) for the rationale.
-- **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
+- **0 global hooks** — As of v1.5.0. Prior hook config preserved at `hooks/hooks-reference.example.json`. Credential status now via `/socialforge:status` on demand. See the [release notes](#current-release-v1300) for the rationale.
+- **Model curator (v1.8.2+)** — `scripts/model_registry.json` + `resolve_model.py` + `refresh_models.py`. Single source of truth for image / vision / video model ids; deprecated ids passed via `--model` / `--video-model` auto-fall-forward to their replacement; `refresh_models.py` polls live provider catalogs and reports drift. Asset indexing is the exception: it takes its vision model from `scripts/model_router.py`, which reads the models your own Google key can use and keeps a deprecated model it was asked for with a warning instead of swapping it. See [`docs/MODEL-CURATOR.md`](docs/MODEL-CURATOR.md).
 
 ## Updating to Latest Version
 
@@ -194,7 +194,7 @@ Open `/plugin`, go to the **Marketplaces** tab, find `neels-plugins`, and toggle
 
 ## Installs in Cowork
 
-Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 30 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 12 catalog connectors are all HTTP and fully Cowork-compatible.
+Cowork is the Anthropic Desktop computer-use product (macOS/Windows). It supports third-party plugins from custom marketplaces — same `/plugin marketplace add indranilbanerjee/neels-plugins` install pattern. Cowork has local filesystem access, so the full SocialForge pipeline including all 31 Python scripts (image generation, video generation, ffmpeg postprocessing, C2PA signing) runs natively. The only Cowork-specific limitation is **HTTP MCPs only** (no stdio/npx) — SocialForge's 12 catalog connectors are all HTTP and fully Cowork-compatible.
 
 ## Admin Setup (One-Time)
 
@@ -265,19 +265,19 @@ The plugin works fully without connectors — all skills, agents, and creative p
 
 ## What it runs and what leaves your machine
 
-SocialForge sends nothing to its author and has no telemetry, no hooks and no auto-connecting server. Its scripts run on your machine inside your agent. A script opens a network connection only when you approve a paid step: image or video generation (Google Gemini or Vertex AI, WaveSpeed, HiggsField, with the keys you stored), asset indexing (Google Gemini image analysis), a model-list refresh (the Anthropic, OpenAI and Google model endpoints), and a C2PA signature timestamp (a hash, not your file). Nothing is installed unless you say yes to a pinned command. The full table of scripts, endpoints and credentials is in [PRIVACY.md](PRIVACY.md); security reports go through [SECURITY.md](SECURITY.md).
+SocialForge sends nothing to its author and has no telemetry, no hooks and no auto-connecting server. Its scripts run on your machine inside your agent. A script opens a network connection only when you approve a paid step: image or video generation (Google Gemini or Vertex AI, WaveSpeed, HiggsField, with the keys you stored), asset indexing (Google Gemini image analysis, after one read of your key's model list at most every 7 days to choose the model), a model-list refresh (the Anthropic, OpenAI and Google model endpoints), and a C2PA signature timestamp (a hash, not your file). Nothing is installed unless you say yes to a pinned command. The full table of scripts, endpoints and credentials is in [PRIVACY.md](PRIVACY.md); security reports go through [SECURITY.md](SECURITY.md).
 
 ## Storage
 
 Brand configs and asset indexes persist across sessions via `${CLAUDE_PLUGIN_DATA}`. Asset images stay in Google Drive, Cloudinary, or local folders. See the [User Guide](docs/USER-GUIDE.md#13-where-your-data-lives) for details.
 
-## Current Release (v1.29.11)
+## Current Release (v1.30.0)
+
+**v1.30.0:** Asset indexing picks its vision model from your own Google key's model list, and the index records which model read each photo. Before, every photo went to whatever the registry alias named, and a hand-reviewed registry can be behind: it could name a model Google had shut down, or miss a newer one your key could already use. Now `scripts/model_router.py` (the suite's one router, copied byte for byte) lists the models your `GEMINI_API_KEY` can use, at most once a week, and takes the newest generally available Flash; previews, "latest" aliases, redirected and shut-down models are never picked. A brand can pin a model (`model_pins` in `brand-config.json`) so a photo library stays comparable, `index_assets.py --show-model` prints the choice before you quote the cost, and a deprecated model you name now runs with a warning instead of being swapped, while a retired one stops the run before anything is sent. `asset-index.json` keeps the decision and, per photo, the model that read it. The Gemini key in `refresh_models.py` also moved from the URL to a header. [Changelog](CHANGELOG.md)
 
 **v1.29.11:** The model registry no longer cites a file a reader cannot open, and a guard keeps public files that way. The registry's `last_updated_by` field pointed at a patch file in a folder outside the repository; it now names the vendor pages, each entry's `docs_url` and `notes`, and `docs/MODEL-CURATOR.md`, and `tests/test_no_internal_references.py` fails if a shipped file names an internal work session or points into that folder again.
 
 **v1.29.10:** The model registry gains the speech models, as pins that expire. 13 entries (OpenAI, ElevenLabs and Sarvam text-to-speech and speech-to-text), six `latest-tts-*` / `latest-stt-*` aliases and two new tiers, 85 models and 26 aliases in all. No vendor's model list tells a speech model from a chat model, so each entry carries `pinned_on` and `pin_expires`, and Digital Marketing Pro's weekly job fails when a pin expires. The registry is now a full mirror made by that repository's sync script, not a by-id update that left dropped entries behind.
-
-**v1.29.9:** the model registry is current, a fallback names the provider that failed, and SocialForge is checked against the plugin directory's own rules. The registry is now a copy of the canonical one (72 models, 20 aliases; vendor pages read 2026-10-27) and `resolve_model.py --check-params` flags any Claude model, because Anthropic API version 2026-10-21 rejects `temperature`, `top_p` and `top_k` on every model. `fallback_from` used to say `vertex-ai` whatever the setup was; it now lists only the providers that were tried and failed (`gemini-aistudio`, `wavespeed-kling`), and a rung that could not start is listed in `skipped_unavailable`. Preparing the directory submission found two base64 files (`.tmp/*.b64`) that had shipped since 1.5.0, each decoding to a script that named a folder on the author's own computer; they are removed. Seven files told a reader to run an unpinned `pip install` and now point at `install_deps.py`, `tests/test_directory_readiness.py` runs the checklist's file-level rules on the repository, the README gains a section on what the plugin runs and what leaves your machine, and the submission bundle is rewritten for the portal. `claude plugin validate --strict --profile directory` passes.
 
 Older releases are in [CHANGELOG.md](CHANGELOG.md).
 

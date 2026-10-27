@@ -156,7 +156,7 @@ SocialForge Credential Setup
 
 Step 1 of 2: Google Cloud (Vertex AI -- Image Generation)
   Provide the path to your Google Cloud service account JSON file.
-  This enables Vertex AI image generation (plus Gemini Vision for asset indexing).
+  This enables Vertex AI image generation (plus Google vision analysis for asset indexing).
 
   Path to JSON file: > /path/to/my-service-account.json
 
@@ -265,7 +265,8 @@ GreenLeaf has a Google Drive folder with 45 photos: products, farm scenes, team 
   Found: 45 images (32 .jpg, 10 .png, 3 .webp)
 
 [2/4] Analyzing images with AI Vision...
-  Each image analyzed by Gemini Vision for: subjects, mood, colors, setting,
+  Each image analyzed by a Google vision model (chosen once, from your key's own
+  model list) for: subjects, mood, colors, setting,
   what posts it's suitable for, whether background is removable.
 
   Analyzed: 15/45 (33%) — ~2 min remaining
@@ -305,6 +306,16 @@ When GreenLeaf adds new photos to their Drive folder:
 ```
 
 Only analyzes new/changed images. Existing index preserved.
+
+### Which vision model analyses your photos
+
+The model is chosen once per run, and the index records which one. In order: the brand's pin (`model_pins` in `brand-config.json`, see `references/brand-config-schema.md`), then `--model <id>`, then the newest generally available Flash on your own Google key's model list, then (when that list cannot be read, or Vertex AI serves the run) the shipped default, marked `offline`. A pinned or named model that is deprecated runs with a warning; one that is retired stops the run before anything is sent and names its replacement. To see the choice, and the model a cost quote must use, without analysing anything:
+
+```
+python scripts/index_assets.py --brand GreenLeaf --show-model
+```
+
+`asset-index.json` keeps the run's decision under `vision_model` and, on each image, the model that analysed it. Pin a model when a large library must stay comparable across refreshes; leave it unpinned to follow the newest.
 
 ---
 
@@ -901,7 +912,7 @@ Skills are the internal engines that commands invoke. You rarely call them direc
 |-------|--------|-------------|
 | setup | medium | One-time credential setup for Vertex AI (image) and WaveSpeed (video) |
 | brand-manager | medium | Set up and manage brand profiles, visual identity, compliance rules |
-| index-assets | high | AI-powered brand photo library indexing via Gemini Vision |
+| index-assets | high | AI-powered brand photo library indexing with a Google vision model chosen from your key's own list |
 | parse-calendar | medium | Parse DOCX/XLSX/Notion/text calendars into structured post data |
 | match-assets | high | Score and match assets to posts using 5-factor algorithm, assign creative modes |
 | compose-creative | max | Core 4-mode creative production engine (ANCHOR, ENHANCE, STYLE, PURE) |

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.30.0] - 2026-10-27
+
+### Asset indexing picks its vision model from your own Google key's model list, and the index records which model read each photo
+
+From the 2026-10-27 model-freshness review. `index_assets.py` sent every photo to whatever the registry alias `latest-vision-google` named. The registry is reviewed by hand, so a run could be sent to a model Google had since shut down, or miss a newer one the key could already use. The suite now has one router, `scripts/model_router.py`, that chooses a model by job from the provider's own list of the models a key can use. Digital Marketing Pro 3.39.0 holds the canonical file (it gained the Google adapter) and this repository carries a byte-for-byte copy. Asset indexing is its first use here. Image and video generation stay on the model book and the registry, because a new model changes how a brand's output looks and that is a decision for the brand.
+
+**Added**
+
+- `scripts/model_router.py` (the canonical file, copied) and `scripts/model_hints.json`: one job, `index-assets.vision.google`, which names a provider, a model family and the generation method it calls, never a model id. The hint book also carries `deprecations.google`, the 81 rows an agent read from Google's deprecations page on 2026-10-27, because Google's list reports no lifecycle and no release dates. From the models the key lists with `generateContent`, the router takes the newest in the family that is active, generally available (no preview, experimental, "latest" alias or dated snapshot), not redirected and at least 14 days old. A listed model the record does not know is held back, with a warning, until the record is re-read.
+- The model is decided once per run, in this order: the brand's pin, then `--model`, then the router, then the registry alias `latest-vision-google` tagged `offline` (the list could not be read, `MODEL_ROUTER_OFFLINE=1` is set, or Vertex AI serves the run, whose catalogue is not the Gemini API's list). A refresh that finds nothing new asks for no model and makes no list call.
+- `model_pins` in `brand-config.json` (documented in `references/brand-config-schema.md`): `{"index-assets.vision.google": "<model id>"}` keeps one brand's photo library on one model so its tags stay comparable. The pin beats `--model`, and says so. A pin that is not a model id stops the run instead of being ignored.
+- `index_assets.py --show-model` prints the decision and stops: no image is read or sent and no index is written. `skills/index-assets/SKILL.md` now quotes the cost for that model, not for the registry alias, which the router may have moved past.
+- `asset-index.json` records `vision_model` (what was asked, what was sent, the basis `live`, `cache`, `requested` or `offline`, the source, the times and any warnings) and, on every analysed image, `analysis_model` and `analyzed_at`, so a refresh that mixes models says which is which.
+- `PRIVACY.md` names the list call: the endpoint, that the key goes only in the `x-goog-api-key` header and never in the URL, once every 7 days per key name, the cache file and what it holds (the key's variable name and the chosen ids, never the key or the list), no call on Vertex AI, and `MODEL_ROUTER_OFFLINE=1`. `docs/MODEL-CURATOR.md` describes the router, the hint book and how to re-read the record.
+- Tests: `tests/test_vision_model_routing.py` (57), written before the code. Run against the 1.29.11 code, 51 of the first 53 fail or error (the other two pass either way), and so do two of the three `refresh_models.py` tests added after. They cover the copy's parity (as git stores it, so a CRLF checkout is not a difference, with a planted changed byte), the hint book, the choice in every order (live, cache, pin over flag over router, refused retired and malformed pins, a deprecated pin kept with its date and replacement, a redirected id, an unrecorded model held back, a stale record, a rejected key, a timeout, offline, Vertex), a whole run in-process (one list call for any number of images, nothing sent on a refusal, nothing written, per-image provenance, a refresh that mixes models), the CLI, and the docs against the code. `tests/test_model_registry_dates.py` grows from 11 to 13: the record is judged on a day it is given, like the registry, so a customer's test run does not turn red.
+
+**Changed**
+
+- `index_assets.py --model` no longer swaps a deprecated id silently for its replacement. A deprecated id runs with a warning that names its retirement date and replacement; a retired id stops the run (exit 2, nothing sent) and names the replacement. This is the router's rule everywhere: nothing is swapped without saying so.
+- A rejected key, a list with no usable model, or a retired pin now stops the run before any image is sent and writes no index, with the reason and (for a blocked list call) the way past it. Before, every image failed one by one and a metadata-only index was written. No credentials at all still ends with a metadata-only index and exit 3.
+- One Gemini client is built per run, not one per image.
+
+**Fixed**
+
+- `scripts/refresh_models.py` sent the Gemini key as `?key=` in the URL, where proxies and server logs keep it, and read only the first page of the list (50 models). It now uses the `x-goog-api-key` header and follows every page. Run against the 1.29.11 code, the two tests for it fail.
+- A `.webp` photo was sent to the vision API labelled `image/png`. It is sent as `image/webp`.
+- `docs/OPERATIONS.md` said `index_assets.py` enforces a 2-second delay between calls and has a `--new-only` flag; it does neither (`--refresh` is the flag, and calls are not paced). It also named the vision model by its alias only.
+- `references/asset-index-schema.md` named fields the script does not write (`mood`, a relative `path`, ids like `asset-001`) and left out ones it does (`source_path`, `relative_path`, `folder`, `dominant_mood`, `dimensions_unreadable`); it now matches `build_basic_entry`.
+- `tests/test_no_internal_references.py` caught the name of the checking session only when it followed "the" directly, so the 1.29.9 entry, which put a qualifier between them, got through. The pattern now allows up to two words between "the" and the name (product names such as the Campaign Orchestrator and the plain words "A/B tester" and "testers" still pass), with planted cases both ways, and that entry now says "a fresh install run from the installed copy".
+
 ## [1.29.11] - 2026-10-27
 
 ### The model registry no longer cites a file a reader cannot open, and a guard keeps public files that way
@@ -40,7 +70,7 @@ From the 2026-10-27 freshness review of the speech vendors' pages, which found t
 
 ### The model registry is current, a fallback names the provider that failed, and SocialForge is checked against the directory's own rules
 
-Found on 2026-10-27 by a freshness review of the vendors' model pages (the registry and the parameter scan), by the fresh-install Tester (`fallback_from`), and while preparing the directory submission by reading Anthropic's plugin pre-submission checklist against the repository.
+Found on 2026-10-27 by a freshness review of the vendors' model pages (the registry and the parameter scan), by a fresh install run from the installed copy (`fallback_from`), and while preparing the directory submission by reading Anthropic's plugin pre-submission checklist against the repository.
 
 **Fixed**
 

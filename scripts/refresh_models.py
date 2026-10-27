@@ -31,6 +31,7 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import date
 from pathlib import Path
@@ -90,19 +91,25 @@ def list_gemini() -> tuple[set[str] | None, str | None]:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         return None, "no-key: GEMINI_API_KEY not set"
-    data, err = _http_get(
-        f"https://generativelanguage.googleapis.com/v1beta/models?key={key}",
-        {},
-    )
-    if err:
-        return None, err
-    if not data:
-        return None, "empty-response: provider returned no body"
-    return {
-        m.get("name", "").replace("models/", "")
-        for m in data.get("models", [])
-        if m.get("name")
-    }, None
+    # The key goes in the x-goog-api-key header, never in the URL (proxies and server logs keep a URL), and every page is
+    # read: the list is 50 models a page unless asked for more, and a registry check that sees only the first page reports
+    # the rest as missing.
+    ids: set[str] = set()
+    token = None
+    for _ in range(20):
+        url = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000"
+        if token:
+            url += "&" + urllib.parse.urlencode({"pageToken": token})
+        data, err = _http_get(url, {"x-goog-api-key": key})
+        if err:
+            return None, err
+        if not data:
+            return None, "empty-response: provider returned no body"
+        ids |= {m.get("name", "").replace("models/", "") for m in data.get("models", []) if m.get("name")}
+        token = data.get("nextPageToken")
+        if not token:
+            break
+    return ids, None
 
 
 def diff(registry_statuses: dict[str, str], live_ids: set[str]) -> dict[str, list[str]]:

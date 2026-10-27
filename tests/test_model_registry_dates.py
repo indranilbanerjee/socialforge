@@ -96,6 +96,21 @@ def registry_problems(reg: dict, on: date) -> list[str]:
     return out
 
 
+RECORD_FAIL_DAYS = 45
+
+
+def record_problems(hints: dict, on: date) -> list[str]:
+    """The router's hand-read lifecycle record (scripts/model_hints.json 'deprecations') goes stale like any pin: the router
+    warns in its own output after 30 days, and a maintainer's check on a given day fails it after 45. Like the registry check
+    above, the suite judges it on a day it is given, never on the wall clock, so a customer's test run does not turn red."""
+    out = []
+    for provider, record in (hints.get("deprecations") or {}).items():
+        age = (on - date.fromisoformat(record["read_on"])).days
+        if age > RECORD_FAIL_DAYS:
+            out.append(f"deprecations.{provider} read {record['read_on']}, {age} days ago; re-read {record['source']}")
+    return out
+
+
 class TestRegistryDates(unittest.TestCase):
 
     def test_registry_is_consistent_on_the_day_it_was_reviewed(self):
@@ -133,6 +148,16 @@ class TestRegistryDates(unittest.TestCase):
                          "veo-3.0-generate-001: retired 2026-06-30, over",
                          "next_review_due"):
             self.assertIn(expected, joined)
+
+    def test_the_router_hint_books_record_is_consistent_on_the_day_it_was_read(self):
+        hints = json.loads((REPO / "scripts" / "model_hints.json").read_text(encoding="utf-8"))
+        problems = record_problems(hints, date.fromisoformat(hints["deprecations"]["google"]["read_on"]))
+        self.assertEqual(problems, [], "\n  " + "\n  ".join(problems))
+
+    def test_a_record_read_more_than_45_days_ago_is_a_problem(self):
+        hints = {"deprecations": {"google": {"read_on": "2026-10-27", "source": "https://x"}}}
+        self.assertEqual(record_problems(hints, date(2026, 12, 11)), [])
+        self.assertIn("46 days ago", "\n".join(record_problems(hints, date(2026, 12, 12))))
 
     def test_recheck_and_shutdown_windows(self):
         reg = {"next_review_due": "2027-01-01", "aliases": {"a": "x"},

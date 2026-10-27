@@ -39,7 +39,7 @@ From the repository root, on Claude Code 2.1.308:
 ## Data handling answers (portal step 4, draft for the owner to confirm)
 
 - **Reads or stores personal data:** only what the user supplies: brand configs, calendars, an asset index, generated creative and the approval ledger. They live in the host's plugin data folder or `~/socialforge-workspace/` on the user's machine. Nothing is stored by the author.
-- **Sends data to services other than declared connectors:** only to the image and video providers the user connects and approves per call (Google Gemini or Vertex AI, WaveSpeed, HiggsField), Gemini image analysis when the user indexes a photo library, the model-list endpoints of Anthropic, OpenAI and Google, and an RFC 3161 timestamp request carrying a hash when the user signs an asset. No telemetry. The full table is `PRIVACY.md`.
+- **Sends data to services other than declared connectors:** only to the image and video providers the user connects and approves per call (Google Gemini or Vertex AI, WaveSpeed, HiggsField), Gemini image analysis when the user indexes a photo library, the model-list endpoints of Anthropic, OpenAI and Google (the Gemini key only in the `x-goog-api-key` header; read before an indexing run to choose its model, at most once every 7 days), and an RFC 3161 timestamp request carrying a hash when the user signs an asset. No telemetry. The full table is `PRIVACY.md`.
 - **Retention:** the author keeps nothing. Local files stay until the user deletes them.
 - **Intended for people under 18:** no. It is a professional marketing tool.
 

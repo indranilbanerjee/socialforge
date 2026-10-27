@@ -4,9 +4,9 @@ This file is auto-loaded by OpenAI Codex, Google Antigravity, GitHub Copilot CLI
 
 ## What this plugin is
 
-SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI), AI video generation (WaveSpeed image-to-video), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **21 skills · 18 commands · 5 agents · 30 scripts · 12 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
+SocialForge is an open-source agency-grade social media production engine — calendar parsing, asset-first compositing (brand assets are sacred, AI is the creative layer around them), AI image generation (Vertex AI), AI video generation (WaveSpeed image-to-video), multi-platform copy adaptation, human-in-the-loop review galleries, and C2PA content provenance signing for EU AI Act Article 50 compliance. **21 skills · 18 commands · 5 agents · 31 scripts · 12 opt-in HTTP MCP connectors (none auto-connected) · 0 global hooks.**
 
-**Supported surfaces (v1.29.11):** Claude Code (CLI + IDE extensions), Anthropic Cowork, OpenAI Codex (CLI + IDE + App), Cursor 2.5+, GitHub Copilot CLI, Google Antigravity 2.0 (CLI + IDE), Hermes Agent, OpenClaw, Grok (xAI Build CLI, native `.grok-plugin/` pair).
+**Supported surfaces (v1.30.0):** Claude Code (CLI + IDE extensions), Anthropic Cowork, OpenAI Codex (CLI + IDE + App), Cursor 2.5+, GitHub Copilot CLI, Google Antigravity 2.0 (CLI + IDE), Hermes Agent, OpenClaw, Grok (xAI Build CLI, native `.grok-plugin/` pair).
 
 ## Core principle
 
@@ -49,7 +49,7 @@ SocialForge is an open-source agency-grade social media production engine — ca
 - `skills/<name>/SKILL.md` — 21 Agent Skills.
 - `agents/<name>.md` — 5 specialist agent definitions.
 - `commands/<name>.md` — 18 Claude Code slash commands (`/socialforge:<name>`; the skills answer to the same prefix).
-- `scripts/*.py` — 30 Python helpers.
+- `scripts/*.py` — 31 Python helpers.
 - `hooks/hooks.json` — `{"hooks":{}}` (zero global hooks).
 - `.mcp.json` — not shipped (gitignored): zero auto-connecting MCPs. The opt-in catalog is `.mcp.json.connectors-reference`.
 - `assets/` + `references/` + `templates/` — brand assets, channel-pack references, post templates.

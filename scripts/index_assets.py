@@ -3,9 +3,20 @@
 index_assets.py — Index brand visual assets using AI vision analysis.
 Scans image libraries, analyzes each with Gemini Vision, builds asset-index.json.
 
-Model selection: pass --model to override. Defaults pull from the curator
-(scripts/model_registry.json) via the `latest-vision-google` alias so a
-registry refresh propagates without touching this file.
+Model selection (decided once per run, recorded in asset-index.json as `vision_model`):
+  1. the brand's pin: `model_pins["index-assets.vision.google"]` in brand-config.json
+  2. --model
+  3. scripts/model_router.py, which lists the models this Gemini API key can use
+     (GET .../v1beta/models, the key in the x-goog-api-key header, at most once a
+     week per key name) and takes the newest active, generally available Flash in
+     the family scripts/model_hints.json names
+  4. the registry alias `latest-vision-google`, tagged "offline", when that list
+     cannot be read, MODEL_ROUTER_OFFLINE=1 is set, or Vertex AI serves the run
+     (its catalogue is not the Gemini API's list)
+A pin or --model is a name asked for: kept with a warning if it is deprecated,
+refused (exit 2, nothing sent) if it is retired. Nothing is swapped silently.
+--show-model prints the decision and stops, so a cost quote is for the model the
+run will use.
 """
 
 import argparse
@@ -19,16 +30,16 @@ from pathlib import Path
 # Add scripts dir to path for credential_manager + curator imports
 sys.path.insert(0, str(Path(__file__).parent))
 
+import model_router  # noqa: E402
+
 try:
-    from resolve_model import resolve as _resolve_model, check as _check_model
-    DEFAULT_VISION_MODEL = _resolve_model("latest-vision-google")
-except (ImportError, KeyError, ValueError):  # pragma: no cover
+    from resolve_model import resolve as _resolve_model, get_registry as _get_registry
+except ImportError:  # pragma: no cover
+    # No literal id here: a literal would always answer, and one day the answer is
+    # a retired model. Without the curator the offline rung has no default and the
+    # router refuses, naming why.
     _resolve_model = None
-    _check_model = None
-    # Deliberately no hardcoded id — a literal here would always answer, and
-    # one day the answer is a retired model. When the curator is missing the
-    # analysis rung records `unresolved-model` and the index stays honest.
-    DEFAULT_VISION_MODEL = None
+    _get_registry = None
 
 # Persistent storage: prefer ${CLAUDE_PLUGIN_DATA} (survives sessions/updates),
 # fall back to ~/socialforge-workspace (legacy/local)
@@ -61,6 +72,165 @@ Provide a JSON response with these fields:
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # scripts/ holds _common.py
 import _common  # noqa: E402
 
+VISION_JOB = "index-assets.vision.google"
+VISION_CREDENTIAL = "GEMINI_API_KEY"          # the NAME of the environment variable; the router never stores the key
+HINTS_FILE = Path(__file__).resolve().parent / "model_hints.json"
+ROUTER_CACHE_NAME = "model-router-cache.json"  # in the workspace folder, next to the other per-user state
+GEMINI_API_BACKEND = "ai-studio-fallback"      # credential_manager's name for "a GEMINI_API_KEY serves this run"
+MIME_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+
+
+def _iso(moment):
+    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _plain(model_id):
+    """The Gemini API writes ids as `models/<id>`; the index records the id alone."""
+    return model_id[len("models/"):] if isinstance(model_id, str) and model_id.startswith("models/") else model_id
+
+
+def read_brand_config(brand):
+    """(config, warning). A missing file is no config; an unreadable one is named, never ignored silently."""
+    path = WORKSPACE / "brands" / brand / "brand-config.json"
+    if not path.exists():
+        return {}, None
+    try:
+        config = json.loads(path.read_text(encoding="utf-8-sig"))
+        if isinstance(config, dict):
+            return config, None
+        problem = "it is not a JSON object"
+    except (OSError, ValueError) as exc:
+        problem = f"{type(exc).__name__}: {str(exc)[:100]}"
+    return {}, f"{path.name} could not be read ({problem}), so no model pin was applied"
+
+
+def brand_pin(config):
+    """The model id this brand pins for the job, or None. A pin that is not a model id is refused, because
+    ignoring it would swap the model the brand chose without saying so."""
+    pins = (config or {}).get("model_pins")
+    if pins is None:
+        return None
+    if not isinstance(pins, dict):
+        raise model_router.RouterError(
+            f'brand-config.json: model_pins must be an object that maps a job name to a model id, for example '
+            f'{{"{VISION_JOB}": "<model id>"}}')
+    if VISION_JOB not in pins:
+        return None
+    pin = pins[VISION_JOB]
+    if not isinstance(pin, str) or not pin.strip():
+        raise model_router.RouterError(
+            f'brand-config.json: model_pins["{VISION_JOB}"] must be a model id (a non-empty string)')
+    return _plain(pin.strip())
+
+
+def _default_model(alias):
+    if _resolve_model is None:
+        return None
+    try:
+        return _resolve_model(alias)
+    except (KeyError, ValueError):
+        return None
+
+
+def _registry():
+    if _get_registry is None:
+        return None
+    try:
+        return _get_registry()
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def choose_vision_model(brand_config, cli_model, *, backend, api_key="", fetch=None, now=None, cache_path=None, env=None):
+    """The vision model for this run, with where the answer came from. Raises model_router.RouterError when no image
+    should be sent (a rejected key, no usable model, a retired model asked for, a malformed pin).
+
+    Order: the brand's pin, then --model, then the router's pick from the key's own model list, then (list unreadable,
+    offline, or a Vertex AI run) the registry alias, tagged "offline". Vertex serves its own catalogue, which the Gemini
+    API list does not describe, so a Vertex run never makes the list call."""
+    hints = json.loads(HINTS_FILE.read_text(encoding="utf-8-sig"))
+    pin, flag = brand_pin(brand_config), _plain(cli_model) if cli_model else None
+    notes = []
+    if pin and flag and pin != flag:
+        notes.append(f"the brand's model pin {pin} is used; --model {flag} was ignored "
+                     f"(remove model_pins from brand-config.json to use the flag)")
+    requested, selected_by = (pin, "brand-pin") if pin else (flag, "--model") if flag else (None, "router")
+    environ = dict(os.environ if env is None else env)
+    gemini_api = backend == GEMINI_API_BACKEND
+    if not gemini_api:
+        environ[model_router.OFFLINE_ENV] = "1"
+    when = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    routing = model_router.route(
+        VISION_JOB, hints, provider="google", credential_name=VISION_CREDENTIAL, api_key=api_key,
+        default_model=_default_model(hints["jobs"][VISION_JOB]["default_alias"]), requested=requested, fetch=fetch,
+        cache_path=cache_path, now=when, env=environ, registry=_registry())
+    reason = routing["reason"]
+    if not gemini_api:
+        reason = (f"the run is served by {backend}, not the Gemini API (Vertex AI's model catalogue differs from the "
+                  f"Gemini API's list), so the list was not read")
+    if requested is None and routing["basis"] == "offline":
+        selected_by = "registry-alias"
+    return {"job": VISION_JOB, "model": routing["model"], "model_requested": routing["model_requested"],
+            "selected_by": selected_by, "basis": routing["basis"], "source": routing["source"],
+            "discovered_at": routing["discovered_at"], "decided_at": _iso(when), "replacement": routing["replacement"],
+            "reason": reason, "router": routing["router"], "warnings": notes + list(routing["warnings"])}
+
+
+def unavailable(reason, now=None):
+    """The record for a run that cannot analyse anything: no client, so no model was asked for."""
+    return {"job": VISION_JOB, "model": None, "model_requested": None, "selected_by": None, "basis": "unavailable",
+            "source": None, "discovered_at": None, "decided_at": _iso(now or datetime.now(timezone.utc)),
+            "replacement": None, "reason": reason, "router": model_router.ROUTER, "warnings": []}
+
+
+def decide(brand, cli_model, backend, *, fetch=None, now=None):
+    """Read the brand's pin and choose the model for a run served by `backend`."""
+    config, warning = read_brand_config(brand)
+    decision = choose_vision_model(config, cli_model, backend=backend, api_key=os.environ.get(VISION_CREDENTIAL, ""),
+                                   fetch=fetch, now=now, cache_path=WORKSPACE / ROUTER_CACHE_NAME)
+    if warning:
+        decision["warnings"].insert(0, warning)
+    return decision
+
+
+def report(decision):
+    for warning in decision["warnings"]:
+        print(f"WARNING (google): {warning}", file=sys.stderr)
+    if decision["basis"] == "offline" and decision["selected_by"] == "registry-alias":
+        print(f"NOTE (google): {decision['reason']}; using the shipped default {decision['model']}", file=sys.stderr)
+
+
+def refuse(exc):
+    """The router refused: nothing was sent and nothing is written."""
+    payload = {"error": exc.reason, "stage": "model routing", "action_required": True}
+    if "model-list call" in exc.reason:
+        payload["hint"] = (f"Fix {VISION_CREDENTIAL}, or set {model_router.OFFLINE_ENV}=1 to skip the list call "
+                           f"and use the shipped default model.")
+    print(json.dumps(payload))
+    sys.exit(exc.exit_code)
+
+
+def open_client():
+    """(client, backend, failure): the Gemini client for this run, built once. `failure` names what stopped it, in the
+    words the per-image failure reasons use."""
+    try:
+        from credential_manager import get_gemini_client
+        client, backend = get_gemini_client()
+        if not client:
+            # backend carries the credential manager's error message here
+            return None, None, f"no-credentials: {backend}"
+        return client, backend, None
+    except ImportError:
+        # Fallback if credential_manager not available
+        try:
+            from google import genai
+        except ImportError:
+            return None, None, "dependency-missing: google-genai not importable"
+        api_key = os.environ.get(VISION_CREDENTIAL)
+        if not api_key:
+            return None, None, f"no-credentials: {VISION_CREDENTIAL} not set"
+        return genai.Client(api_key=api_key), GEMINI_API_BACKEND, None
+
 
 def scan_images(source_path):
     """Find all image files in the source directory.
@@ -89,43 +259,31 @@ def scan_images(source_path):
     return images
 
 
-def analyze_image_gemini(image_path, model=None):
+def analyze_image_gemini(image_path, model=None, client=None):
     """Analyze a single image with Gemini Vision.
 
+    `client` is the one index_all built for the run (one client, one model decision); without it a client is built here.
     Returns (result_dict, None) on success or (None, reason) on failure —
     the reason string names what stopped the analysis so the index summary
     can report WHY images fell back to metadata-only instead of a bare count.
     """
-    try:
-        from credential_manager import get_gemini_client
-        client, backend = get_gemini_client()
-        if not client:
-            # backend carries the credential manager's error message here
-            return None, f"no-credentials: {backend}"
-    except ImportError:
-        # Fallback if credential_manager not available
-        try:
-            from google import genai
-        except ImportError:
-            return None, "dependency-missing: google-genai not importable"
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            return None, "no-credentials: GEMINI_API_KEY not set"
-        client = genai.Client(api_key=api_key)
+    if client is None:
+        client, _backend, failure = open_client()
+        if client is None:
+            return None, failure
 
-    use_model = model or DEFAULT_VISION_MODEL
-    if not use_model:
-        return None, ("unresolved-model: no vision model id could be resolved "
-                      "(model curator unavailable and no --model given)")
+    if not model:
+        return None, ("unresolved-model: no vision model was chosen "
+                      "(the model router and the registry alias both came back empty)")
 
     from google.genai import types
 
     img_data = image_path.read_bytes()
-    mime = "image/jpeg" if image_path.suffix.lower() in [".jpg", ".jpeg"] else "image/png"
+    mime = MIME_TYPES.get(image_path.suffix.lower(), "image/png")
 
     try:
         response = client.models.generate_content(
-            model=use_model,
+            model=model,
             contents=[
                 types.Part.from_bytes(data=img_data, mime_type=mime),
                 VISION_PROMPT,
@@ -206,15 +364,17 @@ def stored_source(brand):
     return None
 
 
-def index_all(brand, source_path, refresh=False, model=None):
-    """Index all images for a brand."""
+def index_all(brand, source_path, refresh=False, model=None, *, fetch=None, now=None):
+    """Index all images for a brand. `fetch` and `now` are the router's seams for tests: the list call and the clock."""
     brand_dir = WORKSPACE / "brands" / brand
     index_path = brand_dir / "asset-index.json"
 
     # Load existing index for refresh mode
     existing = {}
+    prior_vision = None
     if refresh and index_path.exists():
         old_index = json.loads(index_path.read_text(encoding="utf-8"))
+        prior_vision = old_index.get("vision_model")
         for asset in old_index.get("assets", []):
             existing[asset.get("path", "")] = asset
 
@@ -237,6 +397,21 @@ def index_all(brand, source_path, refresh=False, model=None):
     if not images:
         print(json.dumps({"error": f"No images found in {source_path}"}))
         sys.exit(1)
+
+    # The vision model is decided ONCE, and only when an image needs analysing: a refresh that finds nothing new asks for no
+    # model and makes no list call. A refusal (retired pin, rejected key, no usable model) ends the run before anything is sent
+    # or written.
+    client, client_failure, vision = None, None, prior_vision
+    if any(not (refresh and str(p) in existing) for p in images):
+        client, backend, client_failure = open_client()
+        if client is None:
+            vision = unavailable(client_failure, now)
+        else:
+            try:
+                vision = decide(brand, model, backend, fetch=fetch, now=now)
+            except model_router.RouterError as exc:
+                refuse(exc)
+            report(vision)
 
     assets = []
     analyzed = 0
@@ -270,10 +445,16 @@ def index_all(brand, source_path, refresh=False, model=None):
         entry = build_basic_entry(img_path, Path(source_path), asset_id)
 
         # Try AI analysis
-        ai_result, ai_fail_reason = analyze_image_gemini(img_path, model=model)
+        if client is None:
+            ai_result, ai_fail_reason = None, client_failure
+        else:
+            ai_result, ai_fail_reason = analyze_image_gemini(img_path, model=vision["model"], client=client)
         if ai_fail_reason:
             ai_failures.append({"id": asset_id, "file": img_path.name, "reason": ai_fail_reason})
         if ai_result:
+            # Each analysed asset names the model that analysed it: a refresh can mix models in one index.
+            entry["analysis_model"] = vision["model"]
+            entry["analyzed_at"] = datetime.now(timezone.utc).isoformat()
             entry["ai_description"] = ai_result.get("description", "")
             entry["tags"] = ai_result.get("tags", [])
             entry["detected_colors"] = ai_result.get("dominant_colors_hex", [])
@@ -298,8 +479,10 @@ def index_all(brand, source_path, refresh=False, model=None):
         "source": "local",
         "source_path": str(source_path),
         "total_assets": len(assets),
-        "assets": assets
     }
+    if vision:
+        index["vision_model"] = vision  # the latest decision; each asset's own analysis_model is the truth for that asset
+    index["assets"] = assets
 
     brand_dir.mkdir(parents=True, exist_ok=True)
     index_path.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -322,6 +505,8 @@ def index_all(brand, source_path, refresh=False, model=None):
         "style_reference_candidates": len(style_refs),
         "output": str(index_path)
     }
+    if vision:
+        summary["vision_model"] = vision
     if ai_failures:
         summary["ai_failure_reasons"] = failure_counts
         summary["first_failure_detail"] = ai_failures[0]["reason"]
@@ -337,6 +522,22 @@ def index_all(brand, source_path, refresh=False, model=None):
         sys.exit(3)  # index written, but the AI-analysis contract was not met
 
 
+def show_model(brand, cli_model, fetch=None, now=None):
+    """Print the model this run would use and stop: no image is read or sent and no index is written. A cost quote is for
+    this model, not for the registry alias, which the router may have moved past."""
+    client, backend, failure = open_client()
+    if client is None:
+        print(json.dumps({**unavailable(failure, now), "action_required": True}, indent=2))
+        return 4
+    try:
+        decision = decide(brand, cli_model, backend, fetch=fetch, now=now)
+    except model_router.RouterError as exc:
+        refuse(exc)
+    report(decision)
+    print(json.dumps(decision, indent=2))
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="SocialForge Asset Indexer")
     parser.add_argument("--brand", type=_common.path_component, required=True)
@@ -344,25 +545,23 @@ def main():
                         help="Path to image folder (omit to reuse the source recorded by the previous index)")
     parser.add_argument("--refresh", action="store_true", help="Only index new/changed images")
     parser.add_argument("--model", default=None,
-                        help=f"Vision model id (default: registry alias `latest-vision-google` -> {DEFAULT_VISION_MODEL}). "
-                             f"Deprecated ids auto-fall-forward to their replacement.")
+                        help="Vision model id. Without it the model comes from your Gemini API key's own model list "
+                             "(scripts/model_router.py). A brand pin (model_pins in brand-config.json) overrides this flag. "
+                             "A deprecated id is kept with a warning; a retired one is refused (exit 2) and the "
+                             "replacement is named.")
+    parser.add_argument("--show-model", action="store_true",
+                        help="Print which vision model this run would use and stop (no image is read or sent, no index "
+                             "is written). Run it before quoting the cost.")
     args = parser.parse_args()
+
+    if args.show_model:
+        sys.exit(show_model(args.brand, args.model))
 
     source = args.source or stored_source(args.brand)
     if not source:
         parser.error("--source is required (no previous index recorded a source path for this brand)")
 
-    # Validate / resolve --model via curator
-    chosen_model = args.model
-    if _check_model is not None and chosen_model:
-        status, replacement = _check_model(chosen_model)
-        if status in ("deprecated", "retired") and replacement:
-            print(f"WARNING: model {chosen_model!r} is {status}; using {replacement!r}", file=sys.stderr)
-            chosen_model = replacement
-        elif status == "unknown":
-            print(f"WARNING: model {chosen_model!r} not in curated registry", file=sys.stderr)
-
-    index_all(args.brand, source, args.refresh, model=chosen_model)
+    index_all(args.brand, source, args.refresh, model=args.model)
 
 
 if __name__ == "__main__":

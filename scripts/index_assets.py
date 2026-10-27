@@ -202,11 +202,7 @@ def report(decision):
 
 def refuse(exc):
     """The router refused: nothing was sent and nothing is written."""
-    payload = {"error": exc.reason, "stage": "model routing", "action_required": True}
-    if "model-list call" in exc.reason:
-        payload["hint"] = (f"Fix {VISION_CREDENTIAL}, or set {model_router.OFFLINE_ENV}=1 to skip the list call "
-                           f"and use the shipped default model.")
-    print(json.dumps(payload))
+    print(json.dumps({"error": exc.reason, "stage": "model routing", "action_required": True}))
     sys.exit(exc.exit_code)
 
 

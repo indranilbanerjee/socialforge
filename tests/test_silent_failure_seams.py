@@ -47,8 +47,21 @@ def _load(name, filename):
     return mod
 
 
+def _playwright_importable() -> bool:
+    """Whether THIS interpreter (the one the subprocess runs under) can import what render_preview.py imports."""
+    try:
+        return importlib.util.find_spec("playwright.sync_api") is not None
+    except (ImportError, ValueError):
+        return False
+
+
 class TestPreviewRefusesToInventSuccess(unittest.TestCase):
-    def _run(self, extra_args, out_name):
+    """render_preview.py refuses before it looks at the image when Playwright is not installed (a clean interpreter has
+    none), and the refusal is an {"error": ...} that names install_deps.py, not a {"status": ...}. The invariant on every
+    machine is the same: a non-zero exit, no preview file, no success field. Only where Playwright imports does the script
+    get as far as judging the image, so only there is the status asserted."""
+
+    def _run(self, extra_args, out_name, env=None):
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / out_name
             cmd = [sys.executable, str(SCRIPTS / "render_preview.py"),
@@ -57,28 +70,55 @@ class TestPreviewRefusesToInventSuccess(unittest.TestCase):
                    "--platform", "linkedin", "--brand", "t",
                    "--output", str(out)] + extra_args
             p = subprocess.run(cmd, capture_output=True, text=True,
-                               encoding="utf-8", timeout=180)
-            return p, out
+                               encoding="utf-8", timeout=180, env=env)
+            return p, out, out.exists()
 
-    def test_missing_image_is_refused_not_rendered(self):
-        p, out = self._run([], "p.png")
+    def _assert_never_invents_success(self, p, wrote_file):
         self.assertNotEqual(p.returncode, 0,
                             "a failed render must not exit 0 — callers chain on $?")
         payload = json.loads(p.stdout)
-        self.assertEqual(payload["status"], "FAILED")
-        self.assertEqual(payload["reason"], "missing-image")
-        self.assertTrue(payload["next_steps"], "a refusal must say what to do next")
-        self.assertFalse(out.exists(),
-                         "no preview file may be written for an image that does not exist")
+        self.assertNotIn(payload.get("status"), ("success", "placeholder"))
+        self.assertFalse(wrote_file, "no preview file may be written for an image that does not exist")
+        return payload
+
+    def _without_playwright_env(self, tmp):
+        """An environment in which `import playwright` fails, whatever is installed: a sitecustomize on PYTHONPATH."""
+        Path(tmp, "sitecustomize.py").write_text("import sys\nsys.modules['playwright'] = None\n", encoding="utf-8")
+        return {**os.environ, "PYTHONPATH": str(tmp), "PYTHONUTF8": "1"}
+
+    def test_missing_image_is_refused_not_rendered(self):
+        p, out, wrote = self._run([], "p.png")
+        payload = self._assert_never_invents_success(p, wrote)
+        if _playwright_importable():
+            self.assertEqual(payload["status"], "FAILED")
+            self.assertEqual(payload["reason"], "missing-image")
+            self.assertTrue(payload["next_steps"], "a refusal must say what to do next")
+        else:
+            self.assertIn("install_deps.py", payload.get("error", ""),
+                          "without Playwright the refusal must name the installer")
 
     def test_explicit_opt_in_is_placeholder_never_success(self):
         """There is a legitimate use for a copy-layout preview. It must still be
         impossible to mistake for a finished creative by reading one field."""
-        p, _ = self._run(["--allow-missing-image"], "q.png")
+        p, _, wrote = self._run(["--allow-missing-image"], "q.png")
         payload = json.loads(p.stdout)
-        self.assertEqual(payload["status"], "placeholder")
-        self.assertNotEqual(payload["status"], "success")
-        self.assertIn("warning", payload)
+        self.assertNotEqual(payload.get("status"), "success")
+        if _playwright_importable():
+            self.assertEqual(payload["status"], "placeholder")
+            self.assertIn("warning", payload)
+        else:
+            self._assert_never_invents_success(p, wrote)
+            self.assertIn("install_deps.py", payload.get("error", ""))
+
+    def test_without_playwright_both_calls_refuse_and_name_the_installer_on_any_machine(self):
+        """Run with `import playwright` blocked, so the no-Playwright path is exercised even where Playwright is installed."""
+        for args in ([], ["--allow-missing-image"]):
+            with self.subTest(args=args), tempfile.TemporaryDirectory() as tmp:
+                p, _, wrote = self._run(args, "r.png", env=self._without_playwright_env(tmp))
+                payload = self._assert_never_invents_success(p, wrote)
+                self.assertIn("Playwright is not installed", payload.get("error", ""))
+                self.assertIn("install_deps.py", payload["error"])
+                self.assertNotIn("status", payload)
 
 
 class TestFailureRecordsSurviveTheTerminal(unittest.TestCase):

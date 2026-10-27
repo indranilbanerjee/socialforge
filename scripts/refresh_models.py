@@ -57,19 +57,44 @@ def _http_get(url: str, headers: dict[str, str], timeout: int = 15) -> tuple[dic
         return None, f"malformed-json: {e}"
 
 
+# The largest page each paged provider allows, and a ceiling on how many pages one list may take.
+PAGE_SIZE = 1000
+MAX_PAGES = 20
+
+
+def _list_ids(first_url: str, headers: dict[str, str], *, items: str, id_field: str, cursor: str,
+              next_cursor) -> tuple[set[str] | None, str | None]:
+    """Every id a provider's model list reports across all of its pages, as (ids, None), or (None, reason).
+
+    A failed page or a list that does not end within MAX_PAGES is an error, never a short list: the models on the missing
+    pages would all be reported as gone, which is the alarm this script exists to raise, and a false one."""
+    ids: set[str] = set()
+    after = None
+    for _ in range(MAX_PAGES):
+        url = first_url if after is None else first_url + "&" + urllib.parse.urlencode({cursor: after})
+        data, err = _http_get(url, headers)
+        if err:
+            return None, err
+        if not data:
+            return None, "empty-response: provider returned no body"
+        ids |= {m.get(id_field) for m in data.get(items) or [] if isinstance(m, dict) and m.get(id_field)}
+        after = next_cursor(data)
+        if not after:
+            return ids, None
+    return None, f"too-many-pages: the list did not end within {MAX_PAGES} pages"
+
+
 def list_anthropic() -> tuple[set[str] | None, str | None]:
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         return None, "no-key: ANTHROPIC_API_KEY not set"
-    data, err = _http_get(
-        "https://api.anthropic.com/v1/models",
+    # Anthropic lists 20 models a page unless asked for more (up to 1000) and pages by has_more / last_id -> after_id.
+    return _list_ids(
+        f"https://api.anthropic.com/v1/models?limit={PAGE_SIZE}",
         {"x-api-key": key, "anthropic-version": "2023-06-01"},
+        items="data", id_field="id", cursor="after_id",
+        next_cursor=lambda d: d.get("last_id") if d.get("has_more") else None,
     )
-    if err:
-        return None, err
-    if not data:
-        return None, "empty-response: provider returned no body"
-    return {m.get("id") for m in data.get("data", []) if m.get("id")}, None
 
 
 def list_openai() -> tuple[set[str] | None, str | None]:
@@ -92,24 +117,14 @@ def list_gemini() -> tuple[set[str] | None, str | None]:
     if not key:
         return None, "no-key: GEMINI_API_KEY not set"
     # The key goes in the x-goog-api-key header, never in the URL (proxies and server logs keep a URL), and every page is
-    # read: the list is 50 models a page unless asked for more, and a registry check that sees only the first page reports
-    # the rest as missing.
-    ids: set[str] = set()
-    token = None
-    for _ in range(20):
-        url = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000"
-        if token:
-            url += "&" + urllib.parse.urlencode({"pageToken": token})
-        data, err = _http_get(url, {"x-goog-api-key": key})
-        if err:
-            return None, err
-        if not data:
-            return None, "empty-response: provider returned no body"
-        ids |= {m.get("name", "").replace("models/", "") for m in data.get("models", []) if m.get("name")}
-        token = data.get("nextPageToken")
-        if not token:
-            break
-    return ids, None
+    # read: the list is 50 models a page unless asked for more.
+    ids, err = _list_ids(
+        f"https://generativelanguage.googleapis.com/v1beta/models?pageSize={PAGE_SIZE}",
+        {"x-goog-api-key": key},
+        items="models", id_field="name", cursor="pageToken",
+        next_cursor=lambda d: d.get("nextPageToken"),
+    )
+    return (None, err) if err else ({i.replace("models/", "") for i in ids}, None)
 
 
 def diff(registry_statuses: dict[str, str], live_ids: set[str]) -> dict[str, list[str]]:

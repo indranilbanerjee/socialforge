@@ -32,6 +32,7 @@ import sys
 import tempfile
 import types
 import unittest
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
@@ -428,12 +429,8 @@ class TestIndexRunRecordsTheChoice(IndexRunCase):
         self.assertEqual((code, self.client.sent), (2, []))
         refusal = json.loads(out)
         self.assertIn(CRED, refusal["error"])
-        self.assertIn("MODEL_ROUTER_OFFLINE=1", refusal["hint"], "a blocked list call must name the way past it")
-
-    def test_a_retired_pin_gets_no_offline_hint_because_offline_would_not_help(self):
-        self.write_config({"model_pins": {JOB: "gemini-2.0-flash"}})
-        _, out, _ = self.run_index(Fetch())
-        self.assertNotIn("hint", json.loads(out))
+        # A rejected, denied or unpaid key fails every image the same way, so offline mode would only move the failure.
+        self.assertNotIn("MODEL_ROUTER_OFFLINE", json.dumps(refusal), "offline mode does not fix a rejected key")
 
     def test_a_vertex_run_uses_the_registry_alias_and_makes_no_list_call(self):
         from resolve_model import resolve
@@ -572,6 +569,63 @@ class TestRefreshModelsKeepsTheKeyOutOfTheUrl(unittest.TestCase):
         with mock.patch.dict(os.environ, {CRED: KEY}), mock.patch.object(self.rm, "_http_get", fake):
             ids, err = self.rm.list_gemini()
         self.assertEqual((ids, err), (None, "http-401: Unauthorized"))
+
+    # Anthropic lists 20 models by default (up to 1000 a page) and pages by has_more / last_id -> after_id. A list that stops at
+    # the first page reports every current Claude id past the 20th as "registry says live, provider does not list it".
+    A_KEY = "ant-test-0000-not-a-real-anthropic-key"
+
+    def run_anthropic(self, pages):
+        seen = []
+
+        def fake(url, headers, timeout=15):
+            seen.append((url, dict(headers)))
+            return pages[len(seen) - 1], None
+
+        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": self.A_KEY}), mock.patch.object(self.rm, "_http_get", fake):
+            return self.rm.list_anthropic(), seen
+
+    def test_anthropic_follows_has_more_and_last_id_and_asks_for_the_largest_page(self):
+        pages = [{"data": [{"id": "claude-one"}, {"id": "claude-two"}], "has_more": True, "last_id": "claude-two"},
+                 {"data": [{"id": "claude-three"}], "has_more": False, "last_id": "claude-three"}]
+        (ids, err), seen = self.run_anthropic(pages)
+        self.assertEqual((ids, err), ({"claude-one", "claude-two", "claude-three"}, None))
+        self.assertEqual(len(seen), 2)
+        first = urllib.parse.parse_qs(urllib.parse.urlsplit(seen[0][0]).query)
+        second = urllib.parse.parse_qs(urllib.parse.urlsplit(seen[1][0]).query)
+        self.assertEqual(first.get("limit"), ["1000"])
+        self.assertEqual(second.get("after_id"), ["claude-two"])
+        for url, headers in seen:
+            self.assertNotIn(self.A_KEY, url)
+            self.assertEqual(headers.get("x-api-key"), self.A_KEY)
+
+    def test_a_single_anthropic_page_is_read_once(self):
+        (ids, err), seen = self.run_anthropic([{"data": [{"id": "claude-only"}], "has_more": False}])
+        self.assertEqual((ids, err, len(seen)), ({"claude-only"}, None, 1))
+
+    def test_a_failed_second_anthropic_page_is_reported_never_returned_as_a_short_list(self):
+        pages = [{"data": [{"id": "claude-one"}], "has_more": True, "last_id": "claude-one"}]
+
+        def fake(url, headers, timeout=15):
+            return (pages[0], None) if "after_id" not in url else (None, "network: connection reset")
+
+        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": self.A_KEY}), mock.patch.object(self.rm, "_http_get", fake):
+            self.assertEqual(self.rm.list_anthropic(), (None, "network: connection reset"))
+
+    def test_a_list_that_never_ends_is_an_error_not_a_truncated_set(self):
+        """A short list would report every model past the cut as gone. Both paged providers stop and say so."""
+        def endless_anthropic(url, headers, timeout=15):
+            return {"data": [{"id": "claude-x"}], "has_more": True, "last_id": "claude-x"}, None
+
+        def endless_google(url, headers, timeout=15):
+            return {"models": [{"name": "models/x"}], "nextPageToken": "again"}, None
+
+        for fn, endless, env in ((self.rm.list_anthropic, endless_anthropic, {"ANTHROPIC_API_KEY": self.A_KEY}),
+                                 (self.rm.list_gemini, endless_google, {CRED: KEY})):
+            with self.subTest(fn=fn.__name__), mock.patch.dict(os.environ, env), \
+                    mock.patch.object(self.rm, "_http_get", endless):
+                ids, err = fn()
+                self.assertIsNone(ids)
+                self.assertIn("too-many-pages", err)
 
 
 # --- the docs say what the code does ---------------------------------------------------------------------------------

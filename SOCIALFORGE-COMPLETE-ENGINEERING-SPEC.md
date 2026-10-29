@@ -2940,7 +2940,7 @@ OUTPUT: .docx file
 | Facebook | 63,206 | ~400 chars before "See More" | 1-3 | Clickable |
 | YouTube (title) | 100 | ~60-70 visible in search | 0 in title | N/A |
 | YouTube (description) | 5,000 | ~120 visible before expand | 3-5 | Clickable |
-| TikTok | 4,000 | ~150 visible | 3-5 | Limited, one link in bio |
+| TikTok | 2,200 (video caption; 4,000 is a photo post's description) | ~150 visible | 3-5 | Limited, one link in bio |
 | Pinterest | 500 | ~100 visible on pin | 0-2 | Clickable (pin links to URL) |
 
 ### Carousel Specifics

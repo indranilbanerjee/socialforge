@@ -195,6 +195,9 @@ def pinned_value_problems(data):
             problems.append(f"{name} char_limit has no readable primary source and must stay unsourced")
     if p["tiktok"]["limits"]["char_limit"] != 2200:
         problems.append("tiktok char_limit stays 2200 (the conservative cap) until a primary page says otherwise")
+    # 1.30.3: the search index quotes TikTok's posting reference, so the note says where 4,000 comes from.
+    if "photo post's description at 4,000" not in p["tiktok"].get("notes", ""):
+        problems.append("tiktok notes say the 4,000 elsewhere is a photo post's description, not a video caption")
     for name in ("linkedin", "x", "youtube", "threads", "bluesky"):
         if "char_limit" not in p[name]["confirmed"]:
             problems.append(f"{name} char_limit was confirmed against a primary page on 2026-10-04")

@@ -126,7 +126,7 @@
       "differs": [],
       "unsourced": ["char_limit", "hashtag_limit", "link"],
       "also_read": [],
-      "notes": "No TikTok primary page could be read on 2026-10-04: tiktok.com/discover/tiktok-caption-limit returned an unrelated notice, and the Content Posting API reference pages on developers.tiktok.com returned HTTP 503 on two tries. Third-party pages found by search report 2,200 and, more recently, 4,000 characters; that is unconfirmed here. 2,200 is kept as the conservative working cap, because copy that fits it fits under either number. hashtag_limit 10 is SocialForge's own cap, not a TikTok rule."
+      "notes": "No TikTok primary page can be read from here: on 2026-10-04 tiktok.com/discover/tiktok-caption-limit returned an unrelated notice and the Content Posting API reference pages on developers.tiktok.com returned HTTP 503, and on 2026-10-29 developers.tiktok.com did not answer at all. The search index quotes those references (2026-10-29): a video caption, the direct-post title field, is capped at 2,200 UTF-16 runes, and a photo post's description at 4,000 (its title at 90). So the 4,000 that third-party pages give is the photo description, not a video caption. The status stays unsourced because the page itself was not read; 2,200 is the cap either way. hashtag_limit 10 is SocialForge's own cap, not a TikTok rule."
     },
     "pinterest": {
       "limits": {"char_limit": 800, "hashtag_limit": 20, "link": "direct"},

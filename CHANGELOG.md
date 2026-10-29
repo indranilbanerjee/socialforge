@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.30.3] - 2026-10-29
+
+### TikTok's 2,200 / 4,000 split is explained from TikTok's own posting references
+
+- `scripts/platform_limits.json`: the TikTok note now says where the two numbers come from. The search index quotes TikTok's Content Posting API references (2026-10-29): a video caption, the direct-post `title` field, is capped at 2,200 UTF-16 runes, and a photo post's description at 4,000 (its title at 90). So the 4,000 that third-party pages give is the photo description, not a video caption. `adapt_copy.py` still cuts TikTok copy at 2,200.
+- The entry stays `unsourced`: SocialForge marks a limit `confirmed` only when the platform page itself was read, and developers.tiktok.com still doesn't load from here.
+- `references/platform-specs.md` and the engineering spec's design-time table say the same; the spec table said 4,000.
+- A test fails if the note stops saying the 4,000 is a photo post's description.
+
 ## [1.30.2] - 2026-10-28
 
 ### A retired Veo id is replaced by the model of the service that serves it, the registry and the deprecations record must agree, no key follows a redirect to another host, and a session's data folder no longer leaks into the price-book tests

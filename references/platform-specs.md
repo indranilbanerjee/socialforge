@@ -35,7 +35,7 @@ The numbers `adapt_copy.py` enforces live in `scripts/platform_limits.json`, eac
 | X/Twitter | 280 | confirmed | 240 | — | Hard limit, no fold; counted by weight, see below |
 | Facebook | 63,206 | unsourced | 300-500 | 400 | Optimal is short; the adapter cuts at 500 |
 | YouTube | 5,000 | confirmed | 200-500 | 200 | First 200 visible |
-| TikTok | 2,200 | unsourced | 100-300 | — | Third-party pages report 4,000, unconfirmed; 2,200 stays as the safe cap |
+| TikTok | 2,200 | unsourced | 100-300 | — | TikTok's posting reference, quoted by the search index (2026-10-29), caps a video caption at 2,200 UTF-16 runes; the 4,000 other pages give is a photo post's description. The page itself doesn't load from here, so the status stays unsourced |
 | Pinterest | 800 | confirmed | 200-300 | — | Description for SEO (title: 100) |
 | Threads | 500 | confirmed | — | — | Emojis count as UTF-8 bytes |
 | Bluesky | 300 | confirmed | — | — | 300 graphemes |

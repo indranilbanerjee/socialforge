@@ -6,9 +6,9 @@ The latest minor release of SocialForge receives security fixes. Older minor ver
 
 | Version | Supported |
 |---------|-----------|
-| 1.30.x  | ✅ |
-| 1.29.x  | ⚠️ Security fixes only when trivially backportable |
-| < 1.29  | ❌ Please upgrade |
+| 1.31.x  | ✅ |
+| 1.30.x  | ⚠️ Security fixes only when trivially backportable |
+| < 1.30  | ❌ Please upgrade |
 
 ## Reporting a Vulnerability
 
@@ -69,6 +69,8 @@ If you are running SF in a sensitive environment (multi-tenant agency setup, reg
 
 1. **Never commit `.mcp.json` with real API keys.** Use env vars or a secret manager — `.mcp.json.example` is the safe template.
 2. **Treat brand data at `${CLAUDE_PLUGIN_DATA}/socialforge/brands/<brand-slug>/` as sensitive** (fallback `~/socialforge-workspace/brands/<brand-slug>/`). It contains client strategy documents, brand assets, and compliance rules. Apply filesystem ACLs as you would any client PII.
-3. **Rotate generation-provider API keys quarterly.** SocialForge consumes Gemini / Vertex AI keys for image generation and WaveSpeed keys for video — rotate those at the provider. Use `/socialforge:cost-report` to monitor for anomalous consumption.
-4. **Review SKILL.md edits in PRs.** Skills run with whatever permissions Claude Code has. Treat skill modifications like code review for production systems.
-5. **Pin the plugin version in agency environments.** Don't auto-update production agencies on the same day as release — let community testing happen first.
+3. **Keep provider keys in environment variables.** `/socialforge:setup` records only the variable names (`WAVESPEED_API_KEY`, `HF_API_KEY`, `HF_API_SECRET`) in `credentials.json` and reads the values at run time, so the keys are never written by SocialForge. The Vertex AI service-account JSON is used where you keep it (its path is recorded; no copy is made since 1.31.0, and an older `gcp-credentials.json` copy is reported until you delete it). A key piped in with `--api-key-stdin` or typed at `--prompt` goes to the OS keychain when the optional `keyring` package is installed (`install_deps.py --groups keyring`); without it, it is written to `credentials.json` in plain text and setup warns you. `--api-key` / `--api-secret` on the command line are refused.
+4. **Know what the file permissions do.** On macOS and Linux SocialForge's credential files are `chmod 600`. On Windows chmod is a no-op for this (it only sets the read-only flag), so setup runs `icacls <file> /inheritance:r /grant:r <you>:F` on `credentials.json`; anyone with administrator rights on the machine can still read it. The credential folder is `${CLAUDE_PLUGIN_DATA}/socialforge/`, or `~/socialforge-workspace/` when the host sets no data folder.
+5. **Rotate generation-provider API keys quarterly.** SocialForge consumes Gemini / Vertex AI keys for image generation and WaveSpeed keys for video — rotate those at the provider. Use `/socialforge:cost-report` to monitor for anomalous consumption.
+6. **Review SKILL.md edits in PRs.** Skills run with whatever permissions Claude Code has. Treat skill modifications like code review for production systems.
+7. **Pin the plugin version in agency environments.** Don't auto-update production agencies on the same day as release — let community testing happen first.

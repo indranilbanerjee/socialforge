@@ -566,9 +566,7 @@ socialforge/
       "reminder_channel": "string — 'slack' | 'email' | 'both'",
       "reminder_message_template": "string — supports {post_count}, {brand_name}, {month}",
       "escalate_after_days": "number",
-      "escalate_to": "string — role",
-      "auto_publish_without_client": "boolean",
-      "auto_publish_note": "string — appended to status tracker when auto-published"
+      "escalate_to": "string — role"
     }
   },
   
@@ -1757,8 +1755,8 @@ description: >
 2. Revision handling: when a revision is requested, record the feedback, set status to REVISION_REQUESTED, and trigger compose-creative for only the specific post.
 3. Client review package: generate a filtered gallery containing only posts flagged for client review. Generate a PDF or Word doc summary.
 4. Approval reminders: check all brands for posts with status PENDING_CLIENT or PENDING_CEO past their reminder threshold. Send notifications via Slack/email.
-5. Auto-publish logic: for HUB posts past the auto-publish threshold (per approval-chain.json), transition to FINAL with note "Auto-published with internal approval only."
-6. Block logic: HERO posts past threshold → escalate, never auto-publish.
+5. No approval-free path (1.31.0): a post past its escalation threshold is reminded or escalated, never moved to FINAL without its approvals. The design's earlier HUB shortcut was never built and is withdrawn.
+6. Block logic: HERO posts past threshold → escalate.
 7. Bulk operations: "approve all Hygiene posts" → transition all HYGIENE-tier posts from PENDING_REVIEW to APPROVED_INTERNAL.
 
 **Scripts called:**
@@ -3183,7 +3181,7 @@ while not operation.done:
 | Kling 3.0 Omni | Lip-sync video generation (5 languages) | When lip-sync quality dominates the requirement |
 | Flux (Replicate) | Alternative image generation | If Gemini has content policy issues with certain prompts |
 | ElevenLabs | AI voiceover for video scripts | When video production module matures |
-| Buffer / Hootsuite / Later API | Auto-publishing to platforms | Future module — currently out of scope |
+| Buffer / Hootsuite / Later API | Publishing to platforms through their APIs | Future module — currently out of scope |
 
 ---
 

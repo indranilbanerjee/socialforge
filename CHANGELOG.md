@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.31.0] - 2026-11-07
+
+### Keys from the environment are never written, a typed key goes to the OS keychain, and the skills that deliver or message people are started by the user
+
+A security release. Found in a review of the suite's own plugins: setup copied keys and the service-account file into plain-text files whose only protection was `chmod 600` (which does nothing on Windows), `--api-key` still took a key on the command line, and `finalize-month`, the skill under the hidden `/socialforge:finalize` command, could be started by the model on its own, as could `client-review` and `check-approvals`, which message clients and reviewers.
+
+**Changed**
+
+- `scripts/credential_manager.py`: `setup-wavespeed` and `setup-higgsfield` record only the variable names (`WAVESPEED_API_KEY`, `HF_API_KEY`, `HF_API_SECRET`) when the key is in the environment; the scripts read the value each time they need it, and the environment now wins over anything stored. A key given with `--api-key-stdin` or `--prompt` goes to the OS keychain through the optional `keyring` package when it has a working backend, and otherwise to `credentials.json` in plain text, with a warning in the result and on stderr. `status` reports whether a keychain is available and warns about any key an older setup left in plain text.
+- `setup-vertex` records the path of your service-account JSON and uses the file where it is; it no longer copies it to `gcp-credentials.json`. An older copy is left alone, is no longer needed, and is reported until you delete it.
+- On Windows, `credentials.json` is limited to the current account after every write with `icacls <file> /inheritance:r /grant:r <you>:F`, run as an argument list. A failure is reported, not hidden.
+- `--api-key` and `--api-secret` exit 2 with a message that points at the environment variable or `--api-key-stdin`, before anything is read or written; the value is never echoed.
+- `scripts/install_deps.py`: a `keyring` group (keyring 25.7.0, pinned), installed only when asked for by name.
+- `skills/finalize-month/SKILL.md`, `skills/manage-reviews/SKILL.md` (already hidden), `commands/client-review.md` and `commands/check-approvals.md` set `disable-model-invocation: true`. The three that send carry an `## Execution gate`: who receives what, through which connector, and an explicit `yes` before anything goes out. `commands/finalize.md` reads the skill file instead of invoking the hidden skill, and `full-pipeline` stops before Phase 7 and tells you to run `/socialforge:finalize`. The paid generation skills stay invocable: each paid call already waits for a quote and a typed `go`, and the scripts refuse a provider that was not quoted.
+- The reference docs no longer describe an approval-free path: the `auto_publish` block in `references/approval-chain-schema.md`, the `auto_publish_without_client` escalation in `docs/OPERATIONS.md` and the engineering spec, and "auto-finalize HYGIENE" in `full-pipeline` now say that nothing is finalized without its approvals and that such keys are ignored. No code ever implemented them.
+- `skills/setup/SKILL.md`, `SECURITY.md`, `PRIVACY.md`, `README.md`, `docs/ADMIN-SETUP.md` and `docs/USER-GUIDE.md` say what is stored where, and that chmod is a no-op on Windows.
+
+**Added**
+
+- `tests/test_credential_storage.py`: an environment key leaves no value in `credentials.json`; a keychain (a fake one) holds a piped key while the file holds none; without a keychain the file fallback warns "plain text"; the service-account file is not copied and an old copy is reported; icacls is called as a list, its failure is reported, and POSIX runs none; the `keyring` group exists and is not a default; the docs say all of this.
+- `tests/test_execution_gates.py`: any skill or command whose text names a Postiz hand-off, `--force`, sending reminders, sending to a client or over Slack/email, a Drive upload or publishing now must set `disable-model-invocation: true`; the finalize command and skill agree; the pipeline hands finalizing to the user; no shipped doc describes an approval-free path. Planted cases show each rule fires.
+- `tests/test_hermes_review_fixes.py`: `--api-key` / `--api-secret` exit 2 and write nothing; an environment key is recorded by name.
+- `tests/_isolation.py` selects keyring's null backend for the whole test session, so no test can reach the real OS keychain.
+
 ## [1.30.3] - 2026-10-29
 
 ### TikTok's 2,200 / 4,000 split is explained from TikTok's own posting references

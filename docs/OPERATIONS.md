@@ -808,7 +808,7 @@ The approval-chain.json determines which tiers require client and CEO review. HY
 If a post sits in PENDING_CLIENT for too long:
 1. After `reminder_after_days` (e.g., 3 days): send reminder via Slack/email.
 2. After `escalate_after_days` (e.g., 7 days): escalate to the role specified in `escalate_to`.
-3. If `auto_publish_without_client: true` and the escalation period expires: the post can be finalized without client sign-off, with an audit note appended.
+3. Nothing is finalized without client sign-off when the escalation period expires: the post stays PENDING_CLIENT until the client answers or the user records the decision. A `auto_publish_without_client` key in an older approval-chain.json is ignored.
 
 ### Revision Handling
 

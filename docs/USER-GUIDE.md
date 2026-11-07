@@ -91,7 +91,7 @@ Step 2 — Video generation (WaveSpeed):
 
 Step 3 (optional) — HiggsField fallback: set `HF_API_KEY` and `HF_API_SECRET` the same way.
 
-Credentials are stored persistently. You never need to run /socialforge:setup again unless credentials change.
+Setup records where each credential lives: the service-account file's path, and for a key in an environment variable only the variable's name (the key is read from the environment each run, so keep the variable set). You never need to run /socialforge:setup again unless credentials change.
 
 Check status anytime: `/socialforge:setup --status`
 
@@ -170,9 +170,9 @@ Step 2 of 2: WaveSpeed (Video Generation)
 
   > set
 
-  WaveSpeed key saved to the plugin data directory.
+  WaveSpeed configured: WAVESPEED_API_KEY is read from your environment (only its name is recorded).
 
-Setup complete. Credentials saved to plugin data directory.
+Setup complete.
 Both persist across sessions -- you won't need to do this again.
 ```
 
@@ -1067,7 +1067,7 @@ A: LinkedIn, Instagram, Facebook, X/Twitter, YouTube (thumbnails), Pinterest, an
 A: Yes. ANCHOR_COMPOSE mode works with brand assets alone using Pillow for compositing. Carousel rendering uses Playwright (no AI). You can also provide pre-made visuals for every post and skip generation entirely. Only STYLE_REFERENCED and PURE_CREATIVE modes require an image generation API.
 
 **Q: Where do I set API keys?**
-A: Run `/socialforge:setup` to configure all credentials. They are stored securely in the plugin data directory. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
+A: In environment variables (`WAVESPEED_API_KEY`, `HF_API_KEY`, `HF_API_SECRET`), then run `/socialforge:setup`: it records the variable names, not the keys. A key you type at `--prompt` goes to the OS keychain when the optional `keyring` package is installed. For fal.ai and Replicate, connect via the Connectors panel instead of managing keys manually.
 
 ---
 

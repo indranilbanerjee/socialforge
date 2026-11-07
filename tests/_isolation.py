@@ -26,6 +26,7 @@ from pathlib import Path
 
 HOME_VARS = ("HOME", "USERPROFILE")
 DATA_VARS = ("CLAUDE_PLUGIN_DATA", "CLAUDE_PLUGIN_DATA_DIR", "PLUGIN_DATA")
+KEYRING_VAR, NULL_KEYRING = "PYTHON_KEYRING_BACKEND", "keyring.backends.null.Keyring"
 
 _state: dict = {"started": False, "finished": False}
 
@@ -97,6 +98,9 @@ def start(redirect: bool = True) -> None:
             os.environ[name] = str(data)
         _state["tmp"] = tmp
         _state["redirected"] = {name: os.environ[name] for name in HOME_VARS + DATA_VARS}
+    # 1.31.0: credential_manager.py keeps keys in the OS keychain when `keyring` is installed. The keychain is not a folder
+    # the snapshot can see, so no test may reach it: the null backend (priority -1) makes the script fall back to its file.
+    os.environ[KEYRING_VAR] = NULL_KEYRING
     atexit.register(_at_exit)
 
 

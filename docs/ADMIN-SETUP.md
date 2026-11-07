@@ -9,7 +9,7 @@ SocialForge uses **Google Cloud Vertex AI** for image generation. Without it, im
 **Setup via /socialforge:setup (recommended):**
 1. Your admin provides a Google Cloud service account JSON key file with Vertex AI access
 2. Run `/socialforge:setup` and point it to the JSON key file
-3. Credentials are stored persistently — no need to set environment variables manually
+3. Setup records the key file's path (no copy is made), so keep the file where it is, readable only by you
 
 **Alternative — Direct environment variable:**
 If you prefer manual configuration, set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account JSON file:
@@ -134,7 +134,7 @@ The setup wizard first lists the Python packages that are missing and the exact 
 2. WaveSpeed API key (for video) — set `WAVESPEED_API_KEY` in your environment and say when it is set; never paste the key into the chat
 3. HiggsField credentials (optional) — set `HF_API_KEY` and `HF_API_SECRET` the same way
 
-Credentials are stored in the plugin’s persistent data directory. They survive across sessions, restarts, and plugin updates.
+Setup records where each credential lives in `credentials.json` in the plugin’s persistent data directory. For a key in an environment variable it records only the variable name and reads the key at run time, so the variable must stay set (in your shell profile or your host's environment settings). A key given with `--api-key-stdin` or `--prompt` goes to the OS keychain when the optional `keyring` package is installed, and otherwise to `credentials.json` in plain text, with a warning. On Windows `chmod` cannot protect that file, so setup limits it to your account with `icacls`.
 
 **Where credentials are stored per platform:**
 - Windows: `%APPDATA%\Claude\plugins\data\socialforge-neels-plugins\socialforge\`

@@ -9,7 +9,11 @@ disable-model-invocation: true
 
 # /socialforge:manage-reviews — Review & Approval Manager
 
-Manage the multi-tier approval workflow per brand's approval-chain.json.
+Manage the multi-tier approval workflow per brand's approval-chain.json. The user starts this skill; it is not model-invocable. `--client-send` and the reminders of `--check` message people, so they go through the Execution gate below.
+
+## Execution gate
+
+Sending is a side effect other people see. Before any Slack message, email or reminder goes out, show an Execution Summary: who receives it (each recipient or channel), through which connector, which posts, and the exact message text. Send only on an explicit `yes` typed by the user for exactly that summary; any other reply cancels with nothing sent and no status changed. A changed recipient, post list or message is a new summary and a new `yes`. Hosts that ignore `disable-model-invocation` (Codex, for one) still get this gate.
 
 ## Approval Tiers
 - **HERO content**: Internal review → Client approval → CEO approval (if configured)

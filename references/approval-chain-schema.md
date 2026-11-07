@@ -1,6 +1,6 @@
 # Approval Chain Schema Reference
 
-JSON schema for `approval-chain.json` — defines who reviews content and when posts auto-publish.
+JSON schema for `approval-chain.json` — defines who reviews content and when reminders and escalations go out.
 
 ## Location
 
@@ -100,28 +100,16 @@ Each contains the same fields as a tier entry. Example:
 |-----------|------|-------------|
 | `reminder_after_hours` | number | Hours before first reminder is sent |
 | `escalate_after_hours` | number | Hours before escalating to next reviewer |
-| `auto_publish` | object | Auto-publish conditions (see below) |
 
-### `auto_publish`
+### No approval-free path
 
-| Sub-field | Type | Description |
-|-----------|------|-------------|
-| `enabled` | boolean | Whether auto-publish is allowed |
-| `allowed_tiers` | array | Which tiers may auto-publish (e.g., `["HYGIENE"]`). `HERO` is hard-excluded — listing it here has no effect. |
-| `after_hours` | number | Hours of no response before auto-publishing |
-| `require_min_reviewers` | boolean | Still require minimum reviewers even for auto-publish |
+Auto-publish is not supported. No post is finalized, delivered or published because a reviewer did not answer: an expired escalation period sends a reminder or escalates, and every post still needs its approvals before `/socialforge:finalize`, which the user runs and confirms with `yes`. An `auto_publish` block in an existing approval-chain.json is ignored.
 
 ```json
 {
   "escalation_rules": {
     "reminder_after_hours": 4,
-    "escalate_after_hours": 12,
-    "auto_publish": {
-      "enabled": true,
-      "allowed_tiers": ["HYGIENE"],
-      "after_hours": 24,
-      "require_min_reviewers": true
-    }
+    "escalate_after_hours": 12
   }
 }
 ```
@@ -152,5 +140,5 @@ Each contains the same fields as a tier entry. Example:
 
 - Special rules merge with (not replace) the tier defaults.
 - If `min_reviewers` exceeds the number of `reviewers`, all reviewers must approve.
-- Auto-publish never applies to HERO tier. The exclusion is hard-coded, not derived from `allowed_tiers` — adding `"HERO"` to `allowed_tiers` does not enable it, and setting `enabled: true` does not override it. HERO always requires explicit sign-off.
+- No tier finalizes without its approvals: HERO, HUB and HYGIENE all wait for sign-off, and an `auto_publish` block is ignored.
 - Missing `approval-chain.json` defaults to single-reviewer approval on all tiers.

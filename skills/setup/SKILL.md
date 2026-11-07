@@ -10,7 +10,7 @@ user-invocable: true
 
 > **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
-One-time setup that stores credentials persistently. Run once, works forever across all sessions.
+One-time setup that records where each credential lives. A key kept in an environment variable is never written anywhere: setup records the variable name and the scripts read the value each time. See Security Notes for what is stored where.
 
 ## Context efficiency
 
@@ -61,7 +61,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install_deps.py" --install
 ```
 Any other answer: print the pinned commands from the report for the user to run themselves, and continue.
 
-Extra packages are never part of that default and are installed only when the user asks for them by name: HiggsField's client (`--groups higgsfield`), background removal, which fetches model weights on first use (`--groups background-removal`), and C2PA signing (`--groups c2pa`).
+Extra packages are never part of that default and are installed only when the user asks for them by name: HiggsField's client (`--groups higgsfield`), background removal, which fetches model weights on first use (`--groups background-removal`), C2PA signing (`--groups c2pa`), and OS keychain support (`--groups keyring`), which lets a key you type or pipe in be kept in the keychain instead of a plain-text file.
 
 ### Step 1: Image Generation (Vertex AI)
 
@@ -86,6 +86,8 @@ When user provides the path:
 python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-vertex --json-path "<user-provided-path>"
 ```
 
+The script records the file's PATH and uses the file where it is; it makes no copy. Tell the user to keep the file there, readable only by them. If the result carries `warnings` about an older SocialForge copy (`gcp-credentials.json`, made before 1.31.0), show it: that copy is no longer used, and deleting it is the user's call.
+
 Show the result. If success:
 ```
 Image generation configured.
@@ -107,7 +109,9 @@ Do you have a WaveSpeed API key?
 Or type "skip" to configure later (video generation will not work).
 ```
 
-When the user says it is set, run this WITHOUT `--api-key` (the script reads `WAVESPEED_API_KEY`; a key on the command line lands in shell history and the process table). The script never reads stdin on its own, so with no key it stops at once with exit 2 (`no key: pass --api-key, set WAVESPEED_API_KEY, or use --api-key-stdin`) instead of waiting: tell the user the variable is not visible to this shell and ask them to set it where the host can see it. `--api-key-stdin` (one line on stdin) and `--prompt` (a hidden prompt, real terminal only) are explicit alternatives:
+When the user says it is set, run the command below. The script reads `WAVESPEED_API_KEY` and records only the variable name; the key itself is never written, and it is read from the environment each time a video is made. `--api-key` is refused with exit 2 (a key on the command line lands in shell history and the process table). The script never reads stdin on its own, so with no key it stops at once with exit 2 (`no key: set WAVESPEED_API_KEY, or use --api-key-stdin`) instead of waiting: tell the user the variable is not visible to this shell and ask them to set it where the host can see it.
+
+If the variable cannot stay set across sessions, the user can store the key once from their own terminal with `--prompt` (a hidden prompt, real terminal only); `--api-key-stdin` reads one line from stdin. A key given either way goes to the OS keychain when `keyring` is installed (`--groups keyring` above), and otherwise to `credentials.json` in plain text, with a warning in the result: show that warning to the user.
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-wavespeed
 ```
@@ -131,7 +135,7 @@ Do you have a HiggsField API key and secret?
 Or type "skip" (HiggsField is optional — Vertex AI and WaveSpeed are sufficient).
 ```
 
-When the user says both are set, run this WITHOUT `--api-key` or `--api-secret` (the script reads `HF_API_KEY` and `HF_API_SECRET`; it never reads stdin on its own, so with either missing it stops at once with exit 2; `--api-key-stdin` reads the key from the first stdin line and the secret from the second):
+When the user says both are set, run the command below. It reads `HF_API_KEY` and `HF_API_SECRET` and records only the variable names; `--api-key` and `--api-secret` are refused with exit 2. It never reads stdin on its own, so with either missing it stops at once with exit 2. `--api-key-stdin` reads the key from the first stdin line and the secret from the second, and stores them like the WaveSpeed key (keychain, else the file with a warning).
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/scripts/credential_manager.py" setup-higgsfield
 ```
@@ -153,7 +157,8 @@ SocialForge API Setup Complete
   HiggsField: [configured / skipped]
     Provider: HiggsField (fallback)
 
-  Credentials stored persistently. No further setup needed.
+  Credentials recorded. Keys in environment variables are read from the environment each run,
+  so keep those variables set; nothing else needs setting up again.
 
   Next: /socialforge:brand-setup [brand-name] to configure your first brand.
 ```
@@ -275,9 +280,10 @@ Share both the API key AND secret with your team. Both are needed for authentica
 
 ## Security Notes
 
-- Credentials are stored in the plugin persistent data directory
-- The GCP JSON file is copied (not linked) to ensure it survives if the original is deleted
-- WaveSpeed API key is stored in credentials.json within plugin data
-- Keys are never taken through the chat or the command line: only from environment variables or, with an explicit `--api-key-stdin`, from stdin. A script never reads stdin on its own, so a missing key fails at once instead of hanging the shell
-- No credentials are committed to git or shared outside the local machine
-- To revoke access: rotate the service account key in GCP Console or regenerate the WaveSpeed API key
+- `credentials.json` in the plugin data folder (or `~/socialforge-workspace/`) records where each credential lives. For a key in an environment variable it holds only the variable name: the key is never written, and the scripts read it from the environment each time.
+- The GCP service-account JSON is used where you keep it: setup records its path and makes no copy. Keep the file there and readable only by you. Setup before 1.31.0 copied it to `gcp-credentials.json`; that copy is no longer used and is reported by `status` until you delete it.
+- A key given through `--api-key-stdin` or `--prompt` goes to the OS keychain (Windows Credential Manager, macOS Keychain, the Secret Service on Linux) when the optional `keyring` package is installed and has a working backend. Without one it is written to `credentials.json` in plain text, and the result and `status` say so.
+- File permissions: on macOS and Linux the files are `chmod 600`. On Windows chmod does nothing useful (it only sets the read-only flag), so setup also runs `icacls <file> /inheritance:r /grant:r <you>:F`, which removes inherited access and leaves only your account. If that fails, the result says so. An administrator of the machine can still read any file.
+- Keys are never taken through the chat or the command line: `--api-key` and `--api-secret` exit 2. Only environment variables, or an explicit `--api-key-stdin` / `--prompt`, are read. A script never reads stdin on its own, so a missing key fails at once instead of hanging the shell.
+- No credentials are committed to git or shared outside the local machine.
+- To revoke access: rotate the service account key in GCP Console or regenerate the WaveSpeed API key.

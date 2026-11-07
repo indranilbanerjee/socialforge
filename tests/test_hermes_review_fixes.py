@@ -723,13 +723,16 @@ class TestSecretsNeverBlock(unittest.TestCase):
     killed in a finally block so none is left behind. Each run uses a temporary home AND data folder (the credentials folder is the
     data folder only when it exists, else ~/socialforge-workspace), and a test refuses to continue if a key would land outside it."""
     TIMEOUT = 30
-    WS_ERROR = "no key: pass --api-key, set WAVESPEED_API_KEY, or use --api-key-stdin"
+    WS_ERROR = "no key: set WAVESPEED_API_KEY, or use --api-key-stdin"
+    HF_ERROR = "no HiggsField API key: set HF_API_KEY, or use --api-key-stdin"
 
     def _run(self, args, stdin, env_extra=None):
         """stdin is "open-pipe" (a pipe nobody closes, like the Bash tool), "devnull" (NUL), or bytes that are written and closed."""
         with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as logs:
             env = {k: v for k, v in os.environ.items() if not any(w in k.upper() for w in ("KEY", "SECRET", "TOKEN", "CRED", "PASSWORD"))}
             env.update(HOME=home, USERPROFILE=home, APPDATA=home, LOCALAPPDATA=home, CLAUDE_PLUGIN_DATA=home, PLUGIN_DATA=home)
+            # The KEY filter above drops PYTHON_KEYRING_BACKEND; set it again so no run reaches the real OS keychain.
+            env["PYTHON_KEYRING_BACKEND"] = "keyring.backends.null.Keyring"
             env.update(env_extra or {})
             out_path, err_path = Path(logs) / "out.txt", Path(logs) / "err.txt"
             with open(out_path, "wb") as out, open(err_path, "wb") as err:
@@ -751,6 +754,8 @@ class TestSecretsNeverBlock(unittest.TestCase):
                     if proc.stdin and not proc.stdin.closed:
                         proc.stdin.close()
             text = out_path.read_text(encoding="utf-8", errors="replace")
+            cred = Path(home) / "socialforge" / "credentials.json"
+            self.last_store = cred.read_text(encoding="utf-8") if cred.exists() else ""
             try:
                 payload = json.loads(text)
             except ValueError:
@@ -765,8 +770,8 @@ class TestSecretsNeverBlock(unittest.TestCase):
         cases = {
             "wavespeed, open pipe": (["setup-wavespeed"], "open-pipe", self.WS_ERROR),
             "wavespeed, NUL": (["setup-wavespeed"], "devnull", self.WS_ERROR),
-            "higgsfield, open pipe": (["setup-higgsfield"], "open-pipe", "no HiggsField API key: pass --api-key, set HF_API_KEY, or use --api-key-stdin"),
-            "higgsfield, NUL": (["setup-higgsfield"], "devnull", "no HiggsField API key: pass --api-key, set HF_API_KEY, or use --api-key-stdin"),
+            "higgsfield, open pipe": (["setup-higgsfield"], "open-pipe", self.HF_ERROR),
+            "higgsfield, NUL": (["setup-higgsfield"], "devnull", self.HF_ERROR),
         }
         for name, (args, stdin, message) in cases.items():
             with self.subTest(case=name):
@@ -774,15 +779,37 @@ class TestSecretsNeverBlock(unittest.TestCase):
                 self.assertEqual(code, 2, payload)
                 self.assertEqual(payload.get("error"), message)
 
-    def test_a_key_in_the_environment_is_stored_and_stdin_is_never_read(self):
+    def test_a_key_in_the_environment_is_recorded_by_name_and_stdin_is_never_read(self):
+        """1.31.0: a key that is in the environment is never written; credentials.json names the variable."""
         code, payload = self._run(["setup-wavespeed"], "open-pipe", {"WAVESPEED_API_KEY": "k" * 24})
-        self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+        self.assertEqual((code, payload.get("status"), payload.get("source")), (0, "success", "env"), payload)
+        self.assertIn("WAVESPEED_API_KEY", self.last_store)
+        self.assertNotIn("k" * 24, self.last_store)
+        self.assertNotIn("api_key", json.loads(self.last_store)["wavespeed"])
         code, payload = self._run(["setup-higgsfield"], "open-pipe", {"HF_API_KEY": "a" * 24, "HF_API_SECRET": "b" * 24})
-        self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+        self.assertEqual((code, payload.get("status"), payload.get("source")), (0, "success", "env"), payload)
+        self.assertNotIn("a" * 24, self.last_store)
+        self.assertNotIn("b" * 24, self.last_store)
+
+    def test_a_key_on_the_command_line_exits_2_and_is_never_echoed_or_stored(self):
+        """1.31.0: --api-key / --api-secret are refused before anything is read or written."""
+        for args in (["setup-wavespeed", "--api-key", "z" * 24],
+                     ["setup-higgsfield", "--api-key", "z" * 24, "--api-secret", "y" * 24],
+                     ["setup-higgsfield", "--api-secret", "y" * 24]):
+            with self.subTest(args=args[:2]):
+                code, payload = self._run(args, "devnull", {"WAVESPEED_API_KEY": "k" * 24})
+                self.assertEqual(code, 2, payload)
+                self.assertIn("is not accepted", payload.get("error", ""))
+                self.assertNotIn("z" * 24, json.dumps(payload))
+                self.assertNotIn("y" * 24, json.dumps(payload))
+                self.assertEqual(self.last_store, "", "a refused command must write nothing")
 
     def test_api_key_stdin_reads_exactly_what_it_is_given(self):
         code, payload = self._run(["setup-wavespeed", "--api-key-stdin"], ("k" * 24 + "\n").encode())
         self.assertEqual((code, payload.get("status")), (0, "success"), payload)
+        # No keychain in the tests (null backend): the key falls back to the file, and the result says so.
+        self.assertEqual(payload.get("source"), "file", payload)
+        self.assertTrue(any("plain text" in w for w in payload.get("warnings", [])), payload)
         code, payload = self._run(["setup-higgsfield", "--api-key-stdin"], ("a" * 24 + "\n" + "b" * 24 + "\n").encode())
         self.assertEqual((code, payload.get("status")), (0, "success"), payload)
         code, payload = self._run(["setup-wavespeed", "--api-key-stdin"], b"")

@@ -156,9 +156,11 @@ Phase 6 (manage-reviews) is the only async gate — the pipeline pauses here bec
 3. User reviews posts via `/socialforge:review` or `/socialforge:manage-reviews`
 4. To resume after reviews: run `/socialforge:full-pipeline --resume` or `/socialforge:finalize` directly
 
+**Phase 7 is the user's.** `finalize-month` is not model-invocable: it packages the delivery and can upload it and send a completion message. When every post is reviewed, the pipeline stops and tells the user: "All posts are reviewed. Run `/socialforge:finalize` to package the month." It never invokes the finalize skill itself, and `--resume` stops at the same place.
+
 **Escalation (per approval-chain.json):**
 - Reminder after N days (configurable per tier)
 - Escalate to next reviewer after M days
-- Auto-finalize HYGIENE tier after N days if configured
+- No tier is ever finalized or published automatically: an expired escalation period only sends a reminder (through the manage-reviews Execution gate), and finalizing waits for the user to run `/socialforge:finalize`
 
 **Timeout:** No automatic timeout — Phase 6 stays paused until human action. The `/socialforge:status` command shows pending review counts.

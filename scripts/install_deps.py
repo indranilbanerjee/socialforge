@@ -14,7 +14,8 @@ against), so a new package release reaches you only when this table changes on p
 Default groups: core (Pillow), image (google-genai), video (wavespeed, imageio-ffmpeg),
 carousel (playwright, plus the Chromium browser, a large download).
 Extra groups, named explicitly only: higgsfield (higgsfield-client), background-removal (rembg,
-which fetches model weights on first use), c2pa (c2pa-python, cryptography).
+which fetches model weights on first use), c2pa (c2pa-python, cryptography), keyring (keyring: lets
+credential_manager.py keep a key you type or pipe in the OS keychain instead of a plain-text file).
 
 Generation scripts that find a package missing mid-run call ensure_package(): it prints the pinned
 command and returns False. Setting SOCIALFORGE_INSTALL_DEPS=1 for that run is the explicit consent
@@ -41,6 +42,7 @@ PINNED = {
     "rembg": "2.0.77",
     "c2pa-python": "0.38.0",
     "cryptography": "46.0.6",
+    "keyring": "25.7.0",
 }
 
 IMPORT_NAMES = {
@@ -53,6 +55,7 @@ IMPORT_NAMES = {
     "rembg": "rembg",
     "c2pa-python": "c2pa",
     "cryptography": "cryptography",
+    "keyring": "keyring",
 }
 
 REQUIRED = {
@@ -65,6 +68,7 @@ EXTRA = {
     "higgsfield": ["higgsfield-client"],
     "background-removal": ["rembg"],
     "c2pa": ["c2pa-python", "cryptography"],
+    "keyring": ["keyring"],
 }
 ALL_GROUPS = {**REQUIRED, **EXTRA}
 DEFAULT_GROUPS = list(REQUIRED)

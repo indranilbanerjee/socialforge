@@ -142,7 +142,7 @@ Content tiers:
   HUB (regular series): Who reviews?
   HYGIENE (routine posts): Auto-approve or light review?
 
-Escalation: Reminder after N days? Auto-publish without client approval after N days?
+Escalation: Reminder after N days? Escalate to whom after M days? (Posts never finalize without their approvals.)
 ```
 
 If user skips: Default to single-tier (all content requires user approval before finalization).

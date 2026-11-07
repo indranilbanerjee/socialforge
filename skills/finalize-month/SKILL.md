@@ -4,7 +4,7 @@ description: "Finalize the month: package approved content into the delivery fol
 argument-hint: "[--brand <name>] [--force]"
 effort: high
 user-invocable: true
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # /socialforge:finalize-month — Month Finalizer
@@ -12,6 +12,8 @@ disable-model-invocation: false
 > **Script location.** If your host does not set `${CLAUDE_PLUGIN_ROOT}`, the scripts are in this plugin's `scripts/` folder, next to `skills/`. Run them with Python 3.10 or newer: `python`, or `python3` where `python` is not found (macOS, many Linux systems).
 
 Package all approved posts into the organized delivery folder structure.
+
+The user starts this skill: it is not model-invocable (`disable-model-invocation: true`), because it copies the delivery, can upload it and send a completion message, and offers the scheduler hand-off. An orchestrator that reaches this step tells the user to run `/socialforge:finalize` (or `/socialforge:finalize-month`) and stops.
 
 ## Execution gate
 
